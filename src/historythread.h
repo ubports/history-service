@@ -6,5 +6,7 @@ class HistoryThread
     unreadCount: Int
     count: Int
     participants: String[]
-}
+};
+
+typedef QSharedPointer<HistoryThread>
 
