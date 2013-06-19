@@ -11,11 +11,11 @@ set(library_HDRS
     historyitem.h
     #historymanager.h
     #historyplugin.h
-    #historyreader.h
+    historyreader.h
     #historysort.h
-    #historythread.h
+    historythread.h
     #historyunionfilter.h
-    #historywriter.h
+    historywriter.h
     TextItem
     textitem.h
     Types
