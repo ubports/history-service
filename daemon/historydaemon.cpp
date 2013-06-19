@@ -1,8 +1,11 @@
 #include "historydaemon.h"
 #include "telepathyhelper.h"
 
+#include <HistoryWriter>
+#include <VoiceItem>
+
 HistoryDaemon::HistoryDaemon(QObject *parent)
-: QObject(parent)
+    : QObject(parent), mWriter(0)
 {
     connect(TelepathyHelper::instance(),
             SIGNAL(channelObserverCreated(ChannelObserver*)),
@@ -26,4 +29,11 @@ void HistoryDaemon::onObserverCreated()
 
 void HistoryDaemon::onCallEnded(const Tp::CallChannelPtr &channel)
 {
+    if (!mWriter) {
+        return;
+    }
+
+    // TODO: create the VoiceItem and save it
+    VoiceItem item;
+    mWriter->writeVoiceItem(item);
 }
