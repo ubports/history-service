@@ -19,6 +19,10 @@ VoiceItemPrivate::VoiceItemPrivate(const QString &theAccountId,
 {
 }
 
+VoiceItemPrivate::~VoiceItemPrivate()
+{
+}
+
 // ------------- VoiceItem -------------------------------------------------------
 
 VoiceItem::VoiceItem()

@@ -21,4 +21,5 @@ public:
     bool missed;
     QTime duration;
 };
+
 #endif // VOICEITEM_P_H
