@@ -42,6 +42,7 @@ protected:
 protected Q_SLOTS:
     void onTextChannelInvalidated();
     void onMessageReceived(const Tp::ReceivedMessage &message);
+    void onMessageSent(const Tp::Message &message, Tp::MessageSendingFlags flags, const QString &sentMessageToken);
     void onPendingMessageRemoved(const Tp::ReceivedMessage &message);
 
 private:

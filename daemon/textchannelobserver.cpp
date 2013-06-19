@@ -37,6 +37,9 @@ void TextChannelObserver::onTextChannelAvailable(Tp::TextChannelPtr textChannel)
             SIGNAL(messageReceived(const Tp::ReceivedMessage&)),
             SLOT(onMessageReceived(const Tp::ReceivedMessage&)));
     connect(textChannel.data(),
+            SIGNAL(messageSent(Tp::Message,Tp::MessageSendingFlags,QString)),
+            SLOT(onMessageSent(Tp::Message,Tp::MessageSendingFlags,QString)));
+    connect(textChannel.data(),
             SIGNAL(pendingMessageRemoved(const Tp::ReceivedMessage&)),
             SLOT(onPendingMessageRemoved(const Tp::ReceivedMessage&)));
 
@@ -52,6 +55,10 @@ void TextChannelObserver::onTextChannelInvalidated()
 void TextChannelObserver::onMessageReceived(const Tp::ReceivedMessage &message)
 {
     // TODO: emit a signal
+}
+
+void TextChannelObserver::onMessageSent(const Tp::Message &message, Tp::MessageSendingFlags flags, const QString &sentMessageToken)
+{
 }
 
 void TextChannelObserver::onPendingMessageRemoved(const Tp::ReceivedMessage &message)

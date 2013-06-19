@@ -119,7 +119,6 @@ void ChannelObserver::onCallChannelReady(Tp::PendingOperation *op)
     }
 
     Q_EMIT callChannelAvailable(callChannel);
-
     checkContextFinished(callChannel.data());
 }
 
