@@ -1,0 +1,114 @@
+#include "historyitem.h"
+#include "historyitem_p.h"
+
+// ------------- HistoryItemPrivate ------------------------------------------------
+HistoryItemPrivate::HistoryItemPrivate()
+{
+}
+
+HistoryItemPrivate::HistoryItemPrivate(const QString &theAccountId,
+                                       const QString &theThreadId,
+                                       const QString &theItemId,
+                                       const QString &theSender,
+                                       const QDateTime &theTimestamp) :
+    accountId(theAccountId), threadId(theThreadId), itemId(theItemId),
+    sender(theSender), timestamp(theTimestamp), q_ptr(0)
+{
+}
+
+HistoryItemPrivate::~HistoryItemPrivate()
+{
+}
+
+// ------------- HistoryItem -------------------------------------------------------
+
+/*!
+ * \class HistoryItem
+ *
+ * \brief The HistoryItem class provides the base class for all events stored
+ *  and loaded from the history backends.
+ *
+ *  In most of the cases this class does not need to be used directly and instead
+ *  the derived classes should be used.
+ *
+ * \sa TextItem, VoiceItem
+ */
+
+/*!
+ * \fn HistoryItem::ItemType HistoryItem::type() const
+ * \brief Returns the type of this event.
+ */
+
+/*!
+ * \brief Constructs an empty HistoryItem
+ */
+HistoryItem::HistoryItem()
+    : d_ptr(new HistoryItemPrivate())
+{
+    d_ptr->q_ptr = this;
+}
+
+/*!
+ * \brief Constructs a HistoryItem with the given arguments.
+ *
+ * \param accountId The account to which this item is related to
+ * \param threadId The ID of the thread this item belongs to. \sa HistoryThread
+ * \param itemId The ID of the item.
+ * \param sender The ID of the sender related to this event.
+ * \param timestamp The date and time when the event occurred.
+ */
+HistoryItem::HistoryItem(HistoryItemPrivate &p)
+    : d_ptr(&p)
+{
+    d_ptr->q_ptr = this;
+}
+
+HistoryItem::~HistoryItem()
+{
+}
+
+/*!
+ * \brief Returns the account ID this item belongs to.
+ */
+QString HistoryItem::accountId() const
+{
+    Q_D(const HistoryItem);
+    return d->accountId;
+}
+
+/*!
+ * \brief Returns the ID of the communication thread this item belongs to.
+ * \sa HistoryThread
+ */
+QString HistoryItem::threadId() const
+{
+    Q_D(const HistoryItem);
+    return d->threadId;
+}
+
+/*!
+ * \brief Returns the ID that uniquely identifies this item.
+ */
+QString HistoryItem::itemId() const
+{
+    Q_D(const HistoryItem);
+    return d->itemId;
+}
+
+/*!
+ * \brief Returns the ID of the sender of this event.
+ */
+QString HistoryItem::sender() const
+{
+    Q_D(const HistoryItem);
+    return d->sender;
+}
+
+/*!
+ * \brief Returns the timestamp of when the event happened.
+ */
+QDateTime HistoryItem::timestamp() const
+{
+    Q_D(const HistoryItem);
+    return d->timestamp;
+}

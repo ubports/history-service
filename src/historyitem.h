@@ -19,12 +19,7 @@ public:
     };
 
     HistoryItem();
-    HistoryItem(const QString accountId,
-                const QString &threadId,
-                const QString &itemId,
-                const QString &sender,
-                const QDateTime &timestamp,
-                ItemType type);
+    HistoryItem(HistoryItemPrivate &p);
     virtual ~HistoryItem();
 
     QString accountId() const;
@@ -32,7 +27,7 @@ public:
     QString itemId() const;
     QString sender() const;
     QDateTime timestamp() const;
-    ItemType type() const;
+    virtual ItemType type() const = 0;
 
 protected:
     QScopedPointer<HistoryItemPrivate> d_ptr;
