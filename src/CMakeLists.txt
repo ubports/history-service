@@ -1,6 +1,7 @@
 set(library_SRCS
     historyitem.cpp
     textitem.cpp
+    voiceitem.cpp
     )
 
 set(library_HDRS
@@ -17,13 +18,16 @@ set(library_HDRS
     #historywriter.h
     TextItem
     textitem.h
+    Types
     types.h
-    #voiceitem.h
+    VoiceItem
+    voiceitem.h
 )
 
 set(library_PRIV_HDRS
     historyitem_p.h
     textitem_p.h
+    voiceitem_p.h
 )
 
 include_directories(${CMAKE_SOURCE_DIR}/src)

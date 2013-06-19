@@ -18,8 +18,6 @@ public:
         VoiceItem
     };
 
-    HistoryItem();
-    HistoryItem(HistoryItemPrivate &p);
     virtual ~HistoryItem();
 
     QString accountId() const;
@@ -30,6 +28,7 @@ public:
     virtual ItemType type() const = 0;
 
 protected:
+    HistoryItem(HistoryItemPrivate &p);
     QScopedPointer<HistoryItemPrivate> d_ptr;
 };
 

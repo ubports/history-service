@@ -28,7 +28,7 @@ HistoryItemPrivate::~HistoryItemPrivate()
  * \brief The HistoryItem class provides the base class for all events stored
  *  and loaded from the history backends.
  *
- *  In most of the cases this class does not need to be used directly and instead
+ *  This class should not be used directly and instead
  *  the derived classes should be used.
  *
  * \sa TextItem, VoiceItem
@@ -40,22 +40,9 @@ HistoryItemPrivate::~HistoryItemPrivate()
  */
 
 /*!
- * \brief Constructs an empty HistoryItem
- */
-HistoryItem::HistoryItem()
-    : d_ptr(new HistoryItemPrivate())
-{
-    d_ptr->q_ptr = this;
-}
-
-/*!
- * \brief Constructs a HistoryItem with the given arguments.
- *
- * \param accountId The account to which this item is related to
- * \param threadId The ID of the thread this item belongs to. \sa HistoryThread
- * \param itemId The ID of the item.
- * \param sender The ID of the sender related to this event.
- * \param timestamp The date and time when the event occurred.
+  \internal
+ * \brief Constructor to be used by derived classes to pass a HistoryItemPrivate instance
+ * \param p The instance of the private class;
  */
 HistoryItem::HistoryItem(HistoryItemPrivate &p)
     : d_ptr(&p)

@@ -29,6 +29,7 @@ TextItemPrivate::~TextItemPrivate()
 // ------------- TextItem -------------------------------------------------------
 
 TextItem::TextItem()
+    : HistoryItem(*new TextItemPrivate())
 {
 }
 

@@ -6,6 +6,8 @@
 
 class TextItemPrivate : public HistoryItemPrivate
 {
+    Q_DECLARE_PUBLIC(TextItem)
+
 public:
     TextItemPrivate();
     TextItemPrivate(const QString &theAccountId,
