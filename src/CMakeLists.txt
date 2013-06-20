@@ -1,5 +1,6 @@
 set(library_SRCS
     historyitem.cpp
+    historythread.cpp
     textitem.cpp
     voiceitem.cpp
     )
@@ -26,6 +27,7 @@ set(library_HDRS
 
 set(library_PRIV_HDRS
     historyitem_p.h
+    historythread_p.h
     textitem_p.h
     voiceitem_p.h
 )

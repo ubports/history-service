@@ -1,12 +1,35 @@
+#ifndef HISTORYTHREAD_H
+#define HISTORYTHREAD_H
+
+#include <Types>
+#include <QDateTime>
+#include <QScopedPointer>
+
+class HistoryThreadPrivate;
+
 class HistoryThread
 {
-    id: String
-    account: String
-    lastItem: HistoryItem
-    unreadCount: Int
-    count: Int
-    participants: String[]
+    Q_DECLARE_PRIVATE(HistoryThread)
+
+public:
+    HistoryThread();
+    HistoryThread(const QString &accountId,
+                  const QString &threadId,
+                  const QStringList &participants,
+                  const HistoryItemPtr &lastItem = HistoryItemPtr(),
+                  int count = 0,
+                  int unreadCount = 0);
+    ~HistoryThread();
+
+    QString accountId() const;
+    QString threadId() const;
+    QStringList participants() const;
+    HistoryItemPtr lastItem() const;
+    int count() const;
+    int unreadCount() const;
+
+protected:
+    QScopedPointer<HistoryThreadPrivate> d_ptr;
 };
 
-typedef QSharedPointer<HistoryThread>
-
+#endif
