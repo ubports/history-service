@@ -1,6 +1,7 @@
 set(library_SRCS
     historyitem.cpp
     historythread.cpp
+    pluginmanager.cpp
     textitem.cpp
     voiceitem.cpp
     )
@@ -21,6 +22,8 @@ set(library_HDRS
     #historyunionfilter.h
     HistoryWriter
     historywriter.h
+    PluginManager
+    pluginmanager.h
     TextItem
     textitem.h
     Types
