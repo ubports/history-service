@@ -5,7 +5,7 @@
 
 class VoiceItemPrivate;
 
-class VoiceItem : HistoryItem
+class VoiceItem : public HistoryItem
 {
     Q_DECLARE_PRIVATE(VoiceItem)
 

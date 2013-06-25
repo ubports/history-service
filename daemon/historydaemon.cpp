@@ -1,12 +1,27 @@
 #include "historydaemon.h"
 #include "telepathyhelper.h"
 
+#include <HistoryPlugin>
+#include <HistoryThread>
 #include <HistoryWriter>
+#include <PluginManager>
 #include <VoiceItem>
+
+#include <TelepathyQt/CallChannel>
 
 HistoryDaemon::HistoryDaemon(QObject *parent)
     : QObject(parent), mWriter(0)
 {
+    qDebug() << "Going to load the plugins";
+    // try to find a plugin that has a writer
+    Q_FOREACH(HistoryPlugin *plugin, PluginManager::instance()->plugins()) {
+        qDebug() << "Trying the plugin";
+        mWriter = plugin->writer();
+        if (mWriter) {
+            break;
+        }
+    }
+
     connect(TelepathyHelper::instance(),
             SIGNAL(channelObserverCreated(ChannelObserver*)),
             SLOT(onObserverCreated()));
@@ -33,7 +48,21 @@ void HistoryDaemon::onCallEnded(const Tp::CallChannelPtr &channel)
         return;
     }
 
+    QStringList participants;
+    Q_FOREACH(const Tp::ContactPtr contact, channel->remoteMembers()) {
+        participants << contact->id();
+    }
+
+    HistoryThreadPtr thread = mWriter->threadForParticipants(channel->property("accountId").toString(),
+                                                             HistoryItem::VoiceItem,
+                                                             participants);
     // TODO: create the VoiceItem and save it
-    VoiceItem item;
+    VoiceItem item(thread->accountId(),
+                   thread->threadId(),
+                   "foobaritemid",
+                   channel->isRequested() ? "self" : channel->targetContact()->id(),
+                   QDateTime::currentDateTime(), // FIXME: get the correct timestamp
+                   false // FIXME: get the correct missed state
+                   );
     mWriter->writeVoiceItem(item);
 }

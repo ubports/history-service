@@ -1,15 +1,20 @@
 #ifndef HISTORYPLUGIN_H
 #define HISTORYPLUGIN_H
 
-class HistorySaver;
+#include <QtPlugin>
+#include <Types>
+
+class HistoryWriter;
 class HistoryReader;
 
 class HistoryPlugin
 {
 public:
     virtual ~HistoryPlugin() {}
-    virtual HistorySaver *saver() const = 0;
-    virtual HistoryReader *reader() const = 0;
+    virtual HistoryWriterPtr writer() const = 0;
+    virtual HistoryReaderPtr reader() const = 0;
 };
+
+Q_DECLARE_INTERFACE(HistoryPlugin, "com.canonical.libhistory.HistoryPlugin")
 
 #endif

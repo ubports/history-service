@@ -20,6 +20,7 @@
  */
 
 #include "channelobserver.h"
+#include <TelepathyQt/Account>
 #include <TelepathyQt/CallChannel>
 #include <TelepathyQt/ChannelClassSpecList>
 #include <TelepathyQt/MethodInvocationContext>
@@ -60,6 +61,8 @@ void ChannelObserver::observeChannels(const Tp::MethodInvocationContextPtr<> &co
         connect(channel.data(),
                 SIGNAL(invalidated(Tp::DBusProxy*,const QString&, const QString&)),
                 SLOT(onChannelInvalidated()));
+
+        channel->setProperty("accountId", account->objectName());
 
         Tp::CallChannelPtr callChannel = Tp::CallChannelPtr::dynamicCast(channel);
         if (callChannel) {

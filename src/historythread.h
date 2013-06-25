@@ -4,6 +4,7 @@
 #include <Types>
 #include <QDateTime>
 #include <QScopedPointer>
+#include <QStringList>
 
 class HistoryThreadPrivate;
 

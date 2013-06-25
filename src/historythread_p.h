@@ -11,17 +11,18 @@ public:
     HistoryThreadPrivate(const QString &theAccountId,
                        const QString &theThreadId,
                        const QStringList &theParticipants,
-                       const QString &theSender,
-                       const QDateTime &theTimestamp);
+                         const HistoryItemPtr &theLastItem,
+                         int theCount,
+                         int theUnreadCount);
     virtual ~HistoryThreadPrivate();
 
 
     QString accountId;
     QString threadId;
-    QString itemId;
-    QString sender;
-    QString receiver;
-    QDateTime timestamp;
+    QStringList participants;
+    HistoryItemPtr lastItem;
+    int count;
+    int unreadCount;
 
     HistoryThread *q_ptr;
 };

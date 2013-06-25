@@ -6,12 +6,12 @@ SQLiteHistoryPlugin::SQLiteHistoryPlugin(QObject *parent) :
 {
 }
 
-HistoryWriter *SQLiteHistoryPlugin::writer() const
+HistoryWriterPtr SQLiteHistoryPlugin::writer() const
 {
     return mWriter;
 }
 
-HistoryReader *SQLiteHistoryPlugin::reader() const
+HistoryReaderPtr SQLiteHistoryPlugin::reader() const
 {
-    return 0;
+    return HistoryReaderPtr();
 }

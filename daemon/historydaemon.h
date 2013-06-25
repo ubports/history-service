@@ -2,7 +2,7 @@
 #define HISTORYDAEMON_H
 
 #include <QObject>
-#include <QScopedPointer>
+#include <QSharedPointer>
 #include "textchannelobserver.h"
 
 class HistoryWriter;
@@ -20,7 +20,7 @@ private Q_SLOTS:
 
 private:
     TextChannelObserver mTextObserver;
-    QScopedPointer<HistoryWriter> mWriter;
+    QSharedPointer<HistoryWriter> mWriter;
 };
 
 #endif

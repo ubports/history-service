@@ -51,7 +51,11 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}
     )
 
+set(HISTORY_PLUGIN_PATH ${CMAKE_INSTALL_LIBDIR}/history/plugins)
+configure_file(config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h @ONLY)
+
 enable_testing()
 
 add_subdirectory(src)
 add_subdirectory(daemon)
+add_subdirectory(plugins)

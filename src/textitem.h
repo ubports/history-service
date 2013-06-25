@@ -5,7 +5,7 @@
 
 class TextItemPrivate;
 
-class TextItem : HistoryItem
+class TextItem : public HistoryItem
 {
     Q_DECLARE_PRIVATE(TextItem)
 

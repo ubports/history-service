@@ -6,6 +6,8 @@
 
 class SQLiteHistoryWriter;
 
+typedef QSharedPointer<SQLiteHistoryWriter> SQLiteHistoryWriterPtr;
+
 class SQLiteHistoryPlugin : public QObject, HistoryPlugin
 {
     Q_OBJECT
@@ -14,11 +16,11 @@ class SQLiteHistoryPlugin : public QObject, HistoryPlugin
 public:
     explicit SQLiteHistoryPlugin(QObject *parent = 0);
 
-    HistoryWriter *writer() const;
-    HistoryReader *reader() const;
+    HistoryWriterPtr writer() const;
+    HistoryReaderPtr reader() const;
 
 private:
-    SQLiteHistoryWriter *mWriter;
+    SQLiteHistoryWriterPtr mWriter;
 };
 
 #endif // SQLITEHISTORYPLUGIN_H
