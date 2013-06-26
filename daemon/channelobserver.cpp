@@ -54,6 +54,7 @@ void ChannelObserver::observeChannels(const Tp::MethodInvocationContextPtr<> &co
     Q_UNUSED(requestsSatisfied)
     Q_UNUSED(observerInfo)
 
+    qDebug() << __PRETTY_FUNCTION__;
     Q_FOREACH (Tp::ChannelPtr channel, channels) {
         mContexts[channel.data()] = context;
         mChannels.append(channel);

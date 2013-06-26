@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QSharedPointer>
+#include <Types>
 #include "textchannelobserver.h"
 
 class HistoryWriter;
@@ -20,7 +21,7 @@ private Q_SLOTS:
 
 private:
     TextChannelObserver mTextObserver;
-    QSharedPointer<HistoryWriter> mWriter;
+    HistoryWriterPtr mWriter;
 };
 
 #endif

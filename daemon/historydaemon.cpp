@@ -33,6 +33,7 @@ HistoryDaemon::~HistoryDaemon()
 
 void HistoryDaemon::onObserverCreated()
 {
+    qDebug() << __PRETTY_FUNCTION__;
     ChannelObserver *observer = TelepathyHelper::instance()->channelObserver();
 
     connect(observer,
@@ -44,10 +45,12 @@ void HistoryDaemon::onObserverCreated()
 
 void HistoryDaemon::onCallEnded(const Tp::CallChannelPtr &channel)
 {
+    qDebug() << "OnCallEnded" << channel;
     if (!mWriter) {
         return;
     }
 
+    qDebug() << "OnCallEnded" << channel;
     QStringList participants;
     Q_FOREACH(const Tp::ContactPtr contact, channel->remoteMembers()) {
         participants << contact->id();
