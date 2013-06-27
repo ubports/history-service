@@ -44,7 +44,6 @@ public:
                          const Tp::AbstractClientObserver::ObserverInfo &observerInfo);
 
 Q_SIGNALS:
-    void callEnded(const Tp::CallChannelPtr &channel);
     void textChannelAvailable(const Tp::TextChannelPtr &channel);
     void callChannelAvailable(const Tp::CallChannelPtr &channel);
 

@@ -63,7 +63,8 @@ void ChannelObserver::observeChannels(const Tp::MethodInvocationContextPtr<> &co
                 SIGNAL(invalidated(Tp::DBusProxy*,const QString&, const QString&)),
                 SLOT(onChannelInvalidated()));
 
-        channel->setProperty("accountId", account->objectName());
+        channel->setProperty("accountId", account->uniqueIdentifier());
+        qDebug() << "Saving account id:" << account->uniqueIdentifier();
 
         Tp::CallChannelPtr callChannel = Tp::CallChannelPtr::dynamicCast(channel);
         if (callChannel) {
@@ -114,12 +115,6 @@ void ChannelObserver::onCallChannelReady(Tp::PendingOperation *op)
     if (!callChannel) {
         qWarning() << "Ready channel is not a call channel:" << callChannel;
         return;
-    }
-
-    // save the timestamp as a property in the call channel
-    callChannel->setProperty("timestamp", QDateTime::currentDateTime());
-    if (callChannel->callState() == Tp::CallStateActive) {
-        callChannel->setProperty("activeTimestamp", QDateTime::currentDateTime());
     }
 
     Q_EMIT callChannelAvailable(callChannel);

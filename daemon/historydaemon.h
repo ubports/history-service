@@ -5,6 +5,7 @@
 #include <QSharedPointer>
 #include <Types>
 #include "textchannelobserver.h"
+#include "callchannelobserver.h"
 
 class HistoryWriter;
 
@@ -20,6 +21,7 @@ private Q_SLOTS:
     void onCallEnded(const Tp::CallChannelPtr &channel);
 
 private:
+    CallChannelObserver mCallObserver;
     TextChannelObserver mTextObserver;
     HistoryWriterPtr mWriter;
 };

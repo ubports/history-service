@@ -1,5 +1,6 @@
 
 set(qt_SRCS
+    callchannelobserver.cpp
     channelobserver.cpp
     historydaemon.cpp
     telepathyhelper.cpp

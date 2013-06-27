@@ -10,7 +10,7 @@
 #include <TelepathyQt/CallChannel>
 
 HistoryDaemon::HistoryDaemon(QObject *parent)
-    : QObject(parent), mWriter(0)
+    : QObject(parent), mCallObserver(this), mTextObserver(this), mWriter(0)
 {
     qDebug() << "Going to load the plugins";
     // try to find a plugin that has a writer
@@ -25,6 +25,10 @@ HistoryDaemon::HistoryDaemon(QObject *parent)
     connect(TelepathyHelper::instance(),
             SIGNAL(channelObserverCreated(ChannelObserver*)),
             SLOT(onObserverCreated()));
+
+    connect(&mCallObserver,
+            SIGNAL(callEnded(Tp::CallChannelPtr)),
+            SLOT(onCallEnded(Tp::CallChannelPtr)));
 }
 
 HistoryDaemon::~HistoryDaemon()
@@ -36,9 +40,8 @@ void HistoryDaemon::onObserverCreated()
     qDebug() << __PRETTY_FUNCTION__;
     ChannelObserver *observer = TelepathyHelper::instance()->channelObserver();
 
-    connect(observer,
-            SIGNAL(callEnded(Tp::CallChannelPtr)),
-            SLOT(onCallEnded(Tp::CallChannelPtr)));
+    connect(observer, SIGNAL(callChannelAvailable(Tp::CallChannelPtr)),
+            &mCallObserver, SLOT(onCallChannelAvailable(Tp::CallChannelPtr)));
     connect(observer, SIGNAL(textChannelAvailable(Tp::TextChannelPtr)),
             &mTextObserver, SLOT(onTextChannelAvailable(Tp::TextChannelPtr)));
 }
