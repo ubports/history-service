@@ -19,7 +19,7 @@ CREATE TABLE voice_items (
     itemId varchar(255),
     senderId varchar(255),
     timestamp datetime,
-    duration datetime,
+    duration int,
     missed bool
 );
 

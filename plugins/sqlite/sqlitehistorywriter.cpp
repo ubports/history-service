@@ -154,7 +154,7 @@ bool SQLiteHistoryWriter::writeVoiceItem(const VoiceItem &item)
     query.bindValue(":itemId", item.itemId());
     query.bindValue(":senderId", item.sender());
     query.bindValue(":timestamp", item.timestamp());
-    query.bindValue(":duration", item.duration());
+    query.bindValue(":duration", QTime(0,0,0,0).secsTo(item.duration()));
     query.bindValue(":missed", item.missed());
 
     if (!query.exec()) {

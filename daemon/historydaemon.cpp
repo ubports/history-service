@@ -82,7 +82,8 @@ void HistoryDaemon::onCallEnded(const Tp::CallChannelPtr &channel)
                    itemId,
                    incoming ? channel->initiatorContact()->id() : "self",
                    timestamp,
-                   missed
+                   missed,
+                   duration
                    );
     mWriter->writeVoiceItem(item);
 }
