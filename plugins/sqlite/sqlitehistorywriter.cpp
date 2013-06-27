@@ -5,6 +5,7 @@
 #include <QDebug>
 #include <QSqlQuery>
 #include <QVariant>
+#include <QSqlError>
 
 SQLiteHistoryWriter::SQLiteHistoryWriter(QObject *parent) :
     HistoryWriter(parent)
@@ -18,17 +19,18 @@ HistoryThreadPtr SQLiteHistoryWriter::threadForParticipants(const QString &accou
         return HistoryThreadPtr(0);
     }
 
+    QSqlQuery query(SQLiteDatabase::instance()->database());
+
     // select all the threads the first participant is listed in, and from that list
     // check if any of the threads has all the other participants listed
     // FIXME: find a better way to do this
-    QStringList conditions;
-
-    conditions << QString("participantId=\"%1\"").arg(participants[0])
-               << QString("type=%1").arg(type)
-               << QString("accountId=%1").arg(accountId);
-
-    QSqlQuery query(QString("SELECT threadId FROM thread_participants WHERE %1").arg(conditions.join(" AND ")), SQLiteDatabase::instance()->database());
+    query.prepare("SELECT threadId FROM thread_participants WHERE "
+                  "participantId=:participantId AND type=:type AND accountId=:accountId");
+    query.bindValue(":participantId", participants[0]);
+    query.bindValue(":type", type);
+    query.bindValue(":accountId", accountId);
     if (!query.exec()) {
+        qCritical() << "Error:" << query.lastError() << query.lastQuery();
         return HistoryThreadPtr(0);
     }
 
@@ -40,13 +42,13 @@ HistoryThreadPtr SQLiteHistoryWriter::threadForParticipants(const QString &accou
     QString existingThread;
     // now for each threadId, check if all the other participants are listed
     Q_FOREACH(const QString &threadId, threadIds) {
-        conditions.clear();
-        conditions << QString("threadId=\"%1\"").arg(threadId)
-                   << QString("type=%1").arg(type)
-                   << QString("accountId=%1").arg(accountId);
-        query = QSqlQuery(QString("SELECT participantId FROM thread_participants WHERE %1").arg(conditions.join(" AND ")),
-                          SQLiteDatabase::instance()->database());
+        query.prepare("SELECT participantId FROM thread_participants WHERE "
+                      "threadId=:threadId AND type=:type AND accountId=:accountId");
+        query.bindValue(":threadId", threadId);
+        query.bindValue(":type", type);
+        query.bindValue(":accountId", accountId);
         if (!query.exec()) {
+            qCritical() << "Error:" << query.lastError() << query.lastQuery();
             return HistoryThreadPtr(0);
         }
 
@@ -75,28 +77,28 @@ HistoryThreadPtr SQLiteHistoryWriter::threadForParticipants(const QString &accou
         // FIXME: define what the threadId will be
         QString threadId = participants.join("%");
 
-        query = QSqlQuery("INSERT INTO threads (accountId, threadId, type, count, unreadCount)"
-                          "VALUES (:accountId, :threadId, :type, :count, :unreadCount)",
-                          SQLiteDatabase::instance()->database());
+        query.prepare("INSERT INTO threads (accountId, threadId, type, count, unreadCount)"
+                      "VALUES (:accountId, :threadId, :type, :count, :unreadCount)");
         query.bindValue(":accountId", accountId);
         query.bindValue(":threadId", threadId);
         query.bindValue(":type", type);
         query.bindValue(":count", 1);
         query.bindValue(":unreadCount", 0);
         if (!query.exec()) {
+            qCritical() << "Error:" << query.lastError() << query.lastQuery();
             return HistoryThreadPtr(0);
         }
 
         // and insert the participants
         Q_FOREACH(const QString &participant, participants) {
-            query = QSqlQuery("INSERT INTO thread_participants (accountId, threadId, type, participantId)"
-                              "VALUES (:accountId, :threadId, :type, :participantId)",
-                              SQLiteDatabase::instance()->database());
+            query.prepare("INSERT INTO thread_participants (accountId, threadId, type, participantId)"
+                          "VALUES (:accountId, :threadId, :type, :participantId)");
             query.bindValue(":accountId", accountId);
             query.bindValue(":threadId", threadId);
             query.bindValue(":type", type);
             query.bindValue(":participantId", participant);
             if (!query.exec()) {
+                qCritical() << "Error:" << query.lastError() << query.lastQuery();
                 return HistoryThreadPtr(0);
             }
         }
