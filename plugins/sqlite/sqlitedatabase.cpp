@@ -1,6 +1,7 @@
 #include "sqlitedatabase.h"
 #include <QStandardPaths>
 #include <QSqlQuery>
+#include <QSqlError>
 #include <QDebug>
 #include <QFile>
 #include <QDir>
@@ -36,10 +37,14 @@ bool SQLiteDatabase::initializeDatabase()
     mDatabase.setDatabaseName(mDatabasePath);
 
     if (!QFile(mDatabasePath).exists() && !createDatabase()) {
+        qCritical() << "Failed to create the database";
         return false;
     } else if (!mDatabase.open()) {
+        qCritical() << "Failed to open the database";
         return false;
     }
+
+    qDebug() << "Successfully opened the database. Ready to start logging.";
 
     // TODO: verify if the database structure is correct
     return true;
@@ -52,34 +57,30 @@ QSqlDatabase SQLiteDatabase::database() const
 
 bool SQLiteDatabase::createDatabase()
 {
+    qDebug() << __PRETTY_FUNCTION__;
     if (!mDatabase.open()) {
         return false;
     }
 
-    QStringList fields;
-    fields << "accountId varchar(255)"
-           << "threadId varchar(255)"
-           << "type tinyint"
-           << "lastItemId varchar(255)"
-           << "count int"
-           << "unreadCount int";
-
-    QSqlQuery query(QString("CREATE TABLE threads (%1)").arg(fields.join(",")), mDatabase);
-    if (!query.exec()) {
+    QFile schema(":/database/schema.sql");
+    if (!schema.open(QFile::ReadOnly)) {
         return false;
     }
 
-    fields.clear();
-    fields << "accoundId varchar(255)"
-           << "threadId varchar(255)"
-           << "type tinyint"
-           << "participandId varchar(255)";
+    QTextStream stream(&schema);
+    QSqlQuery query(mDatabase);
+    QStringList statements = stream.readAll().split(";");
 
-    query = QSqlQuery(QString("CREATE TABLE thread_participants (%1)").arg(fields.join(",")), mDatabase);
-    if (!query.exec()) {
-        qCritical() << "Failed to create thread_participants table.";
-        return false;
+    Q_FOREACH(const QString &statement, statements) {
+        if (statement.trimmed().isEmpty()) {
+            continue;
+        }
+
+        if (!query.exec(statement)) {
+            qCritical() << "Failed to create table. SQL Statement:" << query.lastQuery() << "Error:" << query.lastError();
+            return false;
+        }
     }
 
-    mDatabase.commit();
+    return true;
 }
