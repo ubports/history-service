@@ -41,6 +41,10 @@ HistoryThread::HistoryThread(const QString &accountId,
     d_ptr->q_ptr = this;
 }
 
+HistoryThread::~HistoryThread()
+{
+}
+
 QString HistoryThread::accountId() const
 {
     Q_D(const HistoryThread);

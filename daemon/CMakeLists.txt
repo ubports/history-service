@@ -24,7 +24,7 @@ endif (USE_UBUNTU_PLATFORM_API)
 
 target_link_libraries(history-daemon
     ${TP_QT5_LIBRARIES}
-    history
+    commhistory
     )
 
 #configure_file(org.freedesktop.Telepathy.Client.PhoneAppApprover.service.in org.freedesktop.Telepathy.Client.PhoneAppApprover.service)

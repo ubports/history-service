@@ -41,7 +41,8 @@ set(library_PRIV_HDRS
 
 include_directories(${CMAKE_SOURCE_DIR}/src)
 
-add_library(history STATIC ${library_SRCS} ${library_HDRS} ${library_PRIV_HDRS})
+add_library(commhistory SHARED ${library_SRCS} ${library_HDRS} ${library_PRIV_HDRS})
 
-qt5_use_modules(history Core Qml Quick)
+qt5_use_modules(commhistory Core Qml Quick)
 
+install(TARGETS commhistory DESTINATION ${CMAKE_INSTALL_LIBDIR})

@@ -19,9 +19,9 @@ include_directories(
 qt5_add_resources(plugin_RES sqlitehistoryplugin.qrc)
 
 add_library(sqlitehistoryplugin SHARED ${plugin_SRCS} ${plugin_HDRS} ${plugin_RES})
-target_link_libraries(sqlitehistoryplugin history)
 qt5_use_modules(sqlitehistoryplugin Core Sql)
 
+target_link_libraries(sqlitehistoryplugin commhistory)
 #target_link_libraries(sqlite
 #    ${TP_QT5_LIBRARIES}
 #    ${TPL_QT5_LIBRARIES}
