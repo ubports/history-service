@@ -113,7 +113,7 @@ HistoryThreadPtr SQLiteHistoryWriter::threadForParticipants(const QString &accou
 
 bool SQLiteHistoryWriter::writeTextItem(const TextItem &item)
 {
-    qDebug() << "Going to write voice item:" << item.accountId() << item.itemId() << item.sender();
+    qDebug() << "Going to write text item:" << item.accountId() << item.itemId() << item.sender() << item.message();
 
     QSqlQuery query(SQLiteDatabase::instance()->database());
 

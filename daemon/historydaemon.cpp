@@ -29,6 +29,15 @@ HistoryDaemon::HistoryDaemon(QObject *parent)
     connect(&mCallObserver,
             SIGNAL(callEnded(Tp::CallChannelPtr)),
             SLOT(onCallEnded(Tp::CallChannelPtr)));
+    connect(&mTextObserver,
+            SIGNAL(messageReceived(Tp::TextChannelPtr,Tp::ReceivedMessage)),
+            SLOT(onMessageReceived(Tp::TextChannelPtr,Tp::ReceivedMessage)));
+    connect(&mTextObserver,
+            SIGNAL(messageSent(Tp::TextChannelPtr,Tp::Message,QString)),
+            SLOT(onMessageSent(Tp::TextChannelPtr,Tp::Message,QString)));
+    connect(&mTextObserver,
+            SIGNAL(messageRead(Tp::TextChannelPtr,Tp::ReceivedMessage)),
+            SLOT(onMessageRead(Tp::TextChannelPtr,Tp::ReceivedMessage)));
 }
 
 HistoryDaemon::~HistoryDaemon()
@@ -48,7 +57,6 @@ void HistoryDaemon::onObserverCreated()
 
 void HistoryDaemon::onCallEnded(const Tp::CallChannelPtr &channel)
 {
-    qDebug() << "OnCallEnded" << channel;
     if (!mWriter) {
         return;
     }
@@ -86,4 +94,66 @@ void HistoryDaemon::onCallEnded(const Tp::CallChannelPtr &channel)
                    duration
                    );
     mWriter->writeVoiceItem(item);
+}
+
+void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, const Tp::ReceivedMessage &message)
+{
+    qDebug() << __PRETTY_FUNCTION__;
+    if (!mWriter) {
+        return;
+    }
+
+    QStringList participants;
+    Q_FOREACH(const Tp::ContactPtr contact, textChannel->groupContacts(false)) {
+        participants << contact->id();
+    }
+
+    HistoryThreadPtr thread = mWriter->threadForParticipants(textChannel->property("accountId").toString(),
+                                                             HistoryItem::VoiceItem,
+                                                             participants);
+    TextItem item(thread->accountId(),
+                  thread->threadId(),
+                  message.messageToken(),
+                  message.sender()->id(),
+                  message.received(),
+                  message.text(),
+                  TextItem::TextMessage, // FIXME: add support for MMS
+                  TextItem::MessageFlags(),
+                  QDateTime());
+    mWriter->writeTextItem(item);
+}
+
+void HistoryDaemon::onMessageRead(const Tp::TextChannelPtr textChannel, const Tp::ReceivedMessage &message)
+{
+    if (!mWriter) {
+        return;
+    }
+
+    // FIXME: implement
+}
+
+void HistoryDaemon::onMessageSent(const Tp::TextChannelPtr textChannel, const Tp::Message &message, const QString &messageToken)
+{
+    if (!mWriter) {
+        return;
+    }
+
+    QStringList participants;
+    Q_FOREACH(const Tp::ContactPtr contact, textChannel->groupContacts(false)) {
+        participants << contact->id();
+    }
+
+    HistoryThreadPtr thread = mWriter->threadForParticipants(textChannel->property("accountId").toString(),
+                                                             HistoryItem::VoiceItem,
+                                                            participants);
+    TextItem item(thread->accountId(),
+                  thread->threadId(),
+                  messageToken,
+                  "self",
+                  message.sent(),
+                  message.text(),
+                  TextItem::TextMessage, // FIXME: add support for MMS
+                  TextItem::MessageFlags(),
+                  QDateTime());
+    mWriter->writeTextItem(item);
 }

@@ -54,14 +54,30 @@ void TextChannelObserver::onTextChannelInvalidated()
 
 void TextChannelObserver::onMessageReceived(const Tp::ReceivedMessage &message)
 {
-    // TODO: emit a signal
+    Tp::TextChannelPtr textChannel(qobject_cast<Tp::TextChannel*>(sender()));
+    if (textChannel.isNull()) {
+        return;
+    }
+
+    Q_EMIT messageReceived(textChannel, message);
 }
 
 void TextChannelObserver::onMessageSent(const Tp::Message &message, Tp::MessageSendingFlags flags, const QString &sentMessageToken)
 {
+    Tp::TextChannelPtr textChannel(qobject_cast<Tp::TextChannel*>(sender()));
+    if (textChannel.isNull()) {
+        return;
+    }
+
+    Q_EMIT messageSent(textChannel, message, sentMessageToken);
 }
 
 void TextChannelObserver::onPendingMessageRemoved(const Tp::ReceivedMessage &message)
 {
-    // TODO: emit a signal
+    Tp::TextChannelPtr textChannel(qobject_cast<Tp::TextChannel*>(sender()));
+    if (textChannel.isNull()) {
+        return;
+    }
+
+    Q_EMIT messageRead(textChannel, message);
 }

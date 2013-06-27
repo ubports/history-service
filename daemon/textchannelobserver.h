@@ -35,6 +35,11 @@ public:
 public Q_SLOTS:
     void onTextChannelAvailable(Tp::TextChannelPtr textChannel);
 
+Q_SIGNALS:
+    void messageReceived(const Tp::TextChannelPtr textChannel, const Tp::ReceivedMessage &message);
+    void messageRead(const Tp::TextChannelPtr textChannel, const Tp::ReceivedMessage &message);
+    void messageSent(const Tp::TextChannelPtr textChannel, const Tp::Message &message, const QString &messageToken);
+
 protected:
     void showNotificationForMessage(const Tp::ReceivedMessage &message);
     Tp::TextChannelPtr channelFromPath(const QString &path);

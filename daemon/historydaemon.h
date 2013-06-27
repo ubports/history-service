@@ -19,6 +19,9 @@ public:
 private Q_SLOTS:
     void onObserverCreated();
     void onCallEnded(const Tp::CallChannelPtr &channel);
+    void onMessageReceived(const Tp::TextChannelPtr textChannel, const Tp::ReceivedMessage &message);
+    void onMessageRead(const Tp::TextChannelPtr textChannel, const Tp::ReceivedMessage &message);
+    void onMessageSent(const Tp::TextChannelPtr textChannel, const Tp::Message &message, const QString &messageToken);
 
 private:
     CallChannelObserver mCallObserver;
