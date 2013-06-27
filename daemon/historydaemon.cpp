@@ -62,13 +62,27 @@ void HistoryDaemon::onCallEnded(const Tp::CallChannelPtr &channel)
     HistoryThreadPtr thread = mWriter->threadForParticipants(channel->property("accountId").toString(),
                                                              HistoryItem::VoiceItem,
                                                              participants);
-    // TODO: create the VoiceItem and save it
+
+    // fill the call info
+    QDateTime timestamp = channel->property("timestamp").toDateTime();
+
+    // FIXME: check if checking for isRequested() is enough
+    bool incoming = !channel->isRequested();
+    QTime duration(0, 0, 0);
+    bool missed = incoming && channel->callStateReason().reason == Tp::CallStateChangeReasonNoAnswer;
+
+    if (!missed) {
+        QDateTime activeTime = channel->property("activeTimestamp").toDateTime();
+        duration = duration.addSecs(activeTime.secsTo(QDateTime::currentDateTime()));
+    }
+
+    QString itemId = QString("%1:%2").arg(thread->threadId()).arg(timestamp.toString());
     VoiceItem item(thread->accountId(),
                    thread->threadId(),
-                   "foobaritemid",
-                   channel->isRequested() ? "self" : channel->targetContact()->id(),
-                   QDateTime::currentDateTime(), // FIXME: get the correct timestamp
-                   false // FIXME: get the correct missed state
+                   itemId,
+                   incoming ? channel->initiatorContact()->id() : "self",
+                   timestamp,
+                   missed
                    );
     mWriter->writeVoiceItem(item);
 }

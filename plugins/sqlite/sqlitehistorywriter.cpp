@@ -113,9 +113,54 @@ HistoryThreadPtr SQLiteHistoryWriter::threadForParticipants(const QString &accou
 
 bool SQLiteHistoryWriter::writeTextItem(const TextItem &item)
 {
+    qDebug() << "Going to write voice item:" << item.accountId() << item.itemId() << item.sender();
+
+    QSqlQuery query(SQLiteDatabase::instance()->database());
+
+    // FIXME: add support for checking if an item already exists
+
+    query.prepare("INSERT INTO text_items (accountId, threadId, itemId, senderId, timestamp, message, messageType, messageFlags, readTimestamp) "
+                  "VALUES (:accountId, :threadId, :itemId, :senderId, :timestamp, :message, :messageType, :messageFlags, :readTimestamp)");
+    query.bindValue(":accountId", item.accountId());
+    query.bindValue(":threadId", item.threadId());
+    query.bindValue(":itemId", item.itemId());
+    query.bindValue(":senderId", item.sender());
+    query.bindValue(":timestamp", item.timestamp());
+    query.bindValue(":message", item.message());
+    query.bindValue(":messageType", item.messageType());
+    query.bindValue(":messageFlags", (int) item.messageFlags());
+    query.bindValue(":readTimestamp", item.readTimestamp());
+
+    if (!query.exec()) {
+        qCritical() << "Failed to save the voice item. Error:" << query.lastError() << query.lastQuery();
+        return false;
+    }
+
+    return true;
 }
 
 bool SQLiteHistoryWriter::writeVoiceItem(const VoiceItem &item)
 {
     qDebug() << "Going to write voice item:" << item.accountId() << item.itemId() << item.sender();
+
+    QSqlQuery query(SQLiteDatabase::instance()->database());
+
+    // FIXME: add support for checking if an item already exists
+
+    query.prepare("INSERT INTO voice_items (accountId, threadId, itemId, senderId, timestamp, duration, missed) "
+                  "VALUES (:accountId, :threadId, :itemId, :senderId, :timestamp, :duration, :missed)");
+    query.bindValue(":accountId", item.accountId());
+    query.bindValue(":threadId", item.threadId());
+    query.bindValue(":itemId", item.itemId());
+    query.bindValue(":senderId", item.sender());
+    query.bindValue(":timestamp", item.timestamp());
+    query.bindValue(":duration", item.duration());
+    query.bindValue(":missed", item.missed());
+
+    if (!query.exec()) {
+        qCritical() << "Failed to save the voice item. Error:" << query.lastError() << query.lastQuery();
+        return false;
+    }
+
+    return true;
 }
