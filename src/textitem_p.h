@@ -2,7 +2,8 @@
 #define TEXTITEM_P_H
 
 #include "historyitem_p.h"
-#include "textitem.h"
+
+class TextItem;
 
 class TextItemPrivate : public HistoryItemPrivate
 {

@@ -1,7 +1,10 @@
 #ifndef HISTORYTHREAD_P_H
 #define HISTORYTHREAD_P_H
 
-#include "historythread.h"
+#include <QString>
+#include <Types>
+
+class HistoryThread;
 
 class HistoryThreadPrivate
 {
@@ -9,13 +12,12 @@ class HistoryThreadPrivate
 public:
     HistoryThreadPrivate();
     HistoryThreadPrivate(const QString &theAccountId,
-                       const QString &theThreadId,
-                       const QStringList &theParticipants,
+                         const QString &theThreadId,
+                         const QStringList &theParticipants,
                          const HistoryItemPtr &theLastItem,
                          int theCount,
                          int theUnreadCount);
     virtual ~HistoryThreadPrivate();
-
 
     QString accountId;
     QString threadId;

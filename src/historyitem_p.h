@@ -1,9 +1,10 @@
 #ifndef HISTORYITEM_P_H
 #define HISTORYITEM_P_H
 
-#include "historyitem.h"
 #include <QDateTime>
 #include <QString>
+
+class HistoryItem;
 
 class HistoryItemPrivate
 {
