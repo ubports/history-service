@@ -25,6 +25,7 @@ public:
     QString itemId() const;
     QString sender() const;
     QDateTime timestamp() const;
+    bool newItem() const;
     virtual ItemType type() const = 0;
 
 protected:

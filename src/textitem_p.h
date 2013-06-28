@@ -15,6 +15,7 @@ public:
                     const QString &theItemId,
                     const QString &theSender,
                     const QDateTime &theTimestamp,
+                    bool theNewItem,
                     const QString &theMessage,
                     TextItem::MessageType theMessageType,
                     TextItem::MessageFlags theMessageFlags,

@@ -12,11 +12,12 @@ TextItemPrivate::TextItemPrivate(const QString &theAccountId,
                                  const QString &theItemId,
                                  const QString &theSender,
                                  const QDateTime &theTimestamp,
+                                 bool theNewItem,
                                  const QString &theMessage,
                                  TextItem::MessageType theMessageType,
                                  TextItem::MessageFlags theMessageFlags,
                                  const QDateTime &theReadTimestamp) :
-    HistoryItemPrivate(theAccountId, theThreadId, theItemId, theSender, theTimestamp),
+    HistoryItemPrivate(theAccountId, theThreadId, theItemId, theSender, theTimestamp, theNewItem),
     message(theMessage), messageType(theMessageType), messageFlags(theMessageFlags),
     readTimestamp(theReadTimestamp)
 {
@@ -38,11 +39,12 @@ TextItem::TextItem(const QString &accountId,
                    const QString &itemId,
                    const QString &sender,
                    const QDateTime &timestamp,
+                   bool newItem,
                    const QString &message,
                    MessageType messageType,
                    MessageFlags messageFlags,
                    const QDateTime &readTimestamp)
-    : HistoryItem(*new TextItemPrivate(accountId, threadId, itemId, sender, timestamp,
+    : HistoryItem(*new TextItemPrivate(accountId, threadId, itemId, sender, timestamp, newItem,
                                        message, messageType, messageFlags, readTimestamp))
 {
 }

@@ -12,7 +12,6 @@ class TextItem : public HistoryItem
 public:
     enum MessageFlag
     {
-        Unread,
         Pending,
         Delivered
     };
@@ -31,6 +30,7 @@ public:
              const QString &itemId,
              const QString &sender,
              const QDateTime &timestamp,
+             bool newItem,
              const QString &message,
              MessageType messageType,
              MessageFlags messageFlags,

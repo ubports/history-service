@@ -90,6 +90,7 @@ void HistoryDaemon::onCallEnded(const Tp::CallChannelPtr &channel)
                    itemId,
                    incoming ? channel->initiatorContact()->id() : "self",
                    timestamp,
+                   missed, // only mark as a new (unseen) item if it is a missed call
                    missed,
                    duration
                    );
@@ -109,13 +110,14 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
     }
 
     HistoryThreadPtr thread = mWriter->threadForParticipants(textChannel->property("accountId").toString(),
-                                                             HistoryItem::VoiceItem,
+                                                             HistoryItem::TextItem,
                                                              participants);
     TextItem item(thread->accountId(),
                   thread->threadId(),
                   message.messageToken(),
                   message.sender()->id(),
                   message.received(),
+                  true, // message is always unread until it reaches HistoryDaemon::onMessageRead
                   message.text(),
                   TextItem::TextMessage, // FIXME: add support for MMS
                   TextItem::MessageFlags(),
@@ -144,13 +146,14 @@ void HistoryDaemon::onMessageSent(const Tp::TextChannelPtr textChannel, const Tp
     }
 
     HistoryThreadPtr thread = mWriter->threadForParticipants(textChannel->property("accountId").toString(),
-                                                             HistoryItem::VoiceItem,
+                                                             HistoryItem::TextItem,
                                                             participants);
     TextItem item(thread->accountId(),
                   thread->threadId(),
                   messageToken,
                   "self",
                   message.sent(),
+                  false, // outgoing messages are never new (unseen)
                   message.text(),
                   TextItem::TextMessage, // FIXME: add support for MMS
                   TextItem::MessageFlags(),

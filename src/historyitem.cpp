@@ -10,9 +10,10 @@ HistoryItemPrivate::HistoryItemPrivate(const QString &theAccountId,
                                        const QString &theThreadId,
                                        const QString &theItemId,
                                        const QString &theSender,
-                                       const QDateTime &theTimestamp) :
+                                       const QDateTime &theTimestamp,
+                                       bool theNewItem) :
     accountId(theAccountId), threadId(theThreadId), itemId(theItemId),
-    sender(theSender), timestamp(theTimestamp), q_ptr(0)
+    sender(theSender), timestamp(theTimestamp), newItem(theNewItem), q_ptr(0)
 {
 }
 
@@ -98,4 +99,14 @@ QDateTime HistoryItem::timestamp() const
 {
     Q_D(const HistoryItem);
     return d->timestamp;
+}
+
+/*!
+ * \brief Returns whether  the item is new (not yet seen by the user).
+ * \return
+ */
+bool HistoryItem::newItem() const
+{
+    Q_D(const HistoryItem);
+    return d->newItem;
 }

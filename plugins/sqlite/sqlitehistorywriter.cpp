@@ -82,7 +82,7 @@ HistoryThreadPtr SQLiteHistoryWriter::threadForParticipants(const QString &accou
         query.bindValue(":accountId", accountId);
         query.bindValue(":threadId", threadId);
         query.bindValue(":type", type);
-        query.bindValue(":count", 1);
+        query.bindValue(":count", 0);
         query.bindValue(":unreadCount", 0);
         if (!query.exec()) {
             qCritical() << "Error:" << query.lastError() << query.lastQuery();
@@ -119,13 +119,14 @@ bool SQLiteHistoryWriter::writeTextItem(const TextItem &item)
 
     // FIXME: add support for checking if an item already exists
 
-    query.prepare("INSERT INTO text_items (accountId, threadId, itemId, senderId, timestamp, message, messageType, messageFlags, readTimestamp) "
-                  "VALUES (:accountId, :threadId, :itemId, :senderId, :timestamp, :message, :messageType, :messageFlags, :readTimestamp)");
+    query.prepare("INSERT INTO text_items (accountId, threadId, itemId, senderId, timestamp, newItem, message, messageType, messageFlags, readTimestamp) "
+                  "VALUES (:accountId, :threadId, :itemId, :senderId, :timestamp, :newItem, :message, :messageType, :messageFlags, :readTimestamp)");
     query.bindValue(":accountId", item.accountId());
     query.bindValue(":threadId", item.threadId());
     query.bindValue(":itemId", item.itemId());
     query.bindValue(":senderId", item.sender());
     query.bindValue(":timestamp", item.timestamp());
+    query.bindValue(":newItem", item.newItem());
     query.bindValue(":message", item.message());
     query.bindValue(":messageType", item.messageType());
     query.bindValue(":messageFlags", (int) item.messageFlags());
@@ -147,13 +148,14 @@ bool SQLiteHistoryWriter::writeVoiceItem(const VoiceItem &item)
 
     // FIXME: add support for checking if an item already exists
 
-    query.prepare("INSERT INTO voice_items (accountId, threadId, itemId, senderId, timestamp, duration, missed) "
-                  "VALUES (:accountId, :threadId, :itemId, :senderId, :timestamp, :duration, :missed)");
+    query.prepare("INSERT INTO voice_items (accountId, threadId, itemId, senderId, timestamp, newItem, duration, missed) "
+                  "VALUES (:accountId, :threadId, :itemId, :senderId, :timestamp, :newItem, :duration, :missed)");
     query.bindValue(":accountId", item.accountId());
     query.bindValue(":threadId", item.threadId());
     query.bindValue(":itemId", item.itemId());
     query.bindValue(":senderId", item.sender());
     query.bindValue(":timestamp", item.timestamp());
+    query.bindValue(":newItem", item.newItem());
     query.bindValue(":duration", QTime(0,0,0,0).secsTo(item.duration()));
     query.bindValue(":missed", item.missed());
 

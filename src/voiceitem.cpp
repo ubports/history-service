@@ -12,9 +12,10 @@ VoiceItemPrivate::VoiceItemPrivate(const QString &theAccountId,
                                    const QString &theItemId,
                                    const QString &theSender,
                                    const QDateTime &theTimestamp,
+                                   bool theNewItem,
                                    bool theMissed,
                                    const QTime &theDuration)
-    : HistoryItemPrivate(theAccountId, theThreadId, theItemId, theSender, theTimestamp),
+    : HistoryItemPrivate(theAccountId, theThreadId, theItemId, theSender, theTimestamp, theNewItem),
       missed(theMissed), duration(theDuration)
 {
 }
@@ -35,9 +36,10 @@ VoiceItem::VoiceItem(const QString &accountId,
                      const QString &itemId,
                      const QString &sender,
                      const QDateTime &timestamp,
+                     bool newItem,
                      bool missed,
                      const QTime &duration)
-    : HistoryItem(*new VoiceItemPrivate(accountId, threadId, itemId, sender, timestamp, missed, duration))
+    : HistoryItem(*new VoiceItemPrivate(accountId, threadId, itemId, sender, timestamp, newItem, missed, duration))
 
 {
 }

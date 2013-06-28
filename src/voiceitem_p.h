@@ -15,6 +15,7 @@ public:
                     const QString &theItemId,
                     const QString &theSender,
                     const QDateTime &theTimestamp,
+                    bool theNewItem,
                     bool theMissed,
                     const QTime &theDuration = QTime());
     ~VoiceItemPrivate();

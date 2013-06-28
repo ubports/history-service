@@ -16,6 +16,7 @@ public:
              const QString &itemId,
              const QString &sender,
              const QDateTime &timestamp,
+             bool newItem,
              bool missed,
              const QTime &duration = QTime());
     ~VoiceItem();

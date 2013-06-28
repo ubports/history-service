@@ -69,14 +69,14 @@ bool SQLiteDatabase::createDatabase()
 
     QTextStream stream(&schema);
     QSqlQuery query(mDatabase);
-    QStringList statements = stream.readAll().split(";");
+    QStringList statements = stream.readAll().split("#");
 
-    Q_FOREACH(const QString &statement, statements) {
+    Q_FOREACH(QString statement, statements) {
         if (statement.trimmed().isEmpty()) {
             continue;
         }
 
-        if (!query.exec(statement)) {
+        if (!query.exec(statement.remove("#"))) {
             qCritical() << "Failed to create table. SQL Statement:" << query.lastQuery() << "Error:" << query.lastError();
             return false;
         }

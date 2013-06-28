@@ -14,7 +14,8 @@ public:
                        const QString &theThreadId,
                        const QString &theItemId,
                        const QString &theSender,
-                       const QDateTime &theTimestamp);
+                       const QDateTime &theTimestamp,
+                       bool theNewItem);
     virtual ~HistoryItemPrivate();
 
 
@@ -24,6 +25,7 @@ public:
     QString sender;
     QString receiver;
     QDateTime timestamp;
+    bool newItem;
 
     HistoryItem *q_ptr;
 };
