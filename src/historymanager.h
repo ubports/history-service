@@ -1,32 +1,41 @@
 #ifndef HISTORYMANAGER_H
 #define HISTORYMANAGER_H
 
+#include <QObject>
+#include <QString>
+#include <Types>
+#include <HistoryFilter>
+#include <HistoryItem>
+#include <HistorySort>
+
+class HistoryManagerPrivate;
+
 class HistoryManager : public QObject
 {
     Q_OBJECT
-public:
-    enum HistoryType {
-        HistoryTypeVoice,
-        HistoryTypeText
-    }
+    Q_DECLARE_PRIVATE(HistoryManager)
 
+public:
     HistoryManager(const QString &backendPlugin = QString::null);
     ~HistoryManager();
 
-    QList<HistoryThreadPtr> queryThreads(HistoryType type,
-                                         const HistorySort &sort = HistoryDefaultSort(),  
-                                         const HistoryFilter &filter = HistoryNoFilter(),
-                                         int startOffset,
-                                         int pageSize);
+    QList<HistoryThreadPtr> queryThreads(HistoryItem::ItemType type,
+                                         const HistorySort &sort = HistorySort(),
+                                         const HistoryFilter &filter = HistoryFilter(),
+                                         int startOffset = 0,
+                                         int pageSize = -1);
 
-    QList<HistoryItemPtr> queryItems(HistoryType type,
+    QList<HistoryItemPtr> queryItems(HistoryItem::ItemType type,
                                      const HistorySort &sort = HistorySort(),
                                      const HistoryFilter &filter = HistoryFilter(),
-                                     int startOffset,
-                                     int pageSize);
+                                     int startOffset = 0,
+                                     int pageSize = -1);
 
-    bool removeThreads(HistoryType type, const QList<QString> &threadIds);
-    bool removeItems(HistoryType type, const QList<QString> &itemIds);
+    bool removeThreads(HistoryItem::ItemType type, const QList<QString> &threadIds);
+    bool removeItems(HistoryItem::ItemType type, const QList<QString> &itemIds);
+
+protected:
+    QScopedPointer<HistoryManagerPrivate> d_ptr;
 };
 
 #endif

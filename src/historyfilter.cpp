@@ -20,12 +20,6 @@ HistoryFilterPrivate::~HistoryFilterPrivate()
 
 // ------------- HistoryFilter -------------------------------------------------------
 
-HistoryFilter::HistoryFilter()
-    : d_ptr(new HistoryFilterPrivate())
-{
-    d_ptr->q_ptr = this;
-}
-
 HistoryFilter::HistoryFilter(HistoryFilterPrivate &p)
     : d_ptr(&p)
 {

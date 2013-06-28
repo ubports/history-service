@@ -25,7 +25,6 @@ public:
     };
     typedef QFlags<MatchFlag> MatchFlags;
 
-    HistoryFilter();
     HistoryFilter(const QString &filterProperty = QString::null,
                   const QVariant &filterValue = QVariant(),
                   MatchFlags matchFlags = MatchCaseSensitive);
