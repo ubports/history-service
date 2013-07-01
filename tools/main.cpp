@@ -1,11 +1,31 @@
 #include <HistoryManager>
 #include <HistoryThread>
+#include <TextItem>
+#include <VoiceItem>
 #include <QCoreApplication>
 #include <QDebug>
 
 void printItem(const HistoryItemPtr &item)
 {
+    QString extraInfo;
+    TextItemPtr textItem;
+    VoiceItemPtr voiceItem;
 
+    switch (item->type()) {
+    case HistoryItem::TextItem:
+        textItem = item.staticCast<TextItem>();
+        extraInfo = QString(" message: %1").arg(textItem->message());
+        break;
+    case HistoryItem::VoiceItem:
+        voiceItem = item.staticCast<VoiceItem>();
+        extraInfo = QString(" missed: %1 duration: %2").arg(voiceItem->missed() ? "yes" : "no", voiceItem->duration().toString());
+        break;
+    }
+
+    qDebug() << QString("    * Item: accountId: %1 threadId: %2 itemId: %3 sender: %4 timestamp: %5 newItem: %6")
+                .arg(item->accountId(), item->threadId(), item->itemId(), item->sender(), item->timestamp().toString(),
+                     item->newItem() ? "yes" : "no");
+    qDebug() << QString("      %1").arg(extraInfo);
 }
 
 void printThread(const HistoryThreadPtr &thread)

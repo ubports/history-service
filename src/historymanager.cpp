@@ -62,6 +62,11 @@ QList<HistoryItemPtr> HistoryManager::queryItems(HistoryItem::ItemType type,
                                                  int startOffset,
                                                  int pageSize)
 {
+    Q_D(HistoryManager);
+    if (d->reader) {
+        return d->reader->queryItems(type, sort, filter, startOffset, pageSize);
+    }
+
     return QList<HistoryItemPtr>();
 }
 

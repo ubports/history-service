@@ -95,12 +95,11 @@ QList<HistoryItemPtr> SQLiteHistoryReader::queryTextItems(const HistorySort &sor
     // FIXME: validate the filter
     QString condition = filter.toString();
     if (!condition.isEmpty()) {
-        condition.prepend(" AND ");
+        condition.prepend(" WHERE ");
     }
 
     QString queryText = QString("SELECT accountId, threadId, itemId, senderId, timestamp, newItem,"
-                                "message, messageType, messageFlags, readTimestamp FROM text_items "
-                                "WHERE type=%1 %2").arg(QString::number((int)HistoryItem::TextItem), condition);
+                                "message, messageType, messageFlags, readTimestamp FROM text_items %1").arg(condition);
     QSqlQuery query(SQLiteDatabase::instance()->database());
     if (!query.exec(queryText)) {
         qCritical() << "Error:" << query.lastError() << query.lastQuery();
@@ -133,12 +132,11 @@ QList<HistoryItemPtr> SQLiteHistoryReader::queryVoiceItems(const HistorySort &so
     // FIXME: validate the filter
     QString condition = filter.toString();
     if (!condition.isEmpty()) {
-        condition.prepend(" AND ");
+        condition.prepend(" WHERE ");
     }
 
     QString queryText = QString("SELECT accountId, threadId, itemId, senderId, timestamp, newItem,"
-                                "duration, missed FROM voice_items "
-                                "WHERE type=%1 %2").arg(QString::number((int)HistoryItem::TextItem), condition);
+                                "duration, missed FROM voice_items %1").arg(condition);
     QSqlQuery query(SQLiteDatabase::instance()->database());
     if (!query.exec(queryText)) {
         qCritical() << "Error:" << query.lastError() << query.lastQuery();
