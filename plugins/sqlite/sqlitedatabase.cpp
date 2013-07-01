@@ -22,8 +22,12 @@ SQLiteDatabase *SQLiteDatabase::instance()
 bool SQLiteDatabase::initializeDatabase()
 {
     mDatabasePath = QStandardPaths::writableLocation(QStandardPaths::DataLocation);
+
     QDir dir(mDatabasePath);
-    qDebug() << "DatabasePath:" << mDatabasePath;
+    // QStandardPaths::writableLocation returns a directory name suffixed with the application name,
+    // so we need to go up one directory
+    dir.cdUp();
+    qDebug() << "DatabasePath:" << dir.absolutePath();
     if (!dir.exists("history") && !dir.mkpath("history")) {
         qDebug() << "Failed to create dir";
         return false;
