@@ -3,7 +3,8 @@ CREATE TABLE threads (
     threadId varchar(255),
     type tinyint,
     lastItemId varchar(255),
-    count int, unreadCount int
+    count int,
+    unreadCount int
 )#
 
 CREATE TABLE thread_participants (

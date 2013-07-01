@@ -2,6 +2,7 @@
 #define HISTORYTHREAD_H
 
 #include <Types>
+#include <HistoryItem>
 #include <QDateTime>
 #include <QScopedPointer>
 #include <QStringList>
@@ -16,6 +17,7 @@ public:
     HistoryThread();
     HistoryThread(const QString &accountId,
                   const QString &threadId,
+                  HistoryItem::ItemType type,
                   const QStringList &participants,
                   const HistoryItemPtr &lastItem = HistoryItemPtr(),
                   int count = 0,
@@ -24,6 +26,7 @@ public:
 
     QString accountId() const;
     QString threadId() const;
+    HistoryItem::ItemType type() const;
     QStringList participants() const;
     HistoryItemPtr lastItem() const;
     int count() const;

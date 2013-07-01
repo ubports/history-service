@@ -16,8 +16,9 @@ class HistoryManager : public QObject
     Q_DECLARE_PRIVATE(HistoryManager)
 
 public:
-    HistoryManager(const QString &backendPlugin = QString::null);
     ~HistoryManager();
+
+    static HistoryManager *instance();
 
     QList<HistoryThreadPtr> queryThreads(HistoryItem::ItemType type,
                                          const HistorySort &sort = HistorySort(),
@@ -34,7 +35,8 @@ public:
     bool removeThreads(HistoryItem::ItemType type, const QList<QString> &threadIds);
     bool removeItems(HistoryItem::ItemType type, const QList<QString> &itemIds);
 
-protected:
+private:
+    HistoryManager(const QString &backendPlugin = QString::null);
     QScopedPointer<HistoryManagerPrivate> d_ptr;
 };
 

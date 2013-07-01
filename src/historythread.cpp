@@ -8,12 +8,12 @@ HistoryThreadPrivate::HistoryThreadPrivate()
 }
 
 HistoryThreadPrivate::HistoryThreadPrivate(const QString &theAccountId,
-                                           const QString &theThreadId,
+                                           const QString &theThreadId, HistoryItem::ItemType theType,
                                            const QStringList &theParticipants,
                                            const HistoryItemPtr &theLastItem,
                                            int theCount,
                                            int theUnreadCount) :
-    accountId(theAccountId), threadId(theThreadId), participants(theParticipants),
+    accountId(theAccountId), threadId(theThreadId), type(theType), participants(theParticipants),
     lastItem(theLastItem), count(theCount), unreadCount(theUnreadCount)
 {
 }
@@ -31,12 +31,12 @@ HistoryThread::HistoryThread()
 }
 
 HistoryThread::HistoryThread(const QString &accountId,
-                             const QString &threadId,
+                             const QString &threadId, HistoryItem::ItemType type,
                              const QStringList &participants,
                              const HistoryItemPtr &lastItem,
                              int count,
                              int unreadCount)
-: d_ptr(new HistoryThreadPrivate(accountId, threadId, participants, lastItem, count, unreadCount))
+: d_ptr(new HistoryThreadPrivate(accountId, threadId, type, participants, lastItem, count, unreadCount))
 {
     d_ptr->q_ptr = this;
 }
@@ -55,6 +55,12 @@ QString HistoryThread::threadId() const
 {
     Q_D(const HistoryThread);
     return d->threadId;
+}
+
+HistoryItem::ItemType HistoryThread::type() const
+{
+    Q_D(const HistoryThread);
+    return d->type;
 }
 
 QStringList HistoryThread::participants() const

@@ -13,6 +13,7 @@ public:
     HistoryThreadPrivate();
     HistoryThreadPrivate(const QString &theAccountId,
                          const QString &theThreadId,
+                         HistoryItem::ItemType theType,
                          const QStringList &theParticipants,
                          const HistoryItemPtr &theLastItem,
                          int theCount,
@@ -22,6 +23,7 @@ public:
     QString accountId;
     QString threadId;
     QStringList participants;
+    HistoryItem::ItemType type;
     HistoryItemPtr lastItem;
     int count;
     int unreadCount;

@@ -16,6 +16,7 @@ public:
     QString backendPlugin;
 
     HistoryManager *q_ptr;
+    HistoryReaderPtr reader;
 };
 
 #endif // HISTORYMANAGER_P_H

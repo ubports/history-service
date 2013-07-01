@@ -3,14 +3,13 @@
 
 #include <QSharedPointer>
 
-class HistoryThread;
-class HistoryItem;
-class HistoryReader;
-class HistoryWriter;
+#define DefineSharedPointer(type) class type; typedef QSharedPointer<type> type ## Ptr;
 
-typedef QSharedPointer<HistoryThread> HistoryThreadPtr;
-typedef QSharedPointer<HistoryItem> HistoryItemPtr;
-typedef QSharedPointer<HistoryReader> HistoryReaderPtr;
-typedef QSharedPointer<HistoryWriter> HistoryWriterPtr;
+DefineSharedPointer(HistoryThread)
+DefineSharedPointer(HistoryItem)
+DefineSharedPointer(HistoryReader)
+DefineSharedPointer(HistoryWriter)
+DefineSharedPointer(TextItem)
+DefineSharedPointer(VoiceItem)
 
 #endif // TYPES_H

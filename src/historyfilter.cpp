@@ -74,8 +74,12 @@ void HistoryFilter::setMatchFlags(const HistoryFilter::MatchFlags &flags)
     d->matchFlags = flags;
 }
 
-QString HistoryFilter::toString()
+QString HistoryFilter::toString() const
 {
+    if (filterProperty().isEmpty()) {
+        return QString::null;
+    }
+
     // FIXME: need to wrap and escape strings
     // FIXME2: need to check for the match flags
     return QString("%1=%2").arg(filterProperty(), filterValue().toString());

@@ -107,7 +107,7 @@ HistoryThreadPtr SQLiteHistoryWriter::threadForParticipants(const QString &accou
 
     // and finally create the thread item
     // FIXME: check for existing instances of the thread object instead of always creating a new one
-    HistoryThreadPtr thread(new HistoryThread(accountId, existingThread, participants));
+    HistoryThreadPtr thread(new HistoryThread(accountId, existingThread, type, participants));
     return thread;
 }
 

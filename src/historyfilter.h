@@ -14,8 +14,6 @@ class HistoryFilter : public QObject
     Q_OBJECT
     Q_DECLARE_PRIVATE(HistoryFilter)
 
-    friend class HistoryManager;
-
 public:
     enum MatchFlag {
         MatchCaseSensitive,
@@ -38,10 +36,9 @@ public:
 
     MatchFlags matchFlags() const;
     void setMatchFlags(const MatchFlags &flags);
+    virtual QString toString() const;
 
 protected:
-    virtual QString toString();
-
     HistoryFilter(HistoryFilterPrivate &p);
     QScopedPointer<HistoryFilterPrivate> d_ptr;
 };
