@@ -3,12 +3,14 @@
 set(plugin_SRCS
     sqlitedatabase.cpp
     sqlitehistoryplugin.cpp
+    sqlitehistoryreader.cpp
     sqlitehistorywriter.cpp
     )
 
 set (plugin_HDRS
     sqlitedatabase.h
     sqlitehistoryplugin.h
+    sqlitehistoryreader.h
     sqlitehistorywriter.h
 )
 

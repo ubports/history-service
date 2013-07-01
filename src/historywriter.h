@@ -9,7 +9,7 @@ class HistoryWriter : public QObject
 {
     Q_OBJECT
 public:
-    HistoryWriter(QObject *parent = 0) : QObject(parent) {}
+    explicit HistoryWriter(QObject *parent = 0) : QObject(parent) {}
     virtual ~HistoryWriter() {}
 
     virtual HistoryThreadPtr threadForParticipants(const QString &accountId, HistoryItem::ItemType type, const QStringList &participants) = 0;

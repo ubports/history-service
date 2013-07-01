@@ -4,8 +4,10 @@
 #include <HistoryPlugin>
 #include <QObject>
 
+class SQLiteHistoryReader;
 class SQLiteHistoryWriter;
 
+typedef QSharedPointer<SQLiteHistoryReader> SQLiteHistoryReaderPtr;
 typedef QSharedPointer<SQLiteHistoryWriter> SQLiteHistoryWriterPtr;
 
 class SQLiteHistoryPlugin : public QObject, HistoryPlugin
@@ -20,6 +22,7 @@ public:
     HistoryReaderPtr reader() const;
 
 private:
+    SQLiteHistoryReaderPtr mReader;
     SQLiteHistoryWriterPtr mWriter;
 };
 
