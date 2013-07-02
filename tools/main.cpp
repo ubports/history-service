@@ -1,4 +1,6 @@
 #include <HistoryManager>
+#include <HistoryFilter>
+#include <HistoryIntersectionFilter>
 #include <HistoryThread>
 #include <TextItem>
 #include <VoiceItem>
@@ -53,23 +55,21 @@ int main(int argc, char **argv)
     QCoreApplication app(argc, argv);
     HistoryManager *manager = HistoryManager::instance();
 
-    // voice items
-    Q_FOREACH(const HistoryThreadPtr &thread, manager->queryThreads(HistoryItem::VoiceItem)) {
-        printThread(thread);
-    }
+    QList<HistoryItem::ItemType> itemTypes;
+    itemTypes << HistoryItem::TextItem << HistoryItem::VoiceItem;
 
-    // text items
-    Q_FOREACH(const HistoryThreadPtr &thread, manager->queryThreads(HistoryItem::TextItem)) {
-        printThread(thread);
-    }
+    Q_FOREACH(HistoryItem::ItemType type, itemTypes) {
+        Q_FOREACH(const HistoryThreadPtr &thread, manager->queryThreads(type)) {
+            printThread(thread);
 
-    // for now print all items, it is not possible to filter for one given thread and account id yet
-    Q_FOREACH(const HistoryItemPtr &item, manager->queryItems(HistoryItem::VoiceItem)) {
-        printItem(item);
-    }
-
-    Q_FOREACH(const HistoryItemPtr &item, manager->queryItems(HistoryItem::TextItem)) {
-        printItem(item);
+            // now print the items for this thread
+            HistoryIntersectionFilter filter;
+            filter.append(HistoryFilter("threadId", thread->threadId()));
+            filter.append(HistoryFilter("accountId", thread->accountId()));
+            Q_FOREACH(const HistoryItemPtr &item, manager->queryItems(type, HistorySort(), filter)) {
+                printItem(item);
+            }
+        }
     }
     return app.exec();
 }

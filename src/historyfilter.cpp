@@ -23,7 +23,11 @@ HistoryFilterPrivate::~HistoryFilterPrivate()
 HistoryFilter::HistoryFilter(HistoryFilterPrivate &p)
     : d_ptr(&p)
 {
-    d_ptr->q_ptr = this;
+}
+
+HistoryFilterPrivate *HistoryFilter::d_func()
+{
+    return d_ptr.data();
 }
 
 HistoryFilter::HistoryFilter(const QString &filterProperty,
@@ -31,7 +35,11 @@ HistoryFilter::HistoryFilter(const QString &filterProperty,
                              HistoryFilter::MatchFlags matchFlags)
     : d_ptr(new HistoryFilterPrivate(filterProperty, filterValue, matchFlags))
 {
-    d_ptr->q_ptr = this;
+}
+
+HistoryFilter::HistoryFilter(const HistoryFilter &other)
+    : d_ptr(other.d_ptr)
+{
 }
 
 HistoryFilter::~HistoryFilter()
@@ -76,11 +84,24 @@ void HistoryFilter::setMatchFlags(const HistoryFilter::MatchFlags &flags)
 
 QString HistoryFilter::toString() const
 {
-    if (filterProperty().isEmpty()) {
+    Q_D(const HistoryFilter);
+
+    if (d->filterProperty.isEmpty()) {
         return QString::null;
     }
 
-    // FIXME: need to wrap and escape strings
+    QString value;
+
+    switch (d->filterValue.type()) {
+    case QVariant::String:
+        // FIXME: need to escape strings
+        // wrap strings
+        value = QString("\"%1\"").arg(d->filterValue.toString());
+        break;
+    default:
+        value = d->filterValue.toString();
+    }
+
     // FIXME2: need to check for the match flags
-    return QString("%1=%2").arg(filterProperty(), filterValue().toString());
+    return QString("%1=%2").arg(filterProperty(), value);
 }

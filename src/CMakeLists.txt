@@ -1,5 +1,6 @@
 set(library_SRCS
     historyfilter.cpp
+    historyintersectionfilter.cpp
     historyitem.cpp
     historymanager.cpp
     historysort.cpp
@@ -12,7 +13,8 @@ set(library_SRCS
 set(library_HDRS
     HistoryFilter
     historyfilter.h
-    #historyintersectionfilter.h
+    HistoryIntersectionFilter
+    historyintersectionfilter.h
     HistoryItem
     historyitem.h
     HistoryManager
@@ -40,6 +42,7 @@ set(library_HDRS
 
 set(library_PRIV_HDRS
     historyfilter_p.h
+    historyintersectionfilter_p.h
     historyitem_p.h
     historymanager_p.h
     historysort_p.h

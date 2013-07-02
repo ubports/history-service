@@ -150,8 +150,8 @@ QList<HistoryItemPtr> SQLiteHistoryReader::queryVoiceItems(const HistorySort &so
                                              query.value(3).toString(),
                                              query.value(4).toDateTime(),
                                              query.value(5).toBool(),
-                                             query.value(6).toBool(),
-                                             QTime(0,0).addSecs(query.value(7).toInt())));
+                                             query.value(7).toBool(),
+                                             QTime(0,0).addSecs(query.value(6).toInt())));
         items << voiceItem;
     }
     return items;

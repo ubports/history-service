@@ -11,7 +11,6 @@ public:
     append(const HistoryFilter &filter);
 
     QList<HistoryFilter> filters() const;
-protected:
     virtual QString toString();
 };
 

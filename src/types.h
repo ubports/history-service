@@ -5,9 +5,10 @@
 
 #define DefineSharedPointer(type) class type; typedef QSharedPointer<type> type ## Ptr;
 
-DefineSharedPointer(HistoryThread)
+DefineSharedPointer(HistoryFilter)
 DefineSharedPointer(HistoryItem)
 DefineSharedPointer(HistoryReader)
+DefineSharedPointer(HistoryThread)
 DefineSharedPointer(HistoryWriter)
 DefineSharedPointer(TextItem)
 DefineSharedPointer(VoiceItem)

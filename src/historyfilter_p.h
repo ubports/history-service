@@ -2,12 +2,12 @@
 #define HISTORYFILTER_P_H
 
 #include "historyfilter.h"
+#include <QSharedData>
 #include <QString>
 #include <QVariant>
 
-class HistoryFilterPrivate
+class HistoryFilterPrivate : public QSharedData
 {
-    Q_DECLARE_PUBLIC(HistoryFilter)
 
 public:
     HistoryFilterPrivate();
@@ -20,8 +20,6 @@ public:
     QString filterProperty;
     QVariant filterValue;
     HistoryFilter::MatchFlags matchFlags;
-
-    HistoryFilter *q_ptr;
 };
 
 #endif // HISTORYFILTER_P_H
