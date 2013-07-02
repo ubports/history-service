@@ -24,10 +24,10 @@ void printItem(const HistoryItemPtr &item)
         break;
     }
 
-    qDebug() << QString("    * Item: accountId: %1 threadId: %2 itemId: %3 sender: %4 timestamp: %5 newItem: %6")
+    qDebug() << qPrintable(QString("    * Item: accountId: %1 threadId: %2 itemId: %3 sender: %4 timestamp: %5 newItem: %6")
                 .arg(item->accountId(), item->threadId(), item->itemId(), item->sender(), item->timestamp().toString(),
-                     item->newItem() ? "yes" : "no");
-    qDebug() << QString("      %1").arg(extraInfo);
+                     item->newItem() ? "yes" : "no"));
+    qDebug() << qPrintable(QString("      %1").arg(extraInfo));
 }
 
 void printThread(const HistoryThreadPtr &thread)
@@ -42,12 +42,12 @@ void printThread(const HistoryThreadPtr &thread)
         break;
     }
 
-    qDebug() << QString("%1 thread - accountId: %2 threadId: %3 count: %4 unreadCount: %5").arg(type,
+    qDebug() << qPrintable(QString("%1 thread - accountId: %2 threadId: %3 count: %4 unreadCount: %5").arg(type,
                                                                                                 thread->accountId(),
                                                                                                 thread->threadId(),
                                                                                                 QString::number(thread->count()),
-                                                                                                QString::number(thread->unreadCount()));
-    qDebug() << QString("    Participants: %1").arg(thread->participants().join(", "));
+                                                                                                QString::number(thread->unreadCount())));
+    qDebug() << qPrintable(QString("    Participants: %1").arg(thread->participants().join(", ")));
 }
 
 int main(int argc, char **argv)
@@ -71,5 +71,4 @@ int main(int argc, char **argv)
             }
         }
     }
-    return app.exec();
 }
