@@ -28,6 +28,9 @@ protected:
                                           int startOffset = 0,
                                           int pageSize = -1);
 
+private:
+    QString pageSqlCommand(int startOffset, int pageSize) const;
+
 };
 
 #endif // SQLITEHISTORYREADER_H

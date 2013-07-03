@@ -22,6 +22,9 @@ QList<HistoryThreadPtr> SQLiteHistoryReader::queryThreads(HistoryItem::ItemType 
     QList<HistoryThreadPtr> threads;
     QSqlQuery query(SQLiteDatabase::instance()->database());
 
+    // FIXME: sort the results property
+    Q_UNUSED(sort)
+
     // FIXME: validate the filter
     QString condition = filter.toString();
     if (!condition.isEmpty()) {
@@ -29,7 +32,8 @@ QList<HistoryThreadPtr> SQLiteHistoryReader::queryThreads(HistoryItem::ItemType 
     }
 
     QString queryText = QString("SELECT accountId, threadId, lastItemId, count, unreadCount FROM threads "
-                                "WHERE type=%1 %2").arg(QString::number((int)type), condition);
+                                "WHERE type=%1 %2 %3")
+                                .arg(QString::number((int)type), condition, pageSqlCommand(startOffset, pageSize));
 
     // FIXME: add support for sorting and paginated results
     if (!query.exec(queryText)) {
@@ -92,6 +96,9 @@ QList<HistoryItemPtr> SQLiteHistoryReader::queryTextItems(const HistorySort &sor
 {
     QList<HistoryItemPtr> items;
 
+    // FIXME: sort the results properly
+    Q_UNUSED(sort)
+
     // FIXME: validate the filter
     QString condition = filter.toString();
     if (!condition.isEmpty()) {
@@ -99,7 +106,8 @@ QList<HistoryItemPtr> SQLiteHistoryReader::queryTextItems(const HistorySort &sor
     }
 
     QString queryText = QString("SELECT accountId, threadId, itemId, senderId, timestamp, newItem,"
-                                "message, messageType, messageFlags, readTimestamp FROM text_items %1").arg(condition);
+                                "message, messageType, messageFlags, readTimestamp FROM text_items %1 %2")
+                                .arg(condition, pageSqlCommand(startOffset, pageSize));
     QSqlQuery query(SQLiteDatabase::instance()->database());
     if (!query.exec(queryText)) {
         qCritical() << "Error:" << query.lastError() << query.lastQuery();
@@ -129,6 +137,9 @@ QList<HistoryItemPtr> SQLiteHistoryReader::queryVoiceItems(const HistorySort &so
 {
     QList<HistoryItemPtr> items;
 
+    // FIXME: sort the results properly
+    Q_UNUSED(sort)
+
     // FIXME: validate the filter
     QString condition = filter.toString();
     if (!condition.isEmpty()) {
@@ -136,7 +147,7 @@ QList<HistoryItemPtr> SQLiteHistoryReader::queryVoiceItems(const HistorySort &so
     }
 
     QString queryText = QString("SELECT accountId, threadId, itemId, senderId, timestamp, newItem,"
-                                "duration, missed FROM voice_items %1").arg(condition);
+                                "duration, missed FROM voice_items %1 %2").arg(condition, pageSqlCommand(startOffset, pageSize));
     QSqlQuery query(SQLiteDatabase::instance()->database());
     if (!query.exec(queryText)) {
         qCritical() << "Error:" << query.lastError() << query.lastQuery();
@@ -155,4 +166,18 @@ QList<HistoryItemPtr> SQLiteHistoryReader::queryVoiceItems(const HistorySort &so
         items << voiceItem;
     }
     return items;
+}
+
+QString SQLiteHistoryReader::pageSqlCommand(int startOffset, int pageSize) const
+{
+    QString paging;
+    if (pageSize > 0) {
+        paging = QString("LIMIT %1").arg(QString::number(pageSize));
+    }
+
+    if (startOffset > 0) {
+        paging += QString(" OFFSET %1").arg(QString::number(startOffset));
+    }
+
+    return paging;
 }
