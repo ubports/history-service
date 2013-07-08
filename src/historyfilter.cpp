@@ -46,6 +46,16 @@ HistoryFilter::~HistoryFilter()
 {
 }
 
+HistoryFilter &HistoryFilter::operator=(const HistoryFilter &other)
+{
+    if (&other == this) {
+        return *this;
+    }
+
+    d_ptr = other.d_ptr;
+    return *this;
+}
+
 QString HistoryFilter::filterProperty() const
 {
     Q_D(const HistoryFilter);

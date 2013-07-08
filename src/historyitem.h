@@ -1,4 +1,3 @@
-
 #ifndef HISTORYITEM_H
 #define HISTORYITEM_H
 

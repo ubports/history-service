@@ -18,13 +18,16 @@ public:
         MatchContains,
         MatchPhoneNumber
     };
-    typedef QFlags<MatchFlag> MatchFlags;
+
+    Q_DECLARE_FLAGS(MatchFlags, MatchFlag)
 
     HistoryFilter(const QString &filterProperty = QString::null,
                   const QVariant &filterValue = QVariant(),
                   MatchFlags matchFlags = MatchCaseSensitive);
     HistoryFilter(const HistoryFilter &other);
     virtual ~HistoryFilter();
+
+    HistoryFilter &operator=(const HistoryFilter &other);
 
     QString filterProperty() const;
     void setFilterProperty(const QString &value);
