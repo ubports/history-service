@@ -1,4 +1,5 @@
 #include "historythreadmodel.h"
+#include "historythread.h"
 #include "historyqmlfilter.h"
 #include <HistoryManager>
 #include <QDebug>
@@ -21,7 +22,35 @@ int HistoryThreadModel::rowCount(const QModelIndex &parent) const
 
 QVariant HistoryThreadModel::data(const QModelIndex &index, int role) const
 {
-    return QVariant();
+    if (!index.isValid() || index.row() < 0 || index.row() > mThreads.count()) {
+        return QVariant();
+    }
+
+    HistoryThreadPtr thread = mThreads[index.row()];
+
+    QVariant result;
+    switch (role) {
+    case AccountIdRole:
+        result = thread->accountId();
+        break;
+    case ThreadIdRole:
+        result = thread->threadId();
+        break;
+    case TypeRole:
+        result = (int) thread->type();
+        break;
+    case ParticipantsRole:
+        result = thread->participants();
+        break;
+    case CountRole:
+        result = thread->count();
+        break;
+    case UnreadCountRole:
+        result = thread->unreadCount();
+        break;
+    }
+
+    return result;
 }
 
 bool HistoryThreadModel::canFetchMore(const QModelIndex &parent) const
@@ -62,6 +91,19 @@ void HistoryThreadModel::fetchMore(const QModelIndex &parent)
     beginInsertRows(QModelIndex(), mThreads.count(), mThreads.count() + threads.count() - 1);
     mThreads << threads;
     endInsertRows();
+}
+
+QHash<int, QByteArray> HistoryThreadModel::roleNames() const
+{
+    QHash<int, QByteArray> roles;
+    roles[AccountIdRole] = "accountId";
+    roles[ThreadIdRole] = "threadId";
+    roles[TypeRole] = "type";
+    roles[ParticipantsRole] = "participants";
+    roles[CountRole] = "count";
+    roles[UnreadCountRole] = "unreadCount";
+
+    return roles;
 }
 
 HistoryQmlFilter *HistoryThreadModel::filter() const

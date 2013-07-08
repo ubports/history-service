@@ -13,10 +13,20 @@ class HistoryThreadModel : public QAbstractListModel
     Q_PROPERTY(HistoryQmlFilter *filter READ filter WRITE setFilter NOTIFY filterChanged)
     Q_PROPERTY(ItemType type READ type WRITE setType NOTIFY typeChanged)
     Q_ENUMS(ItemType)
+    Q_ENUMS(Role)
 public:
     enum ItemType {
         TextItem = HistoryItem::TextItem,
         VoiceItem = HistoryItem::VoiceItem
+    };
+
+    enum Role {
+        AccountIdRole = Qt::UserRole,
+        ThreadIdRole,
+        TypeRole,
+        ParticipantsRole,
+        CountRole,
+        UnreadCountRole
     };
 
     explicit HistoryThreadModel(QObject *parent = 0);
@@ -26,6 +36,8 @@ public:
 
     bool canFetchMore(const QModelIndex &parent) const;
     void fetchMore(const QModelIndex &parent);
+
+    QHash<int, QByteArray> roleNames() const;
 
     HistoryQmlFilter *filter() const;
     void setFilter(HistoryQmlFilter *value);
