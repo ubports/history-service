@@ -35,7 +35,7 @@ QList<HistoryThreadPtr> SQLiteHistoryReader::queryThreads(HistoryItem::ItemType 
                                 "WHERE type=%1 %2 %3")
                                 .arg(QString::number((int)type), condition, pageSqlCommand(startOffset, pageSize));
 
-    // FIXME: add support for sorting and paginated results
+    // FIXME: add support for sorting
     if (!query.exec(queryText)) {
         qCritical() << "Error:" << query.lastError() << query.lastQuery();
         return threads;
