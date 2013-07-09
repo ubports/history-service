@@ -5,7 +5,7 @@ CREATE TABLE threads (
     lastItemId varchar(255),
     lastItemTimestamp datetime,
     count int,
-    unreadCount int,
+    unreadCount int
 )#
 
 CREATE TABLE thread_participants (
