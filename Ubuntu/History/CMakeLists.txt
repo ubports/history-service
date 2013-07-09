@@ -1,6 +1,7 @@
 # QML plugin
 
 set(plugin_SRCS
+    historyitemmodel.cpp
     historyqmlfilter.cpp
     historyqmlintersectionfilter.cpp
     historyqmlplugin.cpp
@@ -9,6 +10,7 @@ set(plugin_SRCS
     )
 
 set(plugin_HDRS
+    historyitemmodel.h
     historyqmlfilter.h
     historyqmlintersectionfilter.h
     historyqmlplugin.h

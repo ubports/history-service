@@ -44,7 +44,7 @@ int HistoryThreadModel::rowCount(const QModelIndex &parent) const
 
 QVariant HistoryThreadModel::data(const QModelIndex &index, int role) const
 {
-    if (!index.isValid() || index.row() < 0 || index.row() > mThreads.count()) {
+    if (!index.isValid() || index.row() < 0 || index.row() >= mThreads.count()) {
         return QVariant();
     }
 
