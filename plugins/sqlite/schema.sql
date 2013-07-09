@@ -3,8 +3,9 @@ CREATE TABLE threads (
     threadId varchar(255),
     type tinyint,
     lastItemId varchar(255),
+    lastItemTimestamp datetime,
     count int,
-    unreadCount int
+    unreadCount int,
 )#
 
 CREATE TABLE thread_participants (
@@ -53,6 +54,11 @@ BEGIN
         threadId=new.threadId
         ORDER BY timestamp DESC LIMIT 1)
         WHERE accountId=new.accountId AND threadId=new.threadId AND type=1;
+    UPDATE threads SET lastItemTimestamp=(SELECT timestamp FROM voice_items WHERE
+        accountId=new.accountId AND
+        threadId=new.threadId
+        ORDER BY timestamp DESC LIMIT 1)
+        WHERE accountId=new.accountId AND threadId=new.threadId AND type=1;
 END#
 
 CREATE TRIGGER voice_items_update_trigger  AFTER UPDATE ON voice_items
@@ -66,6 +72,11 @@ BEGIN
         accountId=new.accountId AND threadId=new.threadId AND newItem=1)
         WHERE accountId=new.accountId AND threadId=new.threadId AND type=1;
     UPDATE threads SET lastItemId=(SELECT itemId FROM voice_items WHERE
+        accountId=new.accountId AND
+        threadId=new.threadId
+        ORDER BY timestamp DESC LIMIT 1)
+        WHERE accountId=new.accountId AND threadId=new.threadId AND type=1;
+    UPDATE threads SET lastItemTimestamp=(SELECT timestamp FROM voice_items WHERE
         accountId=new.accountId AND
         threadId=new.threadId
         ORDER BY timestamp DESC LIMIT 1)
@@ -87,6 +98,11 @@ BEGIN
         threadId=new.threadId
         ORDER BY timestamp DESC LIMIT 1)
         WHERE accountId=new.accountId AND threadId=new.threadId AND type=1;
+    UPDATE threads SET lastItemTimestamp=(SELECT timestamp FROM voice_items WHERE
+        accountId=new.accountId AND
+        threadId=new.threadId
+        ORDER BY timestamp DESC LIMIT 1)
+        WHERE accountId=new.accountId AND threadId=new.threadId AND type=1;
 END#
 
 CREATE TRIGGER text_items_insert_trigger  AFTER INSERT ON text_items
@@ -100,6 +116,11 @@ BEGIN
         accountId=new.accountId AND threadId=new.threadId AND newItem=1)
         WHERE accountId=new.accountId AND threadId=new.threadId AND type=0;
     UPDATE threads SET lastItemId=(SELECT itemId FROM text_items WHERE
+        accountId=new.accountId AND
+        threadId=new.threadId
+        ORDER BY timestamp DESC LIMIT 1)
+        WHERE accountId=new.accountId AND threadId=new.threadId AND type=0;
+    UPDATE threads SET lastItemTimestamp=(SELECT timestamp FROM text_items WHERE
         accountId=new.accountId AND
         threadId=new.threadId
         ORDER BY timestamp DESC LIMIT 1)
@@ -121,6 +142,11 @@ BEGIN
         threadId=new.threadId
         ORDER BY timestamp DESC LIMIT 1)
         WHERE accountId=new.accountId AND threadId=new.threadId AND type=0;
+    UPDATE threads SET lastItemTimestamp=(SELECT timestamp FROM text_items WHERE
+        accountId=new.accountId AND
+        threadId=new.threadId
+        ORDER BY timestamp DESC LIMIT 1)
+        WHERE accountId=new.accountId AND threadId=new.threadId AND type=0;
 END#
 
 CREATE TRIGGER text_items_delete_trigger  AFTER DELETE ON text_items
@@ -134,6 +160,11 @@ BEGIN
         accountId=new.accountId AND threadId=new.threadId AND newItem=1)
         WHERE accountId=new.accountId AND threadId=new.threadId AND type=0;
     UPDATE threads SET lastItemId=(SELECT itemId FROM text_items WHERE
+        accountId=new.accountId AND
+        threadId=new.threadId
+        ORDER BY timestamp DESC LIMIT 1)
+        WHERE accountId=new.accountId AND threadId=new.threadId AND type=0;
+    UPDATE threads SET lastItemTimestamp=(SELECT timestamp FROM text_items WHERE
         accountId=new.accountId AND
         threadId=new.threadId
         ORDER BY timestamp DESC LIMIT 1)

@@ -50,7 +50,7 @@ VoiceItem::~VoiceItem()
 
 HistoryItem::ItemType VoiceItem::type() const
 {
-    return HistoryItem::VoiceItem;
+    return HistoryItem::ItemTypeVoice;
 }
 
 bool VoiceItem::missed() const

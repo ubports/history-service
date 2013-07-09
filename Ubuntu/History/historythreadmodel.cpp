@@ -2,11 +2,33 @@
 #include "historythread.h"
 #include "historyqmlfilter.h"
 #include <HistoryManager>
+#include <TextItem>
+#include <VoiceItem>
 #include <QDebug>
 
 HistoryThreadModel::HistoryThreadModel(QObject *parent) :
-    QAbstractListModel(parent), mCanFetchMore(true), mPageSize(15), mFilter(0), mType(VoiceItem)
+    QAbstractListModel(parent), mCanFetchMore(true), mPageSize(15), mFilter(0), mType(ItemTypeText)
 {
+    // configure the roles
+    mRoles[AccountIdRole] = "accountId";
+    mRoles[ThreadIdRole] = "threadId";
+    mRoles[TypeRole] = "type";
+    mRoles[ParticipantsRole] = "participants";
+    mRoles[CountRole] = "count";
+    mRoles[UnreadCountRole] = "unreadCount";
+
+    // roles related to the thread´s last item
+    mRoles[LastItemIdRole] = "itemId";
+    mRoles[LastItemSenderRole] = "itemSender";
+    mRoles[LastItemTimestampRole] = "itemTimestamp";
+    mRoles[LastItemNewRole] = "itemNew";
+    mRoles[LastItemTextMessageRole] = "itemTextMessage";
+    mRoles[LastItemTextMessageTypeRole] = "itemTextMessageType";
+    mRoles[LastItemTextMessageFlagsRole] = "itemTextMessageFlags";
+    mRoles[LastItemTextReadTimestampRole] = "itemTextReadTimestamp";
+    mRoles[LastItemCallMissedRole] = "itemCallMissed";
+    mRoles[LastItemCallDurationRole] = "itemCallDuration";
+
     // fetch an initial page of results
     fetchMore(QModelIndex());
 }
@@ -27,6 +49,20 @@ QVariant HistoryThreadModel::data(const QModelIndex &index, int role) const
     }
 
     HistoryThreadPtr thread = mThreads[index.row()];
+    HistoryItemPtr item = thread->lastItem();
+    TextItemPtr textItem;
+    VoiceItemPtr voiceItem;
+
+    if (!item.isNull()) {
+        switch (item->type()) {
+        case HistoryItem::ItemTypeText:
+            textItem = item.staticCast<TextItem>();
+            break;
+        case HistoryItem::ItemTypeVoice:
+            voiceItem = item.staticCast<VoiceItem>();
+            break;
+        }
+    }
 
     QVariant result;
     switch (role) {
@@ -47,6 +83,56 @@ QVariant HistoryThreadModel::data(const QModelIndex &index, int role) const
         break;
     case UnreadCountRole:
         result = thread->unreadCount();
+        break;
+    case LastItemIdRole:
+        if (!item.isNull()) {
+            result = item->itemId();
+        }
+        break;
+    case LastItemSenderRole:
+        if (!item.isNull()) {
+            result = item->sender();
+        }
+        break;
+    case LastItemTimestampRole:
+        if (!item.isNull()) {
+            result = item->timestamp();
+        }
+        break;
+    case LastItemNewRole:
+        if (!item.isNull()) {
+            result = item->newItem();
+        }
+        break;
+    case LastItemTextMessageRole:
+        if (!textItem.isNull()) {
+            result = textItem->message();
+        }
+        break;
+    case LastItemTextMessageTypeRole:
+        if (!textItem.isNull()) {
+            result = (int) textItem->messageType();
+        }
+        break;
+    case LastItemTextMessageFlagsRole:
+        if (!textItem.isNull()) {
+            result = (int) textItem->messageFlags();
+        }
+        break;
+    case LastItemTextReadTimestampRole:
+        if (!textItem.isNull()) {
+            result = textItem->readTimestamp();
+        }
+        break;
+    case LastItemCallMissedRole:
+        if (!voiceItem.isNull()) {
+            result = voiceItem->missed();
+        }
+        break;
+    case LastItemCallDurationRole:
+        if (!voiceItem.isNull()) {
+            result = voiceItem->duration();
+        }
         break;
     }
 
@@ -95,15 +181,7 @@ void HistoryThreadModel::fetchMore(const QModelIndex &parent)
 
 QHash<int, QByteArray> HistoryThreadModel::roleNames() const
 {
-    QHash<int, QByteArray> roles;
-    roles[AccountIdRole] = "accountId";
-    roles[ThreadIdRole] = "threadId";
-    roles[TypeRole] = "type";
-    roles[ParticipantsRole] = "participants";
-    roles[CountRole] = "count";
-    roles[UnreadCountRole] = "unreadCount";
-
-    return roles;
+    return mRoles;
 }
 
 HistoryQmlFilter *HistoryThreadModel::filter() const

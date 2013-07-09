@@ -16,8 +16,8 @@ class HistoryThreadModel : public QAbstractListModel
     Q_ENUMS(Role)
 public:
     enum ItemType {
-        TextItem = HistoryItem::TextItem,
-        VoiceItem = HistoryItem::VoiceItem
+        ItemTypeText = HistoryItem::ItemTypeText,
+        ItemTypeVoice = HistoryItem::ItemTypeVoice
     };
 
     enum Role {
@@ -26,7 +26,17 @@ public:
         TypeRole,
         ParticipantsRole,
         CountRole,
-        UnreadCountRole
+        UnreadCountRole,
+        LastItemIdRole,
+        LastItemSenderRole,
+        LastItemTimestampRole,
+        LastItemNewRole,
+        LastItemTextMessageRole,
+        LastItemTextMessageTypeRole,
+        LastItemTextMessageFlagsRole,
+        LastItemTextReadTimestampRole,
+        LastItemCallMissedRole,
+        LastItemCallDurationRole
     };
 
     explicit HistoryThreadModel(QObject *parent = 0);
@@ -58,6 +68,7 @@ private:
     int mPageSize;
     HistoryQmlFilter *mFilter;
     ItemType mType;
+    QHash<int, QByteArray> mRoles;
     
 };
 

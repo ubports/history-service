@@ -13,8 +13,8 @@ class HistoryItem
 
 public:
     enum ItemType {
-        TextItem,
-        VoiceItem
+        ItemTypeText,
+        ItemTypeVoice
     };
 
     virtual ~HistoryItem();

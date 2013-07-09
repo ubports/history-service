@@ -55,7 +55,7 @@ TextItem::~TextItem()
 
 HistoryItem::ItemType TextItem::type() const
 {
-    return HistoryItem::TextItem;
+    return HistoryItem::ItemTypeText;
 }
 
 QString TextItem::message() const

@@ -4,6 +4,7 @@
 #include <QSqlError>
 #include <QSqlQuery>
 #include <HistoryFilter>
+#include <HistoryIntersectionFilter>
 #include <HistoryThread>
 #include <TextItem>
 #include <VoiceItem>
@@ -65,8 +66,20 @@ QList<HistoryThreadPtr> SQLiteHistoryReader::queryThreads(HistoryItem::ItemType 
             participants << secondaryQuery.value(0).toString();
         }
 
+        // the next step is to get the last item
+        HistoryItemPtr historyItem;
+        HistoryIntersectionFilter filter;
+        filter.append(HistoryFilter("accountId", accountId));
+        filter.append(HistoryFilter("threadId", threadId));
+        filter.append(HistoryFilter("itemId", lastItemId));
+
+        QList<HistoryItemPtr> items = queryItems(type, HistorySort(), filter);
+        if (!items.isEmpty()) {
+            historyItem = items.first();
+        }
+
         // and last but not least, create the thread item and append it to the result set
-        HistoryThreadPtr thread(new HistoryThread(accountId, threadId, type, participants, HistoryItemPtr(), count, unreadCount));
+        HistoryThreadPtr thread(new HistoryThread(accountId, threadId, type, participants, historyItem, count, unreadCount));
         threads << thread;
     }
 
@@ -80,9 +93,9 @@ QList<HistoryItemPtr> SQLiteHistoryReader::queryItems(HistoryItem::ItemType type
                                                       int pageSize)
 {
     switch (type) {
-    case HistoryItem::TextItem:
+    case HistoryItem::ItemTypeText:
         return queryTextItems(sort, filter, startOffset, pageSize);
-    case HistoryItem::VoiceItem:
+    case HistoryItem::ItemTypeVoice:
         return queryVoiceItems(sort, filter, startOffset, pageSize);
     }
 

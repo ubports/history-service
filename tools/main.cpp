@@ -14,11 +14,11 @@ void printItem(const HistoryItemPtr &item)
     VoiceItemPtr voiceItem;
 
     switch (item->type()) {
-    case HistoryItem::TextItem:
+    case HistoryItem::ItemTypeText:
         textItem = item.staticCast<TextItem>();
         extraInfo = QString(" message: %1").arg(textItem->message());
         break;
-    case HistoryItem::VoiceItem:
+    case HistoryItem::ItemTypeVoice:
         voiceItem = item.staticCast<VoiceItem>();
         extraInfo = QString(" missed: %1 duration: %2").arg(voiceItem->missed() ? "yes" : "no", voiceItem->duration().toString());
         break;
@@ -34,10 +34,10 @@ void printThread(const HistoryThreadPtr &thread)
 {
     QString type = "Unknown";
     switch (thread->type()) {
-    case HistoryItem::TextItem:
+    case HistoryItem::ItemTypeText:
         type = "Text";
         break;
-    case HistoryItem::VoiceItem:
+    case HistoryItem::ItemTypeVoice:
         type = "Voice";
         break;
     }
@@ -56,7 +56,7 @@ int main(int argc, char **argv)
     HistoryManager *manager = HistoryManager::instance();
 
     QList<HistoryItem::ItemType> itemTypes;
-    itemTypes << HistoryItem::TextItem << HistoryItem::VoiceItem;
+    itemTypes << HistoryItem::ItemTypeText << HistoryItem::ItemTypeVoice;
 
     Q_FOREACH(HistoryItem::ItemType type, itemTypes) {
         Q_FOREACH(const HistoryThreadPtr &thread, manager->queryThreads(type)) {

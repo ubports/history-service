@@ -68,7 +68,7 @@ void HistoryDaemon::onCallEnded(const Tp::CallChannelPtr &channel)
     }
 
     HistoryThreadPtr thread = mWriter->threadForParticipants(channel->property("accountId").toString(),
-                                                             HistoryItem::VoiceItem,
+                                                             HistoryItem::ItemTypeVoice,
                                                              participants);
 
     // fill the call info
@@ -110,7 +110,7 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
     }
 
     HistoryThreadPtr thread = mWriter->threadForParticipants(textChannel->property("accountId").toString(),
-                                                             HistoryItem::TextItem,
+                                                             HistoryItem::ItemTypeText,
                                                              participants);
     TextItem item(thread->accountId(),
                   thread->threadId(),
@@ -146,8 +146,8 @@ void HistoryDaemon::onMessageSent(const Tp::TextChannelPtr textChannel, const Tp
     }
 
     HistoryThreadPtr thread = mWriter->threadForParticipants(textChannel->property("accountId").toString(),
-                                                             HistoryItem::TextItem,
-                                                            participants);
+                                                             HistoryItem::ItemTypeText,
+                                                             participants);
     TextItem item(thread->accountId(),
                   thread->threadId(),
                   messageToken,
