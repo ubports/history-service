@@ -63,6 +63,7 @@ protected Q_SLOTS:
     void updateQuery();
 
 private:
+    HistoryThreadViewPtr mThreadView;
     QList<HistoryThreadPtr> mThreads;
     bool mCanFetchMore;
     int mPageSize;

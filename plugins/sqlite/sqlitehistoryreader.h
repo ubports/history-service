@@ -8,11 +8,9 @@ class SQLiteHistoryReader : public HistoryReader
     Q_OBJECT
 public:
     explicit SQLiteHistoryReader(QObject *parent = 0);
-    QList<HistoryThreadPtr> queryThreads(HistoryItem::ItemType type,
-                                         const HistorySort &sort = HistorySort(),
-                                         const HistoryFilter &filter = HistoryFilter(),
-                                         int startOffset = 0,
-                                         int pageSize = -1);
+    HistoryThreadViewPtr queryThreads(HistoryItem::ItemType type,
+                                      const HistorySort &sort = HistorySort(),
+                                      const HistoryFilter &filter = HistoryFilter());
     QList<HistoryItemPtr> queryItems(HistoryItem::ItemType type,
                                      const HistorySort &sort = HistorySort(),
                                      const HistoryFilter &filter = HistoryFilter(),

@@ -1,4 +1,5 @@
 #include "sqlitehistoryreader.h"
+#include "sqlitehistorythreadview.h"
 #include "sqlitedatabase.h"
 #include <QDebug>
 #include <QSqlError>
@@ -14,76 +15,11 @@ SQLiteHistoryReader::SQLiteHistoryReader(QObject *parent) :
 {
 }
 
-QList<HistoryThreadPtr> SQLiteHistoryReader::queryThreads(HistoryItem::ItemType type,
-                                                          const HistorySort &sort,
-                                                          const HistoryFilter &filter,
-                                                          int startOffset,
-                                                          int pageSize)
+HistoryThreadViewPtr SQLiteHistoryReader::queryThreads(HistoryItem::ItemType type,
+                                                       const HistorySort &sort,
+                                                       const HistoryFilter &filter)
 {
-    QList<HistoryThreadPtr> threads;
-    QSqlQuery query(SQLiteDatabase::instance()->database());
-
-    // FIXME: sort the results property
-    Q_UNUSED(sort)
-
-    // FIXME: validate the filter
-    QString condition = filter.toString();
-    if (!condition.isEmpty()) {
-        condition.prepend(" AND ");
-    }
-
-    QString queryText = QString("SELECT accountId, threadId, lastItemId, count, unreadCount FROM threads "
-                                "WHERE type=%1 %2 %3")
-                                .arg(QString::number((int)type), condition, pageSqlCommand(startOffset, pageSize));
-
-    // FIXME: add support for sorting
-    if (!query.exec(queryText)) {
-        qCritical() << "Error:" << query.lastError() << query.lastQuery();
-        return threads;
-    }
-
-    QSqlQuery secondaryQuery(SQLiteDatabase::instance()->database());
-    while (query.next()) {
-        QString accountId = query.value(0).toString();
-        QString threadId = query.value(1).toString();
-        QString lastItemId = query.value(2).toString();
-        int count = query.value(3).toInt();
-        int unreadCount = query.value(4).toInt();
-
-        // now for each thread we need to fetch the participants
-        secondaryQuery.prepare("SELECT participantId FROM thread_participants WHERE "
-                               "accountId=:accountId AND threadId=:threadId AND type=:type");
-        secondaryQuery.bindValue(":accountId", accountId);
-        secondaryQuery.bindValue(":threadId", threadId);
-        secondaryQuery.bindValue(":type", type);
-        if (!secondaryQuery.exec()) {
-            qCritical() << "Error:" << secondaryQuery.lastError() << query.lastQuery();
-            return threads;
-        }
-
-        QStringList participants;
-        while (secondaryQuery.next()) {
-            participants << secondaryQuery.value(0).toString();
-        }
-
-        // the next step is to get the last item
-        HistoryItemPtr historyItem;
-        HistoryIntersectionFilter filter;
-        filter.append(HistoryFilter("accountId", accountId));
-        filter.append(HistoryFilter("threadId", threadId));
-        filter.append(HistoryFilter("itemId", lastItemId));
-
-        QList<HistoryItemPtr> items = queryItems(type, HistorySort(), filter);
-        if (!items.isEmpty()) {
-            historyItem = items.first();
-        }
-
-        // and last but not least, create the thread item and append it to the result set
-        HistoryThreadPtr thread(new HistoryThread(accountId, threadId, type, participants, historyItem, count, unreadCount));
-        threads << thread;
-    }
-
-    return threads;
+    return HistoryThreadViewPtr(new SQLiteHistoryThreadView(this, type, sort, filter));
 }
 
 QList<HistoryItemPtr> SQLiteHistoryReader::queryItems(HistoryItem::ItemType type,

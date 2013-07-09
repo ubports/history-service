@@ -2,6 +2,7 @@
 #include <HistoryFilter>
 #include <HistoryIntersectionFilter>
 #include <HistoryThread>
+#include <HistoryThreadView>
 #include <TextItem>
 #include <VoiceItem>
 #include <QCoreApplication>
@@ -59,7 +60,13 @@ int main(int argc, char **argv)
     itemTypes << HistoryItem::ItemTypeText << HistoryItem::ItemTypeVoice;
 
     Q_FOREACH(HistoryItem::ItemType type, itemTypes) {
-        Q_FOREACH(const HistoryThreadPtr &thread, manager->queryThreads(type)) {
+        HistoryThreadViewPtr view = manager->queryThreads(type);
+        QList<HistoryThreadPtr> threads = view->nextPage();
+        if (threads.isEmpty()) {
+            continue;
+        }
+
+        Q_FOREACH(const HistoryThreadPtr &thread, threads) {
             printThread(thread);
 
             // now print the items for this thread
@@ -70,5 +77,6 @@ int main(int argc, char **argv)
                 printItem(item);
             }
         }
+        threads = view->nextPage();
     }
 }

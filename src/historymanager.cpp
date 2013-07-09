@@ -42,18 +42,16 @@ HistoryManager *HistoryManager::instance()
     return self;
 }
 
-QList<HistoryThreadPtr> HistoryManager::queryThreads(HistoryItem::ItemType type,
-                                                     const HistorySort &sort,
-                                                     const HistoryFilter &filter,
-                                                     int startOffset,
-                                                     int pageSize)
+HistoryThreadViewPtr HistoryManager::queryThreads(HistoryItem::ItemType type,
+                                                  const HistorySort &sort,
+                                                  const HistoryFilter &filter)
 {
     Q_D(HistoryManager);
     if (d->reader) {
-        return d->reader->queryThreads(type, sort, filter, startOffset, pageSize);
+        return d->reader->queryThreads(type, sort, filter);
     }
 
-    return QList<HistoryThreadPtr>();
+    return HistoryThreadViewPtr();
 }
 
 QList<HistoryItemPtr> HistoryManager::queryItems(HistoryItem::ItemType type,

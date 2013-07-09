@@ -14,11 +14,9 @@ public:
     explicit HistoryReader(QObject *parent = 0) : QObject(parent) {}
     virtual ~HistoryReader() {}
 
-    virtual QList<HistoryThreadPtr> queryThreads(HistoryItem::ItemType type,
-                                                 const HistorySort &sort = HistorySort(),
-                                                 const HistoryFilter &filter = HistoryFilter(),
-                                                 int startOffset = 0,
-                                                 int pageSize = -1) = 0;
+    virtual HistoryThreadViewPtr queryThreads(HistoryItem::ItemType type,
+                                              const HistorySort &sort = HistorySort(),
+                                              const HistoryFilter &filter = HistoryFilter()) = 0;
     virtual QList<HistoryItemPtr> queryItems(HistoryItem::ItemType type,
                                              const HistorySort &sort = HistorySort(),
                                              const HistoryFilter &filter = HistoryFilter(),

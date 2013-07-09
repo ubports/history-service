@@ -5,7 +5,6 @@ set(library_SRCS
     historymanager.cpp
     historysort.cpp
     historythread.cpp
-    historythreadview.cpp
     historyunionfilter.cpp
     pluginmanager.cpp
     textitem.cpp
@@ -52,7 +51,6 @@ set(library_PRIV_HDRS
     historymanager_p.h
     historysort_p.h
     historythread_p.h
-    historythreadview_p.h
     historyunionfilter_p.h
     textitem_p.h
     voiceitem_p.h

@@ -2,26 +2,18 @@
 #define HISTORYTHREADVIEW_H
 
 #include <Types>
-#include <QObject>
 #include <QScopedPointer>
 
 class HistoryThreadViewPrivate;
 
-class HistoryThreadView : public QObject
+class HistoryThreadView
 {
-    Q_OBJECT
-    Q_DECLARE_PRIVATE(HistoryThreadView)
 public:
-    virtual ~HistoryThreadView();
+    HistoryThreadView() {}
+    virtual ~HistoryThreadView() {}
 
     virtual QList<HistoryThreadPtr> nextPage() = 0;
-    virtual bool isValid() = 0;
-
-protected:
-    explicit HistoryThreadView(HistoryThreadViewPrivate &p);
-
-private:
-    QScopedPointer<HistoryThreadViewPrivate> d_ptr;
+    virtual bool isValid() const = 0;
 };
 
 #endif // HISTORYTHREADVIEW_H

@@ -2,6 +2,7 @@
 #include "historythread.h"
 #include "historyqmlfilter.h"
 #include <HistoryManager>
+#include <HistoryThreadView>
 #include <TextItem>
 #include <VoiceItem>
 #include <QDebug>
@@ -29,8 +30,8 @@ HistoryThreadModel::HistoryThreadModel(QObject *parent) :
     mRoles[LastItemCallMissedRole] = "itemCallMissed";
     mRoles[LastItemCallDurationRole] = "itemCallDuration";
 
-    // fetch an initial page of results
-    fetchMore(QModelIndex());
+    // create the results view
+    updateQuery();
 }
 
 int HistoryThreadModel::rowCount(const QModelIndex &parent) const
@@ -154,23 +155,13 @@ void HistoryThreadModel::fetchMore(const QModelIndex &parent)
         return;
     }
 
-    HistoryFilter queryFilter;
-    HistorySort querySort;
 
-    if (mFilter) {
-        queryFilter = mFilter->filter();
-    }
 
-    QList<HistoryThreadPtr> threads = HistoryManager::instance()->queryThreads((HistoryItem::ItemType)mType,
-                                                                               querySort,
-                                                                               queryFilter,
-                                                                               mThreads.count(),
-                                                                               mPageSize);
-
+    QList<HistoryThreadPtr> threads = mThreadView->nextPage();
     qDebug() << "Got items:" << threads.count();
     // if the number of returned items is less than the page size, it means we have reached the end
     // and cannot fetch more items
-    if (threads.count() < mPageSize) {
+    if (threads.isEmpty()) {
         mCanFetchMore = false;
     }
 
@@ -229,5 +220,13 @@ void HistoryThreadModel::updateQuery()
 
     // and fetch again
     mCanFetchMore = true;
+
+    HistoryFilter queryFilter;
+    HistorySort querySort;
+
+    if (mFilter) {
+        queryFilter = mFilter->filter();
+    }
+    mThreadView = HistoryManager::instance()->queryThreads((HistoryItem::ItemType)mType, querySort, queryFilter);
     fetchMore(QModelIndex());
 }
