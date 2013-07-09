@@ -8,6 +8,7 @@
 DefineSharedPointer(HistoryItem)
 DefineSharedPointer(HistoryReader)
 DefineSharedPointer(HistoryThread)
+DefineSharedPointer(HistoryThreadView)
 DefineSharedPointer(HistoryWriter)
 DefineSharedPointer(TextItem)
 DefineSharedPointer(VoiceItem)
