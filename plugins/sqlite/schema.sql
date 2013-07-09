@@ -47,7 +47,7 @@ BEGIN
         threadId=new.threadId)
         WHERE accountId=new.accountId AND threadId=new.threadId AND type=1;
     UPDATE threads SET unreadCount=(SELECT count(itemId) FROM voice_items WHERE
-        accountId=new.accountId AND threadId=new.threadId AND newItem=1)
+        accountId=new.accountId AND threadId=new.threadId AND newItem='true')
         WHERE accountId=new.accountId AND threadId=new.threadId AND type=1;
     UPDATE threads SET lastItemId=(SELECT itemId FROM voice_items WHERE
         accountId=new.accountId AND
@@ -69,7 +69,7 @@ BEGIN
         threadId=new.threadId)
         WHERE accountId=new.accountId AND threadId=new.threadId AND type=1;
     UPDATE threads SET unreadCount=(SELECT count(itemId) FROM voice_items WHERE
-        accountId=new.accountId AND threadId=new.threadId AND newItem=1)
+        accountId=new.accountId AND threadId=new.threadId AND newItem='true')
         WHERE accountId=new.accountId AND threadId=new.threadId AND type=1;
     UPDATE threads SET lastItemId=(SELECT itemId FROM voice_items WHERE
         accountId=new.accountId AND
@@ -91,7 +91,7 @@ BEGIN
         threadId=new.threadId)
         WHERE accountId=new.accountId AND threadId=new.threadId AND type=1;
     UPDATE threads SET unreadCount=(SELECT count(itemId) FROM voice_items WHERE
-        accountId=new.accountId AND threadId=new.threadId AND newItem=1)
+        accountId=new.accountId AND threadId=new.threadId AND newItem='true')
         WHERE accountId=new.accountId AND threadId=new.threadId AND type=1;
     UPDATE threads SET lastItemId=(SELECT itemId FROM voice_items WHERE
         accountId=new.accountId AND
@@ -113,7 +113,7 @@ BEGIN
         threadId=new.threadId)
         WHERE accountId=new.accountId AND threadId=new.threadId AND type=0;
     UPDATE threads SET unreadCount=(SELECT count(itemId) FROM text_items WHERE
-        accountId=new.accountId AND threadId=new.threadId AND newItem=1)
+        accountId=new.accountId AND threadId=new.threadId AND newItem='true')
         WHERE accountId=new.accountId AND threadId=new.threadId AND type=0;
     UPDATE threads SET lastItemId=(SELECT itemId FROM text_items WHERE
         accountId=new.accountId AND
@@ -135,7 +135,7 @@ BEGIN
         threadId=new.threadId)
         WHERE accountId=new.accountId AND threadId=new.threadId AND type=0;
     UPDATE threads SET unreadCount=(SELECT count(itemId) FROM text_items WHERE
-        accountId=new.accountId AND threadId=new.threadId AND newItem=1)
+        accountId=new.accountId AND threadId=new.threadId AND newItem='true')
         WHERE accountId=new.accountId AND threadId=new.threadId AND type=0;
     UPDATE threads SET lastItemId=(SELECT itemId FROM text_items WHERE
         accountId=new.accountId AND
@@ -157,7 +157,7 @@ BEGIN
         threadId=new.threadId)
         WHERE accountId=new.accountId AND threadId=new.threadId AND type=0;
     UPDATE threads SET unreadCount=(SELECT count(itemId) FROM text_items WHERE
-        accountId=new.accountId AND threadId=new.threadId AND newItem=1)
+        accountId=new.accountId AND threadId=new.threadId AND newItem='true')
         WHERE accountId=new.accountId AND threadId=new.threadId AND type=0;
     UPDATE threads SET lastItemId=(SELECT itemId FROM text_items WHERE
         accountId=new.accountId AND
