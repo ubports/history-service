@@ -22,11 +22,25 @@ HistorySort::HistorySort(const QString &sortField,
                          Qt::CaseSensitivity sortCase)
     : d_ptr(new HistorySortPrivate(sortField, sortOrder, sortCase))
 {
-    d_ptr->q_ptr = this;
+}
+
+HistorySort::HistorySort(const HistorySort &other)
+    : d_ptr(other.d_ptr)
+{
 }
 
 HistorySort::~HistorySort()
 {
+}
+
+HistorySort &HistorySort::operator=(const HistorySort &other)
+{
+    if (&other == this) {
+        return *this;
+    }
+
+    d_ptr = other.d_ptr;
+    return *this;
 }
 
 QString HistorySort::sortField()
@@ -45,4 +59,9 @@ Qt::CaseSensitivity HistorySort::sortCase()
 {
     Q_D(const HistorySort);
     return d->sortCase;
+}
+
+HistorySortPrivate *HistorySort::d_func()
+{
+    return d_ptr.data();
 }
