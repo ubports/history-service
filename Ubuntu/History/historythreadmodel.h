@@ -66,7 +66,6 @@ private:
     HistoryThreadViewPtr mThreadView;
     QList<HistoryThreadPtr> mThreads;
     bool mCanFetchMore;
-    int mPageSize;
     HistoryQmlFilter *mFilter;
     ItemType mType;
     QHash<int, QByteArray> mRoles;

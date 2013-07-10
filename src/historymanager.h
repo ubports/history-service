@@ -24,11 +24,9 @@ public:
                                       const HistorySort &sort = HistorySort(),
                                       const HistoryFilter &filter = HistoryFilter());
 
-    QList<HistoryItemPtr> queryItems(HistoryItem::ItemType type,
+    HistoryItemViewPtr queryItems(HistoryItem::ItemType type,
                                      const HistorySort &sort = HistorySort(),
-                                     const HistoryFilter &filter = HistoryFilter(),
-                                     int startOffset = 0,
-                                     int pageSize = -1);
+                                     const HistoryFilter &filter = HistoryFilter());
 
     bool removeThreads(HistoryItem::ItemType type, const QList<QString> &threadIds);
     bool removeItems(HistoryItem::ItemType type, const QList<QString> &itemIds);

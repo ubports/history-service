@@ -2,9 +2,6 @@
 #define HISTORYTHREADVIEW_H
 
 #include <Types>
-#include <QScopedPointer>
-
-class HistoryThreadViewPrivate;
 
 class HistoryThreadView
 {

@@ -1,4 +1,5 @@
 #include <HistoryManager>
+#include <HistoryItemView>
 #include <HistoryFilter>
 #include <HistoryIntersectionFilter>
 #include <HistoryThread>
@@ -62,21 +63,25 @@ int main(int argc, char **argv)
     Q_FOREACH(HistoryItem::ItemType type, itemTypes) {
         HistoryThreadViewPtr view = manager->queryThreads(type);
         QList<HistoryThreadPtr> threads = view->nextPage();
-        if (threads.isEmpty()) {
-            continue;
-        }
 
-        Q_FOREACH(const HistoryThreadPtr &thread, threads) {
-            printThread(thread);
+        while (!threads.isEmpty()) {
+            Q_FOREACH(const HistoryThreadPtr &thread, threads) {
+                printThread(thread);
 
-            // now print the items for this thread
-            HistoryIntersectionFilter filter;
-            filter.append(HistoryFilter("threadId", thread->threadId()));
-            filter.append(HistoryFilter("accountId", thread->accountId()));
-            Q_FOREACH(const HistoryItemPtr &item, manager->queryItems(type, HistorySort(), filter)) {
-                printItem(item);
+                // now print the items for this thread
+                HistoryIntersectionFilter filter;
+                filter.append(HistoryFilter("threadId", thread->threadId()));
+                filter.append(HistoryFilter("accountId", thread->accountId()));
+                HistoryItemViewPtr itemView = manager->queryItems(type, HistorySort(), filter);
+                QList<HistoryItemPtr> items = itemView->nextPage();
+                while (!items.isEmpty()) {
+                    Q_FOREACH(const HistoryItemPtr &item, items) {
+                        printItem(item);
+                    }
+                    items = itemView->nextPage();
+                }
             }
+            threads = view->nextPage();
         }
-        threads = view->nextPage();
     }
 }

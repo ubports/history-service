@@ -2,6 +2,7 @@
 
 set(plugin_SRCS
     sqlitedatabase.cpp
+    sqlitehistoryitemview.cpp
     sqlitehistorythreadview.cpp
     sqlitehistoryplugin.cpp
     sqlitehistoryreader.cpp
@@ -10,6 +11,7 @@ set(plugin_SRCS
 
 set (plugin_HDRS
     sqlitedatabase.h
+    sqlitehistoryitemview.h
     sqlitehistorythreadview.h
     sqlitehistoryplugin.h
     sqlitehistoryreader.h

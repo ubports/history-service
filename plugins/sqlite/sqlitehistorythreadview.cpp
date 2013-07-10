@@ -69,10 +69,11 @@ QList<HistoryThreadPtr> SQLiteHistoryThreadView::nextPage()
         filter.append(HistoryFilter("threadId", threadId));
         filter.append(HistoryFilter("itemId", lastItemId));
 
-        QList<HistoryItemPtr> items = mReader->queryItems(mType, HistorySort(), filter);
+        /* FIXME: port to the new API
+         *QList<HistoryItemPtr> items = mReader->queryItems(mType, HistorySort(), filter);
         if (!items.isEmpty()) {
             historyItem = items.first();
-        }
+        }*/
 
         // and last but not least, create the thread item and append it to the result set
         HistoryThreadPtr thread(new HistoryThread(accountId, threadId, mType, participants, historyItem, count, unreadCount));

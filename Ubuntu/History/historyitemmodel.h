@@ -51,9 +51,9 @@ protected Q_SLOTS:
     void updateQuery();
 
 private:
+    HistoryItemViewPtr mView;
     QList<HistoryItemPtr> mItems;
     bool mCanFetchMore;
-    int mPageSize;
     HistoryQmlFilter *mFilter;
     HistoryThreadModel::ItemType mType;
     QHash<int, QByteArray> mRoles;

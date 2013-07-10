@@ -6,6 +6,7 @@
 #define DefineSharedPointer(type) class type; typedef QSharedPointer<type> type ## Ptr;
 
 DefineSharedPointer(HistoryItem)
+DefineSharedPointer(HistoryItemView)
 DefineSharedPointer(HistoryReader)
 DefineSharedPointer(HistoryThread)
 DefineSharedPointer(HistoryThreadView)

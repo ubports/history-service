@@ -18,6 +18,8 @@ set(library_HDRS
     historyintersectionfilter.h
     HistoryItem
     historyitem.h
+    HistoryItemView
+    historyitemview.h
     HistoryManager
     historymanager.h
     HistoryPlugin

@@ -1,5 +1,6 @@
 #include "historyitemmodel.h"
 #include "historyqmlfilter.h"
+#include <HistoryItemView>
 #include <HistorySort>
 #include <HistoryManager>
 #include <TextItem>
@@ -7,7 +8,7 @@
 #include <QDebug>
 
 HistoryItemModel::HistoryItemModel(QObject *parent) :
-    QAbstractListModel(parent), mCanFetchMore(true), mPageSize(15), mFilter(0),
+    QAbstractListModel(parent), mCanFetchMore(true), mFilter(0),
     mType(HistoryThreadModel::ItemTypeText)
 {
     // configure the roles
@@ -25,8 +26,8 @@ HistoryItemModel::HistoryItemModel(QObject *parent) :
     mRoles[CallMissedRole] = "callMissed";
     mRoles[CallDurationRole] = "callDuration";
 
-    // fetch an initial page of results
-    fetchMore(QModelIndex());
+    // create the view and get some objects
+    updateQuery();
 }
 
 int HistoryItemModel::rowCount(const QModelIndex &parent) const
@@ -131,23 +132,12 @@ void HistoryItemModel::fetchMore(const QModelIndex &parent)
         return;
     }
 
-    HistoryFilter queryFilter;
-    HistorySort querySort;
-
-    if (mFilter) {
-        queryFilter = mFilter->filter();
-    }
-
-    QList<HistoryItemPtr> items = HistoryManager::instance()->queryItems((HistoryItem::ItemType)mType,
-                                                                            querySort,
-                                                                            queryFilter,
-                                                                            mItems.count(),
-                                                                            mPageSize);
+    QList<HistoryItemPtr> items = mView->nextPage();
 
     qDebug() << "Got items:" << items.count();
     // if the number of returned items is less than the page size, it means we have reached the end
     // and cannot fetch more items
-    if (items.count() < mPageSize) {
+    if (items.isEmpty()) {
         mCanFetchMore = false;
     }
 
@@ -203,7 +193,17 @@ void HistoryItemModel::updateQuery()
     mItems.clear();
     endRemoveRows();
 
-    // and fetch again
+    // and create the view again
+    HistoryFilter queryFilter;
+    HistorySort querySort;
+
+    if (mFilter) {
+        queryFilter = mFilter->filter();
+    }
+
+    mView = HistoryManager::instance()->queryItems((HistoryItem::ItemType)mType, querySort, queryFilter);
     mCanFetchMore = true;
+
+    // get an initial set of results
     fetchMore(QModelIndex());
 }

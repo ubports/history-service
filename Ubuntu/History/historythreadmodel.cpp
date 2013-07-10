@@ -8,7 +8,7 @@
 #include <QDebug>
 
 HistoryThreadModel::HistoryThreadModel(QObject *parent) :
-    QAbstractListModel(parent), mCanFetchMore(true), mPageSize(15), mFilter(0), mType(ItemTypeText)
+    QAbstractListModel(parent), mCanFetchMore(true), mFilter(0), mType(ItemTypeText)
 {
     // configure the roles
     mRoles[AccountIdRole] = "accountId";

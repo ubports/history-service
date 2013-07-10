@@ -11,24 +11,9 @@ public:
     HistoryThreadViewPtr queryThreads(HistoryItem::ItemType type,
                                       const HistorySort &sort = HistorySort(),
                                       const HistoryFilter &filter = HistoryFilter());
-    QList<HistoryItemPtr> queryItems(HistoryItem::ItemType type,
-                                     const HistorySort &sort = HistorySort(),
-                                     const HistoryFilter &filter = HistoryFilter(),
-                                     int startOffset = 0,
-                                     int pageSize = -1);
-protected:
-    QList<HistoryItemPtr> queryTextItems(const HistorySort &sort = HistorySort(),
-                                         const HistoryFilter &filter = HistoryFilter(),
-                                         int startOffset = 0,
-                                         int pageSize = -1);
-    QList<HistoryItemPtr> queryVoiceItems(const HistorySort &sort = HistorySort(),
-                                          const HistoryFilter &filter = HistoryFilter(),
-                                          int startOffset = 0,
-                                          int pageSize = -1);
-
-private:
-    QString pageSqlCommand(int startOffset, int pageSize) const;
-
+    HistoryItemViewPtr queryItems(HistoryItem::ItemType type,
+                                  const HistorySort &sort = HistorySort(),
+                                  const HistoryFilter &filter = HistoryFilter());
 };
 
 #endif // SQLITEHISTORYREADER_H
