@@ -50,6 +50,12 @@ void printThread(const HistoryThreadPtr &thread)
                                                                                                 QString::number(thread->count()),
                                                                                                 QString::number(thread->unreadCount())));
     qDebug() << qPrintable(QString("    Participants: %1").arg(thread->participants().join(", ")));
+
+    if (!thread->lastItem().isNull()) {
+        qDebug() << "    Last item:";
+        printItem(thread->lastItem());
+    }
+    qDebug() << "    All items:";
 }
 
 int main(int argc, char **argv)
