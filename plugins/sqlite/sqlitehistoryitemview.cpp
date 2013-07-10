@@ -26,11 +26,11 @@ SQLiteHistoryItemView::SQLiteHistoryItemView(SQLiteHistoryReader *reader,
     switch (type) {
     case HistoryItem::ItemTypeText:
         queryText = QString("SELECT accountId, threadId, itemId, senderId, timestamp, newItem,"
-                            "message, messageType, messageFlags, readTimestamp FROM text_items %1 %2").arg(condition);
+                            "message, messageType, messageFlags, readTimestamp FROM text_items %1").arg(condition);
         break;
     case HistoryItem::ItemTypeVoice:
         queryText = QString("SELECT accountId, threadId, itemId, senderId, timestamp, newItem,"
-                            "duration, missed FROM voice_items %1 %2").arg(condition);
+                            "duration, missed FROM voice_items %1").arg(condition);
         break;
     }
 
