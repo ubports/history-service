@@ -75,10 +75,10 @@ int main(int argc, char **argv)
                 printThread(thread);
 
                 // now print the items for this thread
-                HistoryIntersectionFilter filter;
-                filter.append(HistoryFilter("threadId", thread->threadId()));
-                filter.append(HistoryFilter("accountId", thread->accountId()));
-                HistoryItemViewPtr itemView = manager->queryItems(type, HistorySort(), filter);
+                HistoryIntersectionFilterPtr filter(new HistoryIntersectionFilter());
+                filter->append(HistoryFilterPtr(new HistoryFilter("threadId", thread->threadId())));
+                filter->append(HistoryFilterPtr(new HistoryFilter("accountId", thread->accountId())));
+                HistoryItemViewPtr itemView = manager->queryItems(type, HistorySortPtr(), filter);
                 QList<HistoryItemPtr> items = itemView->nextPage();
                 while (!items.isEmpty()) {
                     Q_FOREACH(const HistoryItemPtr &item, items) {

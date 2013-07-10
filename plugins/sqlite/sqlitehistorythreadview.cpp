@@ -10,8 +10,8 @@
 
 SQLiteHistoryThreadView::SQLiteHistoryThreadView(SQLiteHistoryReader *reader,
                                                  HistoryItem::ItemType type,
-                                                 const HistorySort &sort,
-                                                 const HistoryFilter &filter)
+                                                 const HistorySortPtr &sort,
+                                                 const HistoryFilterPtr &filter)
     : mReader(reader), mType(type), mSort(sort), mFilter(filter), mPageSize(15),
       mQuery(SQLiteDatabase::instance()->database())
 {
@@ -19,7 +19,11 @@ SQLiteHistoryThreadView::SQLiteHistoryThreadView(SQLiteHistoryReader *reader,
     Q_UNUSED(sort)
 
     // FIXME: validate the filter
-    QString condition = filter.toString();
+    QString condition;
+    if (!filter.isNull()) {
+        condition = filter->toString();
+    }
+
     if (!condition.isEmpty()) {
         condition.prepend(" AND ");
     }

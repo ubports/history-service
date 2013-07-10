@@ -14,16 +14,16 @@ class SQLiteHistoryThreadView : public HistoryThreadView
 public:
     SQLiteHistoryThreadView(SQLiteHistoryReader *reader,
                             HistoryItem::ItemType type,
-                            const HistorySort &sort,
-                            const HistoryFilter &filter);
+                            const HistorySortPtr &sort,
+                            const HistoryFilterPtr &filter);
 
     QList<HistoryThreadPtr> nextPage();
     bool isValid() const;
 
 private:
     HistoryItem::ItemType mType;
-    HistorySort mSort;
-    HistoryFilter mFilter;
+    HistorySortPtr mSort;
+    HistoryFilterPtr mFilter;
     QSqlQuery mQuery;
     int mPageSize;
     SQLiteHistoryReader *mReader;

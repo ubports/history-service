@@ -7,8 +7,8 @@
 
 SQLiteHistoryItemView::SQLiteHistoryItemView(SQLiteHistoryReader *reader,
                                              HistoryItem::ItemType type,
-                                             const HistorySort &sort,
-                                             const HistoryFilter &filter)
+                                             const HistorySortPtr &sort,
+                                             const HistoryFilterPtr &filter)
     : mType(type), mSort(sort), mFilter(filter), mQuery(SQLiteDatabase::instance()->database()),
       mPageSize(15), mReader(reader)
 {
@@ -16,7 +16,10 @@ SQLiteHistoryItemView::SQLiteHistoryItemView(SQLiteHistoryReader *reader,
     Q_UNUSED(sort)
 
     // FIXME: validate the filter
-    QString condition = filter.toString();
+    QString condition;
+    if (!filter.isNull()) {
+        condition = filter->toString();
+    }
     if (!condition.isEmpty()) {
         condition.prepend(" WHERE ");
     }

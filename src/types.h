@@ -14,4 +14,10 @@ DefineSharedPointer(HistoryWriter)
 DefineSharedPointer(TextItem)
 DefineSharedPointer(VoiceItem)
 
+// filters and sorting
+DefineSharedPointer(HistorySort)
+DefineSharedPointer(HistoryFilter)
+DefineSharedPointer(HistoryIntersectionFilter)
+DefineSharedPointer(HistoryUnionFilter)
+
 #endif // TYPES_H

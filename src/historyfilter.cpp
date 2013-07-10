@@ -25,11 +25,6 @@ HistoryFilter::HistoryFilter(HistoryFilterPrivate &p)
 {
 }
 
-HistoryFilterPrivate *HistoryFilter::d_func()
-{
-    return d_ptr.data();
-}
-
 HistoryFilter::HistoryFilter(const QString &filterProperty,
                              const QVariant &filterValue,
                              HistoryFilter::MatchFlags matchFlags)
@@ -37,23 +32,8 @@ HistoryFilter::HistoryFilter(const QString &filterProperty,
 {
 }
 
-HistoryFilter::HistoryFilter(const HistoryFilter &other)
-    : d_ptr(other.d_ptr)
-{
-}
-
 HistoryFilter::~HistoryFilter()
 {
-}
-
-HistoryFilter &HistoryFilter::operator=(const HistoryFilter &other)
-{
-    if (&other == this) {
-        return *this;
-    }
-
-    d_ptr = other.d_ptr;
-    return *this;
 }
 
 QString HistoryFilter::filterProperty() const

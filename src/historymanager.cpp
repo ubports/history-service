@@ -43,8 +43,8 @@ HistoryManager *HistoryManager::instance()
 }
 
 HistoryThreadViewPtr HistoryManager::queryThreads(HistoryItem::ItemType type,
-                                                  const HistorySort &sort,
-                                                  const HistoryFilter &filter)
+                                                  const HistorySortPtr &sort,
+                                                  const HistoryFilterPtr &filter)
 {
     Q_D(HistoryManager);
     if (d->reader) {
@@ -55,8 +55,8 @@ HistoryThreadViewPtr HistoryManager::queryThreads(HistoryItem::ItemType type,
 }
 
 HistoryItemViewPtr HistoryManager::queryItems(HistoryItem::ItemType type,
-                                              const HistorySort &sort,
-                                              const HistoryFilter &filter)
+                                              const HistorySortPtr &sort,
+                                              const HistoryFilterPtr &filter)
 {
     Q_D(HistoryManager);
     if (d->reader) {

@@ -2,11 +2,10 @@
 #define HISTORYFILTER_P_H
 
 #include "historyfilter.h"
-#include <QSharedData>
 #include <QString>
 #include <QVariant>
 
-class HistoryFilterPrivate : public QSharedData
+class HistoryFilterPrivate
 {
 
 public:

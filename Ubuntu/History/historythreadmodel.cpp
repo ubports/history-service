@@ -221,8 +221,8 @@ void HistoryThreadModel::updateQuery()
     // and fetch again
     mCanFetchMore = true;
 
-    HistoryFilter queryFilter;
-    HistorySort querySort;
+    HistoryFilterPtr queryFilter;
+    HistorySortPtr querySort;
 
     if (mFilter) {
         queryFilter = mFilter->filter();

@@ -12,7 +12,7 @@ public:
     HistoryUnionFilterPrivate();
     ~HistoryUnionFilterPrivate();
 
-    QList<HistoryFilter> filters;
+    QList<HistoryFilterPtr> filters;
 };
 
 #endif // HISTORYUNIONFILTER_P_H

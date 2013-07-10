@@ -2,17 +2,16 @@
 #include <HistoryUnionFilter>
 
 HistoryQmlUnionFilter::HistoryQmlUnionFilter(QObject *parent) :
-    HistoryQmlCompoundFilter(parent)
+    HistoryQmlCompoundFilter(parent), mFilter(new HistoryUnionFilter())
 {
 }
 
-HistoryFilter HistoryQmlUnionFilter::filter() const
+HistoryFilterPtr HistoryQmlUnionFilter::filter() const
 {
-    HistoryUnionFilter unionFilter;
-
+    mFilter->clear();
     Q_FOREACH(HistoryQmlFilter *filter, mFilters) {
-        unionFilter.append(filter->filter());
+        mFilter->append(filter->filter());
     }
 
-    return unionFilter;
+    return mFilter;
 }

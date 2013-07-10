@@ -9,11 +9,11 @@ class SQLiteHistoryReader : public HistoryReader
 public:
     explicit SQLiteHistoryReader(QObject *parent = 0);
     HistoryThreadViewPtr queryThreads(HistoryItem::ItemType type,
-                                      const HistorySort &sort = HistorySort(),
-                                      const HistoryFilter &filter = HistoryFilter());
+                                      const HistorySortPtr &sort = HistorySortPtr(),
+                                      const HistoryFilterPtr &filter = HistoryFilterPtr());
     HistoryItemViewPtr queryItems(HistoryItem::ItemType type,
-                                  const HistorySort &sort = HistorySort(),
-                                  const HistoryFilter &filter = HistoryFilter());
+                                  const HistorySortPtr &sort = HistorySortPtr(),
+                                  const HistoryFilterPtr &filter = HistoryFilterPtr());
 };
 
 #endif // SQLITEHISTORYREADER_H

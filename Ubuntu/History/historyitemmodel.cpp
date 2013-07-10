@@ -3,6 +3,7 @@
 #include <HistoryItemView>
 #include <HistorySort>
 #include <HistoryManager>
+#include <Types>
 #include <TextItem>
 #include <VoiceItem>
 #include <QDebug>
@@ -194,8 +195,8 @@ void HistoryItemModel::updateQuery()
     endRemoveRows();
 
     // and create the view again
-    HistoryFilter queryFilter;
-    HistorySort querySort;
+    HistoryFilterPtr queryFilter;
+    HistorySortPtr querySort;
 
     if (mFilter) {
         queryFilter = mFilter->filter();

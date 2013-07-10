@@ -14,8 +14,8 @@ class SQLiteHistoryItemView : public HistoryItemView
 public:
     SQLiteHistoryItemView(SQLiteHistoryReader *reader,
                           HistoryItem::ItemType type,
-                          const HistorySort &sort,
-                          const HistoryFilter &filter);
+                          const HistorySortPtr &sort,
+                          const HistoryFilterPtr &filter);
 
     QList<HistoryItemPtr> nextPage();
     bool isValid() const;
@@ -25,8 +25,8 @@ protected:
 
 private:
     HistoryItem::ItemType mType;
-    HistorySort mSort;
-    HistoryFilter mFilter;
+    HistorySortPtr mSort;
+    HistoryFilterPtr mFilter;
     QSqlQuery mQuery;
     int mPageSize;
     SQLiteHistoryReader *mReader;

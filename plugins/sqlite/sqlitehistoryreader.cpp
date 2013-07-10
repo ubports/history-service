@@ -17,15 +17,15 @@ SQLiteHistoryReader::SQLiteHistoryReader(QObject *parent) :
 }
 
 HistoryThreadViewPtr SQLiteHistoryReader::queryThreads(HistoryItem::ItemType type,
-                                                       const HistorySort &sort,
-                                                       const HistoryFilter &filter)
+                                                       const HistorySortPtr &sort,
+                                                       const HistoryFilterPtr &filter)
 {
     return HistoryThreadViewPtr(new SQLiteHistoryThreadView(this, type, sort, filter));
 }
 
 HistoryItemViewPtr SQLiteHistoryReader::queryItems(HistoryItem::ItemType type,
-                                                      const HistorySort &sort,
-                                                      const HistoryFilter &filter)
+                                                      const HistorySortPtr &sort,
+                                                      const HistoryFilterPtr &filter)
 {
     return HistoryItemViewPtr(new SQLiteHistoryItemView(this, type, sort, filter));
 }

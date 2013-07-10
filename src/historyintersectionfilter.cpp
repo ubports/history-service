@@ -15,34 +15,35 @@ HistoryIntersectionFilter::HistoryIntersectionFilter()
 {
 }
 
-HistoryIntersectionFilter::HistoryIntersectionFilter(const HistoryIntersectionFilter &other)
-    : HistoryFilter(other)
-{
-}
-
 HistoryIntersectionFilter::~HistoryIntersectionFilter()
 {
 }
 
-void HistoryIntersectionFilter::setFilters(const QList<HistoryFilter> &filters)
+void HistoryIntersectionFilter::setFilters(const QList<HistoryFilterPtr> &filters)
 {
     Q_D(HistoryIntersectionFilter);
     d->filters = filters;
 }
 
-void HistoryIntersectionFilter::prepend(const HistoryFilter &filter)
+void HistoryIntersectionFilter::prepend(const HistoryFilterPtr &filter)
 {
     Q_D(HistoryIntersectionFilter);
     d->filters.prepend(filter);
 }
 
-void HistoryIntersectionFilter::append(const HistoryFilter &filter)
+void HistoryIntersectionFilter::append(const HistoryFilterPtr &filter)
 {
     Q_D(HistoryIntersectionFilter);
     d->filters.append(filter);
 }
 
-QList<HistoryFilter> HistoryIntersectionFilter::filters() const
+void HistoryIntersectionFilter::clear()
+{
+    Q_D(HistoryIntersectionFilter);
+    d->filters.clear();
+}
+
+QList<HistoryFilterPtr> HistoryIntersectionFilter::filters() const
 {
     Q_D(const HistoryIntersectionFilter);
     return d->filters;
@@ -55,26 +56,14 @@ QString HistoryIntersectionFilter::toString() const
     if (d->filters.isEmpty()) {
         return QString::null;
     } else if (d->filters.count() == 1) {
-        return d->filters.first().toString();
+        return d->filters.first()->toString();
     }
 
     QStringList output;
     // wrap each filter string around parenthesis
-    Q_FOREACH(const HistoryFilter &filter, d->filters) {
-        output << QString("(%1)").arg(filter.toString());
+    Q_FOREACH(const HistoryFilterPtr &filter, d->filters) {
+        output << QString("(%1)").arg(filter->toString());
     }
 
     return output.join(" AND ");
 }
-
-HistoryIntersectionFilterPrivate *HistoryIntersectionFilter::d_func()
-{
-    return reinterpret_cast<HistoryIntersectionFilterPrivate *>(d_ptr.data());
-}
-
-const HistoryIntersectionFilterPrivate *HistoryIntersectionFilter::d_func() const
-{
-    return reinterpret_cast<const HistoryIntersectionFilterPrivate *>(d_ptr.constData());
-}
-
-

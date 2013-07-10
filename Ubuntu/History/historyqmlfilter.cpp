@@ -1,7 +1,7 @@
 #include "historyqmlfilter.h"
 
 HistoryQmlFilter::HistoryQmlFilter(QObject *parent) :
-    QObject(parent)
+    QObject(parent), mFilter(new HistoryFilter())
 {
     connect(this,
             SIGNAL(filterPropertyChanged()),
@@ -16,39 +16,39 @@ HistoryQmlFilter::HistoryQmlFilter(QObject *parent) :
 
 QString HistoryQmlFilter::filterProperty() const
 {
-    return mFilter.filterProperty();
+    return mFilter->filterProperty();
 }
 
 void HistoryQmlFilter::setFilterProperty(const QString &value)
 {
-    mFilter.setFilterProperty(value);
+    mFilter->setFilterProperty(value);
     Q_EMIT filterPropertyChanged();
 }
 
 QVariant HistoryQmlFilter::filterValue() const
 {
-    return mFilter.filterProperty();
+    return mFilter->filterProperty();
 }
 
 void HistoryQmlFilter::setFilterValue(const QVariant &value)
 {
-    mFilter.setFilterValue(value);
+    mFilter->setFilterValue(value);
     Q_EMIT filterValueChanged();
 }
 
 int HistoryQmlFilter::matchFlags() const
 {
-    return mFilter.matchFlags();
+    return mFilter->matchFlags();
 }
 
 void HistoryQmlFilter::setMatchFlags(int flags)
 {
-    mFilter.setMatchFlags((HistoryFilter::MatchFlags)flags);
+    mFilter->setMatchFlags((HistoryFilter::MatchFlags)flags);
     Q_EMIT matchFlagsChanged();
 }
 
 
-HistoryFilter HistoryQmlFilter::filter() const
+HistoryFilterPtr HistoryQmlFilter::filter() const
 {
     return mFilter;
 }

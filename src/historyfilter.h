@@ -2,7 +2,7 @@
 #define HISTORYFILTER_H
 
 #include <QFlags>
-#include <QSharedDataPointer>
+#include <QScopedPointer>
 #include <QVariant>
 
 class HistoryFilterPrivate;
@@ -10,7 +10,7 @@ class HistoryFilterPrivate;
 // simple filter
 class HistoryFilter
 {
-
+    Q_DECLARE_PRIVATE(HistoryFilter)
 public:
     enum MatchFlag {
         MatchCaseSensitive,
@@ -24,10 +24,7 @@ public:
     HistoryFilter(const QString &filterProperty = QString::null,
                   const QVariant &filterValue = QVariant(),
                   MatchFlags matchFlags = MatchCaseSensitive);
-    HistoryFilter(const HistoryFilter &other);
     virtual ~HistoryFilter();
-
-    HistoryFilter &operator=(const HistoryFilter &other);
 
     QString filterProperty() const;
     void setFilterProperty(const QString &value);
@@ -41,14 +38,7 @@ public:
 
 protected:
     HistoryFilter(HistoryFilterPrivate &p);
-    QSharedDataPointer<HistoryFilterPrivate> d_ptr;
-
-    // Q_DECLARE_PRIVATE equivalent for shared data pointers
-    HistoryFilterPrivate* d_func();
-    inline const HistoryFilterPrivate* d_func() const
-    {
-        return d_ptr.constData();
-    }
+    QScopedPointer<HistoryFilterPrivate> d_ptr;
 };
 
 #endif

@@ -4,6 +4,7 @@
 #include <qqml.h>
 #include <QObject>
 #include <HistoryFilter>
+#include <Types>
 
 class HistoryQmlFilter : public QObject
 {
@@ -31,7 +32,7 @@ public:
     int matchFlags() const;
     void setMatchFlags(int flags);
 
-    virtual HistoryFilter filter() const;
+    virtual HistoryFilterPtr filter() const;
 
 Q_SIGNALS:
     void filterPropertyChanged();
@@ -40,7 +41,7 @@ Q_SIGNALS:
     void filterChanged();
     
 protected:
-    HistoryFilter mFilter;
+    HistoryFilterPtr mFilter;
 };
 
 

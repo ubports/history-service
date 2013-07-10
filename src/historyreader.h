@@ -15,11 +15,11 @@ public:
     virtual ~HistoryReader() {}
 
     virtual HistoryThreadViewPtr queryThreads(HistoryItem::ItemType type,
-                                              const HistorySort &sort = HistorySort(),
-                                              const HistoryFilter &filter = HistoryFilter()) = 0;
+                                              const HistorySortPtr &sort = HistorySortPtr(),
+                                              const HistoryFilterPtr &filter = HistoryFilterPtr()) = 0;
     virtual HistoryItemViewPtr queryItems(HistoryItem::ItemType type,
-                                          const HistorySort &sort = HistorySort(),
-                                          const HistoryFilter &filter = HistoryFilter()) = 0;
+                                          const HistorySortPtr &sort = HistorySortPtr(),
+                                          const HistoryFilterPtr &filter = HistoryFilterPtr()) = 0;
 };
 
 #endif

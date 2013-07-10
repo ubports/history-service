@@ -21,12 +21,12 @@ public:
     static HistoryManager *instance();
 
     HistoryThreadViewPtr queryThreads(HistoryItem::ItemType type,
-                                      const HistorySort &sort = HistorySort(),
-                                      const HistoryFilter &filter = HistoryFilter());
+                                      const HistorySortPtr &sort = HistorySortPtr(),
+                                      const HistoryFilterPtr &filter = HistoryFilterPtr());
 
     HistoryItemViewPtr queryItems(HistoryItem::ItemType type,
-                                     const HistorySort &sort = HistorySort(),
-                                     const HistoryFilter &filter = HistoryFilter());
+                                     const HistorySortPtr &sort = HistorySortPtr(),
+                                     const HistoryFilterPtr &filter = HistoryFilterPtr());
 
     bool removeThreads(HistoryItem::ItemType type, const QList<QString> &threadIds);
     bool removeItems(HistoryItem::ItemType type, const QList<QString> &itemIds);

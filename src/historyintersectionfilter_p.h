@@ -12,7 +12,7 @@ public:
     HistoryIntersectionFilterPrivate();
     ~HistoryIntersectionFilterPrivate();
 
-    QList<HistoryFilter> filters;
+    QList<HistoryFilterPtr> filters;
 };
 
 #endif // HISTORYINTERSECTIONFILTER_P_H

@@ -9,23 +9,18 @@ class HistoryIntersectionFilterPrivate;
 // AND filter
 class HistoryIntersectionFilter : public HistoryFilter
 {
-
+    Q_DECLARE_PRIVATE(HistoryIntersectionFilter)
 public:
     HistoryIntersectionFilter();
-    HistoryIntersectionFilter(const HistoryIntersectionFilter &other);
     ~HistoryIntersectionFilter();
 
-    void setFilters(const QList<HistoryFilter> &filters);
-    void prepend(const HistoryFilter &filter);
-    void append(const HistoryFilter &filter);
+    void setFilters(const QList<HistoryFilterPtr> &filters);
+    void prepend(const HistoryFilterPtr &filter);
+    void append(const HistoryFilterPtr &filter);
+    void clear();
 
-    QList<HistoryFilter> filters() const;
+    QList<HistoryFilterPtr> filters() const;
     QString toString() const;
-
-protected:
-    // Q_DECLARE_PRIVATE equivalent for shared data pointers
-    HistoryIntersectionFilterPrivate *d_func();
-    const HistoryIntersectionFilterPrivate *d_func() const;
 };
 
 #endif
