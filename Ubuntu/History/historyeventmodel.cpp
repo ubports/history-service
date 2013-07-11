@@ -14,10 +14,10 @@ HistoryEventModel::HistoryEventModel(QObject *parent) :
     mRoles[AccountIdRole] = "accountId";
     mRoles[ThreadIdRole] = "threadId";
     mRoles[TypeRole] = "type";
-    mRoles[ItemIdRole] = "eventId";
+    mRoles[EventIdRole] = "eventId";
     mRoles[SenderRole] = "sender";
     mRoles[TimestampRole] = "timestamp";
-    mRoles[NewItemRole] = "newEvent";
+    mRoles[NewEventRole] = "newEvent";
     mRoles[TextMessageRole] = "textMessage";
     mRoles[TextMessageTypeRole] = "textMessageType";
     mRoles[TextMessageFlagsRole] = "textMessageFlags";
@@ -69,7 +69,7 @@ QVariant HistoryEventModel::data(const QModelIndex &index, int role) const
     case TypeRole:
         result = event->type();
         break;
-    case ItemIdRole:
+    case EventIdRole:
         result = event->eventId();
         break;
     case SenderRole:
@@ -78,7 +78,7 @@ QVariant HistoryEventModel::data(const QModelIndex &index, int role) const
     case TimestampRole:
         result = event->timestamp();
         break;
-    case NewItemRole:
+    case NewEventRole:
         result = event->newEvent();
         break;
     case TextMessageRole:
@@ -134,8 +134,6 @@ void HistoryEventModel::fetchMore(const QModelIndex &parent)
     QList<History::EventPtr> events = mView->nextPage();
 
     qDebug() << "Got events:" << events.count();
-    // if the number of returned items is less than the page size, it means we have reached the end
-    // and cannot fetch more items
     if (events.isEmpty()) {
         mCanFetchMore = false;
     }
@@ -187,7 +185,7 @@ void HistoryEventModel::setType(HistoryThreadModel::EventType value)
 
 void HistoryEventModel::updateQuery()
 {
-    // remove all items from the model
+    // remove all events from the model
     beginRemoveRows(QModelIndex(), 0, mEvents.count() - 1);
     mEvents.clear();
     endRemoveRows();

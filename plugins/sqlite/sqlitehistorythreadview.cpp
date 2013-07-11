@@ -94,7 +94,7 @@ QList<History::ThreadPtr> SQLiteHistoryThreadView::nextPage()
             participants << secondaryQuery.value(0).toString();
         }
 
-        // the next step is to get the last item
+        // the next step is to get the last event
         History::EventPtr historyEvent;
         if (!lastEventId.isEmpty()) {
             switch (mType) {
@@ -122,7 +122,7 @@ QList<History::ThreadPtr> SQLiteHistoryThreadView::nextPage()
                 break;
             }
         }
-        // and last but not least, create the thread item and append it to the result set
+        // and last but not least, create the thread and append it to the result set
         History::ThreadPtr thread(new History::Thread(accountId, threadId, mType, participants, historyEvent, count, unreadCount));
         threads << thread;
     }

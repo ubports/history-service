@@ -12,10 +12,10 @@ public:
     VoiceEventPrivate();
     VoiceEventPrivate(const QString &theAccountId,
                     const QString &theThreadId,
-                    const QString &theItemId,
+                    const QString &theEventId,
                     const QString &theSender,
                     const QDateTime &theTimestamp,
-                    bool theNewItem,
+                    bool theNewEvent,
                     bool theMissed,
                     const QTime &theDuration = QTime());
     ~VoiceEventPrivate();

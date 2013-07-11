@@ -26,7 +26,7 @@ void printEvent(const History::EventPtr &event)
         break;
     }
 
-    qDebug() << qPrintable(QString("    * Item: accountId: %1 threadId: %2 eventId: %3 sender: %4 timestamp: %5 newEvent: %6")
+    qDebug() << qPrintable(QString("    * Event: accountId: %1 threadId: %2 eventId: %3 sender: %4 timestamp: %5 newEvent: %6")
                 .arg(event->accountId(), event->threadId(), event->eventId(), event->sender(), event->timestamp().toString(),
                      event->newEvent() ? "yes" : "no"));
     qDebug() << qPrintable(QString("      %1").arg(extraInfo));
@@ -74,7 +74,7 @@ int main(int argc, char **argv)
             Q_FOREACH(const History::ThreadPtr &thread, threads) {
                 printThread(thread);
 
-                // now print the items for this thread
+                // now print the events for this thread
                 History::IntersectionFilterPtr filter(new History::IntersectionFilter());
                 filter->append(History::FilterPtr(new History::Filter("threadId", thread->threadId())));
                 filter->append(History::FilterPtr(new History::Filter("accountId", thread->accountId())));

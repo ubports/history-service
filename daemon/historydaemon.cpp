@@ -91,7 +91,7 @@ void HistoryDaemon::onCallEnded(const Tp::CallChannelPtr &channel)
                                                          eventId,
                                                          incoming ? channel->initiatorContact()->id() : "self",
                                                          timestamp,
-                                                         missed, // only mark as a new (unseen) item if it is a missed call
+                                                         missed, // only mark as a new (unseen) event if it is a missed call
                                                          missed,
                                                          duration));
     mWriter->writeVoiceEvent(event);

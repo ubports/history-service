@@ -18,17 +18,17 @@ HistoryThreadModel::HistoryThreadModel(QObject *parent) :
     mRoles[CountRole] = "count";
     mRoles[UnreadCountRole] = "unreadCount";
 
-    // roles related to the thread´s last item
-    mRoles[LastItemIdRole] = "eventId";
-    mRoles[LastItemSenderRole] = "itemSender";
-    mRoles[LastItemTimestampRole] = "itemTimestamp";
-    mRoles[LastItemNewRole] = "itemNew";
-    mRoles[LastItemTextMessageRole] = "itemTextMessage";
-    mRoles[LastItemTextMessageTypeRole] = "itemTextMessageType";
-    mRoles[LastItemTextMessageFlagsRole] = "itemTextMessageFlags";
-    mRoles[LastItemTextReadTimestampRole] = "itemTextReadTimestamp";
-    mRoles[LastItemCallMissedRole] = "itemCallMissed";
-    mRoles[LastItemCallDurationRole] = "itemCallDuration";
+    // roles related to the thread´s last event
+    mRoles[LastEventIdRole] = "eventId";
+    mRoles[LastEventSenderRole] = "eventSender";
+    mRoles[LastEventTimestampRole] = "eventTimestamp";
+    mRoles[LastEventNewRole] = "eventNew";
+    mRoles[LastEventTextMessageRole] = "eventTextMessage";
+    mRoles[LastEventTextMessageTypeRole] = "eventTextMessageType";
+    mRoles[LastEventTextMessageFlagsRole] = "eventTextMessageFlags";
+    mRoles[LastEventTextReadTimestampRole] = "eventTextReadTimestamp";
+    mRoles[LastEventCallMissedRole] = "eventCallMissed";
+    mRoles[LastEventCallDurationRole] = "eventCallDuration";
 
     // create the results view
     updateQuery();
@@ -85,52 +85,52 @@ QVariant HistoryThreadModel::data(const QModelIndex &index, int role) const
     case UnreadCountRole:
         result = thread->unreadCount();
         break;
-    case LastItemIdRole:
+    case LastEventIdRole:
         if (!event.isNull()) {
             result = event->eventId();
         }
         break;
-    case LastItemSenderRole:
+    case LastEventSenderRole:
         if (!event.isNull()) {
             result = event->sender();
         }
         break;
-    case LastItemTimestampRole:
+    case LastEventTimestampRole:
         if (!event.isNull()) {
             result = event->timestamp();
         }
         break;
-    case LastItemNewRole:
+    case LastEventNewRole:
         if (!event.isNull()) {
             result = event->newEvent();
         }
         break;
-    case LastItemTextMessageRole:
+    case LastEventTextMessageRole:
         if (!textEvent.isNull()) {
             result = textEvent->message();
         }
         break;
-    case LastItemTextMessageTypeRole:
+    case LastEventTextMessageTypeRole:
         if (!textEvent.isNull()) {
             result = (int) textEvent->messageType();
         }
         break;
-    case LastItemTextMessageFlagsRole:
+    case LastEventTextMessageFlagsRole:
         if (!textEvent.isNull()) {
             result = (int) textEvent->messageFlags();
         }
         break;
-    case LastItemTextReadTimestampRole:
+    case LastEventTextReadTimestampRole:
         if (!textEvent.isNull()) {
             result = textEvent->readTimestamp();
         }
         break;
-    case LastItemCallMissedRole:
+    case LastEventCallMissedRole:
         if (!voiceEvent.isNull()) {
             result = voiceEvent->missed();
         }
         break;
-    case LastItemCallDurationRole:
+    case LastEventCallDurationRole:
         if (!voiceEvent.isNull()) {
             result = voiceEvent->duration();
         }
@@ -156,9 +156,7 @@ void HistoryThreadModel::fetchMore(const QModelIndex &parent)
     }
 
     QList<History::ThreadPtr> threads = mThreadView->nextPage();
-    qDebug() << "Got items:" << threads.count();
-    // if the number of returned items is less than the page size, it means we have reached the end
-    // and cannot fetch more items
+    qDebug() << "Got threads:" << threads.count();
     if (threads.isEmpty()) {
         mCanFetchMore = false;
     }
@@ -211,7 +209,7 @@ void HistoryThreadModel::setType(HistoryThreadModel::EventType value)
 
 void HistoryThreadModel::updateQuery()
 {
-    // remove all items from the model
+    // remove all events from the model
     beginRemoveRows(QModelIndex(), 0, mThreads.count() - 1);
     mThreads.clear();
     endRemoveRows();

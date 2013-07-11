@@ -11,12 +11,12 @@ EventPrivate::EventPrivate()
 
 EventPrivate::EventPrivate(const QString &theAccountId,
                                        const QString &theThreadId,
-                                       const QString &theItemId,
+                                       const QString &theEventId,
                                        const QString &theSender,
                                        const QDateTime &theTimestamp,
-                                       bool theNewItem) :
-    accountId(theAccountId), threadId(theThreadId), eventId(theItemId),
-    sender(theSender), timestamp(theTimestamp), newEvent(theNewItem)
+                                       bool theNewEvent) :
+    accountId(theAccountId), threadId(theThreadId), eventId(theEventId),
+    sender(theSender), timestamp(theTimestamp), newEvent(theNewEvent)
 {
 }
 
@@ -35,7 +35,7 @@ EventPrivate::~EventPrivate()
  *  This class should not be used directly and instead
  *  the derived classes should be used.
  *
- * \sa TextItem, VoiceItem
+ * \sa TextEvent, VoiceEvent
  */
 
 /*!
@@ -58,7 +58,7 @@ Event::~Event()
 }
 
 /*!
- * \brief Returns the account ID this item belongs to.
+ * \brief Returns the account ID this event belongs to.
  */
 QString Event::accountId() const
 {
@@ -67,7 +67,7 @@ QString Event::accountId() const
 }
 
 /*!
- * \brief Returns the ID of the communication thread this item belongs to.
+ * \brief Returns the ID of the communication thread this event belongs to.
  * \sa HistoryThread
  */
 QString Event::threadId() const

@@ -26,16 +26,16 @@ public:
         ParticipantsRole,
         CountRole,
         UnreadCountRole,
-        LastItemIdRole,
-        LastItemSenderRole,
-        LastItemTimestampRole,
-        LastItemNewRole,
-        LastItemTextMessageRole,
-        LastItemTextMessageTypeRole,
-        LastItemTextMessageFlagsRole,
-        LastItemTextReadTimestampRole,
-        LastItemCallMissedRole,
-        LastItemCallDurationRole
+        LastEventIdRole,
+        LastEventSenderRole,
+        LastEventTimestampRole,
+        LastEventNewRole,
+        LastEventTextMessageRole,
+        LastEventTextMessageTypeRole,
+        LastEventTextMessageFlagsRole,
+        LastEventTextReadTimestampRole,
+        LastEventCallMissedRole,
+        LastEventCallDurationRole
     };
 
     explicit HistoryThreadModel(QObject *parent = 0);

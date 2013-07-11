@@ -106,7 +106,7 @@ History::ThreadPtr SQLiteHistoryWriter::threadForParticipants(const QString &acc
         existingThread = threadId;
     }
 
-    // and finally create the thread item
+    // and finally create the thread
     // FIXME: check for existing instances of the thread object instead of always creating a new one
     History::ThreadPtr thread(new History::Thread(accountId, existingThread, type, participants));
     return thread;
@@ -118,7 +118,7 @@ bool SQLiteHistoryWriter::writeTextEvent(const History::TextEventPtr &event)
 
     QSqlQuery query(SQLiteDatabase::instance()->database());
 
-    // FIXME: add support for checking if an item already exists
+    // FIXME: add support for checking if an event already exists
 
     query.prepare("INSERT INTO text_events (accountId, threadId, eventId, senderId, timestamp, newEvent, message, messageType, messageFlags, readTimestamp) "
                   "VALUES (:accountId, :threadId, :eventId, :senderId, :timestamp, :newEvent, :message, :messageType, :messageFlags, :readTimestamp)");
@@ -147,7 +147,7 @@ bool SQLiteHistoryWriter::writeVoiceEvent(const History::VoiceEventPtr &event)
 
     QSqlQuery query(SQLiteDatabase::instance()->database());
 
-    // FIXME: add support for checking if an item already exists
+    // FIXME: add support for checking if an event already exists
 
     query.prepare("INSERT INTO voice_events (accountId, threadId, eventId, senderId, timestamp, newEvent, duration, missed) "
                   "VALUES (:accountId, :threadId, :eventId, :senderId, :timestamp, :newEvent, :duration, :missed)");
