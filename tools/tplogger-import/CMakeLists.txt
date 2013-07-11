@@ -18,5 +18,5 @@ target_link_libraries(tplogger-import
     ${TP_QT5_LIBRARIES}
     ${TPL_QT5_LIBRARIES}
     ${QTGLIB_LIBRARIES}
-    commhistory
+    historyservice
     )

@@ -1,67 +1,68 @@
 set(library_SRCS
-    historyfilter.cpp
-    historyintersectionfilter.cpp
-    historyitem.cpp
-    historymanager.cpp
-    historysort.cpp
-    historythread.cpp
-    historyunionfilter.cpp
+    event.cpp
+    filter.cpp
+    intersectionfilter.cpp
+    manager.cpp
     pluginmanager.cpp
-    textitem.cpp
-    voiceitem.cpp
+    sort.cpp
+    textevent.cpp
+    thread.cpp
+    unionfilter.cpp
+    voiceevent.cpp
     )
 
 set(library_HDRS
-    HistoryFilter
-    historyfilter.h
-    HistoryIntersectionFilter
-    historyintersectionfilter.h
-    HistoryItem
-    historyitem.h
-    HistoryItemView
-    historyitemview.h
-    HistoryManager
-    historymanager.h
-    HistoryPlugin
-    historyplugin.h
-    HistoryReader
-    historyreader.h
-    HistorySort
-    historysort.h
-    HistoryThread
-    historythread.h
-    HistoryThreadView
-    historythreadview.h
-    HistoryUnionFilter
-    historyunionfilter.h
-    HistoryWriter
-    historywriter.h
+    Event
+    event.h
+    EventView
+    eventview.h
+    Filter
+    filter.h
+    IntersectionFilter
+    intersectionfilter.h
+    Manager
+    manager.h
+    Plugin
+    plugin.h
     PluginManager
     pluginmanager.h
-    TextItem
-    textitem.h
+    Reader
+    reader.h
+    Sort
+    sort.h
+    TextEvent
+    textevent.h
+    Thread
+    thread.h
+    ThreadView
+    threadview.h
     Types
     types.h
-    VoiceItem
-    voiceitem.h
+    UnionFilter
+    unionfilter.h
+    VoiceEvent
+    voiceevent.h
+    Writer
+    writer.h
 )
 
 set(library_PRIV_HDRS
-    historyfilter_p.h
-    historyintersectionfilter_p.h
-    historyitem_p.h
-    historymanager_p.h
-    historysort_p.h
-    historythread_p.h
-    historyunionfilter_p.h
-    textitem_p.h
-    voiceitem_p.h
+    event_p.h
+    filter_p.h
+    intersectionfilter_p.h
+    manager_p.h
+    sort_p.h
+    textevent_p.h
+    thread_p.h
+    unionfilter_p.h
+    voiceevent_p.h
 )
 
 include_directories(${CMAKE_SOURCE_DIR}/src)
 
-add_library(commhistory SHARED ${library_SRCS} ${library_HDRS} ${library_PRIV_HDRS})
+# FIXME: set the library version and SONAME
+add_library(historyservice SHARED ${library_SRCS} ${library_HDRS} ${library_PRIV_HDRS})
 
-qt5_use_modules(commhistory Core Qml Quick)
+qt5_use_modules(historyservice Core)
 
-install(TARGETS commhistory DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(TARGETS historyservice DESTINATION ${CMAKE_INSTALL_LIBDIR})

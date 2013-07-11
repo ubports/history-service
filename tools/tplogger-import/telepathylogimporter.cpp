@@ -1,15 +1,18 @@
 #include "telepathylogimporter.h"
 #include "telepathylogreader.h"
-#include <HistoryWriter>
+#include "writer.h"
+#include "pluginmanager.h"
+#include "plugin.h"
+#include "thread.h"
+#include "textevent.h"
+#include "voiceevent.h"
 #include <TelepathyLoggerQt/Entity>
-#include <PluginManager>
-#include <HistoryPlugin>
-#include <HistoryThread>
+
 
 TelepathyLogImporter::TelepathyLogImporter(QObject *parent) :
     QObject(parent)
 {
-    Q_FOREACH(HistoryPlugin *plugin, PluginManager::instance()->plugins()) {
+    Q_FOREACH(History::PluginPtr plugin, History::PluginManager::instance()->plugins()) {
         qDebug() << "Trying the plugin";
         mWriter = plugin->writer();
         if (mWriter) {
@@ -34,19 +37,19 @@ void TelepathyLogImporter::onCallEventLoaded(const Tpl::CallEventPtr &event)
     // FIXME: add support for conf call
     bool incoming = event->receiver()->entityType() == Tpl::EntityTypeSelf;
     Tpl::EntityPtr remote = incoming ? event->sender() : event->receiver();
-    HistoryThreadPtr thread = mWriter->threadForParticipants(event->account()->uniqueIdentifier(),
-                                                             HistoryItem::ItemTypeVoice,
-                                                             QStringList() << remote->identifier());
-    QString itemId = QString("%1:%2").arg(thread->threadId()).arg(event->timestamp().toString());
-    VoiceItem item(thread->accountId(),
-                   thread->threadId(),
-                   itemId,
-                   incoming ? remote->identifier() : "self",
-                   event->timestamp(),
-                   false,
-                   event->endReason() == Tp::CallStateChangeReasonNoAnswer,
-                   event->duration());
-    mWriter->writeVoiceItem(item);
+    History::ThreadPtr thread = mWriter->threadForParticipants(event->account()->uniqueIdentifier(),
+                                                               History::EventTypeVoice,
+                                                               QStringList() << remote->identifier());
+    QString eventId = QString("%1:%2").arg(thread->threadId()).arg(event->timestamp().toString());
+    History::VoiceEventPtr historyEvent(new History::VoiceEvent(thread->accountId(),
+                                                                thread->threadId(),
+                                                                eventId,
+                                                                incoming ? remote->identifier() : "self",
+                                                                event->timestamp(),
+                                                                false,
+                                                                event->endReason() == Tp::CallStateChangeReasonNoAnswer,
+                                                                event->duration()));
+    mWriter->writeVoiceEvent(historyEvent);
 }
 
 void TelepathyLogImporter::onMessageEventLoaded(const Tpl::TextEventPtr &event)
@@ -58,19 +61,18 @@ void TelepathyLogImporter::onMessageEventLoaded(const Tpl::TextEventPtr &event)
     // FIXME: add support for conf call
     bool incoming = event->receiver()->entityType() == Tpl::EntityTypeSelf;
     Tpl::EntityPtr remote = incoming ? event->sender() : event->receiver();
-    HistoryThreadPtr thread = mWriter->threadForParticipants(event->account()->uniqueIdentifier(),
-                                                             HistoryItem::ItemTypeText,
-                                                             QStringList() << remote->identifier());
-    TextItem item(thread->accountId(),
-                  thread->threadId(),
-                  event->messageToken(),
-                  incoming ? remote->identifier() : "self",
-                  event->timestamp(),
-                  false,
-                  event->message(),
-                  TextItem::TextMessage,
-                  TextItem::MessageFlags(),
-                  event->timestamp());
-
-    mWriter->writeTextItem(item);
+    History::ThreadPtr thread = mWriter->threadForParticipants(event->account()->uniqueIdentifier(),
+                                                               History::EventTypeText,
+                                                               QStringList() << remote->identifier());
+    History::TextEventPtr historyEvent(new History::TextEvent(thread->accountId(),
+                                                              thread->threadId(),
+                                                              event->messageToken(),
+                                                              incoming ? remote->identifier() : "self",
+                                                              event->timestamp(),
+                                                              false,
+                                                              event->message(),
+                                                              History::TextMessage,
+                                                              History::MessageFlags(),
+                                                              event->timestamp()));
+    mWriter->writeTextEvent(historyEvent);
 }

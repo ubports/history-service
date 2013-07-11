@@ -7,4 +7,4 @@ include_directories(
 add_executable(history-reader ${reader_SRCS})
 qt5_use_modules(history-reader Core)
 
-target_link_libraries(history-reader commhistory)
+target_link_libraries(history-reader historyservice)

@@ -1,7 +1,8 @@
 #include "historyqmlfilter.h"
+#include "filter.h"
 
 HistoryQmlFilter::HistoryQmlFilter(QObject *parent) :
-    QObject(parent), mFilter(new HistoryFilter())
+    QObject(parent), mFilter(new History::Filter())
 {
     connect(this,
             SIGNAL(filterPropertyChanged()),
@@ -43,12 +44,12 @@ int HistoryQmlFilter::matchFlags() const
 
 void HistoryQmlFilter::setMatchFlags(int flags)
 {
-    mFilter->setMatchFlags((HistoryFilter::MatchFlags)flags);
+    mFilter->setMatchFlags((History::MatchFlags)flags);
     Q_EMIT matchFlagsChanged();
 }
 
 
-HistoryFilterPtr HistoryQmlFilter::filter() const
+History::FilterPtr HistoryQmlFilter::filter() const
 {
     return mFilter;
 }

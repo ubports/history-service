@@ -1,19 +1,19 @@
 #ifndef SQLITEHISTORYREADER_H
 #define SQLITEHISTORYREADER_H
 
-#include <HistoryReader>
+#include "reader.h"
 
-class SQLiteHistoryReader : public HistoryReader
+class SQLiteHistoryReader : public History::Reader
 {
     Q_OBJECT
 public:
     explicit SQLiteHistoryReader(QObject *parent = 0);
-    HistoryThreadViewPtr queryThreads(HistoryItem::ItemType type,
-                                      const HistorySortPtr &sort = HistorySortPtr(),
-                                      const HistoryFilterPtr &filter = HistoryFilterPtr());
-    HistoryItemViewPtr queryItems(HistoryItem::ItemType type,
-                                  const HistorySortPtr &sort = HistorySortPtr(),
-                                  const HistoryFilterPtr &filter = HistoryFilterPtr());
+    History::ThreadViewPtr queryThreads(History::EventType type,
+                                        const History::SortPtr &sort = History::SortPtr(),
+                                        const History::FilterPtr &filter = History::FilterPtr());
+    History::EventViewPtr queryEvents(History::EventType type,
+                                      const History::SortPtr &sort = History::SortPtr(),
+                                      const History::FilterPtr &filter = History::FilterPtr());
 };
 
 #endif // SQLITEHISTORYREADER_H

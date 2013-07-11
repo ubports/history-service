@@ -1,9 +1,12 @@
 #include "pluginmanager.h"
 #include "config.h"
+#include "plugin.h"
 #include <QDir>
 #include <QPluginLoader>
-#include <HistoryPlugin>
 #include <QDebug>
+
+namespace History
+{
 
 PluginManager::PluginManager(QObject *parent) :
     QObject(parent)
@@ -13,8 +16,6 @@ PluginManager::PluginManager(QObject *parent) :
 
 PluginManager::~PluginManager()
 {
-    // remove all the loaded plugins
-    qDeleteAll(mPlugins);
 }
 
 PluginManager *PluginManager::instance()
@@ -23,7 +24,7 @@ PluginManager *PluginManager::instance()
     return self;
 }
 
-QList<HistoryPlugin *> PluginManager::plugins()
+QList<PluginPtr> PluginManager::plugins()
 {
     return mPlugins;
 }
@@ -36,9 +37,11 @@ void PluginManager::loadPlugins()
     Q_FOREACH (QString fileName, dir.entryList(QDir::Files)) {
         qDebug() << fileName;
         QPluginLoader loader(dir.absoluteFilePath(fileName));
-        HistoryPlugin *plugin = qobject_cast<HistoryPlugin*>(loader.instance());
+        Plugin *plugin = qobject_cast<Plugin*>(loader.instance());
         if (plugin) {
-            mPlugins.append(plugin);
+            mPlugins.append(PluginPtr(plugin));
         }
     }
+}
+
 }

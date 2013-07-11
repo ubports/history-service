@@ -2,8 +2,7 @@
 #define HISTORYTHREADMODEL_H
 
 #include <QAbstractListModel>
-#include <HistoryItem>
-#include <Types>
+#include "types.h"
 
 class HistoryQmlFilter;
 
@@ -11,13 +10,13 @@ class HistoryThreadModel : public QAbstractListModel
 {
     Q_OBJECT
     Q_PROPERTY(HistoryQmlFilter *filter READ filter WRITE setFilter NOTIFY filterChanged)
-    Q_PROPERTY(ItemType type READ type WRITE setType NOTIFY typeChanged)
-    Q_ENUMS(ItemType)
+    Q_PROPERTY(EventType type READ type WRITE setType NOTIFY typeChanged)
+    Q_ENUMS(EventType)
     Q_ENUMS(Role)
 public:
-    enum ItemType {
-        ItemTypeText = HistoryItem::ItemTypeText,
-        ItemTypeVoice = HistoryItem::ItemTypeVoice
+    enum EventType {
+        EventTypeText = History::EventTypeText,
+        EventTypeVoice = History::EventTypeVoice
     };
 
     enum Role {
@@ -52,8 +51,8 @@ public:
     HistoryQmlFilter *filter() const;
     void setFilter(HistoryQmlFilter *value);
 
-    ItemType type() const;
-    void setType(ItemType value);
+    EventType type() const;
+    void setType(EventType value);
 
 Q_SIGNALS:
     void filterChanged();
@@ -63,13 +62,12 @@ protected Q_SLOTS:
     void updateQuery();
 
 private:
-    HistoryThreadViewPtr mThreadView;
-    QList<HistoryThreadPtr> mThreads;
+    History::ThreadViewPtr mThreadView;
+    QList<History::ThreadPtr> mThreads;
     bool mCanFetchMore;
     HistoryQmlFilter *mFilter;
-    ItemType mType;
+    EventType mType;
     QHash<int, QByteArray> mRoles;
-    
 };
 
 #endif // HISTORYTHREADMODEL_H

@@ -2,8 +2,8 @@ CREATE TABLE threads (
     accountId varchar(255),
     threadId varchar(255),
     type tinyint,
-    lastItemId varchar(255),
-    lastItemTimestamp datetime,
+    lastEventId varchar(255),
+    lastEventTimestamp datetime,
     count int,
     unreadCount int
 )#
@@ -15,156 +15,156 @@ CREATE TABLE thread_participants (
     participantId varchar(255)
 )#
 
-CREATE TABLE voice_items (
+CREATE TABLE voice_events (
     accountId varchar(255),
     threadId varchar(255),
-    itemId varchar(255),
+    eventId varchar(255),
     senderId varchar(255),
     timestamp datetime,
-    newItem bool,
+    newEvent bool,
     duration int,
     missed bool
 )#
 
-CREATE TABLE text_items (
+CREATE TABLE text_events (
     accountId varchar(255),
     threadId varchar(255),
-    itemId varchar(255),
+    eventId varchar(255),
     senderId varchar(255),
     timestamp datetime,
-    newItem bool,
+    newEvent bool,
     message varchar(512),
     messageType tinyint,
     messageFlags tinyint,
     readTimestamp datetime
 )#
 
-CREATE TRIGGER voice_items_insert_trigger  AFTER INSERT ON voice_items
+CREATE TRIGGER voice_events_insert_trigger  AFTER INSERT ON voice_events
 FOR EACH ROW
 BEGIN
-    UPDATE threads SET count=(SELECT count(itemId) FROM voice_items WHERE
+    UPDATE threads SET count=(SELECT count(eventId) FROM voice_events WHERE
         accountId=new.accountId AND
         threadId=new.threadId)
         WHERE accountId=new.accountId AND threadId=new.threadId AND type=1;
-    UPDATE threads SET unreadCount=(SELECT count(itemId) FROM voice_items WHERE
+    UPDATE threads SET unreadCount=(SELECT count(eventId) FROM voice_events WHERE
         accountId=new.accountId AND threadId=new.threadId AND newItem='true')
         WHERE accountId=new.accountId AND threadId=new.threadId AND type=1;
-    UPDATE threads SET lastItemId=(SELECT itemId FROM voice_items WHERE
+    UPDATE threads SET lastEventId=(SELECT eventId FROM voice_events WHERE
         accountId=new.accountId AND
         threadId=new.threadId
         ORDER BY timestamp DESC LIMIT 1)
         WHERE accountId=new.accountId AND threadId=new.threadId AND type=1;
-    UPDATE threads SET lastItemTimestamp=(SELECT timestamp FROM voice_items WHERE
+    UPDATE threads SET lastEventTimestamp=(SELECT timestamp FROM voice_events WHERE
         accountId=new.accountId AND
         threadId=new.threadId
         ORDER BY timestamp DESC LIMIT 1)
         WHERE accountId=new.accountId AND threadId=new.threadId AND type=1;
 END#
 
-CREATE TRIGGER voice_items_update_trigger  AFTER UPDATE ON voice_items
+CREATE TRIGGER voice_events_update_trigger  AFTER UPDATE ON voice_events
 FOR EACH ROW
 BEGIN
-    UPDATE threads SET count=(SELECT count(itemId) FROM voice_items WHERE
+    UPDATE threads SET count=(SELECT count(eventId) FROM voice_events WHERE
         accountId=new.accountId AND
         threadId=new.threadId)
         WHERE accountId=new.accountId AND threadId=new.threadId AND type=1;
-    UPDATE threads SET unreadCount=(SELECT count(itemId) FROM voice_items WHERE
+    UPDATE threads SET unreadCount=(SELECT count(eventId) FROM voice_events WHERE
         accountId=new.accountId AND threadId=new.threadId AND newItem='true')
         WHERE accountId=new.accountId AND threadId=new.threadId AND type=1;
-    UPDATE threads SET lastItemId=(SELECT itemId FROM voice_items WHERE
+    UPDATE threads SET lastEventId=(SELECT eventId FROM voice_events WHERE
         accountId=new.accountId AND
         threadId=new.threadId
         ORDER BY timestamp DESC LIMIT 1)
         WHERE accountId=new.accountId AND threadId=new.threadId AND type=1;
-    UPDATE threads SET lastItemTimestamp=(SELECT timestamp FROM voice_items WHERE
+    UPDATE threads SET lastEventTimestamp=(SELECT timestamp FROM voice_events WHERE
         accountId=new.accountId AND
         threadId=new.threadId
         ORDER BY timestamp DESC LIMIT 1)
         WHERE accountId=new.accountId AND threadId=new.threadId AND type=1;
 END#
 
-CREATE TRIGGER voice_items_delete_trigger  AFTER DELETE ON voice_items
+CREATE TRIGGER voice_events_delete_trigger  AFTER DELETE ON voice_events
 FOR EACH ROW
 BEGIN
-    UPDATE threads SET count=(SELECT count(itemId) FROM voice_items WHERE
+    UPDATE threads SET count=(SELECT count(eventId) FROM voice_events WHERE
         accountId=new.accountId AND
         threadId=new.threadId)
         WHERE accountId=new.accountId AND threadId=new.threadId AND type=1;
-    UPDATE threads SET unreadCount=(SELECT count(itemId) FROM voice_items WHERE
+    UPDATE threads SET unreadCount=(SELECT count(eventId) FROM voice_events WHERE
         accountId=new.accountId AND threadId=new.threadId AND newItem='true')
         WHERE accountId=new.accountId AND threadId=new.threadId AND type=1;
-    UPDATE threads SET lastItemId=(SELECT itemId FROM voice_items WHERE
+    UPDATE threads SET lastEventId=(SELECT eventId FROM voice_events WHERE
         accountId=new.accountId AND
         threadId=new.threadId
         ORDER BY timestamp DESC LIMIT 1)
         WHERE accountId=new.accountId AND threadId=new.threadId AND type=1;
-    UPDATE threads SET lastItemTimestamp=(SELECT timestamp FROM voice_items WHERE
+    UPDATE threads SET lastEventTimestamp=(SELECT timestamp FROM voice_events WHERE
         accountId=new.accountId AND
         threadId=new.threadId
         ORDER BY timestamp DESC LIMIT 1)
         WHERE accountId=new.accountId AND threadId=new.threadId AND type=1;
 END#
 
-CREATE TRIGGER text_items_insert_trigger  AFTER INSERT ON text_items
+CREATE TRIGGER text_events_insert_trigger  AFTER INSERT ON text_events
 FOR EACH ROW
 BEGIN
-    UPDATE threads SET count=(SELECT count(itemId) FROM text_items WHERE
+    UPDATE threads SET count=(SELECT count(eventId) FROM text_events WHERE
         accountId=new.accountId AND
         threadId=new.threadId)
         WHERE accountId=new.accountId AND threadId=new.threadId AND type=0;
-    UPDATE threads SET unreadCount=(SELECT count(itemId) FROM text_items WHERE
+    UPDATE threads SET unreadCount=(SELECT count(eventId) FROM text_events WHERE
         accountId=new.accountId AND threadId=new.threadId AND newItem='true')
         WHERE accountId=new.accountId AND threadId=new.threadId AND type=0;
-    UPDATE threads SET lastItemId=(SELECT itemId FROM text_items WHERE
+    UPDATE threads SET lastEventId=(SELECT eventId FROM text_events WHERE
         accountId=new.accountId AND
         threadId=new.threadId
         ORDER BY timestamp DESC LIMIT 1)
         WHERE accountId=new.accountId AND threadId=new.threadId AND type=0;
-    UPDATE threads SET lastItemTimestamp=(SELECT timestamp FROM text_items WHERE
+    UPDATE threads SET lastEventTimestamp=(SELECT timestamp FROM text_events WHERE
         accountId=new.accountId AND
         threadId=new.threadId
         ORDER BY timestamp DESC LIMIT 1)
         WHERE accountId=new.accountId AND threadId=new.threadId AND type=0;
 END#
 
-CREATE TRIGGER text_items_update_trigger  AFTER UPDATE ON text_items
+CREATE TRIGGER text_events_update_trigger  AFTER UPDATE ON text_events
 FOR EACH ROW
 BEGIN
-    UPDATE threads SET count=(SELECT count(itemId) FROM text_items WHERE
+    UPDATE threads SET count=(SELECT count(eventId) FROM text_events WHERE
         accountId=new.accountId AND
         threadId=new.threadId)
         WHERE accountId=new.accountId AND threadId=new.threadId AND type=0;
-    UPDATE threads SET unreadCount=(SELECT count(itemId) FROM text_items WHERE
+    UPDATE threads SET unreadCount=(SELECT count(eventId) FROM text_events WHERE
         accountId=new.accountId AND threadId=new.threadId AND newItem='true')
         WHERE accountId=new.accountId AND threadId=new.threadId AND type=0;
-    UPDATE threads SET lastItemId=(SELECT itemId FROM text_items WHERE
+    UPDATE threads SET lastEventId=(SELECT eventId FROM text_events WHERE
         accountId=new.accountId AND
         threadId=new.threadId
         ORDER BY timestamp DESC LIMIT 1)
         WHERE accountId=new.accountId AND threadId=new.threadId AND type=0;
-    UPDATE threads SET lastItemTimestamp=(SELECT timestamp FROM text_items WHERE
+    UPDATE threads SET lastEventTimestamp=(SELECT timestamp FROM text_events WHERE
         accountId=new.accountId AND
         threadId=new.threadId
         ORDER BY timestamp DESC LIMIT 1)
         WHERE accountId=new.accountId AND threadId=new.threadId AND type=0;
 END#
 
-CREATE TRIGGER text_items_delete_trigger  AFTER DELETE ON text_items
+CREATE TRIGGER text_events_delete_trigger  AFTER DELETE ON text_events
 FOR EACH ROW
 BEGIN
-    UPDATE threads SET count=(SELECT count(itemId) FROM text_items WHERE
+    UPDATE threads SET count=(SELECT count(eventId) FROM text_events WHERE
         accountId=new.accountId AND
         threadId=new.threadId)
         WHERE accountId=new.accountId AND threadId=new.threadId AND type=0;
-    UPDATE threads SET unreadCount=(SELECT count(itemId) FROM text_items WHERE
+    UPDATE threads SET unreadCount=(SELECT count(eventId) FROM text_events WHERE
         accountId=new.accountId AND threadId=new.threadId AND newItem='true')
         WHERE accountId=new.accountId AND threadId=new.threadId AND type=0;
-    UPDATE threads SET lastItemId=(SELECT itemId FROM text_items WHERE
+    UPDATE threads SET lastEventId=(SELECT eventId FROM text_events WHERE
         accountId=new.accountId AND
         threadId=new.threadId
         ORDER BY timestamp DESC LIMIT 1)
         WHERE accountId=new.accountId AND threadId=new.threadId AND type=0;
-    UPDATE threads SET lastItemTimestamp=(SELECT timestamp FROM text_items WHERE
+    UPDATE threads SET lastEventTimestamp=(SELECT timestamp FROM text_events WHERE
         accountId=new.accountId AND
         threadId=new.threadId
         ORDER BY timestamp DESC LIMIT 1)

@@ -1,45 +1,45 @@
-#include <HistoryManager>
-#include <HistoryItemView>
-#include <HistoryFilter>
-#include <HistoryIntersectionFilter>
-#include <HistoryThread>
-#include <HistoryThreadView>
-#include <TextItem>
-#include <VoiceItem>
+#include "manager.h"
+#include "eventview.h"
+#include "filter.h"
+#include "intersectionfilter.h"
+#include "thread.h"
+#include "threadview.h"
+#include "textevent.h"
+#include "voiceevent.h"
 #include <QCoreApplication>
 #include <QDebug>
 
-void printItem(const HistoryItemPtr &item)
+void printEvent(const History::EventPtr &event)
 {
     QString extraInfo;
-    TextItemPtr textItem;
-    VoiceItemPtr voiceItem;
+    History::TextEventPtr textEvent;
+    History::VoiceEventPtr voiceEvent;
 
-    switch (item->type()) {
-    case HistoryItem::ItemTypeText:
-        textItem = item.staticCast<TextItem>();
-        extraInfo = QString(" message: %1").arg(textItem->message());
+    switch (event->type()) {
+    case History::EventTypeText:
+        textEvent = event.staticCast<History::TextEvent>();
+        extraInfo = QString(" message: %1").arg(textEvent->message());
         break;
-    case HistoryItem::ItemTypeVoice:
-        voiceItem = item.staticCast<VoiceItem>();
-        extraInfo = QString(" missed: %1 duration: %2").arg(voiceItem->missed() ? "yes" : "no", voiceItem->duration().toString());
+    case History::EventTypeVoice:
+        voiceEvent = event.staticCast<History::VoiceEvent>();
+        extraInfo = QString(" missed: %1 duration: %2").arg(voiceEvent->missed() ? "yes" : "no", voiceEvent->duration().toString());
         break;
     }
 
-    qDebug() << qPrintable(QString("    * Item: accountId: %1 threadId: %2 itemId: %3 sender: %4 timestamp: %5 newItem: %6")
-                .arg(item->accountId(), item->threadId(), item->itemId(), item->sender(), item->timestamp().toString(),
-                     item->newItem() ? "yes" : "no"));
+    qDebug() << qPrintable(QString("    * Item: accountId: %1 threadId: %2 eventId: %3 sender: %4 timestamp: %5 newEvent: %6")
+                .arg(event->accountId(), event->threadId(), event->eventId(), event->sender(), event->timestamp().toString(),
+                     event->newEvent() ? "yes" : "no"));
     qDebug() << qPrintable(QString("      %1").arg(extraInfo));
 }
 
-void printThread(const HistoryThreadPtr &thread)
+void printThread(const History::ThreadPtr &thread)
 {
     QString type = "Unknown";
     switch (thread->type()) {
-    case HistoryItem::ItemTypeText:
+    case History::EventTypeText:
         type = "Text";
         break;
-    case HistoryItem::ItemTypeVoice:
+    case History::EventTypeVoice:
         type = "Voice";
         break;
     }
@@ -51,40 +51,40 @@ void printThread(const HistoryThreadPtr &thread)
                                                                                                 QString::number(thread->unreadCount())));
     qDebug() << qPrintable(QString("    Participants: %1").arg(thread->participants().join(", ")));
 
-    if (!thread->lastItem().isNull()) {
-        qDebug() << "    Last item:";
-        printItem(thread->lastItem());
+    if (!thread->lastEvent().isNull()) {
+        qDebug() << "    Last event:";
+        printEvent(thread->lastEvent());
     }
-    qDebug() << "    All items:";
+    qDebug() << "    All events:";
 }
 
 int main(int argc, char **argv)
 {
     QCoreApplication app(argc, argv);
-    HistoryManager *manager = HistoryManager::instance();
+    History::Manager *manager = History::Manager::instance();
 
-    QList<HistoryItem::ItemType> itemTypes;
-    itemTypes << HistoryItem::ItemTypeText << HistoryItem::ItemTypeVoice;
+    QList<History::EventType> eventTypes;
+    eventTypes << History::EventTypeText << History::EventTypeVoice;
 
-    Q_FOREACH(HistoryItem::ItemType type, itemTypes) {
-        HistoryThreadViewPtr view = manager->queryThreads(type);
-        QList<HistoryThreadPtr> threads = view->nextPage();
+    Q_FOREACH(History::EventType type, eventTypes) {
+        History::ThreadViewPtr view = manager->queryThreads(type);
+        QList<History::ThreadPtr> threads = view->nextPage();
 
         while (!threads.isEmpty()) {
-            Q_FOREACH(const HistoryThreadPtr &thread, threads) {
+            Q_FOREACH(const History::ThreadPtr &thread, threads) {
                 printThread(thread);
 
                 // now print the items for this thread
-                HistoryIntersectionFilterPtr filter(new HistoryIntersectionFilter());
-                filter->append(HistoryFilterPtr(new HistoryFilter("threadId", thread->threadId())));
-                filter->append(HistoryFilterPtr(new HistoryFilter("accountId", thread->accountId())));
-                HistoryItemViewPtr itemView = manager->queryItems(type, HistorySortPtr(), filter);
-                QList<HistoryItemPtr> items = itemView->nextPage();
-                while (!items.isEmpty()) {
-                    Q_FOREACH(const HistoryItemPtr &item, items) {
-                        printItem(item);
+                History::IntersectionFilterPtr filter(new History::IntersectionFilter());
+                filter->append(History::FilterPtr(new History::Filter("threadId", thread->threadId())));
+                filter->append(History::FilterPtr(new History::Filter("accountId", thread->accountId())));
+                History::EventViewPtr eventView = manager->queryEvents(type, History::SortPtr(), filter);
+                QList<History::EventPtr> events = eventView->nextPage();
+                while (!events.isEmpty()) {
+                    Q_FOREACH(const History::EventPtr &event, events) {
+                        printEvent(event);
                     }
-                    items = itemView->nextPage();
+                    events = eventView->nextPage();
                 }
             }
             threads = view->nextPage();

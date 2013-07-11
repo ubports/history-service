@@ -1,17 +1,17 @@
 #include "sqlitehistorythreadview.h"
 #include "sqlitedatabase.h"
 #include "sqlitehistoryreader.h"
+#include "thread.h"
+#include "intersectionfilter.h"
+#include "textevent.h"
+#include "voiceevent.h"
 #include <QDebug>
 #include <QSqlError>
-#include <HistoryThread>
-#include <HistoryIntersectionFilter>
-#include <TextItem>
-#include <VoiceItem>
 
 SQLiteHistoryThreadView::SQLiteHistoryThreadView(SQLiteHistoryReader *reader,
-                                                 HistoryItem::ItemType type,
-                                                 const HistorySortPtr &sort,
-                                                 const HistoryFilterPtr &filter)
+                                                 History::EventType type,
+                                                 const History::SortPtr &sort,
+                                                 const History::FilterPtr &filter)
     : mReader(reader), mType(type), mSort(sort), mFilter(filter), mPageSize(15),
       mQuery(SQLiteDatabase::instance()->database())
 {
@@ -31,7 +31,7 @@ SQLiteHistoryThreadView::SQLiteHistoryThreadView(SQLiteHistoryReader *reader,
     QStringList fields;
     fields << "threads.accountId"
            << "threads.threadId"
-           << "threads.lastItemId"
+           << "threads.lastEventId"
            << "threads.count"
            << "threads.unreadCount";
 
@@ -39,26 +39,24 @@ SQLiteHistoryThreadView::SQLiteHistoryThreadView(SQLiteHistoryReader *reader,
     QString table;
 
     switch (type) {
-    case HistoryItem::ItemTypeText:
-        table = "text_items";
-        extraFields << "text_items.message" << "text_items.messageType" << "text_items.messageFlags" << "text_items.readTimestamp";
+    case History::EventTypeText:
+        table = "text_events";
+        extraFields << "text_events.message" << "text_events.messageType" << "text_events.messageFlags" << "text_events.readTimestamp";
         break;
-    case HistoryItem::ItemTypeVoice:
-        table = "voice_items";
-        extraFields << "voice_items.duration" << "voice_items.missed";
+    case History::EventTypeVoice:
+        table = "voice_events";
+        extraFields << "voice_events.duration" << "voice_events.missed";
         break;
     }
 
     fields << QString("%1.senderId").arg(table)
            << QString("%1.timestamp").arg(table)
-           << QString("%1.newItem").arg(table);
+           << QString("%1.newEvent").arg(table);
     fields << extraFields;
 
     QString queryText = QString("SELECT %1 FROM threads LEFT JOIN %2 ON threads.threadId=%2.threadId AND "
-                                "threads.accountId=%2.accountId AND threads.lastItemId=%2.itemId WHERE threads.type=%3 %4")
+                                "threads.accountId=%2.accountId AND threads.lastEventId=%2.eventId WHERE threads.type=%3 %4")
                                 .arg(fields.join(", "), table, QString::number((int)type), condition);
-
-    qDebug() << "Query text:" << queryText;
 
     // FIXME: add support for sorting
     if (!mQuery.exec(queryText)) {
@@ -67,16 +65,16 @@ SQLiteHistoryThreadView::SQLiteHistoryThreadView(SQLiteHistoryReader *reader,
     }
 }
 
-QList<HistoryThreadPtr> SQLiteHistoryThreadView::nextPage()
+QList<History::ThreadPtr> SQLiteHistoryThreadView::nextPage()
 {
-    QList<HistoryThreadPtr> threads;
+    QList<History::ThreadPtr> threads;
     int remaining = mPageSize;
     QSqlQuery secondaryQuery(SQLiteDatabase::instance()->database());
 
     while (mQuery.next() && remaining-- > 0) {
         QString accountId = mQuery.value(0).toString();
         QString threadId = mQuery.value(1).toString();
-        QString lastItemId = mQuery.value(2).toString();
+        QString lastEventId = mQuery.value(2).toString();
         int count = mQuery.value(3).toInt();
         int unreadCount = mQuery.value(4).toInt();
 
@@ -97,35 +95,35 @@ QList<HistoryThreadPtr> SQLiteHistoryThreadView::nextPage()
         }
 
         // the next step is to get the last item
-        HistoryItemPtr historyItem;
-        if (!lastItemId.isEmpty()) {
+        History::EventPtr historyEvent;
+        if (!lastEventId.isEmpty()) {
             switch (mType) {
-            case HistoryItem::ItemTypeText:
-                historyItem = TextItemPtr(new TextItem(accountId,
-                                                       threadId,
-                                                       lastItemId,
-                                                       mQuery.value(5).toString(),
-                                                       mQuery.value(6).toDateTime(),
-                                                       mQuery.value(7).toBool(),
-                                                       mQuery.value(8).toString(),
-                                                       (TextItem::MessageType)mQuery.value(9).toInt(),
-                                                       TextItem::MessageFlags(mQuery.value(10).toInt()),
-                                                       mQuery.value(11).toDateTime()));
+            case History::EventTypeText:
+                historyEvent = History::TextEventPtr(new History::TextEvent(accountId,
+                                                                            threadId,
+                                                                            lastEventId,
+                                                                            mQuery.value(5).toString(),
+                                                                            mQuery.value(6).toDateTime(),
+                                                                            mQuery.value(7).toBool(),
+                                                                            mQuery.value(8).toString(),
+                                                                            (History::MessageType)mQuery.value(9).toInt(),
+                                                                            History::MessageFlags(mQuery.value(10).toInt()),
+                                                                            mQuery.value(11).toDateTime()));
                 break;
-            case HistoryItem::ItemTypeVoice:
-                historyItem = VoiceItemPtr(new VoiceItem(accountId,
-                                                         threadId,
-                                                         lastItemId,
-                                                         mQuery.value(5).toString(),
-                                                         mQuery.value(6).toDateTime(),
-                                                         mQuery.value(7).toBool(),
-                                                         mQuery.value(9).toBool(),
-                                                         QTime(0,0).addSecs(mQuery.value(8).toInt())));
+            case History::EventTypeVoice:
+                historyEvent = History::VoiceEventPtr(new History::VoiceEvent(accountId,
+                                                                              threadId,
+                                                                              lastEventId,
+                                                                              mQuery.value(5).toString(),
+                                                                              mQuery.value(6).toDateTime(),
+                                                                              mQuery.value(7).toBool(),
+                                                                              mQuery.value(9).toBool(),
+                                                                              QTime(0,0).addSecs(mQuery.value(8).toInt())));
                 break;
             }
         }
         // and last but not least, create the thread item and append it to the result set
-        HistoryThreadPtr thread(new HistoryThread(accountId, threadId, mType, participants, historyItem, count, unreadCount));
+        History::ThreadPtr thread(new History::Thread(accountId, threadId, mType, participants, historyEvent, count, unreadCount));
         threads << thread;
     }
 

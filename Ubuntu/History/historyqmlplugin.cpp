@@ -3,7 +3,7 @@
 #include "historyqmlintersectionfilter.h"
 #include "historyqmlunionfilter.h"
 #include "historythreadmodel.h"
-#include "historyitemmodel.h"
+#include "historyeventmodel.h"
 #include <QQmlEngine>
 #include <qqml.h>
 
@@ -17,7 +17,7 @@ void HistoryQmlPlugin::initializeEngine(QQmlEngine *engine, const char *uri)
 void HistoryQmlPlugin::registerTypes(const char *uri)
 {
     // @uri History
-    qmlRegisterType<HistoryItemModel>(uri, 0, 1, "HistoryItemModel");
+    qmlRegisterType<HistoryEventModel>(uri, 0, 1, "HistoryEventModel");
     qmlRegisterType<HistoryThreadModel>(uri, 0, 1, "HistoryThreadModel");
     qmlRegisterType<HistoryQmlFilter>(uri, 0, 1, "HistoryFilter");
     qmlRegisterType<HistoryQmlIntersectionFilter>(uri, 0, 1, "HistoryIntersectionFilter");

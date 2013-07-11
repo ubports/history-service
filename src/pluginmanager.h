@@ -1,9 +1,13 @@
-#ifndef PLUGINMANAGER_H
-#define PLUGINMANAGER_H
+#ifndef HISTORY_PLUGINMANAGER_H
+#define HISTORY_PLUGINMANAGER_H
 
 #include <QObject>
+#include "types.h"
 
-class HistoryPlugin;
+namespace History
+{
+
+class Plugin;
 
 class PluginManager : public QObject
 {
@@ -11,14 +15,16 @@ class PluginManager : public QObject
 public:
     ~PluginManager();
     static PluginManager *instance();
-    QList<HistoryPlugin*> plugins();
+    QList<PluginPtr> plugins();
 
 protected:
     void loadPlugins();
 
 private:
     explicit PluginManager(QObject *parent = 0);
-    QList<HistoryPlugin*> mPlugins;
+    QList<PluginPtr> mPlugins;
 };
 
-#endif // PLUGINMANAGER_H
+}
+
+#endif // HISTORY_PLUGINMANAGER_H

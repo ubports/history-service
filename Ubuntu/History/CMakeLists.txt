@@ -1,7 +1,7 @@
 # QML plugin
 
 set(plugin_SRCS
-    historyitemmodel.cpp
+    historyeventmodel.cpp
     historyqmlfilter.cpp
     historyqmlintersectionfilter.cpp
     historyqmlplugin.cpp
@@ -10,7 +10,7 @@ set(plugin_SRCS
     )
 
 set(plugin_HDRS
-    historyitemmodel.h
+    historyeventmodel.h
     historyqmlfilter.h
     historyqmlintersectionfilter.h
     historyqmlplugin.h
@@ -27,7 +27,7 @@ add_library(history-qml SHARED ${plugin_SRCS} ${plugin_HDRS})
 qt5_use_modules(history-qml Core Qml Quick)
 
 target_link_libraries(history-qml
-    commhistory
+    historyservice
     )
 
 set(PLUGIN_DIR ${QT_INSTALL_QML}/Ubuntu/History)

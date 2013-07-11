@@ -3,7 +3,7 @@
 
 #include <QObject>
 #include <QSharedPointer>
-#include <Types>
+#include "types.h"
 #include "textchannelobserver.h"
 #include "callchannelobserver.h"
 
@@ -26,7 +26,7 @@ private Q_SLOTS:
 private:
     CallChannelObserver mCallObserver;
     TextChannelObserver mTextObserver;
-    HistoryWriterPtr mWriter;
+    History::WriterPtr mWriter;
 };
 
 #endif

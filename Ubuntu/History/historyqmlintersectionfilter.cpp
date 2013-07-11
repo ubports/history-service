@@ -1,12 +1,12 @@
 #include "historyqmlintersectionfilter.h"
-#include <HistoryIntersectionFilter>
+#include "intersectionfilter.h"
 
 HistoryQmlIntersectionFilter::HistoryQmlIntersectionFilter(QObject *parent) :
-    HistoryQmlCompoundFilter(parent), mFilter(new HistoryIntersectionFilter())
+    HistoryQmlCompoundFilter(parent), mFilter(new History::IntersectionFilter())
 {
 }
 
-HistoryFilterPtr HistoryQmlIntersectionFilter::filter() const
+History::FilterPtr HistoryQmlIntersectionFilter::filter() const
 {
     mFilter->clear();
     Q_FOREACH(HistoryQmlFilter *filter, mFilters) {

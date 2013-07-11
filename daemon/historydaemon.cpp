@@ -1,11 +1,12 @@
 #include "historydaemon.h"
 #include "telepathyhelper.h"
 
-#include <HistoryPlugin>
-#include <HistoryThread>
-#include <HistoryWriter>
-#include <PluginManager>
-#include <VoiceItem>
+#include "plugin.h"
+#include "thread.h"
+#include "writer.h"
+#include "pluginmanager.h"
+#include "textevent.h"
+#include "voiceevent.h"
 
 #include <TelepathyQt/CallChannel>
 
@@ -14,7 +15,7 @@ HistoryDaemon::HistoryDaemon(QObject *parent)
 {
     qDebug() << "Going to load the plugins";
     // try to find a plugin that has a writer
-    Q_FOREACH(HistoryPlugin *plugin, PluginManager::instance()->plugins()) {
+    Q_FOREACH(History::PluginPtr plugin, History::PluginManager::instance()->plugins()) {
         qDebug() << "Trying the plugin";
         mWriter = plugin->writer();
         if (mWriter) {
@@ -67,9 +68,9 @@ void HistoryDaemon::onCallEnded(const Tp::CallChannelPtr &channel)
         participants << contact->id();
     }
 
-    HistoryThreadPtr thread = mWriter->threadForParticipants(channel->property("accountId").toString(),
-                                                             HistoryItem::ItemTypeVoice,
-                                                             participants);
+    History::ThreadPtr thread = mWriter->threadForParticipants(channel->property("accountId").toString(),
+                                                               History::EventTypeVoice,
+                                                               participants);
 
     // fill the call info
     QDateTime timestamp = channel->property("timestamp").toDateTime();
@@ -84,17 +85,16 @@ void HistoryDaemon::onCallEnded(const Tp::CallChannelPtr &channel)
         duration = duration.addSecs(activeTime.secsTo(QDateTime::currentDateTime()));
     }
 
-    QString itemId = QString("%1:%2").arg(thread->threadId()).arg(timestamp.toString());
-    VoiceItem item(thread->accountId(),
-                   thread->threadId(),
-                   itemId,
-                   incoming ? channel->initiatorContact()->id() : "self",
-                   timestamp,
-                   missed, // only mark as a new (unseen) item if it is a missed call
-                   missed,
-                   duration
-                   );
-    mWriter->writeVoiceItem(item);
+    QString eventId = QString("%1:%2").arg(thread->threadId()).arg(timestamp.toString());
+    History::VoiceEventPtr event(new History::VoiceEvent(thread->accountId(),
+                                                         thread->threadId(),
+                                                         eventId,
+                                                         incoming ? channel->initiatorContact()->id() : "self",
+                                                         timestamp,
+                                                         missed, // only mark as a new (unseen) item if it is a missed call
+                                                         missed,
+                                                         duration));
+    mWriter->writeVoiceEvent(event);
 }
 
 void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, const Tp::ReceivedMessage &message)
@@ -109,20 +109,20 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
         participants << contact->id();
     }
 
-    HistoryThreadPtr thread = mWriter->threadForParticipants(textChannel->property("accountId").toString(),
-                                                             HistoryItem::ItemTypeText,
-                                                             participants);
-    TextItem item(thread->accountId(),
-                  thread->threadId(),
-                  message.messageToken(),
-                  message.sender()->id(),
-                  message.received(),
-                  true, // message is always unread until it reaches HistoryDaemon::onMessageRead
-                  message.text(),
-                  TextItem::TextMessage, // FIXME: add support for MMS
-                  TextItem::MessageFlags(),
-                  QDateTime());
-    mWriter->writeTextItem(item);
+    History::ThreadPtr thread = mWriter->threadForParticipants(textChannel->property("accountId").toString(),
+                                                               History::EventTypeText,
+                                                               participants);
+    History::TextEventPtr event(new History::TextEvent(thread->accountId(),
+                                                       thread->threadId(),
+                                                       message.messageToken(),
+                                                       message.sender()->id(),
+                                                       message.received(),
+                                                       true, // message is always unread until it reaches HistoryDaemon::onMessageRead
+                                                       message.text(),
+                                                       History::TextMessage, // FIXME: add support for MMS
+                                                       History::MessageFlags(),
+                                                       QDateTime()));
+    mWriter->writeTextEvent(event);
 }
 
 void HistoryDaemon::onMessageRead(const Tp::TextChannelPtr textChannel, const Tp::ReceivedMessage &message)
@@ -145,18 +145,18 @@ void HistoryDaemon::onMessageSent(const Tp::TextChannelPtr textChannel, const Tp
         participants << contact->id();
     }
 
-    HistoryThreadPtr thread = mWriter->threadForParticipants(textChannel->property("accountId").toString(),
-                                                             HistoryItem::ItemTypeText,
-                                                             participants);
-    TextItem item(thread->accountId(),
-                  thread->threadId(),
-                  messageToken,
-                  "self",
-                  message.sent(),
-                  false, // outgoing messages are never new (unseen)
-                  message.text(),
-                  TextItem::TextMessage, // FIXME: add support for MMS
-                  TextItem::MessageFlags(),
-                  QDateTime());
-    mWriter->writeTextItem(item);
+    History::ThreadPtr thread = mWriter->threadForParticipants(textChannel->property("accountId").toString(),
+                                                               History::EventTypeText,
+                                                               participants);
+    History::TextEventPtr event(new History::TextEvent(thread->accountId(),
+                                thread->threadId(),
+                                messageToken,
+                                "self",
+                                message.sent(),
+                                false, // outgoing messages are never new (unseen)
+                                message.text(),
+                                History::TextMessage, // FIXME: add support for MMS
+                                History::MessageFlags(),
+                                QDateTime()));
+    mWriter->writeTextEvent(event);
 }

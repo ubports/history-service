@@ -1,29 +1,27 @@
 #ifndef SQLITEHISTORYTHREADVIEW_H
 #define SQLITEHISTORYTHREADVIEW_H
 
-#include <HistoryThreadView>
-#include <HistoryItem>
-#include <HistorySort>
-#include <HistoryFilter>
+#include "threadview.h"
+#include "types.h"
 #include <QSqlQuery>
 
 class SQLiteHistoryReader;
 
-class SQLiteHistoryThreadView : public HistoryThreadView
+class SQLiteHistoryThreadView : public History::ThreadView
 {
 public:
     SQLiteHistoryThreadView(SQLiteHistoryReader *reader,
-                            HistoryItem::ItemType type,
-                            const HistorySortPtr &sort,
-                            const HistoryFilterPtr &filter);
+                            History::EventType type,
+                            const History::SortPtr &sort,
+                            const History::FilterPtr &filter);
 
-    QList<HistoryThreadPtr> nextPage();
+    QList<History::ThreadPtr> nextPage();
     bool isValid() const;
 
 private:
-    HistoryItem::ItemType mType;
-    HistorySortPtr mSort;
-    HistoryFilterPtr mFilter;
+    History::EventType mType;
+    History::SortPtr mSort;
+    History::FilterPtr mFilter;
     QSqlQuery mQuery;
     int mPageSize;
     SQLiteHistoryReader *mReader;

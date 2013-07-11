@@ -3,8 +3,7 @@
 
 #include <qqml.h>
 #include <QObject>
-#include <HistoryFilter>
-#include <Types>
+#include "types.h"
 
 class HistoryQmlFilter : public QObject
 {
@@ -15,10 +14,10 @@ class HistoryQmlFilter : public QObject
     Q_PROPERTY(int matchFlags READ matchFlags WRITE setMatchFlags NOTIFY matchFlagsChanged)
 public:
     enum MatchFlag {
-        MatchCaseSensitive = HistoryFilter::MatchCaseSensitive,
-        MatchCaseInsensitive = HistoryFilter::MatchCaseInsensitive,
-        MatchContains = HistoryFilter::MatchContains,
-        MatchPhoneNumber = HistoryFilter::MatchPhoneNumber
+        MatchCaseSensitive = History::MatchCaseSensitive,
+        MatchCaseInsensitive = History::MatchCaseInsensitive,
+        MatchContains = History::MatchContains,
+        MatchPhoneNumber = History::MatchPhoneNumber
     };
 
     explicit HistoryQmlFilter(QObject *parent = 0);
@@ -32,7 +31,7 @@ public:
     int matchFlags() const;
     void setMatchFlags(int flags);
 
-    virtual HistoryFilterPtr filter() const;
+    virtual History::FilterPtr filter() const;
 
 Q_SIGNALS:
     void filterPropertyChanged();
@@ -41,7 +40,7 @@ Q_SIGNALS:
     void filterChanged();
     
 protected:
-    HistoryFilterPtr mFilter;
+    History::FilterPtr mFilter;
 };
 
 

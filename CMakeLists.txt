@@ -1,4 +1,4 @@
-project(history)
+project(history-service)
 cmake_minimum_required(VERSION 2.8)
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules)
 
@@ -53,7 +53,7 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}
     )
 
-set(HISTORY_PLUGIN_PATH ${CMAKE_INSTALL_LIBDIR}/history/plugins)
+set(HISTORY_PLUGIN_PATH ${CMAKE_INSTALL_LIBDIR}/history-service/plugins)
 configure_file(config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h @ONLY)
 
 enable_testing()

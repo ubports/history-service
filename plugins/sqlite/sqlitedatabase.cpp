@@ -25,11 +25,11 @@ bool SQLiteDatabase::initializeDatabase()
 
     QDir dir(mDatabasePath);
     qDebug() << "DatabasePath:" << dir.absolutePath();
-    if (!dir.exists("history") && !dir.mkpath("history")) {
+    if (!dir.exists("history-service") && !dir.mkpath("history-service")) {
         qDebug() << "Failed to create dir";
         return false;
     }
-    dir.cd("history");
+    dir.cd("history-service");
 
     mDatabasePath = dir.absoluteFilePath("history.sqlite");
     qDebug() << "History database:" << mDatabasePath;

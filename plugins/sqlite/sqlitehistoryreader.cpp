@@ -1,31 +1,27 @@
 #include "sqlitehistoryreader.h"
-#include "sqlitehistoryitemview.h"
+#include "sqlitehistoryeventview.h"
 #include "sqlitehistorythreadview.h"
 #include "sqlitedatabase.h"
+#include "types.h"
 #include <QDebug>
 #include <QSqlError>
 #include <QSqlQuery>
-#include <HistoryFilter>
-#include <HistoryIntersectionFilter>
-#include <HistoryThread>
-#include <TextItem>
-#include <VoiceItem>
 
 SQLiteHistoryReader::SQLiteHistoryReader(QObject *parent) :
-    HistoryReader(parent)
+    History::Reader(parent)
 {
 }
 
-HistoryThreadViewPtr SQLiteHistoryReader::queryThreads(HistoryItem::ItemType type,
-                                                       const HistorySortPtr &sort,
-                                                       const HistoryFilterPtr &filter)
+History::ThreadViewPtr SQLiteHistoryReader::queryThreads(History::EventType type,
+                                                         const History::SortPtr &sort,
+                                                         const History::FilterPtr &filter)
 {
-    return HistoryThreadViewPtr(new SQLiteHistoryThreadView(this, type, sort, filter));
+    return History::ThreadViewPtr(new SQLiteHistoryThreadView(this, type, sort, filter));
 }
 
-HistoryItemViewPtr SQLiteHistoryReader::queryItems(HistoryItem::ItemType type,
-                                                      const HistorySortPtr &sort,
-                                                      const HistoryFilterPtr &filter)
+History::EventViewPtr SQLiteHistoryReader::queryEvents(History::EventType type,
+                                                       const History::SortPtr &sort,
+                                                       const History::FilterPtr &filter)
 {
-    return HistoryItemViewPtr(new SQLiteHistoryItemView(this, type, sort, filter));
+    return History::EventViewPtr(new SQLiteHistoryEventView(this, type, sort, filter));
 }

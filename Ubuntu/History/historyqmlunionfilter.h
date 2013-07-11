@@ -9,9 +9,9 @@ class HistoryQmlUnionFilter : public HistoryQmlCompoundFilter
     Q_OBJECT
 public:
     explicit HistoryQmlUnionFilter(QObject *parent = 0);
-    HistoryFilterPtr filter() const;
+    History::FilterPtr filter() const;
 private:
-    HistoryUnionFilterPtr mFilter;
+    History::UnionFilterPtr mFilter;
 };
 
 #endif // HISTORYQMLUNIONFILTER_H

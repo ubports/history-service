@@ -1,7 +1,3 @@
-#include <HistoryManager>
-#include <HistoryThread>
-#include <TextItem>
-#include <VoiceItem>
 #include <QCoreApplication>
 #include <QDebug>
 #include <TelepathyQt/Types>

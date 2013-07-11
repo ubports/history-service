@@ -1,14 +1,14 @@
 #include "historythreadmodel.h"
-#include "historythread.h"
+#include "thread.h"
 #include "historyqmlfilter.h"
-#include <HistoryManager>
-#include <HistoryThreadView>
-#include <TextItem>
-#include <VoiceItem>
+#include "manager.h"
+#include "threadview.h"
+#include "textevent.h"
+#include "voiceevent.h"
 #include <QDebug>
 
 HistoryThreadModel::HistoryThreadModel(QObject *parent) :
-    QAbstractListModel(parent), mCanFetchMore(true), mFilter(0), mType(ItemTypeText)
+    QAbstractListModel(parent), mCanFetchMore(true), mFilter(0), mType(EventTypeText)
 {
     // configure the roles
     mRoles[AccountIdRole] = "accountId";
@@ -19,7 +19,7 @@ HistoryThreadModel::HistoryThreadModel(QObject *parent) :
     mRoles[UnreadCountRole] = "unreadCount";
 
     // roles related to the thread´s last item
-    mRoles[LastItemIdRole] = "itemId";
+    mRoles[LastItemIdRole] = "eventId";
     mRoles[LastItemSenderRole] = "itemSender";
     mRoles[LastItemTimestampRole] = "itemTimestamp";
     mRoles[LastItemNewRole] = "itemNew";
@@ -49,18 +49,18 @@ QVariant HistoryThreadModel::data(const QModelIndex &index, int role) const
         return QVariant();
     }
 
-    HistoryThreadPtr thread = mThreads[index.row()];
-    HistoryItemPtr item = thread->lastItem();
-    TextItemPtr textItem;
-    VoiceItemPtr voiceItem;
+    History::ThreadPtr thread = mThreads[index.row()];
+    History::EventPtr event = thread->lastEvent();
+    History::TextEventPtr textEvent;
+    History::VoiceEventPtr voiceEvent;
 
-    if (!item.isNull()) {
-        switch (item->type()) {
-        case HistoryItem::ItemTypeText:
-            textItem = item.staticCast<TextItem>();
+    if (!event.isNull()) {
+        switch (event->type()) {
+        case History::EventTypeText:
+            textEvent = event.staticCast<History::TextEvent>();
             break;
-        case HistoryItem::ItemTypeVoice:
-            voiceItem = item.staticCast<VoiceItem>();
+        case History::EventTypeVoice:
+            voiceEvent = event.staticCast<History::VoiceEvent>();
             break;
         }
     }
@@ -86,53 +86,53 @@ QVariant HistoryThreadModel::data(const QModelIndex &index, int role) const
         result = thread->unreadCount();
         break;
     case LastItemIdRole:
-        if (!item.isNull()) {
-            result = item->itemId();
+        if (!event.isNull()) {
+            result = event->eventId();
         }
         break;
     case LastItemSenderRole:
-        if (!item.isNull()) {
-            result = item->sender();
+        if (!event.isNull()) {
+            result = event->sender();
         }
         break;
     case LastItemTimestampRole:
-        if (!item.isNull()) {
-            result = item->timestamp();
+        if (!event.isNull()) {
+            result = event->timestamp();
         }
         break;
     case LastItemNewRole:
-        if (!item.isNull()) {
-            result = item->newItem();
+        if (!event.isNull()) {
+            result = event->newEvent();
         }
         break;
     case LastItemTextMessageRole:
-        if (!textItem.isNull()) {
-            result = textItem->message();
+        if (!textEvent.isNull()) {
+            result = textEvent->message();
         }
         break;
     case LastItemTextMessageTypeRole:
-        if (!textItem.isNull()) {
-            result = (int) textItem->messageType();
+        if (!textEvent.isNull()) {
+            result = (int) textEvent->messageType();
         }
         break;
     case LastItemTextMessageFlagsRole:
-        if (!textItem.isNull()) {
-            result = (int) textItem->messageFlags();
+        if (!textEvent.isNull()) {
+            result = (int) textEvent->messageFlags();
         }
         break;
     case LastItemTextReadTimestampRole:
-        if (!textItem.isNull()) {
-            result = textItem->readTimestamp();
+        if (!textEvent.isNull()) {
+            result = textEvent->readTimestamp();
         }
         break;
     case LastItemCallMissedRole:
-        if (!voiceItem.isNull()) {
-            result = voiceItem->missed();
+        if (!voiceEvent.isNull()) {
+            result = voiceEvent->missed();
         }
         break;
     case LastItemCallDurationRole:
-        if (!voiceItem.isNull()) {
-            result = voiceItem->duration();
+        if (!voiceEvent.isNull()) {
+            result = voiceEvent->duration();
         }
         break;
     }
@@ -155,9 +155,7 @@ void HistoryThreadModel::fetchMore(const QModelIndex &parent)
         return;
     }
 
-
-
-    QList<HistoryThreadPtr> threads = mThreadView->nextPage();
+    QList<History::ThreadPtr> threads = mThreadView->nextPage();
     qDebug() << "Got items:" << threads.count();
     // if the number of returned items is less than the page size, it means we have reached the end
     // and cannot fetch more items
@@ -198,12 +196,12 @@ void HistoryThreadModel::setFilter(HistoryQmlFilter *value)
     updateQuery();
 }
 
-HistoryThreadModel::ItemType HistoryThreadModel::type() const
+HistoryThreadModel::EventType HistoryThreadModel::type() const
 {
     return mType;
 }
 
-void HistoryThreadModel::setType(HistoryThreadModel::ItemType value)
+void HistoryThreadModel::setType(HistoryThreadModel::EventType value)
 {
     mType = value;
     Q_EMIT typeChanged();
@@ -221,12 +219,12 @@ void HistoryThreadModel::updateQuery()
     // and fetch again
     mCanFetchMore = true;
 
-    HistoryFilterPtr queryFilter;
-    HistorySortPtr querySort;
+    History::FilterPtr queryFilter;
+    History::SortPtr querySort;
 
     if (mFilter) {
         queryFilter = mFilter->filter();
     }
-    mThreadView = HistoryManager::instance()->queryThreads((HistoryItem::ItemType)mType, querySort, queryFilter);
+    mThreadView = History::Manager::instance()->queryThreads((History::EventType)mType, querySort, queryFilter);
     fetchMore(QModelIndex());
 }

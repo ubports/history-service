@@ -1,22 +1,23 @@
 #include "sqlitehistorywriter.h"
 #include "sqlitedatabase.h"
-#include <HistoryItem>
-#include <HistoryThread>
+#include "thread.h"
+#include "textevent.h"
+#include "voiceevent.h"
 #include <QDebug>
 #include <QSqlQuery>
 #include <QVariant>
 #include <QSqlError>
 
 SQLiteHistoryWriter::SQLiteHistoryWriter(QObject *parent) :
-    HistoryWriter(parent)
+    History::Writer(parent)
 {
     SQLiteDatabase::instance();
 }
 
-HistoryThreadPtr SQLiteHistoryWriter::threadForParticipants(const QString &accountId, HistoryItem::ItemType type, const QStringList &participants)
+History::ThreadPtr SQLiteHistoryWriter::threadForParticipants(const QString &accountId, History::EventType type, const QStringList &participants)
 {
     if (participants.isEmpty()) {
-        return HistoryThreadPtr(0);
+        return History::ThreadPtr(0);
     }
 
     QSqlQuery query(SQLiteDatabase::instance()->database());
@@ -31,7 +32,7 @@ HistoryThreadPtr SQLiteHistoryWriter::threadForParticipants(const QString &accou
     query.bindValue(":accountId", accountId);
     if (!query.exec()) {
         qCritical() << "Error:" << query.lastError() << query.lastQuery();
-        return HistoryThreadPtr(0);
+        return History::ThreadPtr(0);
     }
 
     QStringList threadIds;
@@ -49,7 +50,7 @@ HistoryThreadPtr SQLiteHistoryWriter::threadForParticipants(const QString &accou
         query.bindValue(":accountId", accountId);
         if (!query.exec()) {
             qCritical() << "Error:" << query.lastError() << query.lastQuery();
-            return HistoryThreadPtr(0);
+            return History::ThreadPtr(0);
         }
 
         QStringList threadParticipants;
@@ -86,7 +87,7 @@ HistoryThreadPtr SQLiteHistoryWriter::threadForParticipants(const QString &accou
         query.bindValue(":unreadCount", 0);
         if (!query.exec()) {
             qCritical() << "Error:" << query.lastError() << query.lastQuery();
-            return HistoryThreadPtr(0);
+            return History::ThreadPtr(0);
         }
 
         // and insert the participants
@@ -99,7 +100,7 @@ HistoryThreadPtr SQLiteHistoryWriter::threadForParticipants(const QString &accou
             query.bindValue(":participantId", participant);
             if (!query.exec()) {
                 qCritical() << "Error:" << query.lastError() << query.lastQuery();
-                return HistoryThreadPtr(0);
+                return History::ThreadPtr(0);
             }
         }
         existingThread = threadId;
@@ -107,60 +108,60 @@ HistoryThreadPtr SQLiteHistoryWriter::threadForParticipants(const QString &accou
 
     // and finally create the thread item
     // FIXME: check for existing instances of the thread object instead of always creating a new one
-    HistoryThreadPtr thread(new HistoryThread(accountId, existingThread, type, participants));
+    History::ThreadPtr thread(new History::Thread(accountId, existingThread, type, participants));
     return thread;
 }
 
-bool SQLiteHistoryWriter::writeTextItem(const TextItem &item)
+bool SQLiteHistoryWriter::writeTextEvent(const History::TextEventPtr &event)
 {
-    qDebug() << "Going to write text item:" << item.accountId() << item.itemId() << item.sender() << item.message();
+    qDebug() << "Going to write text event:" << event->accountId() << event->eventId() << event->sender() << event->message();
 
     QSqlQuery query(SQLiteDatabase::instance()->database());
 
     // FIXME: add support for checking if an item already exists
 
-    query.prepare("INSERT INTO text_items (accountId, threadId, itemId, senderId, timestamp, newItem, message, messageType, messageFlags, readTimestamp) "
-                  "VALUES (:accountId, :threadId, :itemId, :senderId, :timestamp, :newItem, :message, :messageType, :messageFlags, :readTimestamp)");
-    query.bindValue(":accountId", item.accountId());
-    query.bindValue(":threadId", item.threadId());
-    query.bindValue(":itemId", item.itemId());
-    query.bindValue(":senderId", item.sender());
-    query.bindValue(":timestamp", item.timestamp());
-    query.bindValue(":newItem", item.newItem());
-    query.bindValue(":message", item.message());
-    query.bindValue(":messageType", item.messageType());
-    query.bindValue(":messageFlags", (int) item.messageFlags());
-    query.bindValue(":readTimestamp", item.readTimestamp());
+    query.prepare("INSERT INTO text_events (accountId, threadId, eventId, senderId, timestamp, newEvent, message, messageType, messageFlags, readTimestamp) "
+                  "VALUES (:accountId, :threadId, :eventId, :senderId, :timestamp, :newEvent, :message, :messageType, :messageFlags, :readTimestamp)");
+    query.bindValue(":accountId", event->accountId());
+    query.bindValue(":threadId", event->threadId());
+    query.bindValue(":eventId", event->eventId());
+    query.bindValue(":senderId", event->sender());
+    query.bindValue(":timestamp", event->timestamp());
+    query.bindValue(":newEvent", event->newEvent());
+    query.bindValue(":message", event->message());
+    query.bindValue(":messageType", event->messageType());
+    query.bindValue(":messageFlags", (int) event->messageFlags());
+    query.bindValue(":readTimestamp", event->readTimestamp());
 
     if (!query.exec()) {
-        qCritical() << "Failed to save the voice item. Error:" << query.lastError() << query.lastQuery();
+        qCritical() << "Failed to save the text event: Error:" << query.lastError() << query.lastQuery();
         return false;
     }
 
     return true;
 }
 
-bool SQLiteHistoryWriter::writeVoiceItem(const VoiceItem &item)
+bool SQLiteHistoryWriter::writeVoiceEvent(const History::VoiceEventPtr &event)
 {
-    qDebug() << "Going to write voice item:" << item.accountId() << item.itemId() << item.sender();
+    qDebug() << "Going to write voice event:" << event->accountId() << event->eventId() << event->sender();
 
     QSqlQuery query(SQLiteDatabase::instance()->database());
 
     // FIXME: add support for checking if an item already exists
 
-    query.prepare("INSERT INTO voice_items (accountId, threadId, itemId, senderId, timestamp, newItem, duration, missed) "
-                  "VALUES (:accountId, :threadId, :itemId, :senderId, :timestamp, :newItem, :duration, :missed)");
-    query.bindValue(":accountId", item.accountId());
-    query.bindValue(":threadId", item.threadId());
-    query.bindValue(":itemId", item.itemId());
-    query.bindValue(":senderId", item.sender());
-    query.bindValue(":timestamp", item.timestamp());
-    query.bindValue(":newItem", item.newItem());
-    query.bindValue(":duration", QTime(0,0,0,0).secsTo(item.duration()));
-    query.bindValue(":missed", item.missed());
+    query.prepare("INSERT INTO voice_events (accountId, threadId, eventId, senderId, timestamp, newEvent, duration, missed) "
+                  "VALUES (:accountId, :threadId, :eventId, :senderId, :timestamp, :newEvent, :duration, :missed)");
+    query.bindValue(":accountId", event->accountId());
+    query.bindValue(":threadId", event->threadId());
+    query.bindValue(":eventId", event->eventId());
+    query.bindValue(":senderId", event->sender());
+    query.bindValue(":timestamp", event->timestamp());
+    query.bindValue(":newEvent", event->newEvent());
+    query.bindValue(":duration", QTime(0,0,0,0).secsTo(event->duration()));
+    query.bindValue(":missed", event->missed());
 
     if (!query.exec()) {
-        qCritical() << "Failed to save the voice item. Error:" << query.lastError() << query.lastQuery();
+        qCritical() << "Failed to save the voice event: Error:" << query.lastError() << query.lastQuery();
         return false;
     }
 
