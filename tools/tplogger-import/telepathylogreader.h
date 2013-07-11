@@ -50,6 +50,7 @@ protected:
 Q_SIGNALS:
     void loadedCallEvent(const Tpl::CallEventPtr &event);
     void loadedMessageEvent(const Tpl::TextEventPtr &event);
+    void finished();
 
 protected Q_SLOTS:
     void onAccountManagerReady(Tp::PendingOperation *op);
@@ -63,6 +64,7 @@ protected:
 
 private:
     explicit TelepathyLogReader(QObject *parent = 0);
+    QList <Tpl::PendingOperation*> mOperations;
 
 };
 

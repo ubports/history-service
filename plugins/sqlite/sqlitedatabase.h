@@ -13,6 +13,10 @@ public:
     bool initializeDatabase();
     QSqlDatabase database() const;
 
+    bool beginTransation();
+    bool finishTransaction();
+    bool rollbackTransaction();
+
 protected:
     bool createDatabase();
 

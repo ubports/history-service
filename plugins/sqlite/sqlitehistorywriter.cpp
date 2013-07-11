@@ -114,8 +114,6 @@ History::ThreadPtr SQLiteHistoryWriter::threadForParticipants(const QString &acc
 
 bool SQLiteHistoryWriter::writeTextEvent(const History::TextEventPtr &event)
 {
-    qDebug() << "Going to write text event:" << event->accountId() << event->eventId() << event->sender() << event->message();
-
     QSqlQuery query(SQLiteDatabase::instance()->database());
 
     // FIXME: add support for checking if an event already exists
@@ -143,8 +141,6 @@ bool SQLiteHistoryWriter::writeTextEvent(const History::TextEventPtr &event)
 
 bool SQLiteHistoryWriter::writeVoiceEvent(const History::VoiceEventPtr &event)
 {
-    qDebug() << "Going to write voice event:" << event->accountId() << event->eventId() << event->sender();
-
     QSqlQuery query(SQLiteDatabase::instance()->database());
 
     // FIXME: add support for checking if an event already exists
@@ -166,4 +162,14 @@ bool SQLiteHistoryWriter::writeVoiceEvent(const History::VoiceEventPtr &event)
     }
 
     return true;
+}
+
+bool SQLiteHistoryWriter::beginBatchOperation()
+{
+    return SQLiteDatabase::instance()->beginTransation();
+}
+
+bool SQLiteHistoryWriter::endBatchOperation()
+{
+    return SQLiteDatabase::instance()->finishTransaction();
 }

@@ -63,6 +63,8 @@ void TelepathyLogReader::fetchLog(const Tp::AccountPtr &account)
 {
     Tpl::PendingEntities *pendingEntities = mLogManager->queryEntities(account);
 
+    mOperations.append(pendingEntities);
+
     /* Fetching the log work like this:
        - Start by fetching the entities from the log
        - Once you get the entities, fetch the available dates
@@ -82,6 +84,7 @@ void TelepathyLogReader::requestDatesForEntities(const Tp::AccountPtr &account, 
         connect(pendingDates,
                 SIGNAL(finished(Tpl::PendingOperation*)),
                 SLOT(onPendingDatesFinished(Tpl::PendingOperation*)));
+        mOperations.append(pendingDates);
     }
 }
 
@@ -92,6 +95,7 @@ void TelepathyLogReader::requestEventsForDates(const Tp::AccountPtr &account, co
         connect(pendingEvents,
                 SIGNAL(finished(Tpl::PendingOperation*)),
                 SLOT(onPendingEventsFinished(Tpl::PendingOperation*)));
+        mOperations.append(pendingEvents);
     }
 }
 
@@ -104,6 +108,11 @@ void TelepathyLogReader::onPendingEntitiesFinished(Tpl::PendingOperation *op)
 
     // request the dates for all the entities
     requestDatesForEntities(pe->account(), pe->entities());
+
+    mOperations.removeAll(op);
+    if (mOperations.isEmpty()) {
+        Q_EMIT finished();
+    }
 }
 
 void TelepathyLogReader::onPendingDatesFinished(Tpl::PendingOperation *op)
@@ -115,6 +124,11 @@ void TelepathyLogReader::onPendingDatesFinished(Tpl::PendingOperation *op)
 
     // request all events
     requestEventsForDates(pd->account(), pd->entity(), pd->dates());
+
+    mOperations.removeAll(op);
+    if (mOperations.isEmpty()) {
+        Q_EMIT finished();
+    }
 }
 
 void TelepathyLogReader::onPendingEventsFinished(Tpl::PendingOperation *op)
@@ -141,6 +155,11 @@ void TelepathyLogReader::onPendingEventsFinished(Tpl::PendingOperation *op)
         if (!textEvent.isNull()) {
             Q_EMIT loadedMessageEvent(textEvent);
         }
+    }
+
+    mOperations.removeAll(op);
+    if (mOperations.isEmpty()) {
+        Q_EMIT finished();
     }
 }
 

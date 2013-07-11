@@ -16,8 +16,11 @@ public:
 public Q_SLOTS:
     void onCallEventLoaded(const Tpl::CallEventPtr &event);
     void onMessageEventLoaded(const Tpl::TextEventPtr &event);
+    void onFinished();
 private:
     History::WriterPtr mWriter;
+    int mTextEvents;
+    int mVoiceEvents;
 };
 
 #endif // TELEPATHYLOGIMPORTER_H

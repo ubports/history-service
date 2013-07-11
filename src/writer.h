@@ -17,6 +17,9 @@ public:
     virtual bool writeTextEvent(const TextEventPtr &event) = 0;
     virtual bool writeVoiceEvent(const VoiceEventPtr &event) = 0;
 
+    virtual bool beginBatchOperation() {}
+    virtual bool endBatchOperation() {}
+
     // TODO: check if there is the need to write MMS entries
 };
 

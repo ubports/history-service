@@ -56,6 +56,21 @@ QSqlDatabase SQLiteDatabase::database() const
     return mDatabase;
 }
 
+bool SQLiteDatabase::beginTransation()
+{
+    return mDatabase.transaction();
+}
+
+bool SQLiteDatabase::finishTransaction()
+{
+    return mDatabase.commit();
+}
+
+bool SQLiteDatabase::rollbackTransaction()
+{
+    return mDatabase.rollback();
+}
+
 bool SQLiteDatabase::createDatabase()
 {
     qDebug() << __PRETTY_FUNCTION__;
@@ -72,6 +87,8 @@ bool SQLiteDatabase::createDatabase()
     QSqlQuery query(mDatabase);
     QStringList statements = stream.readAll().split("#");
 
+    beginTransation();
+
     Q_FOREACH(QString statement, statements) {
         if (statement.trimmed().isEmpty()) {
             continue;
@@ -79,9 +96,12 @@ bool SQLiteDatabase::createDatabase()
 
         if (!query.exec(statement.remove("#"))) {
             qCritical() << "Failed to create table. SQL Statement:" << query.lastQuery() << "Error:" << query.lastError();
+            rollbackTransaction();
             return false;
         }
     }
+
+    finishTransaction();
 
     return true;
 }

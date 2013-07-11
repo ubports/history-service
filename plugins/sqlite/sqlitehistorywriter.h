@@ -14,6 +14,9 @@ public:
     History::ThreadPtr threadForParticipants(const QString &accountId, History::EventType type, const QStringList &participants);
     bool writeTextEvent(const History::TextEventPtr &event);
     bool writeVoiceEvent(const History::VoiceEventPtr &event);
+
+    bool beginBatchOperation();
+    bool endBatchOperation();
 };
 
 #endif // SQLITEHISTORYWRITER_H

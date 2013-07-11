@@ -10,10 +10,9 @@
 
 
 TelepathyLogImporter::TelepathyLogImporter(QObject *parent) :
-    QObject(parent)
+    QObject(parent), mTextEvents(0), mVoiceEvents(0)
 {
     Q_FOREACH(History::PluginPtr plugin, History::PluginManager::instance()->plugins()) {
-        qDebug() << "Trying the plugin";
         mWriter = plugin->writer();
         if (mWriter) {
             break;
@@ -26,6 +25,12 @@ TelepathyLogImporter::TelepathyLogImporter(QObject *parent) :
     connect(TelepathyLogReader::instance(),
             SIGNAL(loadedMessageEvent(Tpl::TextEventPtr)),
             SLOT(onMessageEventLoaded(Tpl::TextEventPtr)));
+    connect(TelepathyLogReader::instance(),
+            SIGNAL(finished()),
+            SLOT(onFinished()));
+
+    qDebug() << "Starting to import...";
+    mWriter->beginBatchOperation();
 }
 
 void TelepathyLogImporter::onCallEventLoaded(const Tpl::CallEventPtr &event)
@@ -50,6 +55,7 @@ void TelepathyLogImporter::onCallEventLoaded(const Tpl::CallEventPtr &event)
                                                                 event->endReason() == Tp::CallStateChangeReasonNoAnswer,
                                                                 event->duration()));
     mWriter->writeVoiceEvent(historyEvent);
+    mVoiceEvents++;
 }
 
 void TelepathyLogImporter::onMessageEventLoaded(const Tpl::TextEventPtr &event)
@@ -75,4 +81,14 @@ void TelepathyLogImporter::onMessageEventLoaded(const Tpl::TextEventPtr &event)
                                                               History::MessageFlags(),
                                                               event->timestamp()));
     mWriter->writeTextEvent(historyEvent);
+    mTextEvents++;
+}
+
+void TelepathyLogImporter::onFinished()
+{
+    qDebug() << "... finished";
+    qDebug() << "Text events:" << mTextEvents;
+    qDebug() << "Voice events:" << mVoiceEvents;
+    mWriter->endBatchOperation();
+    qApp->quit();
 }
