@@ -18,15 +18,15 @@ void printEvent(const History::EventPtr &event)
     switch (event->type()) {
     case History::EventTypeText:
         textEvent = event.staticCast<History::TextEvent>();
-        extraInfo = QString(" message: %1").arg(textEvent->message());
+        extraInfo = QString("message: %1").arg(textEvent->message());
         break;
     case History::EventTypeVoice:
         voiceEvent = event.staticCast<History::VoiceEvent>();
-        extraInfo = QString(" missed: %1 duration: %2").arg(voiceEvent->missed() ? "yes" : "no", voiceEvent->duration().toString());
+        extraInfo = QString("missed: %1\n      duration: %2").arg(voiceEvent->missed() ? "yes" : "no", voiceEvent->duration().toString());
         break;
     }
 
-    qDebug() << qPrintable(QString("    * Event: accountId: %1 threadId: %2 eventId: %3 sender: %4 timestamp: %5 newEvent: %6")
+    qDebug() << qPrintable(QString("    * Event: accountId: %1\n      threadId: %2\n      eventId: %3\n      sender: %4\n      timestamp: %5\n      newEvent: %6")
                 .arg(event->accountId(), event->threadId(), event->eventId(), event->sender(), event->timestamp().toString(),
                      event->newEvent() ? "yes" : "no"));
     qDebug() << qPrintable(QString("      %1").arg(extraInfo));
@@ -44,7 +44,7 @@ void printThread(const History::ThreadPtr &thread)
         break;
     }
 
-    qDebug() << qPrintable(QString("%1 thread - accountId: %2 threadId: %3 count: %4 unreadCount: %5").arg(type,
+    qDebug() << qPrintable(QString("- %1 thread - accountId: %2 threadId: %3 count: %4 unreadCount: %5").arg(type,
                                                                                                 thread->accountId(),
                                                                                                 thread->threadId(),
                                                                                                 QString::number(thread->count()),
