@@ -16,6 +16,8 @@ SQLiteHistoryEventView::SQLiteHistoryEventView(SQLiteHistoryReader *reader,
     // FIXME: sort the results properly
     Q_UNUSED(sort)
 
+    mQuery.setForwardOnly(true);
+
     // FIXME: validate the filter
     QString condition;
     if (!filter.isNull()) {

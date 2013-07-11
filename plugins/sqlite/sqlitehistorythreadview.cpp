@@ -18,6 +18,8 @@ SQLiteHistoryThreadView::SQLiteHistoryThreadView(SQLiteHistoryReader *reader,
     // FIXME: sort the results property
     Q_UNUSED(sort)
 
+    mQuery.setForwardOnly(true);
+
     // FIXME: validate the filter
     QString condition;
     if (!filter.isNull()) {
