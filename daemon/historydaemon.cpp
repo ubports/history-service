@@ -58,6 +58,7 @@ void HistoryDaemon::onObserverCreated()
 
 void HistoryDaemon::onCallEnded(const Tp::CallChannelPtr &channel)
 {
+    qDebug() << __PRETTY_FUNCTION__;
     if (!mWriter) {
         return;
     }
@@ -127,6 +128,7 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
 
 void HistoryDaemon::onMessageRead(const Tp::TextChannelPtr textChannel, const Tp::ReceivedMessage &message)
 {
+    qDebug() << __PRETTY_FUNCTION__;
     if (!mWriter) {
         return;
     }
@@ -136,6 +138,7 @@ void HistoryDaemon::onMessageRead(const Tp::TextChannelPtr textChannel, const Tp
 
 void HistoryDaemon::onMessageSent(const Tp::TextChannelPtr textChannel, const Tp::Message &message, const QString &messageToken)
 {
+    qDebug() << __PRETTY_FUNCTION__;
     if (!mWriter) {
         return;
     }

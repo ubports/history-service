@@ -73,7 +73,7 @@ void TelepathyHelper::registerChannelObserver()
 {
     // check if this instance is running on the main phone application
     // or if it is just the plugin imported somewhere else
-    QString observerName = "HistoryObserver";
+    QString observerName = "HistoryDaemonObserver";
 
     mChannelObserver = new ChannelObserver(this);
     registerClient(mChannelObserver, observerName);
