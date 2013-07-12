@@ -58,6 +58,12 @@ configure_file(config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h @ONLY)
 
 enable_testing()
 
+# Define the version to be used in the library
+set(HISTORY_VERSION_MAJOR 0)
+set(HISTORY_VERSION_MINOR 0)
+set(HISTORY_VERSION_PATCH 0)
+
+
 add_subdirectory(src)
 add_subdirectory(daemon)
 add_subdirectory(plugins)

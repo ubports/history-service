@@ -60,8 +60,12 @@ set(library_PRIV_HDRS
 
 include_directories(${CMAKE_SOURCE_DIR}/src)
 
-# FIXME: set the library version and SONAME
 add_library(historyservice SHARED ${library_SRCS} ${library_HDRS} ${library_PRIV_HDRS})
+
+# Set the library version and the SOVERSION
+set_target_properties(historyservice PROPERTIES
+                      SOVERSION ${HISTORY_VERSION_MAJOR}
+                      VERSION ${HISTORY_VERSION_MAJOR}.${HISTORY_VERSION_MINOR}.${HISTORY_VERSION_PATCH})
 
 qt5_use_modules(historyservice Core)
 
