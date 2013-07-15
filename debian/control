@@ -20,7 +20,7 @@ Vcs-Bzr: lp:history-service
 Vcs-Browser: https://bazaar.launchpad.net/~phablet-team/history-service/trunk/files
 
 Package: history-service
-Architecture: i386 amd64 armhf
+Architecture: any
 Depends: ${misc:Depends},
          ${shlibs:Depends},
 Description: History service to store messages and calls
@@ -30,7 +30,7 @@ Description: History service to store messages and calls
  events and stores.
 
 Package: history-service-dbg
-Architecture: i386 amd64 armhf
+Architecture: any
 Section: debug
 Priority: extra
 Depends: ${misc:Depends},
@@ -41,7 +41,7 @@ Description: debugging symbols for history-service
  This package contains the debugging symbols for history-service
 
 Package: libhistoryservice0
-Architecture: i386 amd64 armhf
+Architecture: any
 Section: libs
 Priority: extra
 Depends: ${misc:Depends},
@@ -50,7 +50,7 @@ Description: Client library to access data from the history service
  history service.
 
 Package: qtdeclarative5-history-service-plugin
-Architecture: i386 amd64 armhf
+Architecture: any
 Section: libs
 Priority: extra
 Depends: ${misc:Depends},
@@ -59,7 +59,7 @@ Description: QML plugin to access data from the history service
  stored by the history service.
 
 Package: libhistoryservice-dev
-Architecture: i386 amd64 armhf
+Architecture: any
 Section: libdevel
 Priority: extra
 Depends: ${misc:Depends},
