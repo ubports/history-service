@@ -16,7 +16,7 @@ include_directories(
     )
 
 add_executable(history-daemon ${daemon_SRCS} ${daemon_HDRS})
-qt5_use_modules(history-daemon Contacts Core DBus Gui Multimedia Qml)
+qt5_use_modules(history-daemon Core DBus)
 
 target_link_libraries(history-daemon
     ${TP_QT5_LIBRARIES}

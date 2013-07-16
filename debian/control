@@ -1,0 +1,69 @@
+Source: history-service
+Section: libs
+Priority: optional
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Build-Depends: cmake,
+               debhelper (>= 9),
+               dh-translations,
+               libtelepathy-qt5-dev,
+               libtelepathy-logger-qt5-dev,
+               pkg-config,
+               python,
+               qt5-default,
+               qtbase5-dev (>= 5.0),
+               qtdeclarative5-dev (>= 5.0),
+Standards-Version: 3.9.4
+# If you don't have commit rights to lp:history-service but need to upload
+# packaging changes, just go ahead.  The developers will notice and sync
+# up the code again.
+Vcs-Bzr: lp:history-service
+Vcs-Browser: https://bazaar.launchpad.net/~phablet-team/history-service/trunk/files
+
+Package: history-service
+Architecture: any
+Depends: ${misc:Depends},
+         ${shlibs:Depends},
+Description: History service to store messages and calls
+ A service to record the messages that are sent and received and the calls that
+ are made in the Ubuntu Touch platform.
+ This package contains the history service daemon that watches for Telepathy
+ events and stores.
+
+Package: history-service-dbg
+Architecture: any
+Section: debug
+Priority: extra
+Depends: ${misc:Depends},
+         history-service (= ${binary:Version}),
+         libhistoryservice0 (= ${binary:Version}),
+         qtdeclarative5-history-service-plugin (= ${binary:Version}),
+Description: debugging symbols for history-service
+ This package contains the debugging symbols for history-service
+
+Package: libhistoryservice0
+Architecture: any
+Section: libs
+Priority: extra
+Depends: ${misc:Depends},
+Description: Client library to access data from the history service
+ This package contains the client library to access the data stored by the
+ history service.
+
+Package: qtdeclarative5-history-service-plugin
+Architecture: any
+Section: libs
+Priority: extra
+Depends: ${misc:Depends},
+Description: QML plugin to access data from the history service
+ This package contains a QML plugin that provides data models to access the data
+ stored by the history service.
+
+Package: libhistoryservice-dev
+Architecture: any
+Section: libdevel
+Priority: extra
+Depends: ${misc:Depends},
+         libhistoryservice0 (= ${binary:Version}),
+Description: Development files for the history service client library
+ This package contains the development files for the history service client
+ library.
