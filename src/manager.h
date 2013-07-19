@@ -50,6 +50,8 @@ public:
                              const FilterPtr &filter = FilterPtr());
 
     ThreadPtr threadForParticipants(const QString &accountId, EventType type, const QStringList &participants, bool create=false);
+    ThreadPtr getSingleThread(EventType type, const QString &accountId, const QString &threadId);
+
     bool writeTextEvents(const History::TextEvents &textEvents);
     bool writeVoiceEvents(const History::VoiceEvents &voiceEvents);
     bool removeThreads(EventType type, const Threads &threads);

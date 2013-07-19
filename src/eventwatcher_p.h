@@ -22,17 +22,46 @@
 #ifndef EVENTWATCHER_P_H
 #define EVENTWATCHER_P_H
 
+#include "types.h"
 #include <QObject>
+#include <QList>
+#include <QVariantMap>
+
+namespace History
+{
 
 class EventWatcher : public QObject
 {
     Q_OBJECT
 public:
-    explicit EventWatcher(QObject *parent = 0);
+    static EventWatcher *instance();
+
+Q_SIGNALS:
+    void threadsAdded(const History::Threads &threads);
+    void threadsModified(const History::Threads &threads);
+    void threadsRemoved(const History::Threads &threads);
+
+    void eventsAdded(const History::Events &events);
+    void eventsModified(const History::Events &events);
+    void eventsRemoved(const History::Events &events);
 
 protected Q_SLOTS:
     void onThreadsAdded(const QList<QVariantMap> &threads);
-    
+    void onThreadsModified(const QList<QVariantMap> &threads);
+    void onThreadsRemoved(const QList<QVariantMap> &threads);
+
+    void onEventsAdded(const QList<QVariantMap> &events);
+    void onEventsModified(const QList<QVariantMap> &events);
+    void onEventsRemoved(const QList<QVariantMap> &events);
+
+protected:
+    Threads threadsFromProperties(const QList<QVariantMap> &threadsProperties);
+    Events eventsFromProperties(const QList<QVariantMap> &eventsProperties);
+
+private:
+    explicit EventWatcher(QObject *parent = 0);
 };
+
+}
 
 #endif // EVENTWATCHER_P_H

@@ -20,12 +20,80 @@
  */
 
 #include "eventwatcher_p.h"
+#include "manager.h"
+#include <QDBusConnection>
+#include <QDebug>
+
+#define HISTORY_INTERFACE "com.canonical.HistoryService"
+
+namespace History
+{
 
 EventWatcher::EventWatcher(QObject *parent) :
     QObject(parent)
 {
+    QDBusConnection connection = QDBusConnection::sessionBus();
+    connection.connect(QString::null, QString::null, HISTORY_INTERFACE, "ThreadsAdded",
+                       this, SLOT(onThreadsAdded(QList<QVariantMap>)));
+}
+
+EventWatcher *EventWatcher::instance()
+{
+    static EventWatcher *self = new EventWatcher();
+    return self;
 }
 
 void EventWatcher::onThreadsAdded(const QList<QVariantMap> &threads)
 {
+    qDebug() << __PRETTY_FUNCTION__;
+    Q_EMIT threadsAdded(threadsFromProperties(threads));
+}
+
+void EventWatcher::onThreadsModified(const QList<QVariantMap> &threads)
+{
+    Q_EMIT threadsModified(threadsFromProperties(threads));
+}
+
+void EventWatcher::onThreadsRemoved(const QList<QVariantMap> &threads)
+{
+    Q_EMIT threadsRemoved(threadsFromProperties(threads));
+}
+
+void EventWatcher::onEventsAdded(const QList<QVariantMap> &events)
+{
+    Q_EMIT eventsAdded(eventsFromProperties(events));
+}
+
+void EventWatcher::onEventsModified(const QList<QVariantMap> &events)
+{
+    Q_EMIT eventsAdded(eventsFromProperties(events));
+}
+
+void EventWatcher::onEventsRemoved(const QList<QVariantMap> &events)
+{
+    Q_EMIT eventsAdded(eventsFromProperties(events));
+}
+
+Threads EventWatcher::threadsFromProperties(const QList<QVariantMap> &threadsProperties)
+{
+    Threads threads;
+    Manager *manager = Manager::instance();
+
+    Q_FOREACH(const QVariantMap &map, threadsProperties) {
+        QString accountId = map["accountId"].toString();
+        QString threadId = map["threadId"].toString();
+        EventType type = (EventType) map["type"].toInt();
+        ThreadPtr thread = manager->getSingleThread(type, accountId, threadId);
+        if (!thread.isNull()) {
+            threads << thread;
+        }
+    }
+
+    return threads;
+}
+
+Events EventWatcher::eventsFromProperties(const QList<QVariantMap> &eventsProperties)
+{
+}
+
 }

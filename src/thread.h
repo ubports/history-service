@@ -46,7 +46,7 @@ public:
                   const EventPtr &lastEvent = EventPtr(),
                   int count = 0,
                   int unreadCount = 0);
-    ~Thread();
+    virtual ~Thread();
 
     QString accountId() const;
     QString threadId() const;

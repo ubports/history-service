@@ -21,6 +21,7 @@
 
 #include "manager.h"
 #include "manager_p.h"
+#include "eventwatcher_p.h"
 #include "managerdbus_p.h"
 #include "pluginmanager_p.h"
 #include "plugin.h"
@@ -69,7 +70,11 @@ Manager::Manager(const QString &backendPlugin)
             break;
         }
     }
-    // FIXME: connect signals
+
+    // Propagate the signals from the event watcher
+    connect(EventWatcher::instance(),
+            SIGNAL(threadsAdded(History::Threads)),
+            SIGNAL(threadsAdded(History::Threads)));
 }
 
 Manager::~Manager()
@@ -123,6 +128,18 @@ ThreadPtr Manager::threadForParticipants(const QString &accountId,
     if (thread.isNull() && create) {
         thread = d->writer->createThreadForParticipants(accountId, type, participants);
         d->dbus->notifyThreadsAdded(Threads() << thread);
+    }
+
+    return thread;
+}
+
+ThreadPtr Manager::getSingleThread(EventType type, const QString &accountId, const QString &threadId)
+{
+    Q_D(Manager);
+
+    ThreadPtr thread;
+    if (d->reader) {
+        thread = d->reader->getSingleThread(type, accountId, threadId);
     }
 
     return thread;

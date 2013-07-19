@@ -41,6 +41,9 @@ public:
     virtual EventViewPtr queryEvents(EventType type,
                                      const SortPtr &sort = SortPtr(),
                                      const FilterPtr &filter = FilterPtr()) = 0;
+    virtual ThreadPtr getSingleThread(EventType type,
+                                      const QString &accountId,
+                                      const QString &threadId) = 0;
     virtual ThreadPtr threadForParticipants(const QString &accountId, EventType type, const QStringList &participants) = 0;
 };
 

@@ -46,6 +46,7 @@ bool ManagerDBus::connectToBus()
 
 void ManagerDBus::notifyThreadsAdded(const Threads &threads)
 {
+    qDebug() << __PRETTY_FUNCTION__;
     Q_EMIT ThreadsAdded(threadsToProperties(threads));
 }
 

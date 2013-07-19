@@ -23,6 +23,8 @@
 #include "sqlitehistoryeventview.h"
 #include "sqlitehistorythreadview.h"
 #include "sqlitedatabase.h"
+#include "filter.h"
+#include "intersectionfilter.h"
 #include "types.h"
 #include "thread.h"
 #include <QDebug>
@@ -113,4 +115,20 @@ History::ThreadPtr SQLiteHistoryReader::threadForParticipants(const QString &acc
     }
 
     return History::ThreadPtr();
- }
+}
+
+History::ThreadPtr SQLiteHistoryReader::getSingleThread(History::EventType type, const QString &accountId, const QString &threadId)
+{
+    History::IntersectionFilterPtr intersectionFilter(new History::IntersectionFilter());
+    intersectionFilter->append(History::FilterPtr(new History::Filter("accountId", accountId)));
+    intersectionFilter->append(History::FilterPtr(new History::Filter("threadId", threadId)));
+    History::ThreadViewPtr view = queryThreads(type, History::SortPtr(), intersectionFilter);
+
+    History::Threads threads= view->nextPage();
+    History::ThreadPtr thread;
+    if (!threads.isEmpty()) {
+        thread = threads.first();
+    }
+
+    return thread;
+}
