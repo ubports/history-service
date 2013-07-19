@@ -176,7 +176,7 @@ void HistoryThreadModel::fetchMore(const QModelIndex &parent)
         return;
     }
 
-    QList<History::ThreadPtr> threads = mThreadView->nextPage();
+    History::Threads threads = mThreadView->nextPage();
     qDebug() << "Got threads:" << threads.count();
     if (threads.isEmpty()) {
         mCanFetchMore = false;

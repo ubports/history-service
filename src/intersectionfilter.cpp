@@ -43,7 +43,7 @@ IntersectionFilter::~IntersectionFilter()
 {
 }
 
-void IntersectionFilter::setFilters(const QList<FilterPtr> &filters)
+void IntersectionFilter::setFilters(const Filters &filters)
 {
     Q_D(IntersectionFilter);
     d->filters = filters;
@@ -67,7 +67,7 @@ void IntersectionFilter::clear()
     d->filters.clear();
 }
 
-QList<FilterPtr> IntersectionFilter::filters() const
+Filters IntersectionFilter::filters() const
 {
     Q_D(const IntersectionFilter);
     return d->filters;

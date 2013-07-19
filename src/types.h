@@ -24,7 +24,7 @@
 
 #include <QSharedPointer>
 
-#define DefineSharedPointer(type) class type; typedef QSharedPointer<type> type ## Ptr;
+#define DefineSharedPointer(type) class type; typedef QSharedPointer<type> type##Ptr; typedef QList<type##Ptr> type##s;
 
 namespace History
 {

@@ -45,7 +45,7 @@ PluginManager *PluginManager::instance()
     return self;
 }
 
-QList<PluginPtr> PluginManager::plugins()
+Plugins PluginManager::plugins()
 {
     return mPlugins;
 }

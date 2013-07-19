@@ -73,7 +73,7 @@ protected Q_SLOTS:
 
 private:
     History::EventViewPtr mView;
-    QList<History::EventPtr> mEvents;
+    History::Events mEvents;
     bool mCanFetchMore;
     HistoryQmlFilter *mFilter;
     HistoryThreadModel::EventType mType;

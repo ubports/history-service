@@ -33,7 +33,7 @@ public:
     ThreadView() {}
     virtual ~ThreadView() {}
 
-    virtual QList<History::ThreadPtr> nextPage() = 0;
+    virtual Threads nextPage() = 0;
     virtual bool isValid() const = 0;
 };
 

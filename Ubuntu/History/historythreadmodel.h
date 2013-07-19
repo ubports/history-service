@@ -84,7 +84,7 @@ protected Q_SLOTS:
 
 private:
     History::ThreadViewPtr mThreadView;
-    QList<History::ThreadPtr> mThreads;
+    History::Threads mThreads;
     bool mCanFetchMore;
     HistoryQmlFilter *mFilter;
     EventType mType;

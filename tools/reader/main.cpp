@@ -89,7 +89,7 @@ int main(int argc, char **argv)
 
     Q_FOREACH(History::EventType type, eventTypes) {
         History::ThreadViewPtr view = manager->queryThreads(type);
-        QList<History::ThreadPtr> threads = view->nextPage();
+        History::Threads threads = view->nextPage();
 
         while (!threads.isEmpty()) {
             Q_FOREACH(const History::ThreadPtr &thread, threads) {
@@ -100,7 +100,7 @@ int main(int argc, char **argv)
                 filter->append(History::FilterPtr(new History::Filter("threadId", thread->threadId())));
                 filter->append(History::FilterPtr(new History::Filter("accountId", thread->accountId())));
                 History::EventViewPtr eventView = manager->queryEvents(type, History::SortPtr(), filter);
-                QList<History::EventPtr> events = eventView->nextPage();
+                History::Events events = eventView->nextPage();
                 while (!events.isEmpty()) {
                     Q_FOREACH(const History::EventPtr &event, events) {
                         printEvent(event);

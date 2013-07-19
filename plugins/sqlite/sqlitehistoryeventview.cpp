@@ -67,9 +67,9 @@ SQLiteHistoryEventView::SQLiteHistoryEventView(SQLiteHistoryReader *reader,
     }
 }
 
-QList<History::EventPtr> SQLiteHistoryEventView::nextPage()
+History::Events SQLiteHistoryEventView::nextPage()
 {
-    QList<History::EventPtr> events;
+    History::Events events;
     int remaining = mPageSize;
 
     while (mQuery.next() && remaining-- > 0) {

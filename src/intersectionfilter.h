@@ -38,12 +38,12 @@ public:
     IntersectionFilter();
     ~IntersectionFilter();
 
-    void setFilters(const QList<FilterPtr> &filters);
+    void setFilters(const Filters &filters);
     void prepend(const FilterPtr &filter);
     void append(const FilterPtr &filter);
     void clear();
 
-    QList<FilterPtr> filters() const;
+    Filters filters() const;
     QString toString() const;
 };
 

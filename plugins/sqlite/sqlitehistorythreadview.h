@@ -36,7 +36,7 @@ public:
                             const History::SortPtr &sort,
                             const History::FilterPtr &filter);
 
-    QList<History::ThreadPtr> nextPage();
+    History::Threads nextPage();
     bool isValid() const;
 
 private:

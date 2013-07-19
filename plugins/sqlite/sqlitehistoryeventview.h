@@ -37,7 +37,7 @@ public:
                           const History::SortPtr &sort,
                           const History::FilterPtr &filter);
 
-    QList<History::EventPtr> nextPage();
+    History::Events nextPage();
     bool isValid() const;
 
 protected:

@@ -36,14 +36,14 @@ class PluginManager : public QObject
 public:
     ~PluginManager();
     static PluginManager *instance();
-    QList<PluginPtr> plugins();
+    Plugins plugins();
 
 protected:
     void loadPlugins();
 
 private:
     explicit PluginManager(QObject *parent = 0);
-    QList<PluginPtr> mPlugins;
+    Plugins mPlugins;
 };
 
 }

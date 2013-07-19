@@ -152,7 +152,7 @@ void HistoryEventModel::fetchMore(const QModelIndex &parent)
         return;
     }
 
-    QList<History::EventPtr> events = mView->nextPage();
+    History::Events events = mView->nextPage();
 
     qDebug() << "Got events:" << events.count();
     if (events.isEmpty()) {

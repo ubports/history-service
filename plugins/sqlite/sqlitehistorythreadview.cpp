@@ -88,9 +88,9 @@ SQLiteHistoryThreadView::SQLiteHistoryThreadView(SQLiteHistoryReader *reader,
     }
 }
 
-QList<History::ThreadPtr> SQLiteHistoryThreadView::nextPage()
+History::Threads SQLiteHistoryThreadView::nextPage()
 {
-    QList<History::ThreadPtr> threads;
+    History::Threads threads;
     int remaining = mPageSize;
     QSqlQuery secondaryQuery(SQLiteDatabase::instance()->database());
 

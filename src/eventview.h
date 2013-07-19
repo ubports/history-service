@@ -33,7 +33,7 @@ public:
     EventView() {}
     virtual ~EventView() {}
 
-    virtual QList<History::EventPtr> nextPage() = 0;
+    virtual History::Events nextPage() = 0;
     virtual bool isValid() const = 0;
 };
 
