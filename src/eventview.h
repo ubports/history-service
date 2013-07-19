@@ -28,19 +28,31 @@
 namespace History
 {
 
+class EventViewPrivate;
+
 class EventView : public QObject
 {
     Q_OBJECT
+    Q_DECLARE_PRIVATE(EventView)
 public:
-    EventView() {}
-    virtual ~EventView() {}
+    EventView(History::EventType type,
+              const History::SortPtr &sort,
+              const History::FilterPtr &filter);
+    virtual ~EventView();
 
     virtual History::Events nextPage() = 0;
     virtual bool isValid() const = 0;
 
+Q_SIGNALS:
     void eventsAdded(const History::Events &events);
     void eventsModified(const History::Events &events);
     void eventsRemoved(const History::Events &events);
+
+private:
+    Q_PRIVATE_SLOT(d_func(), void _d_eventsAdded(const History::Events &events))
+    Q_PRIVATE_SLOT(d_func(), void _d_eventsModified(const History::Events &events))
+    Q_PRIVATE_SLOT(d_func(), void _d_eventsRemoved(const History::Events &events))
+    QScopedPointer<EventViewPrivate> d_ptr;
 };
 
 }

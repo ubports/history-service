@@ -19,36 +19,36 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef THREADVIEW_P_H
-#define THREADVIEW_P_H
+#ifndef EVENTVIEW_P_H
+#define EVENTVIEW_P_H
 
 #include "types.h"
 
 namespace History
 {
-    class ThreadView;
+    class EventView;
 
-    class ThreadViewPrivate
+    class EventViewPrivate
     {
-        Q_DECLARE_PUBLIC(ThreadView)
+        Q_DECLARE_PUBLIC(EventView)
 
     public:
-        ThreadViewPrivate(History::EventType theType,
+        EventViewPrivate(History::EventType theType,
                           const History::SortPtr &theSort,
                           const History::FilterPtr &theFilter);
         EventType type;
         SortPtr sort;
         FilterPtr filter;
 
-        Threads filteredThreads(const Threads &threads);
+        Events filteredEvents(const Events &events);
 
         // private slots
-        void _d_threadsAdded(const History::Threads &threads);
-        void _d_threadsModified(const History::Threads &threads);
-        void _d_threadsRemoved(const History::Threads &threads);
+        void _d_eventsAdded(const History::Events &events);
+        void _d_eventsModified(const History::Events &events);
+        void _d_eventsRemoved(const History::Events &events);
 
-        ThreadView *q_ptr;
+        EventView *q_ptr;
     };
 }
 
-#endif // THREADVIEW_P_H
+#endif // EVENTVIEW_P_H
