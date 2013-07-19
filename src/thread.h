@@ -25,6 +25,7 @@
 #include <QDateTime>
 #include <QScopedPointer>
 #include <QStringList>
+#include <QVariantMap>
 #include "types.h"
 
 namespace History
@@ -54,6 +55,8 @@ public:
     EventPtr lastEvent() const;
     int count() const;
     int unreadCount() const;
+
+    virtual QVariantMap properties() const;
 
 protected:
     QScopedPointer<ThreadPrivate> d_ptr;

@@ -33,8 +33,8 @@ SQLiteHistoryThreadView::SQLiteHistoryThreadView(SQLiteHistoryReader *reader,
                                                  History::EventType type,
                                                  const History::SortPtr &sort,
                                                  const History::FilterPtr &filter)
-    : mReader(reader), mType(type), mSort(sort), mFilter(filter), mPageSize(15),
-      mQuery(SQLiteDatabase::instance()->database())
+    : History::ThreadView(type, sort, filter), mReader(reader), mType(type), mSort(sort),
+      mFilter(filter), mPageSize(15), mQuery(SQLiteDatabase::instance()->database())
 {
     // FIXME: sort the results property
     Q_UNUSED(sort)

@@ -109,4 +109,19 @@ int Thread::unreadCount() const
     return d->unreadCount;
 }
 
+QVariantMap Thread::properties() const
+{
+    Q_D(const Thread);
+
+    QVariantMap map;
+    map["accountId"] = d->accountId;
+    map["threadId"] = d->threadId;
+    map["type"] = d->type;
+    map["participants"] = d->participants;
+    map["count"] = d->count;
+    map["unreadCount"] = d->unreadCount;
+
+    return map;
+}
+
 }

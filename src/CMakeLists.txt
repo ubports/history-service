@@ -7,6 +7,7 @@ set(library_SRCS
     sort.cpp
     textevent.cpp
     thread.cpp
+    threadview.cpp
     unionfilter.cpp
     voiceevent.cpp
     )
@@ -54,6 +55,7 @@ set(library_PRIV_HDRS
     sort_p.h
     textevent_p.h
     thread_p.h
+    threadview_p.h
     unionfilter_p.h
     voiceevent_p.h
 )
