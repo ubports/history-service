@@ -31,6 +31,8 @@ class SQLiteHistoryReader;
 
 class SQLiteHistoryEventView : public History::EventView
 {
+    Q_OBJECT
+
 public:
     SQLiteHistoryEventView(SQLiteHistoryReader *reader,
                           History::EventType type,

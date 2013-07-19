@@ -23,18 +23,26 @@
 #define HISTORY_THREADVIEW_H
 
 #include "types.h"
+#include <QObject>
 
 namespace History
 {
 
-class ThreadView
+class ThreadView : public QObject
 {
+    Q_OBJECT
+
 public:
     ThreadView() {}
     virtual ~ThreadView() {}
 
     virtual Threads nextPage() = 0;
     virtual bool isValid() const = 0;
+
+Q_SIGNALS:
+    void threadsAdded(const History::Threads &threads);
+    void threadsModified(const History::Threads &threads);
+    void threadsRemoved(const History::Threads &threads);
 };
 
 }

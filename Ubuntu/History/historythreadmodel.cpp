@@ -41,7 +41,7 @@ HistoryThreadModel::HistoryThreadModel(QObject *parent) :
 
     // roles related to the thread´s last event
     mRoles[LastEventIdRole] = "eventId";
-    mRoles[LastEventSenderRole] = "eventSender";
+    mRoles[LastEventSenderIdRole] = "eventSenderId";
     mRoles[LastEventTimestampRole] = "eventTimestamp";
     mRoles[LastEventNewRole] = "eventNew";
     mRoles[LastEventTextMessageRole] = "eventTextMessage";
@@ -111,9 +111,9 @@ QVariant HistoryThreadModel::data(const QModelIndex &index, int role) const
             result = event->eventId();
         }
         break;
-    case LastEventSenderRole:
+    case LastEventSenderIdRole:
         if (!event.isNull()) {
-            result = event->sender();
+            result = event->senderId();
         }
         break;
     case LastEventTimestampRole:

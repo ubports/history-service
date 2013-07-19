@@ -25,6 +25,7 @@
 #include <QDateTime>
 #include <QScopedPointer>
 #include <QString>
+#include <QVariantMap>
 #include "types.h"
 
 namespace History
@@ -42,10 +43,11 @@ public:
     QString accountId() const;
     QString threadId() const;
     QString eventId() const;
-    QString sender() const;
+    QString senderId() const;
     QDateTime timestamp() const;
     bool newEvent() const;
     virtual EventType type() const = 0;
+    virtual QVariantMap properties() const;
 
 protected:
     Event(EventPrivate &p);

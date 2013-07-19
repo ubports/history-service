@@ -81,6 +81,20 @@ EventType TextEvent::type() const
     return EventTypeText;
 }
 
+QVariantMap TextEvent::properties() const
+{
+    Q_D(const TextEvent);
+
+    QVariantMap map = Event::properties();
+
+    map["message"] = d->message;
+    map["messageType"] = (int)d->messageType;
+    map["messageFlags"] = (int)d->messageFlags;
+    map["readTimestamp"] = d->readTimestamp;
+
+    return map;
+}
+
 QString TextEvent::message() const
 {
     Q_D(const TextEvent);

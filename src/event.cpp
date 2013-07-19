@@ -33,11 +33,11 @@ EventPrivate::EventPrivate()
 EventPrivate::EventPrivate(const QString &theAccountId,
                                        const QString &theThreadId,
                                        const QString &theEventId,
-                                       const QString &theSender,
+                                       const QString &theSenderId,
                                        const QDateTime &theTimestamp,
                                        bool theNewEvent) :
     accountId(theAccountId), threadId(theThreadId), eventId(theEventId),
-    sender(theSender), timestamp(theTimestamp), newEvent(theNewEvent)
+    senderId(theSenderId), timestamp(theTimestamp), newEvent(theNewEvent)
 {
 }
 
@@ -109,10 +109,10 @@ QString Event::eventId() const
 /*!
  * \brief Returns the ID of the sender of this event.
  */
-QString Event::sender() const
+QString Event::senderId() const
 {
     Q_D(const Event);
-    return d->sender;
+    return d->senderId;
 }
 
 /*!
@@ -132,6 +132,23 @@ bool Event::newEvent() const
 {
     Q_D(const Event);
     return d->newEvent;
+}
+
+QVariantMap Event::properties() const
+{
+    Q_D(const Event);
+
+    QVariantMap map;
+
+    map["accountId"] = d->accountId;
+    map["threadId"] = d->threadId;
+    map["eventId"] = d->eventId;
+    map["senderId"] = d->senderId;
+    map["timestamp"] = d->timestamp;
+    map["newEvent"] = d->newEvent;
+    map["type"] = type();
+
+    return map;
 }
 
 }

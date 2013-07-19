@@ -48,7 +48,7 @@ public:
         CountRole,
         UnreadCountRole,
         LastEventIdRole,
-        LastEventSenderRole,
+        LastEventSenderIdRole,
         LastEventTimestampRole,
         LastEventNewRole,
         LastEventTextMessageRole,

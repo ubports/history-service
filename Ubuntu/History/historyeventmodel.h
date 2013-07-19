@@ -37,7 +37,7 @@ public:
         ThreadIdRole,
         TypeRole,
         EventIdRole,
-        SenderRole,
+        SenderIdRole,
         TimestampRole,
         NewEventRole,
         TextMessageRole,

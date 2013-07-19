@@ -144,7 +144,7 @@ bool SQLiteHistoryWriter::writeTextEvent(const History::TextEventPtr &event)
     query.bindValue(":accountId", event->accountId());
     query.bindValue(":threadId", event->threadId());
     query.bindValue(":eventId", event->eventId());
-    query.bindValue(":senderId", event->sender());
+    query.bindValue(":senderId", event->senderId());
     query.bindValue(":timestamp", event->timestamp());
     query.bindValue(":newEvent", event->newEvent());
     query.bindValue(":message", event->message());
@@ -171,7 +171,7 @@ bool SQLiteHistoryWriter::writeVoiceEvent(const History::VoiceEventPtr &event)
     query.bindValue(":accountId", event->accountId());
     query.bindValue(":threadId", event->threadId());
     query.bindValue(":eventId", event->eventId());
-    query.bindValue(":senderId", event->sender());
+    query.bindValue(":senderId", event->senderId());
     query.bindValue(":timestamp", event->timestamp());
     query.bindValue(":newEvent", event->newEvent());
     query.bindValue(":duration", QTime(0,0,0,0).secsTo(event->duration()));

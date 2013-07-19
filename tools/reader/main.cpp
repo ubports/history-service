@@ -47,8 +47,8 @@ void printEvent(const History::EventPtr &event)
         break;
     }
 
-    qDebug() << qPrintable(QString("    * Event: accountId: %1\n      threadId: %2\n      eventId: %3\n      sender: %4\n      timestamp: %5\n      newEvent: %6")
-                .arg(event->accountId(), event->threadId(), event->eventId(), event->sender(), event->timestamp().toString(),
+    qDebug() << qPrintable(QString("    * Event: accountId: %1\n      threadId: %2\n      eventId: %3\n      senderId: %4\n      timestamp: %5\n      newEvent: %6")
+                .arg(event->accountId(), event->threadId(), event->eventId(), event->senderId(), event->timestamp().toString(),
                      event->newEvent() ? "yes" : "no"));
     qDebug() << qPrintable(QString("      %1").arg(extraInfo));
 }

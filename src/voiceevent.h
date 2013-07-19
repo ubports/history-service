@@ -46,6 +46,7 @@ public:
     ~VoiceEvent();
 
     EventType type() const;
+    QVariantMap properties() const;
 
     bool missed() const;
     QTime duration() const;

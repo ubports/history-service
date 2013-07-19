@@ -23,18 +23,24 @@
 #define HISTORY_EVENTVIEW_H
 
 #include "types.h"
+#include <QObject>
 
 namespace History
 {
 
-class EventView
+class EventView : public QObject
 {
+    Q_OBJECT
 public:
     EventView() {}
     virtual ~EventView() {}
 
     virtual History::Events nextPage() = 0;
     virtual bool isValid() const = 0;
+
+    void eventsAdded(const History::Events &events);
+    void eventsModified(const History::Events &events);
+    void eventsRemoved(const History::Events &events);
 };
 
 }

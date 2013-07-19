@@ -48,6 +48,7 @@ public:
     ~TextEvent();
 
     EventType type() const;
+    QVariantMap properties() const;
 
     QString message() const;
     MessageType messageType() const;

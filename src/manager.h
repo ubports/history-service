@@ -52,6 +52,15 @@ public:
     bool removeThreads(EventType type, const QList<QString> &threadIds);
     bool removeEvents(EventType type, const QList<QString> &eventIds);
 
+Q_SIGNALS:
+    void threadsAdded(const History::Threads &threads);
+    void threadsModified(const History::Threads &threads);
+    void threadsRemoved(const History::Threads &threads);
+
+    void eventsAdded(const History::Events &events);
+    void eventsModified(const History::Events &events);
+    void eventsRemoved(const History::Events &events);
+
 private:
     Manager(const QString &backendPlugin = QString::null);
     QScopedPointer<ManagerPrivate> d_ptr;
