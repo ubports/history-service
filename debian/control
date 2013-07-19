@@ -40,6 +40,16 @@ Depends: ${misc:Depends},
 Description: debugging symbols for history-service
  This package contains the debugging symbols for history-service
 
+Package: history-service-tools
+Architecture: any
+Section: utils
+Depends: ${misc:Depends},
+         ${shlibs:Depends},
+         history-service (= ${binary:Version}),
+Description: Tools for the history service
+ This package contains some tools to be used with the history service. Currently
+ there is just one tool to import existing logs from Telepathy Logger.
+
 Package: libhistoryservice0
 Architecture: any
 Section: libs
