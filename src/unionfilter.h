@@ -43,6 +43,8 @@ public:
     void append(const FilterPtr &filter);
     void clear();
 
+    bool match(const QVariantMap properties) const;
+
     Filters filters() const;
     QString toString() const;
 };

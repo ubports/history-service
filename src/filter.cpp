@@ -120,4 +120,17 @@ QString Filter::toString() const
     return QString("%1=%2").arg(filterProperty(), value);
 }
 
+bool Filter::match(const QVariantMap properties) const
+{
+    Q_D(const Filter);
+
+    // assume empty filters match anything
+    if (d->filterProperty.isEmpty() || !d->filterValue.isValid() || !properties.contains(d->filterProperty)) {
+        return true;
+    }
+
+    // FIXME: use the MatchFlags
+    return properties[d->filterProperty] == d->filterValue;
+}
+
 }

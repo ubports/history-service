@@ -52,6 +52,8 @@ public:
     void setMatchFlags(const MatchFlags &flags);
     virtual QString toString() const;
 
+    virtual bool match(const QVariantMap properties) const;
+
 protected:
     Filter(FilterPrivate &p);
     QScopedPointer<FilterPrivate> d_ptr;

@@ -67,6 +67,20 @@ void IntersectionFilter::clear()
     d->filters.clear();
 }
 
+bool IntersectionFilter::match(const QVariantMap properties) const
+{
+    Q_D(const IntersectionFilter);
+
+    // return true only if all filters match
+    Q_FOREACH(const History::FilterPtr &filter, d->filters) {
+        if (!filter->match(properties)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 Filters IntersectionFilter::filters() const
 {
     Q_D(const IntersectionFilter);

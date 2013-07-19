@@ -67,6 +67,26 @@ void UnionFilter::clear()
     d->filters.clear();
 }
 
+bool UnionFilter::match(const QVariantMap properties) const
+{
+    Q_D(const UnionFilter);
+
+    // if the filter list is empty, assume it matches
+    if (d->filters.isEmpty()) {
+        return true;
+    }
+
+    // return true if any of the filters match
+    Q_FOREACH(const History::FilterPtr &filter, d->filters) {
+        if (filter->match(properties)) {
+            return true;
+        }
+    }
+
+    // if we reach this point it means none of the filters matched the properties
+    return false;
+}
+
 Filters UnionFilter::filters() const
 {
     Q_D(const UnionFilter);
