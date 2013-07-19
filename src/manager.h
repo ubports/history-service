@@ -49,8 +49,11 @@ public:
                              const SortPtr &sort = SortPtr(),
                              const FilterPtr &filter = FilterPtr());
 
-    bool removeThreads(EventType type, const QList<QString> &threadIds);
-    bool removeEvents(EventType type, const QList<QString> &eventIds);
+    ThreadPtr threadForParticipants(const QString &accountId, EventType type, const QStringList &participants, bool create=false);
+    bool writeTextEvents(const History::TextEvents &textEvents);
+    bool writeVoiceEvents(const History::VoiceEvents &voiceEvents);
+    bool removeThreads(EventType type, const Threads &threads);
+    bool removeEvents(EventType type, const Events &events);
 
 Q_SIGNALS:
     void threadsAdded(const History::Threads &threads);

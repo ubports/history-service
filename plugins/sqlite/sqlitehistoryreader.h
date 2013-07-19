@@ -35,6 +35,9 @@ public:
     History::EventViewPtr queryEvents(History::EventType type,
                                       const History::SortPtr &sort = History::SortPtr(),
                                       const History::FilterPtr &filter = History::FilterPtr());
+    History::ThreadPtr threadForParticipants(const QString &accountId,
+                                             History::EventType type,
+                                             const QStringList &participants);
 };
 
 #endif // SQLITEHISTORYREADER_H

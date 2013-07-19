@@ -19,31 +19,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef HISTORYWRITER_H
-#define HISTORYWRITER_H
+#include "eventwatcher_p.h"
 
-#include "types.h"
-
-namespace History
+EventWatcher::EventWatcher(QObject *parent) :
+    QObject(parent)
 {
-
-class Writer : public QObject
-{
-    Q_OBJECT
-public:
-    explicit Writer(QObject *parent = 0) : QObject(parent) {}
-    virtual ~Writer() {}
-
-    virtual ThreadPtr createThreadForParticipants(const QString &accountId, EventType type, const QStringList &participants) = 0;
-    virtual bool writeTextEvent(const TextEventPtr &event) = 0;
-    virtual bool writeVoiceEvent(const VoiceEventPtr &event) = 0;
-
-    virtual bool beginBatchOperation() {}
-    virtual bool endBatchOperation() {}
-
-    // TODO: check if there is the need to write MMS entries
-};
-
 }
 
-#endif
+void EventWatcher::onThreadsAdded(const QList<QVariantMap> &threads)
+{
+}

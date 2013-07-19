@@ -32,7 +32,7 @@ class SQLiteHistoryWriter : public History::Writer
 public:
     explicit SQLiteHistoryWriter(QObject *parent = 0);
 
-    History::ThreadPtr threadForParticipants(const QString &accountId, History::EventType type, const QStringList &participants);
+    History::ThreadPtr createThreadForParticipants(const QString &accountId, History::EventType type, const QStringList &participants);
     bool writeTextEvent(const History::TextEventPtr &event);
     bool writeVoiceEvent(const History::VoiceEventPtr &event);
 

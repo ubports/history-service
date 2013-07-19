@@ -21,28 +21,17 @@
 
 #include "historydaemon.h"
 #include "telepathyhelper.h"
-
-#include "plugin.h"
 #include "thread.h"
-#include "writer.h"
-#include "pluginmanager.h"
+#include "manager.h"
 #include "textevent.h"
 #include "voiceevent.h"
 
 #include <TelepathyQt/CallChannel>
 
 HistoryDaemon::HistoryDaemon(QObject *parent)
-    : QObject(parent), mCallObserver(this), mTextObserver(this), mWriter(0)
+    : QObject(parent), mCallObserver(this), mTextObserver(this)
 {
     qDebug() << "Going to load the plugins";
-    // try to find a plugin that has a writer
-    Q_FOREACH(History::PluginPtr plugin, History::PluginManager::instance()->plugins()) {
-        qDebug() << "Trying the plugin";
-        mWriter = plugin->writer();
-        if (mWriter) {
-            break;
-        }
-    }
 
     connect(TelepathyHelper::instance(),
             SIGNAL(channelObserverCreated(ChannelObserver*)),
@@ -80,19 +69,15 @@ void HistoryDaemon::onObserverCreated()
 void HistoryDaemon::onCallEnded(const Tp::CallChannelPtr &channel)
 {
     qDebug() << __PRETTY_FUNCTION__;
-    if (!mWriter) {
-        return;
-    }
-
-    qDebug() << "OnCallEnded" << channel;
     QStringList participants;
     Q_FOREACH(const Tp::ContactPtr contact, channel->remoteMembers()) {
         participants << contact->id();
     }
 
-    History::ThreadPtr thread = mWriter->threadForParticipants(channel->property("accountId").toString(),
-                                                               History::EventTypeVoice,
-                                                               participants);
+    History::ThreadPtr thread = History::Manager::instance()->threadForParticipants(channel->property("accountId").toString(),
+                                                                                    History::EventTypeVoice,
+                                                                                    participants,
+                                                                                    true);
 
     // fill the call info
     QDateTime timestamp = channel->property("timestamp").toDateTime();
@@ -116,24 +101,22 @@ void HistoryDaemon::onCallEnded(const Tp::CallChannelPtr &channel)
                                                          missed, // only mark as a new (unseen) event if it is a missed call
                                                          missed,
                                                          duration));
-    mWriter->writeVoiceEvent(event);
+    History::Manager::instance()->writeVoiceEvents(History::VoiceEvents() << event);
 }
 
 void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, const Tp::ReceivedMessage &message)
 {
     qDebug() << __PRETTY_FUNCTION__;
-    if (!mWriter) {
-        return;
-    }
 
     QStringList participants;
     Q_FOREACH(const Tp::ContactPtr contact, textChannel->groupContacts(false)) {
         participants << contact->id();
     }
 
-    History::ThreadPtr thread = mWriter->threadForParticipants(textChannel->property("accountId").toString(),
-                                                               History::EventTypeText,
-                                                               participants);
+    History::ThreadPtr thread = History::Manager::instance()->threadForParticipants(textChannel->property("accountId").toString(),
+                                                                                    History::EventTypeText,
+                                                                                    participants,
+                                                                                    true);
     History::TextEventPtr event(new History::TextEvent(thread->accountId(),
                                                        thread->threadId(),
                                                        message.messageToken(),
@@ -144,34 +127,27 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
                                                        History::TextMessage, // FIXME: add support for MMS
                                                        History::MessageFlags(),
                                                        QDateTime()));
-    mWriter->writeTextEvent(event);
+    History::Manager::instance()->writeTextEvents(History::TextEvents() << event);
 }
 
 void HistoryDaemon::onMessageRead(const Tp::TextChannelPtr textChannel, const Tp::ReceivedMessage &message)
 {
     qDebug() << __PRETTY_FUNCTION__;
-    if (!mWriter) {
-        return;
-    }
-
     // FIXME: implement
 }
 
 void HistoryDaemon::onMessageSent(const Tp::TextChannelPtr textChannel, const Tp::Message &message, const QString &messageToken)
 {
     qDebug() << __PRETTY_FUNCTION__;
-    if (!mWriter) {
-        return;
-    }
-
     QStringList participants;
     Q_FOREACH(const Tp::ContactPtr contact, textChannel->groupContacts(false)) {
         participants << contact->id();
     }
 
-    History::ThreadPtr thread = mWriter->threadForParticipants(textChannel->property("accountId").toString(),
-                                                               History::EventTypeText,
-                                                               participants);
+    History::ThreadPtr thread = History::Manager::instance()->threadForParticipants(textChannel->property("accountId").toString(),
+                                                                                    History::EventTypeText,
+                                                                                    participants,
+                                                                                    true);
     History::TextEventPtr event(new History::TextEvent(thread->accountId(),
                                 thread->threadId(),
                                 messageToken,
@@ -182,5 +158,5 @@ void HistoryDaemon::onMessageSent(const Tp::TextChannelPtr textChannel, const Tp
                                 History::TextMessage, // FIXME: add support for MMS
                                 History::MessageFlags(),
                                 QDateTime()));
-    mWriter->writeTextEvent(event);
+    History::Manager::instance()->writeTextEvents(History::TextEvents() << event);
 }
