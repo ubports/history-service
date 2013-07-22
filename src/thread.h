@@ -31,20 +31,14 @@ namespace History
 {
 
 class ThreadPrivate;
+class ItemFactory;
 
 class Thread
 {
     Q_DECLARE_PRIVATE(Thread)
+    friend class ItemFactory;
 
 public:
-    Thread();
-    Thread(const QString &accountId,
-                  const QString &threadId,
-                  EventType type,
-                  const QStringList &participants,
-                  const EventPtr &lastEvent = EventPtr(),
-                  int count = 0,
-                  int unreadCount = 0);
     ~Thread();
 
     QString accountId() const;
@@ -57,6 +51,16 @@ public:
 
 protected:
     QScopedPointer<ThreadPrivate> d_ptr;
+
+private:
+    Thread();
+    Thread(const QString &accountId,
+           const QString &threadId,
+           EventType type,
+           const QStringList &participants,
+           const EventPtr &lastEvent = EventPtr(),
+           int count = 0,
+           int unreadCount = 0);
 };
 
 }

@@ -22,6 +22,7 @@
 #include "sqlitehistoryeventview.h"
 #include "sqlitedatabase.h"
 #include "filter.h"
+#include "itemfactory.h"
 #include "textevent.h"
 #include "voiceevent.h"
 #include <QDebug>
@@ -75,26 +76,26 @@ QList<History::EventPtr> SQLiteHistoryEventView::nextPage()
     while (mQuery.next() && remaining-- > 0) {
         switch (mType) {
         case History::EventTypeText:
-            events << History::EventPtr(new History::TextEvent(mQuery.value(0).toString(),
-                                                               mQuery.value(1).toString(),
-                                                               mQuery.value(2).toString(),
-                                                               mQuery.value(3).toString(),
-                                                               mQuery.value(4).toDateTime(),
-                                                               mQuery.value(5).toBool(),
-                                                               mQuery.value(6).toString(),
-                                                               (History::MessageType) mQuery.value(7).toInt(),
-                                                               (History::MessageFlags) mQuery.value(8).toInt(),
-                                                               mQuery.value(9).toDateTime()));
+            events << History::ItemFactory::instance()->createTextEvent(mQuery.value(0).toString(),
+                                                                        mQuery.value(1).toString(),
+                                                                        mQuery.value(2).toString(),
+                                                                        mQuery.value(3).toString(),
+                                                                        mQuery.value(4).toDateTime(),
+                                                                        mQuery.value(5).toBool(),
+                                                                        mQuery.value(6).toString(),
+                                                                        (History::MessageType) mQuery.value(7).toInt(),
+                                                                        (History::MessageFlags) mQuery.value(8).toInt(),
+                                                                        mQuery.value(9).toDateTime());
             break;
         case History::EventTypeVoice:
-            events << History::EventPtr(new History::VoiceEvent(mQuery.value(0).toString(),
-                                                                mQuery.value(1).toString(),
-                                                                mQuery.value(2).toString(),
-                                                                mQuery.value(3).toString(),
-                                                                mQuery.value(4).toDateTime(),
-                                                                mQuery.value(5).toBool(),
-                                                                mQuery.value(7).toBool(),
-                                                                QTime(0,0).addSecs(mQuery.value(6).toInt())));
+            events << History::ItemFactory::instance()->createVoiceEvent(mQuery.value(0).toString(),
+                                                                         mQuery.value(1).toString(),
+                                                                         mQuery.value(2).toString(),
+                                                                         mQuery.value(3).toString(),
+                                                                         mQuery.value(4).toDateTime(),
+                                                                         mQuery.value(5).toBool(),
+                                                                         mQuery.value(7).toBool(),
+                                                                         QTime(0,0).addSecs(mQuery.value(6).toInt()));
             break;
         }
     }

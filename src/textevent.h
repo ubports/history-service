@@ -28,23 +28,14 @@ namespace History
 {
 
 class TextEventPrivate;
+class ItemFactory;
 
 class TextEvent : public Event
 {
     Q_DECLARE_PRIVATE(TextEvent)
+    friend class ItemFactory;
 
 public:
-    TextEvent();
-    TextEvent(const QString &accountId,
-             const QString &threadId,
-             const QString &eventId,
-             const QString &sender,
-             const QDateTime &timestamp,
-             bool newEvent,
-             const QString &message,
-             MessageType messageType,
-             MessageFlags messageFlags,
-             const QDateTime &readTimestamp);
     ~TextEvent();
 
     EventType type() const;
@@ -53,6 +44,19 @@ public:
     MessageType messageType() const;
     MessageFlags messageFlags() const;
     QDateTime readTimestamp() const;
+
+private:
+    TextEvent();
+    TextEvent(const QString &accountId,
+              const QString &threadId,
+              const QString &eventId,
+              const QString &sender,
+              const QDateTime &timestamp,
+              bool newEvent,
+              const QString &message,
+              MessageType messageType,
+              MessageFlags messageFlags,
+              const QDateTime &readTimestamp);
 };
 
 }
