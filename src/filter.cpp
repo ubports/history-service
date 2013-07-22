@@ -116,8 +116,9 @@ QString Filter::toString(const QString &propertyPrefix) const
         value = d->filterValue.toString();
     }
 
+    QString propertyName = propertyPrefix.isNull() ? filterProperty() : QString("%1.%2").arg(propertyPrefix, filterProperty());
     // FIXME2: need to check for the match flags
-    return QString("%1.%2=%3").arg(propertyPrefix, filterProperty(), value);
+    return QString("%1=%2").arg(propertyName, value);
 }
 
 bool Filter::match(const QVariantMap properties) const
