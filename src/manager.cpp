@@ -22,6 +22,7 @@
 #include "manager.h"
 #include "manager_p.h"
 #include "managerdbus_p.h"
+#include "itemfactory.h"
 #include "pluginmanager_p.h"
 #include "plugin.h"
 #include "textevent.h"
@@ -170,7 +171,18 @@ bool Manager::writeTextEvents(const TextEvents &textEvents)
     d->writer->beginBatchOperation();
 
     Events events;
+    Threads threads;
     Q_FOREACH(const TextEventPtr &textEvent, textEvents) {
+        // save the thread so that the thread updated signal can be emitted
+        ThreadPtr thread = History::ItemFactory::instance()->cachedThread(textEvent->accountId(),
+                                                                          textEvent->threadId(),
+                                                                          EventTypeText);
+        if (thread.isNull()) {
+            thread = getSingleThread(EventTypeText, textEvent->accountId(), textEvent->threadId());
+        }
+        if (!threads.contains(thread)) {
+            threads << thread;
+        }
         d->writer->writeTextEvent(textEvent);
         events << textEvent.staticCast<Event>();
     }
@@ -178,6 +190,7 @@ bool Manager::writeTextEvents(const TextEvents &textEvents)
     d->writer->endBatchOperation();
 
     d->dbus->notifyEventsAdded(events);
+    d->dbus->notifyThreadsModified(threads);
     return true;
 }
 
@@ -192,7 +205,18 @@ bool Manager::writeVoiceEvents(const VoiceEvents &voiceEvents)
     d->writer->beginBatchOperation();
 
     Events events;
+    Threads threads;
     Q_FOREACH(const VoiceEventPtr &voiceEvent, voiceEvents) {
+        // save the thread so that the thread updated signal can be emitted
+        ThreadPtr thread = History::ItemFactory::instance()->cachedThread(voiceEvent->accountId(),
+                                                                          voiceEvent->threadId(),
+                                                                          EventTypeVoice);
+        if (thread.isNull()) {
+            thread = getSingleThread(EventTypeVoice, voiceEvent->accountId(), voiceEvent->threadId());
+        }
+        if (!threads.contains(thread)) {
+            threads << thread;
+        }
         d->writer->writeVoiceEvent(voiceEvent);
         events << voiceEvent.staticCast<Event>();
     }
@@ -200,19 +224,19 @@ bool Manager::writeVoiceEvents(const VoiceEvents &voiceEvents)
     d->writer->endBatchOperation();
 
     d->dbus->notifyEventsAdded(events);
+    d->dbus->notifyThreadsModified(threads);
+
     return true;
 }
 
-bool Manager::removeThreads(History::EventType type, const Threads &threads)
+bool Manager::removeThreads(const Threads &threads)
 {
-    Q_UNUSED(type)
     Q_UNUSED(threads)
     // FIXME: implement
 }
 
-bool Manager::removeEvents(History::EventType type, const Events &events)
+bool Manager::removeEvents(const Events &events)
 {
-    Q_UNUSED(type)
     Q_UNUSED(events)
     // FIXME: implement
 }

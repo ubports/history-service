@@ -253,10 +253,31 @@ void HistoryEventModel::onEventsAdded(const History::Events &events)
 
 void HistoryEventModel::onEventsModified(const History::Events &events)
 {
-    // FIXME: implement
+    Q_FOREACH(const History::EventPtr &event, events) {
+        int pos = mEvents.indexOf(event);
+        if (pos >= 0) {
+            mEvents[pos] = event;
+            QModelIndex idx = index(pos);
+            Q_EMIT dataChanged(idx, idx);
+        }
+    }
+
+    // FIXME: append modified events that are not loaded yet and make sure they don´t
+    // get added twice to the model when new pages are requested
 }
 
 void HistoryEventModel::onEventsRemoved(const History::Events &events)
 {
-    // FIXME: implement
+    Q_FOREACH(const History::EventPtr &event, events) {
+        int pos = mEvents.indexOf(event);
+        if (pos >= 0) {
+            beginRemoveRows(QModelIndex(), pos, pos);
+            mEvents.removeAt(pos);
+            endRemoveRows();
+        }
+    }
+
+    // FIXME: there is a corner case here: if an event was not loaded yet, but was already
+    // removed by another client, it will still show up when a new page is requested. Maybe it
+    // should be handle internally in History::EventView?
 }

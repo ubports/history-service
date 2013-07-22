@@ -54,8 +54,8 @@ public:
 
     bool writeTextEvents(const History::TextEvents &textEvents);
     bool writeVoiceEvents(const History::VoiceEvents &voiceEvents);
-    bool removeThreads(EventType type, const Threads &threads);
-    bool removeEvents(EventType type, const Events &events);
+    bool removeThreads(const Threads &threads);
+    bool removeEvents(const Events &events);
 
 Q_SIGNALS:
     void threadsAdded(const History::Threads &threads);

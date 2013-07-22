@@ -276,10 +276,31 @@ void HistoryThreadModel::onThreadsAdded(const History::Threads &threads)
 
 void HistoryThreadModel::onThreadsModified(const History::Threads &threads)
 {
-    // FIXME: implement
+    Q_FOREACH(const History::ThreadPtr &thread, threads) {
+        int pos = mThreads.indexOf(thread);
+        if (pos >= 0) {
+            mThreads[pos] = thread;
+            QModelIndex idx = index(pos);
+            Q_EMIT dataChanged(idx, idx);
+        }
+    }
+
+    // FIXME: append modified threads that are not loaded yet and make sure they don´t
+    // get added twice to the model
 }
 
 void HistoryThreadModel::onThreadsRemoved(const History::Threads &threads)
 {
-    // FIXME: implement
+    Q_FOREACH(const History::ThreadPtr &thread, threads) {
+        int pos = mThreads.indexOf(thread);
+        if (pos >= 0) {
+            beginRemoveRows(QModelIndex(), pos, pos);
+            mThreads.removeAt(pos);
+            endRemoveRows();
+        }
+    }
+
+    // FIXME: there is a corner case here: if a thread was not loaded yet, but was already
+    // removed by another client, it will still show up when a new page is requested. Maybe it
+    // should be handle internally in History::ThreadView?
 }
