@@ -63,7 +63,8 @@ set(library_PRIV_HDRS
     voiceevent_p.h
 )
 
-include_directories(${CMAKE_SOURCE_DIR}/src)
+include_directories(${CMAKE_SOURCE_DIR}/src
+                    ${CMAKE_CURRENT_BINARY_DIR})
 
 qt5_add_dbus_adaptor(library_SRCS HistoryService.xml managerdbus_p.h History::ManagerDBus)
 
