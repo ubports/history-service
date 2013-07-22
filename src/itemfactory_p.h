@@ -19,43 +19,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef HISTORY_VOICEEVENT_H
-#define HISTORY_VOICEEVENT_H
+#ifndef ITEMFACTORY_P_H
+#define ITEMFACTORY_P_H
 
-#include "event.h"
+#include <QMap>
+#include "types.h"
 
 namespace History
 {
 
-class VoiceEventPrivate;
-class ItemFactory;
-
-class VoiceEvent : public Event
+class ItemFactoryPrivate
 {
-    Q_DECLARE_PRIVATE(VoiceEvent)
-    friend class ItemFactory;
-
 public:
-    ~VoiceEvent();
+    QMap<QString, ThreadWeakPtr> threads;
+    QMap<QString, EventWeakPtr> events;
 
-    EventType type() const;
-
-    bool missed() const;
-    QTime duration() const;
-
-private:
-    VoiceEvent();
-    VoiceEvent(const QString &accountId,
-               const QString &threadId,
-               const QString &eventId,
-               const QString &sender,
-               const QDateTime &timestamp,
-               bool newEvent,
-               bool missed,
-               const QTime &duration = QTime());
+    QString hashItem(EventType type, const QString &accountId, const QString &threadId, const QString &eventId = QString::null);
+    void cleanupThreads();
+    void cleanupEvents();
 };
 
 }
 
-#endif
-
+#endif // ITEMFACTORY_P_H

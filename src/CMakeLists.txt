@@ -2,6 +2,7 @@ set(library_SRCS
     event.cpp
     filter.cpp
     intersectionfilter.cpp
+    itemfactory.cpp
     manager.cpp
     pluginmanager.cpp
     sort.cpp
@@ -20,6 +21,8 @@ set(library_HDRS
     filter.h
     IntersectionFilter
     intersectionfilter.h
+    ItemFactory
+    itemfactory.h
     Manager
     manager.h
     Plugin
@@ -50,6 +53,7 @@ set(library_PRIV_HDRS
     event_p.h
     filter_p.h
     intersectionfilter_p.h
+    itemfactory_p.h
     manager_p.h
     sort_p.h
     textevent_p.h

@@ -21,6 +21,7 @@
 
 #include "sqlitehistorywriter.h"
 #include "sqlitedatabase.h"
+#include "itemfactory.h"
 #include "thread.h"
 #include "textevent.h"
 #include "voiceevent.h"
@@ -128,8 +129,7 @@ History::ThreadPtr SQLiteHistoryWriter::threadForParticipants(const QString &acc
     }
 
     // and finally create the thread
-    // FIXME: check for existing instances of the thread object instead of always creating a new one
-    History::ThreadPtr thread(new History::Thread(accountId, existingThread, type, participants));
+    History::ThreadPtr thread = History::ItemFactory::instance()->createThread(accountId, existingThread, type, participants);
     return thread;
 }
 

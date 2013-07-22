@@ -24,6 +24,7 @@
 #include "sqlitehistoryreader.h"
 #include "thread.h"
 #include "intersectionfilter.h"
+#include "itemfactory.h"
 #include "textevent.h"
 #include "voiceevent.h"
 #include <QDebug>
@@ -122,31 +123,37 @@ QList<History::ThreadPtr> SQLiteHistoryThreadView::nextPage()
         if (!lastEventId.isEmpty()) {
             switch (mType) {
             case History::EventTypeText:
-                historyEvent = History::TextEventPtr(new History::TextEvent(accountId,
-                                                                            threadId,
-                                                                            lastEventId,
-                                                                            mQuery.value(5).toString(),
-                                                                            mQuery.value(6).toDateTime(),
-                                                                            mQuery.value(7).toBool(),
-                                                                            mQuery.value(8).toString(),
-                                                                            (History::MessageType)mQuery.value(9).toInt(),
-                                                                            History::MessageFlags(mQuery.value(10).toInt()),
-                                                                            mQuery.value(11).toDateTime()));
+                historyEvent = History::ItemFactory::instance()->createTextEvent(accountId,
+                                                                                 threadId,
+                                                                                 lastEventId,
+                                                                                 mQuery.value(5).toString(),
+                                                                                 mQuery.value(6).toDateTime(),
+                                                                                 mQuery.value(7).toBool(),
+                                                                                 mQuery.value(8).toString(),
+                                                                                 (History::MessageType)mQuery.value(9).toInt(),
+                                                                                 History::MessageFlags(mQuery.value(10).toInt()),
+                                                                                 mQuery.value(11).toDateTime());
                 break;
             case History::EventTypeVoice:
-                historyEvent = History::VoiceEventPtr(new History::VoiceEvent(accountId,
-                                                                              threadId,
-                                                                              lastEventId,
-                                                                              mQuery.value(5).toString(),
-                                                                              mQuery.value(6).toDateTime(),
-                                                                              mQuery.value(7).toBool(),
-                                                                              mQuery.value(9).toBool(),
-                                                                              QTime(0,0).addSecs(mQuery.value(8).toInt())));
+                historyEvent = History::ItemFactory::instance()->createVoiceEvent(accountId,
+                                                                                  threadId,
+                                                                                  lastEventId,
+                                                                                  mQuery.value(5).toString(),
+                                                                                  mQuery.value(6).toDateTime(),
+                                                                                  mQuery.value(7).toBool(),
+                                                                                  mQuery.value(9).toBool(),
+                                                                                  QTime(0,0).addSecs(mQuery.value(8).toInt()));
                 break;
             }
         }
         // and last but not least, create the thread and append it to the result set
-        History::ThreadPtr thread(new History::Thread(accountId, threadId, mType, participants, historyEvent, count, unreadCount));
+        History::ThreadPtr thread = History::ItemFactory::instance()->createThread(accountId,
+                                                                                   threadId,
+                                                                                   mType,
+                                                                                   participants,
+                                                                                   historyEvent,
+                                                                                   count,
+                                                                                   unreadCount);
         threads << thread;
     }
 

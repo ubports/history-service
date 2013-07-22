@@ -22,6 +22,7 @@
 #include "telepathylogimporter.h"
 #include "telepathylogreader.h"
 #include "writer.h"
+#include "itemfactory.h"
 #include "pluginmanager.h"
 #include "plugin.h"
 #include "thread.h"
@@ -67,14 +68,14 @@ void TelepathyLogImporter::onCallEventLoaded(const Tpl::CallEventPtr &event)
                                                                History::EventTypeVoice,
                                                                QStringList() << remote->identifier());
     QString eventId = QString("%1:%2").arg(thread->threadId()).arg(event->timestamp().toString());
-    History::VoiceEventPtr historyEvent(new History::VoiceEvent(thread->accountId(),
-                                                                thread->threadId(),
-                                                                eventId,
-                                                                incoming ? remote->identifier() : "self",
-                                                                event->timestamp(),
-                                                                false,
-                                                                event->endReason() == Tp::CallStateChangeReasonNoAnswer,
-                                                                event->duration()));
+    History::VoiceEventPtr historyEvent = History::ItemFactory::instance()->createVoiceEvent(thread->accountId(),
+                                                                                             thread->threadId(),
+                                                                                             eventId,
+                                                                                             incoming ? remote->identifier() : "self",
+                                                                                             event->timestamp(),
+                                                                                             false,
+                                                                                             event->endReason() == Tp::CallStateChangeReasonNoAnswer,
+                                                                                             event->duration());
     mWriter->writeVoiceEvent(historyEvent);
     mVoiceEvents++;
 }
@@ -91,16 +92,16 @@ void TelepathyLogImporter::onMessageEventLoaded(const Tpl::TextEventPtr &event)
     History::ThreadPtr thread = mWriter->threadForParticipants(event->account()->uniqueIdentifier(),
                                                                History::EventTypeText,
                                                                QStringList() << remote->identifier());
-    History::TextEventPtr historyEvent(new History::TextEvent(thread->accountId(),
-                                                              thread->threadId(),
-                                                              event->messageToken(),
-                                                              incoming ? remote->identifier() : "self",
-                                                              event->timestamp(),
-                                                              false,
-                                                              event->message(),
-                                                              History::TextMessage,
-                                                              History::MessageFlags(),
-                                                              event->timestamp()));
+    History::TextEventPtr historyEvent = History::ItemFactory::instance()->createTextEvent(thread->accountId(),
+                                                                                           thread->threadId(),
+                                                                                           event->messageToken(),
+                                                                                           incoming ? remote->identifier() : "self",
+                                                                                           event->timestamp(),
+                                                                                           false,
+                                                                                           event->message(),
+                                                                                           History::TextMessage,
+                                                                                           History::MessageFlags(),
+                                                                                           event->timestamp());
     mWriter->writeTextEvent(historyEvent);
     mTextEvents++;
 }
