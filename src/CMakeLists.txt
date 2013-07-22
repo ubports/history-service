@@ -1,7 +1,6 @@
 set(library_SRCS
     event.cpp
     eventview.cpp
-    eventwatcher.cpp
     filter.cpp
     intersectionfilter.cpp
     manager.cpp
@@ -51,7 +50,6 @@ set(library_HDRS
 set(library_PRIV_HDRS
     event_p.h
     eventview_p.h
-    eventwatcher_p.h
     filter_p.h
     intersectionfilter_p.h
     manager_p.h

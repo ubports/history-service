@@ -87,7 +87,7 @@ Filters IntersectionFilter::filters() const
     return d->filters;
 }
 
-QString IntersectionFilter::toString() const
+QString IntersectionFilter::toString(const QString &propertyPrefix) const
 {
     Q_D(const IntersectionFilter);
 
@@ -100,7 +100,7 @@ QString IntersectionFilter::toString() const
     QStringList output;
     // wrap each filter string around parenthesis
     Q_FOREACH(const FilterPtr &filter, d->filters) {
-        output << QString("(%1)").arg(filter->toString());
+        output << QString("(%1)").arg(filter->toString(propertyPrefix));
     }
 
     return output.join(" AND ");

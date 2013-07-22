@@ -46,7 +46,7 @@ public:
     bool match(const QVariantMap properties) const;
 
     Filters filters() const;
-    QString toString() const;
+    QString toString(const QString &propertyPrefix = QString::null) const;
 };
 
 }

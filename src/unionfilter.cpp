@@ -93,7 +93,7 @@ Filters UnionFilter::filters() const
     return d->filters;
 }
 
-QString UnionFilter::toString() const
+QString UnionFilter::toString(const QString &propertyPrefix) const
 {
     Q_D(const UnionFilter);
 
@@ -106,7 +106,7 @@ QString UnionFilter::toString() const
     QStringList output;
     // wrap each filter string around parenthesis
     Q_FOREACH(const FilterPtr &filter, d->filters) {
-        output << QString("(%1)").arg(filter->toString());
+        output << QString("(%1)").arg(filter->toString(propertyPrefix));
     }
 
     return output.join(" OR ");

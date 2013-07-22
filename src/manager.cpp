@@ -21,7 +21,6 @@
 
 #include "manager.h"
 #include "manager_p.h"
-#include "eventwatcher_p.h"
 #include "managerdbus_p.h"
 #include "pluginmanager_p.h"
 #include "plugin.h"
@@ -72,9 +71,24 @@ Manager::Manager(const QString &backendPlugin)
     }
 
     // Propagate the signals from the event watcher
-    connect(EventWatcher::instance(),
+    connect(d->dbus.data(),
             SIGNAL(threadsAdded(History::Threads)),
             SIGNAL(threadsAdded(History::Threads)));
+    connect(d->dbus.data(),
+            SIGNAL(threadsModified(History::Threads)),
+            SIGNAL(threadsModified(History::Threads)));
+    connect(d->dbus.data(),
+            SIGNAL(threadsRemoved(History::Threads)),
+            SIGNAL(threadsRemoved(History::Threads)));
+    connect(d->dbus.data(),
+            SIGNAL(eventsAdded(History::Events)),
+            SIGNAL(eventsAdded(History::Events)));
+    connect(d->dbus.data(),
+            SIGNAL(eventsModified(History::Events)),
+            SIGNAL(eventsModified(History::Events)));
+    connect(d->dbus.data(),
+            SIGNAL(eventsRemoved(History::Events)),
+            SIGNAL(eventsRemoved(History::Events)));
 }
 
 Manager::~Manager()

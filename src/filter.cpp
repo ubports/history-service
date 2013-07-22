@@ -96,7 +96,7 @@ void Filter::setMatchFlags(const MatchFlags &flags)
     d->matchFlags = flags;
 }
 
-QString Filter::toString() const
+QString Filter::toString(const QString &propertyPrefix) const
 {
     Q_D(const Filter);
 
@@ -117,7 +117,7 @@ QString Filter::toString() const
     }
 
     // FIXME2: need to check for the match flags
-    return QString("%1=%2").arg(filterProperty(), value);
+    return QString("%1.%2=%3").arg(propertyPrefix, filterProperty(), value);
 }
 
 bool Filter::match(const QVariantMap properties) const

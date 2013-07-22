@@ -22,9 +22,15 @@
 #include "managerdbus_p.h"
 #include "historyserviceadaptor.h"
 #include "event.h"
+#include "manager.h"
 #include "thread.h"
+#include "textevent.h"
+#include "voiceevent.h"
 
 static const char* DBUS_OBJECT_PATH = "/com/canonical/HistoryService";
+static const char* HISTORY_INTERFACE = "com.canonical.HistoryService";
+
+Q_DECLARE_METATYPE(QList< QVariantMap >)
 
 namespace History
 {
@@ -32,7 +38,24 @@ namespace History
 ManagerDBus::ManagerDBus(QObject *parent) :
     QObject(parent), mAdaptor(0)
 {
+    qDBusRegisterMetaType<QList<QVariantMap> >();
     connectToBus();
+
+    // listen for signals coming from the bus
+    QDBusConnection connection = QDBusConnection::sessionBus();
+    connection.connect(QString::null, QString::null, HISTORY_INTERFACE, "ThreadsAdded",
+                       this, SLOT(onThreadsAdded(QList<QVariantMap>)));
+    connection.connect(QString::null, QString::null, HISTORY_INTERFACE, "ThreadsModified",
+                       this, SLOT(onThreadsModified(QList<QVariantMap>)));
+    connection.connect(QString::null, QString::null, HISTORY_INTERFACE, "ThreadsRemoved",
+                       this, SLOT(onThreadsRemoved(QList<QVariantMap>)));
+
+    connection.connect(QString::null, QString::null, HISTORY_INTERFACE, "EventsAdded",
+                       this, SLOT(onEventsAdded(QList<QVariantMap>)));
+    connection.connect(QString::null, QString::null, HISTORY_INTERFACE, "EventsModified",
+                       this, SLOT(onEventsAdded(QList<QVariantMap>)));
+    connection.connect(QString::null, QString::null, HISTORY_INTERFACE, "EventsRemoved",
+                       this, SLOT(onEventsRemoved(QList<QVariantMap>)));
 }
 
 bool ManagerDBus::connectToBus()
@@ -75,6 +98,60 @@ void ManagerDBus::notifyEventsRemoved(const Events &events)
     Q_EMIT EventsRemoved(eventsToProperties(events));
 }
 
+void ManagerDBus::onThreadsAdded(const QList<QVariantMap> &threads)
+{
+    qDebug() << __PRETTY_FUNCTION__;
+    Q_EMIT threadsAdded(threadsFromProperties(threads));
+}
+
+void ManagerDBus::onThreadsModified(const QList<QVariantMap> &threads)
+{
+    qDebug() << __PRETTY_FUNCTION__;
+    Q_EMIT threadsModified(threadsFromProperties(threads));
+}
+
+void ManagerDBus::onThreadsRemoved(const QList<QVariantMap> &threads)
+{
+    qDebug() << __PRETTY_FUNCTION__;
+    Q_EMIT threadsRemoved(threadsFromProperties(threads));
+}
+
+void ManagerDBus::onEventsAdded(const QList<QVariantMap> &events)
+{
+    qDebug() << __PRETTY_FUNCTION__;
+    Q_EMIT eventsAdded(eventsFromProperties(events));
+}
+
+void ManagerDBus::onEventsModified(const QList<QVariantMap> &events)
+{
+    qDebug() << __PRETTY_FUNCTION__;
+    Q_EMIT eventsModified(eventsFromProperties(events));
+}
+
+void ManagerDBus::onEventsRemoved(const QList<QVariantMap> &events)
+{
+    qDebug() << __PRETTY_FUNCTION__;
+    Q_EMIT eventsRemoved(eventsFromProperties(events));
+}
+
+Threads ManagerDBus::threadsFromProperties(const QList<QVariantMap> &threadsProperties)
+{
+    Threads threads;
+    Manager *manager = Manager::instance();
+
+    Q_FOREACH(const QVariantMap &map, threadsProperties) {
+        QString accountId = map["accountId"].toString();
+        QString threadId = map["threadId"].toString();
+        EventType type = (EventType) map["type"].toInt();
+        ThreadPtr thread = manager->getSingleThread(type, accountId, threadId);
+        if (!thread.isNull()) {
+            threads << thread;
+        }
+    }
+
+    return threads;
+}
+
 QList<QVariantMap> ManagerDBus::threadsToProperties(const Threads &threads)
 {
     QList<QVariantMap> threadsPropertyMap;
@@ -84,6 +161,47 @@ QList<QVariantMap> ManagerDBus::threadsToProperties(const Threads &threads)
     }
 
     return threadsPropertyMap;
+}
+
+Events ManagerDBus::eventsFromProperties(const QList<QVariantMap> &eventsProperties)
+{
+    Events events;
+
+    Q_FOREACH(const QVariantMap &map, eventsProperties) {
+        EventPtr event;
+
+        QString accountId = map["accountId"].toString();
+        QString threadId = map["threadId"].toString();
+        QString eventId = map["eventIdId"].toString();
+        EventType type = (EventType) map["type"].toInt();
+        QString senderId = map["senderId"].toString();
+        QDateTime timestamp = map["timestamp"].toDateTime();
+        bool newEvent = map["newEvent"].toBool();
+
+        // now create the
+        switch (type) {
+        case EventTypeText: {
+            QString message = map["message"].toString();
+            MessageType messageType = (MessageType) map["messageType"].toInt();
+            MessageFlags messageFlags = (MessageFlags) map["messageFlags"].toInt();
+            QDateTime readTimestamp = map["readTimestamp"].toDateTime();
+            event = EventPtr(new TextEvent(accountId, threadId, eventId, senderId, timestamp, newEvent,
+                                           message, messageType, messageFlags, readTimestamp));
+            break;
+        }
+        case EventTypeVoice: {
+            bool missed = map["missed"].toBool();
+            QTime duration = QTime(0,0,0).addSecs(map["duration"].toInt());
+            event = EventPtr(new VoiceEvent(accountId, threadId, eventId, senderId, timestamp, newEvent,
+                                            missed, duration));
+            break;
+        }
+        }
+
+        events << event;
+    }
+
+    return events;
 }
 
 QList<QVariantMap> ManagerDBus::eventsToProperties(const Events &events)
@@ -97,4 +215,6 @@ QList<QVariantMap> ManagerDBus::eventsToProperties(const Events &events)
     return eventsPropertyMap;
 }
 
+
 }
+

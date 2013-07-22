@@ -50,7 +50,7 @@ public:
 
     MatchFlags matchFlags() const;
     void setMatchFlags(const MatchFlags &flags);
-    virtual QString toString() const;
+    virtual QString toString(const QString &propertyPrefix = QString::null) const;
 
     virtual bool match(const QVariantMap properties) const;
 

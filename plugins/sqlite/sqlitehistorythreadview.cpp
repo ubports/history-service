@@ -44,7 +44,7 @@ SQLiteHistoryThreadView::SQLiteHistoryThreadView(SQLiteHistoryReader *reader,
     // FIXME: validate the filter
     QString condition;
     if (!filter.isNull()) {
-        condition = filter->toString();
+        condition = filter->toString("threads");
     }
 
     if (!condition.isEmpty()) {

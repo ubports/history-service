@@ -48,6 +48,7 @@ public:
     void notifyEventsRemoved(const Events &events);
 
 Q_SIGNALS:
+    // signals that will be relayed into the bus
     void ThreadsAdded(const QList<QVariantMap> &threads);
     void ThreadsModified(const QList<QVariantMap> &threads);
     void ThreadsRemoved(const QList<QVariantMap> &threads);
@@ -56,8 +57,29 @@ Q_SIGNALS:
     void EventsModified(const QList<QVariantMap> &events);
     void EventsRemoved(const QList<QVariantMap> &events);
 
+    // signals that will be triggered after processing bus signals
+    void threadsAdded(const History::Threads &threads);
+    void threadsModified(const History::Threads &threads);
+    void threadsRemoved(const History::Threads &threads);
+
+    void eventsAdded(const History::Events &events);
+    void eventsModified(const History::Events &events);
+    void eventsRemoved(const History::Events &events);
+
+protected Q_SLOTS:
+    void onThreadsAdded(const QList<QVariantMap> &threads);
+    void onThreadsModified(const QList<QVariantMap> &threads);
+    void onThreadsRemoved(const QList<QVariantMap> &threads);
+
+    void onEventsAdded(const QList<QVariantMap> &events);
+    void onEventsModified(const QList<QVariantMap> &events);
+    void onEventsRemoved(const QList<QVariantMap> &events);
+
 protected:
+    Threads threadsFromProperties(const QList<QVariantMap> &threadsProperties);
     QList<QVariantMap> threadsToProperties(const Threads &threads);
+
+    Events eventsFromProperties(const QList<QVariantMap> &eventsProperties);
     QList<QVariantMap> eventsToProperties(const Events &events);
 
 private:
