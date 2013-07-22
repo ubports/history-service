@@ -25,6 +25,7 @@
 #include "sqlitedatabase.h"
 #include "filter.h"
 #include "intersectionfilter.h"
+#include "itemfactory.h"
 #include "types.h"
 #include "thread.h"
 #include <QDebug>
@@ -111,7 +112,7 @@ History::ThreadPtr SQLiteHistoryReader::threadForParticipants(const QString &acc
     }
 
     if (!existingThread.isNull()) {
-        return History::ThreadPtr(new History::Thread(accountId, existingThread, type, participants));
+        return History::ItemFactory::instance()->createThread(accountId, existingThread, type, participants);
     }
 
     return History::ThreadPtr();

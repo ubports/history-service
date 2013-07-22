@@ -72,7 +72,7 @@ History::ThreadPtr SQLiteHistoryWriter::createThreadForParticipants(const QStrin
     }
 
     // and finally create the thread
-    History::ThreadPtr thread = History::ItemFactory::instance()->createThread(accountId, existingThread, type, participants);
+    History::ThreadPtr thread = History::ItemFactory::instance()->createThread(accountId, threadId, type, participants);
     return thread;
 }
 

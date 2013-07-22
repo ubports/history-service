@@ -22,6 +22,7 @@
 #include "managerdbus_p.h"
 #include "historyserviceadaptor.h"
 #include "event.h"
+#include "itemfactory.h"
 #include "manager.h"
 #include "thread.h"
 #include "textevent.h"
@@ -178,15 +179,15 @@ Events ManagerDBus::eventsFromProperties(const QList<QVariantMap> &eventsPropert
             MessageType messageType = (MessageType) map["messageType"].toInt();
             MessageFlags messageFlags = (MessageFlags) map["messageFlags"].toInt();
             QDateTime readTimestamp = map["readTimestamp"].toDateTime();
-            event = EventPtr(new TextEvent(accountId, threadId, eventId, senderId, timestamp, newEvent,
-                                           message, messageType, messageFlags, readTimestamp));
+            event = History::ItemFactory::instance()->createTextEvent(accountId, threadId, eventId, senderId, timestamp, newEvent,
+                                                                      message, messageType, messageFlags, readTimestamp);
             break;
         }
         case EventTypeVoice: {
             bool missed = map["missed"].toBool();
             QTime duration = QTime(0,0,0).addSecs(map["duration"].toInt());
-            event = EventPtr(new VoiceEvent(accountId, threadId, eventId, senderId, timestamp, newEvent,
-                                            missed, duration));
+            event = History::ItemFactory::instance()->createVoiceEvent(accountId, threadId, eventId, senderId, timestamp, newEvent,
+                                                                       missed, duration);
             break;
         }
         }
