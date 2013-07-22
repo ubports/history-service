@@ -22,6 +22,7 @@
 #include "telepathylogimporter.h"
 #include "telepathylogreader.h"
 #include "manager.h"
+#include "itemfactory.h"
 #include "thread.h"
 #include "textevent.h"
 #include "voiceevent.h"
@@ -54,14 +55,15 @@ void TelepathyLogImporter::onCallEventLoaded(const Tpl::CallEventPtr &event)
                                                                                     QStringList() << remote->identifier(),
                                                                                     true);
     QString eventId = QString("%1:%2").arg(thread->threadId()).arg(event->timestamp().toString());
-    History::VoiceEventPtr historyEvent(new History::VoiceEvent(thread->accountId(),
-                                                                thread->threadId(),
-                                                                eventId,
-                                                                incoming ? remote->identifier() : "self",
-                                                                event->timestamp(),
-                                                                false,
-                                                                event->endReason() == Tp::CallStateChangeReasonNoAnswer,
-                                                                event->duration()));
+    History::VoiceEventPtr historyEvent = History::ItemFactory::instance()->createVoiceEvent(thread->accountId(),
+                                                                                             thread->threadId(),
+                                                                                             eventId,
+                                                                                             incoming ? remote->identifier() : "self",
+                                                                                             event->timestamp(),
+                                                                                             false,
+                                                                                             event->endReason() == Tp::CallStateChangeReasonNoAnswer,
+                                                                                             event->duration());
+
     mVoiceEvents << historyEvent;
     if (mVoiceEvents.count() >= mBatchSize) {
         History::Manager::instance()->writeVoiceEvents(mVoiceEvents);
@@ -75,21 +77,21 @@ void TelepathyLogImporter::onMessageEventLoaded(const Tpl::TextEventPtr &event)
     // FIXME: add support for conf call
     bool incoming = event->receiver()->entityType() == Tpl::EntityTypeSelf;
     Tpl::EntityPtr remote = incoming ? event->sender() : event->receiver();
+<<<<<<< TREE
     History::ThreadPtr thread = History::Manager::instance()->threadForParticipants(event->account()->uniqueIdentifier(),
                                                                                     History::EventTypeText,
                                                                                     QStringList() << remote->identifier(),
                                                                                     true);
-    History::TextEventPtr historyEvent(new History::TextEvent(thread->accountId(),
-                                                              thread->threadId(),
-                                                              event->messageToken(),
-                                                              incoming ? remote->identifier() : "self",
-                                                              event->timestamp(),
-                                                              false,
-                                                              event->message(),
-                                                              History::TextMessage,
-                                                              History::MessageFlags(),
-                                                              event->timestamp()));
-
+    History::TextEventPtr historyEvent = History::ItemFactory::instance()->createTextEvent(thread->accountId(),
+                                                                                           thread->threadId(),
+                                                                                           event->messageToken(),
+                                                                                           incoming ? remote->identifier() : "self",
+                                                                                           event->timestamp(),
+                                                                                           false,
+                                                                                           event->message(),
+                                                                                           History::TextMessage,
+                                                                                           History::MessageFlags(),
+                                                                                           event->timestamp());
     mTextEvents << historyEvent;
     if (mTextEvents.count() >= mBatchSize) {
         History::Manager::instance()->writeTextEvents(mTextEvents);

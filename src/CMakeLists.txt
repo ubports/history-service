@@ -3,6 +3,7 @@ set(library_SRCS
     eventview.cpp
     filter.cpp
     intersectionfilter.cpp
+    itemfactory.cpp
     manager.cpp
     managerdbus.cpp
     pluginmanager.cpp
@@ -23,6 +24,8 @@ set(library_HDRS
     filter.h
     IntersectionFilter
     intersectionfilter.h
+    ItemFactory
+    itemfactory.h
     Manager
     manager.h
     Plugin
@@ -52,6 +55,7 @@ set(library_PRIV_HDRS
     eventview_p.h
     filter_p.h
     intersectionfilter_p.h
+    itemfactory_p.h
     manager_p.h
     managerdbus_p.h
     pluginmanager_p.h
