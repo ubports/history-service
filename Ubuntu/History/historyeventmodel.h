@@ -70,6 +70,9 @@ Q_SIGNALS:
 
 protected Q_SLOTS:
     void updateQuery();
+    void onEventsAdded(const History::Events &events);
+    void onEventsModified(const History::Events &events);
+    void onEventsRemoved(const History::Events &events);
 
 private:
     History::EventViewPtr mView;

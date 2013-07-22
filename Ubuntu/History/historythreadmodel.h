@@ -81,6 +81,9 @@ Q_SIGNALS:
 
 protected Q_SLOTS:
     void updateQuery();
+    void onThreadsAdded(const History::Threads &threads);
+    void onThreadsModified(const History::Threads &threads);
+    void onThreadsRemoved(const History::Threads &threads);
 
 private:
     History::ThreadViewPtr mThreadView;

@@ -241,9 +241,45 @@ void HistoryThreadModel::updateQuery()
     History::FilterPtr queryFilter;
     History::SortPtr querySort;
 
+    if (!mThreadView.isNull()) {
+        mThreadView->disconnect(this);
+    }
+
     if (mFilter) {
         queryFilter = mFilter->filter();
     }
     mThreadView = History::Manager::instance()->queryThreads((History::EventType)mType, querySort, queryFilter);
+    connect(mThreadView.data(),
+            SIGNAL(threadsAdded(History::Threads)),
+            SLOT(onThreadsAdded(History::Threads)));
+    connect(mThreadView.data(),
+            SIGNAL(threadsModified(History::Threads)),
+            SLOT(onThreadsModified(History::Threads)));
+    connect(mThreadView.data(),
+            SIGNAL(threadsRemoved(History::Threads)),
+            SLOT(onThreadsRemoved(History::Threads)));
+
     fetchMore(QModelIndex());
+}
+
+void HistoryThreadModel::onThreadsAdded(const History::Threads &threads)
+{
+    if (threads.isEmpty()) {
+        return;
+    }
+
+    // FIXME: handle sorting
+    beginInsertRows(QModelIndex(), mThreads.count(), mThreads.count() + threads.count() - 1);
+    mThreads << threads;
+    endInsertRows();
+}
+
+void HistoryThreadModel::onThreadsModified(const History::Threads &threads)
+{
+    // FIXME: implement
+}
+
+void HistoryThreadModel::onThreadsRemoved(const History::Threads &threads)
+{
+    // FIXME: implement
 }

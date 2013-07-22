@@ -215,13 +215,48 @@ void HistoryEventModel::updateQuery()
     History::FilterPtr queryFilter;
     History::SortPtr querySort;
 
+    if (!mView.isNull()) {
+        mView->disconnect(this);
+    }
+
     if (mFilter) {
         queryFilter = mFilter->filter();
     }
 
     mView = History::Manager::instance()->queryEvents((History::EventType)mType, querySort, queryFilter);
+    connect(mView.data(),
+            SIGNAL(eventsAdded(History::Events)),
+            SLOT(onEventsAdded(History::Events)));
+    connect(mView.data(),
+            SIGNAL(eventsModified(History::Events)),
+            SLOT(onEventsModified(History::Events)));
+    connect(mView.data(),
+            SIGNAL(eventsRemoved(History::Events)),
+            SLOT(onEventsRemoved(History::Events)));
     mCanFetchMore = true;
 
     // get an initial set of results
     fetchMore(QModelIndex());
+}
+
+void HistoryEventModel::onEventsAdded(const History::Events &events)
+{
+    if (!events.count()) {
+        return;
+    }
+
+    //FIXME: handle sorting
+    beginInsertRows(QModelIndex(), mEvents.count(), mEvents.count() + events.count() - 1);
+    mEvents << events;
+    endInsertRows();
+}
+
+void HistoryEventModel::onEventsModified(const History::Events &events)
+{
+    // FIXME: implement
+}
+
+void HistoryEventModel::onEventsRemoved(const History::Events &events)
+{
+    // FIXME: implement
 }

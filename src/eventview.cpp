@@ -46,7 +46,7 @@ Events EventViewPrivate::filteredEvents(const Events &events)
 
     Events filtered;
     Q_FOREACH(const EventPtr &event, events) {
-        if (filter->match(event->properties())) {
+        if (event->type() == type && filter->match(event->properties())) {
             filtered << events;
         }
     }

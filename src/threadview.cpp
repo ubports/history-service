@@ -46,7 +46,7 @@ Threads ThreadViewPrivate::filteredThreads(const Threads &threads)
 
     Threads filtered;
     Q_FOREACH(const ThreadPtr &thread, threads) {
-        if (filter->match(thread->properties())) {
+        if (thread->type() == type && filter->match(thread->properties())) {
             filtered << thread;
         }
     }
