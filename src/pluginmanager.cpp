@@ -56,7 +56,6 @@ void PluginManager::loadPlugins()
     QDir dir(HISTORY_PLUGIN_PATH);
 
     Q_FOREACH (QString fileName, dir.entryList(QDir::Files)) {
-        qDebug() << fileName;
         QPluginLoader loader(dir.absoluteFilePath(fileName));
         Plugin *plugin = qobject_cast<Plugin*>(loader.instance());
         if (plugin) {

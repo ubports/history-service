@@ -69,7 +69,6 @@ bool ManagerDBus::connectToBus()
 
 void ManagerDBus::notifyThreadsAdded(const Threads &threads)
 {
-    qDebug() << __PRETTY_FUNCTION__;
     Q_EMIT ThreadsAdded(threadsToProperties(threads));
 }
 
@@ -100,37 +99,31 @@ void ManagerDBus::notifyEventsRemoved(const Events &events)
 
 void ManagerDBus::onThreadsAdded(const QList<QVariantMap> &threads)
 {
-    qDebug() << __PRETTY_FUNCTION__;
     Q_EMIT threadsAdded(threadsFromProperties(threads));
 }
 
 void ManagerDBus::onThreadsModified(const QList<QVariantMap> &threads)
 {
-    qDebug() << __PRETTY_FUNCTION__;
     Q_EMIT threadsModified(threadsFromProperties(threads));
 }
 
 void ManagerDBus::onThreadsRemoved(const QList<QVariantMap> &threads)
 {
-    qDebug() << __PRETTY_FUNCTION__;
     Q_EMIT threadsRemoved(threadsFromProperties(threads));
 }
 
 void ManagerDBus::onEventsAdded(const QList<QVariantMap> &events)
 {
-    qDebug() << __PRETTY_FUNCTION__;
     Q_EMIT eventsAdded(eventsFromProperties(events));
 }
 
 void ManagerDBus::onEventsModified(const QList<QVariantMap> &events)
 {
-    qDebug() << __PRETTY_FUNCTION__;
     Q_EMIT eventsModified(eventsFromProperties(events));
 }
 
 void ManagerDBus::onEventsRemoved(const QList<QVariantMap> &events)
 {
-    qDebug() << __PRETTY_FUNCTION__;
     Q_EMIT eventsRemoved(eventsFromProperties(events));
 }
 
