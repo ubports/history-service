@@ -34,27 +34,39 @@ ListView {
     delegate: Rectangle {
         anchors.left: parent.left
         anchors.right: parent.right
-        height: 30
+        height: childrenRect.height + 5
         border.color: "black"
         color: "lightGray"
 
-        Row {
-            anchors.fill: parent
+        Column {
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.right: parent.right
             anchors.margins: 3
             spacing: 3
+            height: childrenRect.height
 
             Text {
-                anchors.verticalCenter: parent.verticalCenter
+                anchors.left: parent.left
                 text: "<b>AccountId:</b> " + accountId
             }
             Text {
-                anchors.verticalCenter: parent.verticalCenter
+                anchors.left: parent.left
                 text: "<b>ThreadId:</b> " + threadId
             }
             Text {
-                anchors.verticalCenter: parent.verticalCenter
+                anchors.left: parent.left
                 text: "<b>Participants:</b> " + participants
             }
+            Text {
+                anchors.left: parent.left
+                text: "<b>Sender:</b> " + eventSenderId
+            }
+            Text {
+                anchors.left: parent.left
+                text: "<b>Message:</b> " + eventTextMessage
+            }
+
         }
     }
 }

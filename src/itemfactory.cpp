@@ -27,7 +27,6 @@
 #include "thread_p.h"
 #include "textevent_p.h"
 #include "voiceevent_p.h"
-#include <QDebug>
 
 namespace History
 {
@@ -85,7 +84,6 @@ ThreadPtr ItemFactory::createThread(const QString &accountId,
     Q_D(ItemFactory);
 
     QString hash = d->hashItem(type, accountId, threadId);
-    qDebug() << "Hash:" << hash;
 
     ThreadPtr thread;
     if (d->threads.contains(hash)) {
@@ -130,7 +128,6 @@ TextEventPtr ItemFactory::createTextEvent(const QString &accountId,
     Q_D(ItemFactory);
 
     QString hash = d->hashItem(EventTypeText, accountId, threadId, eventId);
-    qDebug() << "Hash:" << hash;
 
     EventPtr event;
     if (d->events.contains(hash)) {
@@ -176,7 +173,6 @@ VoiceEventPtr ItemFactory::createVoiceEvent(const QString &accountId,
     Q_D(ItemFactory);
 
     QString hash = d->hashItem(EventTypeVoice, accountId, threadId, eventId);
-    qDebug() << "Hash:" << hash;
 
     EventPtr event;
     if (d->events.contains(hash)) {
