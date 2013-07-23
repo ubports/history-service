@@ -32,7 +32,8 @@
 HistoryDaemon::HistoryDaemon(QObject *parent)
     : QObject(parent), mCallObserver(this), mTextObserver(this)
 {
-    qDebug() << "Going to load the plugins";
+    // trigger the creation of History::Manager so that plugins are loaded
+    History::Manager::instance();
 
     connect(TelepathyHelper::instance(),
             SIGNAL(channelObserverCreated(ChannelObserver*)),
@@ -108,6 +109,12 @@ void HistoryDaemon::onCallEnded(const Tp::CallChannelPtr &channel)
 void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, const Tp::ReceivedMessage &message)
 {
     qDebug() << __PRETTY_FUNCTION__;
+
+    // ignore delivery reports for now.
+    // FIXME: maybe we should set the readTimestamp when a delivery report is received
+    if (message.isDeliveryReport() || message.isRescued() || message.isScrollback()) {
+        return;
+    }
 
     QStringList participants;
     Q_FOREACH(const Tp::ContactPtr contact, textChannel->groupContacts(false)) {
