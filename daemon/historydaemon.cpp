@@ -160,7 +160,7 @@ void HistoryDaemon::onMessageSent(const Tp::TextChannelPtr textChannel, const Tp
                                                                                     thread->threadId(),
                                                                                     messageToken,
                                                                                     "self",
-                                                                                    message.sent(),
+                                                                                    QDateTime::currentDateTime(), // FIXME: check why message.sent() is empty
                                                                                     false, // outgoing messages are never new (unseen)
                                                                                     message.text(),
                                                                                     History::TextMessage, // FIXME: add support for MMS
