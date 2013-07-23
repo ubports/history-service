@@ -45,4 +45,5 @@ void HistoryQmlPlugin::registerTypes(const char *uri)
     qmlRegisterType<HistoryQmlIntersectionFilter>(uri, 0, 1, "HistoryIntersectionFilter");
     qmlRegisterType<HistoryQmlUnionFilter>(uri, 0, 1, "HistoryUnionFilter");
     qmlRegisterType<SortProxyModel>(uri, 0, 1, "SortProxyModel");
+    qmlRegisterUncreatableType<QAbstractItemModel>(uri, 0, 1, "QAbstractItemModel", "");
 }

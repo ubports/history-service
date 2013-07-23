@@ -43,30 +43,7 @@ void SortProxyModel::setAscending(bool value)
     }
 }
 
-QObject* SortProxyModel::model() const
-{
-
-    return sourceModel();
-}
-
-void SortProxyModel::setModel(QObject* value)
-{
-    QAbstractItemModel *model = qobject_cast<QAbstractItemModel*>(value);
-    connect(model,SIGNAL(dataChanged(QModelIndex,QModelIndex)), SLOT(updateSorting()));
-    setSourceModel(model);
-    Q_EMIT modelChanged();
-}
-
 void SortProxyModel::updateSorting()
 {
     sort(0, mAscending ? Qt::AscendingOrder : Qt::DescendingOrder);
-}
-
-QVariant SortProxyModel::data(const QModelIndex &index, int role) const
-{
-    if (!index.isValid()) {
-        return QVariant();
-    }
-
-    return QSortFilterProxyModel::data(index, role);
 }

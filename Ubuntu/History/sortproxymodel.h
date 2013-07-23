@@ -31,21 +31,12 @@ class SortProxyModel : public QSortFilterProxyModel
                READ ascending
                WRITE setAscending
                NOTIFY ascendingChanged)
-    Q_PROPERTY(QObject* model
-               READ model
-               WRITE setModel
-               NOTIFY modelChanged)
+
 public:
     explicit SortProxyModel(QObject *parent = 0);
 
     bool ascending() const;
     void setAscending(bool value);
-
-    QObject* model() const;
-    void setModel(QObject* value);
-
-
-    virtual QVariant data(const QModelIndex &index, int role) const;
 
 private Q_SLOTS:
     void updateSorting();
