@@ -169,7 +169,8 @@ Events ManagerDBus::eventsFromProperties(const QList<QVariantMap> &eventsPropert
         QString eventId = map["eventId"].toString();
         EventType type = (EventType) map["type"].toInt();
         QString senderId = map["senderId"].toString();
-        QDateTime timestamp = map["timestamp"].toDateTime();
+        QDateTime timestamp;
+        map["timestamp"].value<QDBusArgument>() >> timestamp;
         bool newEvent = map["newEvent"].toBool();
 
         // now create the
@@ -178,7 +179,8 @@ Events ManagerDBus::eventsFromProperties(const QList<QVariantMap> &eventsPropert
             QString message = map["message"].toString();
             MessageType messageType = (MessageType) map["messageType"].toInt();
             MessageFlags messageFlags = (MessageFlags) map["messageFlags"].toInt();
-            QDateTime readTimestamp = map["readTimestamp"].toDateTime();
+            QDateTime readTimestamp;
+            map["readTimestamp"].value<QDBusArgument>() >> readTimestamp;
             event = History::ItemFactory::instance()->createTextEvent(accountId, threadId, eventId, senderId, timestamp, newEvent,
                                                                       message, messageType, messageFlags, readTimestamp);
             break;
