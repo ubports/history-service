@@ -48,7 +48,7 @@ public:
         CountRole,
         UnreadCountRole,
         LastEventIdRole,
-        LastEventSenderRole,
+        LastEventSenderIdRole,
         LastEventTimestampRole,
         LastEventNewRole,
         LastEventTextMessageRole,
@@ -81,10 +81,13 @@ Q_SIGNALS:
 
 protected Q_SLOTS:
     void updateQuery();
+    void onThreadsAdded(const History::Threads &threads);
+    void onThreadsModified(const History::Threads &threads);
+    void onThreadsRemoved(const History::Threads &threads);
 
 private:
     History::ThreadViewPtr mThreadView;
-    QList<History::ThreadPtr> mThreads;
+    History::Threads mThreads;
     bool mCanFetchMore;
     HistoryQmlFilter *mFilter;
     EventType mType;

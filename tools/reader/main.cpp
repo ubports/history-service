@@ -47,8 +47,8 @@ void printEvent(const History::EventPtr &event)
         break;
     }
 
-    qDebug() << qPrintable(QString("    * Event: accountId: %1\n      threadId: %2\n      eventId: %3\n      sender: %4\n      timestamp: %5\n      newEvent: %6")
-                .arg(event->accountId(), event->threadId(), event->eventId(), event->sender(), event->timestamp().toString(),
+    qDebug() << qPrintable(QString("    * Event: accountId: %1\n      threadId: %2\n      eventId: %3\n      senderId: %4\n      timestamp: %5\n      newEvent: %6")
+                .arg(event->accountId(), event->threadId(), event->eventId(), event->senderId(), event->timestamp().toString(),
                      event->newEvent() ? "yes" : "no"));
     qDebug() << qPrintable(QString("      %1").arg(extraInfo));
 }
@@ -89,7 +89,7 @@ int main(int argc, char **argv)
 
     Q_FOREACH(History::EventType type, eventTypes) {
         History::ThreadViewPtr view = manager->queryThreads(type);
-        QList<History::ThreadPtr> threads = view->nextPage();
+        History::Threads threads = view->nextPage();
 
         while (!threads.isEmpty()) {
             Q_FOREACH(const History::ThreadPtr &thread, threads) {
@@ -100,7 +100,7 @@ int main(int argc, char **argv)
                 filter->append(History::FilterPtr(new History::Filter("threadId", thread->threadId())));
                 filter->append(History::FilterPtr(new History::Filter("accountId", thread->accountId())));
                 History::EventViewPtr eventView = manager->queryEvents(type, History::SortPtr(), filter);
-                QList<History::EventPtr> events = eventView->nextPage();
+                History::Events events = eventView->nextPage();
                 while (!events.isEmpty()) {
                     Q_FOREACH(const History::EventPtr &event, events) {
                         printEvent(event);

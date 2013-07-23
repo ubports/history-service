@@ -32,8 +32,8 @@ SQLiteHistoryEventView::SQLiteHistoryEventView(SQLiteHistoryReader *reader,
                                              History::EventType type,
                                              const History::SortPtr &sort,
                                              const History::FilterPtr &filter)
-    : mType(type), mSort(sort), mFilter(filter), mQuery(SQLiteDatabase::instance()->database()),
-      mPageSize(15), mReader(reader)
+    : History::EventView(type, sort, filter), mType(type), mSort(sort), mFilter(filter),
+      mQuery(SQLiteDatabase::instance()->database()), mPageSize(15), mReader(reader)
 {
     // FIXME: sort the results properly
     Q_UNUSED(sort)
@@ -68,9 +68,9 @@ SQLiteHistoryEventView::SQLiteHistoryEventView(SQLiteHistoryReader *reader,
     }
 }
 
-QList<History::EventPtr> SQLiteHistoryEventView::nextPage()
+History::Events SQLiteHistoryEventView::nextPage()
 {
-    QList<History::EventPtr> events;
+    History::Events events;
     int remaining = mPageSize;
 
     while (mQuery.next() && remaining-- > 0) {

@@ -96,7 +96,7 @@ void Filter::setMatchFlags(const MatchFlags &flags)
     d->matchFlags = flags;
 }
 
-QString Filter::toString() const
+QString Filter::toString(const QString &propertyPrefix) const
 {
     Q_D(const Filter);
 
@@ -116,8 +116,22 @@ QString Filter::toString() const
         value = d->filterValue.toString();
     }
 
+    QString propertyName = propertyPrefix.isNull() ? filterProperty() : QString("%1.%2").arg(propertyPrefix, filterProperty());
     // FIXME2: need to check for the match flags
-    return QString("%1=%2").arg(filterProperty(), value);
+    return QString("%1=%2").arg(propertyName, value);
+}
+
+bool Filter::match(const QVariantMap properties) const
+{
+    Q_D(const Filter);
+
+    // assume empty filters match anything
+    if (d->filterProperty.isEmpty() || !d->filterValue.isValid() || !properties.contains(d->filterProperty)) {
+        return true;
+    }
+
+    // FIXME: use the MatchFlags
+    return properties[d->filterProperty] == d->filterValue;
 }
 
 }

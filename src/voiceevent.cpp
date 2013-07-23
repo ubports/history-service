@@ -76,6 +76,18 @@ EventType VoiceEvent::type() const
     return EventTypeVoice;
 }
 
+QVariantMap VoiceEvent::properties() const
+{
+    Q_D(const VoiceEvent);
+
+    QVariantMap map = Event::properties();
+
+    map["missed"] = d->missed;
+    map["duration"] = d->duration;
+
+    return map;
+}
+
 bool VoiceEvent::missed() const
 {
     Q_D(const VoiceEvent);

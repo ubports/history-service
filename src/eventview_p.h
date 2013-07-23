@@ -19,36 +19,36 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef HISTORY_INTERSECTIONFILTER_H
-#define HISTORY_INTERSECTIONFILTER_H
+#ifndef EVENTVIEW_P_H
+#define EVENTVIEW_P_H
 
-#include "filter.h"
 #include "types.h"
 
 namespace History
 {
+    class EventView;
 
-class IntersectionFilterPrivate;
+    class EventViewPrivate
+    {
+        Q_DECLARE_PUBLIC(EventView)
 
-// AND filter
-class IntersectionFilter : public Filter
-{
-    Q_DECLARE_PRIVATE(IntersectionFilter)
-public:
-    IntersectionFilter();
-    ~IntersectionFilter();
+    public:
+        EventViewPrivate(History::EventType theType,
+                          const History::SortPtr &theSort,
+                          const History::FilterPtr &theFilter);
+        EventType type;
+        SortPtr sort;
+        FilterPtr filter;
 
-    void setFilters(const Filters &filters);
-    void prepend(const FilterPtr &filter);
-    void append(const FilterPtr &filter);
-    void clear();
+        Events filteredEvents(const Events &events);
 
-    bool match(const QVariantMap properties) const;
+        // private slots
+        void _d_eventsAdded(const History::Events &events);
+        void _d_eventsModified(const History::Events &events);
+        void _d_eventsRemoved(const History::Events &events);
 
-    Filters filters() const;
-    QString toString(const QString &propertyPrefix = QString::null) const;
-};
-
+        EventView *q_ptr;
+    };
 }
 
-#endif
+#endif // EVENTVIEW_P_H

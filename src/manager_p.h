@@ -29,6 +29,7 @@ namespace History
 {
 
 class Manager;
+class ManagerDBus;
 
 class ManagerPrivate
 {
@@ -38,6 +39,8 @@ public:
 
     QString backendPlugin;
     ReaderPtr reader;
+    WriterPtr writer;
+    QScopedPointer<ManagerDBus> dbus;
 };
 
 }

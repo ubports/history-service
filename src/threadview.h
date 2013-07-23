@@ -23,18 +23,38 @@
 #define HISTORY_THREADVIEW_H
 
 #include "types.h"
+#include <QObject>
 
 namespace History
 {
 
-class ThreadView
-{
-public:
-    ThreadView() {}
-    virtual ~ThreadView() {}
+class ThreadViewPrivate;
 
-    virtual QList<History::ThreadPtr> nextPage() = 0;
+class ThreadView : public QObject
+{
+    Q_OBJECT
+    Q_DECLARE_PRIVATE(ThreadView)
+
+public:
+    ThreadView(History::EventType type,
+               const History::SortPtr &sort,
+               const History::FilterPtr &filter);
+    virtual ~ThreadView();
+
+    virtual Threads nextPage() = 0;
     virtual bool isValid() const = 0;
+
+Q_SIGNALS:
+    void threadsAdded(const History::Threads &threads);
+    void threadsModified(const History::Threads &threads);
+    void threadsRemoved(const History::Threads &threads);
+
+private:
+    Q_PRIVATE_SLOT(d_func(), void _d_threadsAdded(const History::Threads &threads))
+    Q_PRIVATE_SLOT(d_func(), void _d_threadsModified(const History::Threads &threads))
+    Q_PRIVATE_SLOT(d_func(), void _d_threadsRemoved(const History::Threads &threads))
+    QScopedPointer<ThreadViewPrivate> d_ptr;
+
 };
 
 }

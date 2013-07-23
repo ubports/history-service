@@ -24,7 +24,9 @@
 #include "thread.h"
 #include "textevent.h"
 #include "voiceevent.h"
-#include <QDebug>
+#include "thread_p.h"
+#include "textevent_p.h"
+#include "voiceevent_p.h"
 
 namespace History
 {
@@ -82,7 +84,6 @@ ThreadPtr ItemFactory::createThread(const QString &accountId,
     Q_D(ItemFactory);
 
     QString hash = d->hashItem(type, accountId, threadId);
-    qDebug() << "Hash:" << hash;
 
     ThreadPtr thread;
     if (d->threads.contains(hash)) {
@@ -103,6 +104,13 @@ ThreadPtr ItemFactory::createThread(const QString &accountId,
     // take the opportunity to clean the map
     d->cleanupThreads();
 
+    // update the thread data before returning it
+    ThreadPrivate *threadD = thread->d_func();
+    threadD->participants = participants;
+    threadD->lastEvent = lastEvent;
+    threadD->count = count;
+    threadD->unreadCount = unreadCount;
+
     return thread;
 }
 
@@ -120,7 +128,6 @@ TextEventPtr ItemFactory::createTextEvent(const QString &accountId,
     Q_D(ItemFactory);
 
     QString hash = d->hashItem(EventTypeText, accountId, threadId, eventId);
-    qDebug() << "Hash:" << hash;
 
     EventPtr event;
     if (d->events.contains(hash)) {
@@ -144,6 +151,13 @@ TextEventPtr ItemFactory::createTextEvent(const QString &accountId,
     // take the opportunity to clean the map
     d->cleanupEvents();
 
+    // update the event data before returning it
+    TextEventPrivate *eventD = event.staticCast<TextEvent>()->d_func();
+    // assume that only newEvent, messageFlags and readTimestamp are going to change
+    eventD->newEvent = newEvent;
+    eventD->messageFlags = messageFlags;
+    eventD->readTimestamp = readTimestamp;
+
     return event.staticCast<TextEvent>();
 }
 
@@ -159,7 +173,6 @@ VoiceEventPtr ItemFactory::createVoiceEvent(const QString &accountId,
     Q_D(ItemFactory);
 
     QString hash = d->hashItem(EventTypeVoice, accountId, threadId, eventId);
-    qDebug() << "Hash:" << hash;
 
     EventPtr event;
     if (d->events.contains(hash)) {
@@ -181,7 +194,24 @@ VoiceEventPtr ItemFactory::createVoiceEvent(const QString &accountId,
     // take the opportunity to clean the map
     d->cleanupEvents();
 
+    // update the event data before returning it
+    VoiceEventPrivate *eventD = event.staticCast<VoiceEvent>()->d_func();
+    // assume that only newEvent can change
+    eventD->newEvent = newEvent;
+
     return event.staticCast<VoiceEvent>();
+}
+
+ThreadPtr ItemFactory::cachedThread(const QString &accountId, const QString &threadId, EventType type)
+{
+    Q_D(ItemFactory);
+    return d->threads[d->hashItem(type, accountId, threadId)];
+}
+
+EventPtr ItemFactory::cachedEvent(const QString &accountId, const QString &threadId, const QString &eventId, EventType type)
+{
+    Q_D(ItemFactory);
+    return d->events[d->hashItem(type, accountId, threadId, eventId)];
 }
 
 }

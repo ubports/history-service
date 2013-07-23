@@ -36,7 +36,7 @@ public:
     UnionFilterPrivate();
     ~UnionFilterPrivate();
 
-    QList<FilterPtr> filters;
+    Filters filters;
 };
 
 }

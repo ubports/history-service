@@ -47,7 +47,6 @@ private Q_SLOTS:
 private:
     CallChannelObserver mCallObserver;
     TextChannelObserver mTextObserver;
-    History::WriterPtr mWriter;
 };
 
 #endif

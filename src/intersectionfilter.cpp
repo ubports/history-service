@@ -43,7 +43,7 @@ IntersectionFilter::~IntersectionFilter()
 {
 }
 
-void IntersectionFilter::setFilters(const QList<FilterPtr> &filters)
+void IntersectionFilter::setFilters(const Filters &filters)
 {
     Q_D(IntersectionFilter);
     d->filters = filters;
@@ -67,13 +67,27 @@ void IntersectionFilter::clear()
     d->filters.clear();
 }
 
-QList<FilterPtr> IntersectionFilter::filters() const
+bool IntersectionFilter::match(const QVariantMap properties) const
+{
+    Q_D(const IntersectionFilter);
+
+    // return true only if all filters match
+    Q_FOREACH(const History::FilterPtr &filter, d->filters) {
+        if (!filter->match(properties)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+Filters IntersectionFilter::filters() const
 {
     Q_D(const IntersectionFilter);
     return d->filters;
 }
 
-QString IntersectionFilter::toString() const
+QString IntersectionFilter::toString(const QString &propertyPrefix) const
 {
     Q_D(const IntersectionFilter);
 
@@ -86,7 +100,7 @@ QString IntersectionFilter::toString() const
     QStringList output;
     // wrap each filter string around parenthesis
     Q_FOREACH(const FilterPtr &filter, d->filters) {
-        output << QString("(%1)").arg(filter->toString());
+        output << QString("(%1)").arg(filter->toString(propertyPrefix));
     }
 
     return output.join(" AND ");

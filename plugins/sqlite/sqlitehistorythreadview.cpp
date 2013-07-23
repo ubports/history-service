@@ -34,8 +34,8 @@ SQLiteHistoryThreadView::SQLiteHistoryThreadView(SQLiteHistoryReader *reader,
                                                  History::EventType type,
                                                  const History::SortPtr &sort,
                                                  const History::FilterPtr &filter)
-    : mReader(reader), mType(type), mSort(sort), mFilter(filter), mPageSize(15),
-      mQuery(SQLiteDatabase::instance()->database())
+    : History::ThreadView(type, sort, filter), mReader(reader), mType(type), mSort(sort),
+      mFilter(filter), mPageSize(15), mQuery(SQLiteDatabase::instance()->database())
 {
     // FIXME: sort the results property
     Q_UNUSED(sort)
@@ -45,7 +45,7 @@ SQLiteHistoryThreadView::SQLiteHistoryThreadView(SQLiteHistoryReader *reader,
     // FIXME: validate the filter
     QString condition;
     if (!filter.isNull()) {
-        condition = filter->toString();
+        condition = filter->toString("threads");
     }
 
     if (!condition.isEmpty()) {
@@ -89,9 +89,9 @@ SQLiteHistoryThreadView::SQLiteHistoryThreadView(SQLiteHistoryReader *reader,
     }
 }
 
-QList<History::ThreadPtr> SQLiteHistoryThreadView::nextPage()
+History::Threads SQLiteHistoryThreadView::nextPage()
 {
-    QList<History::ThreadPtr> threads;
+    History::Threads threads;
     int remaining = mPageSize;
     QSqlQuery secondaryQuery(SQLiteDatabase::instance()->database());
 

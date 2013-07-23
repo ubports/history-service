@@ -19,33 +19,36 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef HISTORY_PLUGINMANAGER_H
-#define HISTORY_PLUGINMANAGER_H
+#ifndef THREADVIEW_P_H
+#define THREADVIEW_P_H
 
-#include <QObject>
 #include "types.h"
 
 namespace History
 {
+    class ThreadView;
 
-class Plugin;
+    class ThreadViewPrivate
+    {
+        Q_DECLARE_PUBLIC(ThreadView)
 
-class PluginManager : public QObject
-{
-    Q_OBJECT
-public:
-    ~PluginManager();
-    static PluginManager *instance();
-    QList<PluginPtr> plugins();
+    public:
+        ThreadViewPrivate(History::EventType theType,
+                          const History::SortPtr &theSort,
+                          const History::FilterPtr &theFilter);
+        EventType type;
+        SortPtr sort;
+        FilterPtr filter;
 
-protected:
-    void loadPlugins();
+        Threads filteredThreads(const Threads &threads);
 
-private:
-    explicit PluginManager(QObject *parent = 0);
-    QList<PluginPtr> mPlugins;
-};
+        // private slots
+        void _d_threadsAdded(const History::Threads &threads);
+        void _d_threadsModified(const History::Threads &threads);
+        void _d_threadsRemoved(const History::Threads &threads);
 
+        ThreadView *q_ptr;
+    };
 }
 
-#endif // HISTORY_PLUGINMANAGER_H
+#endif // THREADVIEW_P_H

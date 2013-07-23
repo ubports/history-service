@@ -41,7 +41,7 @@ HistoryThreadModel::HistoryThreadModel(QObject *parent) :
 
     // roles related to the thread´s last event
     mRoles[LastEventIdRole] = "eventId";
-    mRoles[LastEventSenderRole] = "eventSender";
+    mRoles[LastEventSenderIdRole] = "eventSenderId";
     mRoles[LastEventTimestampRole] = "eventTimestamp";
     mRoles[LastEventNewRole] = "eventNew";
     mRoles[LastEventTextMessageRole] = "eventTextMessage";
@@ -111,9 +111,9 @@ QVariant HistoryThreadModel::data(const QModelIndex &index, int role) const
             result = event->eventId();
         }
         break;
-    case LastEventSenderRole:
+    case LastEventSenderIdRole:
         if (!event.isNull()) {
-            result = event->sender();
+            result = event->senderId();
         }
         break;
     case LastEventTimestampRole:
@@ -176,7 +176,7 @@ void HistoryThreadModel::fetchMore(const QModelIndex &parent)
         return;
     }
 
-    QList<History::ThreadPtr> threads = mThreadView->nextPage();
+    History::Threads threads = mThreadView->nextPage();
     qDebug() << "Got threads:" << threads.count();
     if (threads.isEmpty()) {
         mCanFetchMore = false;
@@ -241,9 +241,66 @@ void HistoryThreadModel::updateQuery()
     History::FilterPtr queryFilter;
     History::SortPtr querySort;
 
+    if (!mThreadView.isNull()) {
+        mThreadView->disconnect(this);
+    }
+
     if (mFilter) {
         queryFilter = mFilter->filter();
     }
     mThreadView = History::Manager::instance()->queryThreads((History::EventType)mType, querySort, queryFilter);
+    connect(mThreadView.data(),
+            SIGNAL(threadsAdded(History::Threads)),
+            SLOT(onThreadsAdded(History::Threads)));
+    connect(mThreadView.data(),
+            SIGNAL(threadsModified(History::Threads)),
+            SLOT(onThreadsModified(History::Threads)));
+    connect(mThreadView.data(),
+            SIGNAL(threadsRemoved(History::Threads)),
+            SLOT(onThreadsRemoved(History::Threads)));
+
     fetchMore(QModelIndex());
+}
+
+void HistoryThreadModel::onThreadsAdded(const History::Threads &threads)
+{
+    if (threads.isEmpty()) {
+        return;
+    }
+
+    // FIXME: handle sorting
+    beginInsertRows(QModelIndex(), mThreads.count(), mThreads.count() + threads.count() - 1);
+    mThreads << threads;
+    endInsertRows();
+}
+
+void HistoryThreadModel::onThreadsModified(const History::Threads &threads)
+{
+    Q_FOREACH(const History::ThreadPtr &thread, threads) {
+        int pos = mThreads.indexOf(thread);
+        if (pos >= 0) {
+            mThreads[pos] = thread;
+            QModelIndex idx = index(pos);
+            Q_EMIT dataChanged(idx, idx);
+        }
+    }
+
+    // FIXME: append modified threads that are not loaded yet and make sure they don´t
+    // get added twice to the model
+}
+
+void HistoryThreadModel::onThreadsRemoved(const History::Threads &threads)
+{
+    Q_FOREACH(const History::ThreadPtr &thread, threads) {
+        int pos = mThreads.indexOf(thread);
+        if (pos >= 0) {
+            beginRemoveRows(QModelIndex(), pos, pos);
+            mThreads.removeAt(pos);
+            endRemoveRows();
+        }
+    }
+
+    // FIXME: there is a corner case here: if a thread was not loaded yet, but was already
+    // removed by another client, it will still show up when a new page is requested. Maybe it
+    // should be handle internally in History::ThreadView?
 }

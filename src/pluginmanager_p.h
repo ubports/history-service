@@ -19,36 +19,33 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef HISTORY_INTERSECTIONFILTER_H
-#define HISTORY_INTERSECTIONFILTER_H
+#ifndef HISTORY_PLUGINMANAGER_H
+#define HISTORY_PLUGINMANAGER_H
 
-#include "filter.h"
+#include <QObject>
 #include "types.h"
 
 namespace History
 {
 
-class IntersectionFilterPrivate;
+class Plugin;
 
-// AND filter
-class IntersectionFilter : public Filter
+class PluginManager : public QObject
 {
-    Q_DECLARE_PRIVATE(IntersectionFilter)
+    Q_OBJECT
 public:
-    IntersectionFilter();
-    ~IntersectionFilter();
+    ~PluginManager();
+    static PluginManager *instance();
+    Plugins plugins();
 
-    void setFilters(const Filters &filters);
-    void prepend(const FilterPtr &filter);
-    void append(const FilterPtr &filter);
-    void clear();
+protected:
+    void loadPlugins();
 
-    bool match(const QVariantMap properties) const;
-
-    Filters filters() const;
-    QString toString(const QString &propertyPrefix = QString::null) const;
+private:
+    explicit PluginManager(QObject *parent = 0);
+    Plugins mPlugins;
 };
 
 }
 
-#endif
+#endif // HISTORY_PLUGINMANAGER_H

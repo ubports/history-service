@@ -37,7 +37,7 @@ public:
         ThreadIdRole,
         TypeRole,
         EventIdRole,
-        SenderRole,
+        SenderIdRole,
         TimestampRole,
         NewEventRole,
         TextMessageRole,
@@ -70,10 +70,13 @@ Q_SIGNALS:
 
 protected Q_SLOTS:
     void updateQuery();
+    void onEventsAdded(const History::Events &events);
+    void onEventsModified(const History::Events &events);
+    void onEventsRemoved(const History::Events &events);
 
 private:
     History::EventViewPtr mView;
-    QList<History::EventPtr> mEvents;
+    History::Events mEvents;
     bool mCanFetchMore;
     HistoryQmlFilter *mFilter;
     HistoryThreadModel::EventType mType;

@@ -31,13 +31,15 @@ class SQLiteHistoryReader;
 
 class SQLiteHistoryEventView : public History::EventView
 {
+    Q_OBJECT
+
 public:
     SQLiteHistoryEventView(SQLiteHistoryReader *reader,
                           History::EventType type,
                           const History::SortPtr &sort,
                           const History::FilterPtr &filter);
 
-    QList<History::EventPtr> nextPage();
+    History::Events nextPage();
     bool isValid() const;
 
 protected:

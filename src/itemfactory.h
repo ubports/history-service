@@ -65,6 +65,14 @@ public:
                                    bool missed,
                                    const QTime &duration = QTime());
 
+    ThreadPtr cachedThread(const QString &accountId,
+                           const QString &threadId,
+                           EventType type);
+    EventPtr cachedEvent(const QString &accountId,
+                         const QString &threadId,
+                         const QString &eventId,
+                         EventType type);
+
 private:
     explicit ItemFactory();
     QScopedPointer<ItemFactoryPrivate> d_ptr;

@@ -19,7 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "pluginmanager.h"
+#include "pluginmanager_p.h"
 #include "config.h"
 #include "plugin.h"
 #include <QDir>
@@ -45,7 +45,7 @@ PluginManager *PluginManager::instance()
     return self;
 }
 
-QList<PluginPtr> PluginManager::plugins()
+Plugins PluginManager::plugins()
 {
     return mPlugins;
 }
@@ -56,7 +56,6 @@ void PluginManager::loadPlugins()
     QDir dir(HISTORY_PLUGIN_PATH);
 
     Q_FOREACH (QString fileName, dir.entryList(QDir::Files)) {
-        qDebug() << fileName;
         QPluginLoader loader(dir.absoluteFilePath(fileName));
         Plugin *plugin = qobject_cast<Plugin*>(loader.instance());
         if (plugin) {

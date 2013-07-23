@@ -25,6 +25,7 @@
 #include <QDateTime>
 #include <QScopedPointer>
 #include <QStringList>
+#include <QVariantMap>
 #include "types.h"
 
 namespace History
@@ -39,7 +40,7 @@ class Thread
     friend class ItemFactory;
 
 public:
-    ~Thread();
+    virtual ~Thread();
 
     QString accountId() const;
     QString threadId() const;
@@ -48,6 +49,8 @@ public:
     EventPtr lastEvent() const;
     int count() const;
     int unreadCount() const;
+
+    virtual QVariantMap properties() const;
 
 protected:
     QScopedPointer<ThreadPrivate> d_ptr;

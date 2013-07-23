@@ -36,7 +36,7 @@ public:
     IntersectionFilterPrivate();
     ~IntersectionFilterPrivate();
 
-    QList<FilterPtr> filters;
+    Filters filters;
 };
 
 }

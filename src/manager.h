@@ -49,8 +49,22 @@ public:
                              const SortPtr &sort = SortPtr(),
                              const FilterPtr &filter = FilterPtr());
 
-    bool removeThreads(EventType type, const QList<QString> &threadIds);
-    bool removeEvents(EventType type, const QList<QString> &eventIds);
+    ThreadPtr threadForParticipants(const QString &accountId, EventType type, const QStringList &participants, bool create=false);
+    ThreadPtr getSingleThread(EventType type, const QString &accountId, const QString &threadId);
+
+    bool writeTextEvents(const History::TextEvents &textEvents);
+    bool writeVoiceEvents(const History::VoiceEvents &voiceEvents);
+    bool removeThreads(const Threads &threads);
+    bool removeEvents(const Events &events);
+
+Q_SIGNALS:
+    void threadsAdded(const History::Threads &threads);
+    void threadsModified(const History::Threads &threads);
+    void threadsRemoved(const History::Threads &threads);
+
+    void eventsAdded(const History::Events &events);
+    void eventsModified(const History::Events &events);
+    void eventsRemoved(const History::Events &events);
 
 private:
     Manager(const QString &backendPlugin = QString::null);

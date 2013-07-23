@@ -36,7 +36,7 @@ HistoryEventModel::HistoryEventModel(QObject *parent) :
     mRoles[ThreadIdRole] = "threadId";
     mRoles[TypeRole] = "type";
     mRoles[EventIdRole] = "eventId";
-    mRoles[SenderRole] = "sender";
+    mRoles[SenderIdRole] = "senderId";
     mRoles[TimestampRole] = "timestamp";
     mRoles[NewEventRole] = "newEvent";
     mRoles[TextMessageRole] = "textMessage";
@@ -93,8 +93,8 @@ QVariant HistoryEventModel::data(const QModelIndex &index, int role) const
     case EventIdRole:
         result = event->eventId();
         break;
-    case SenderRole:
-        result = event->sender();
+    case SenderIdRole:
+        result = event->senderId();
         break;
     case TimestampRole:
         result = event->timestamp();
@@ -152,7 +152,7 @@ void HistoryEventModel::fetchMore(const QModelIndex &parent)
         return;
     }
 
-    QList<History::EventPtr> events = mView->nextPage();
+    History::Events events = mView->nextPage();
 
     qDebug() << "Got events:" << events.count();
     if (events.isEmpty()) {
@@ -215,13 +215,69 @@ void HistoryEventModel::updateQuery()
     History::FilterPtr queryFilter;
     History::SortPtr querySort;
 
+    if (!mView.isNull()) {
+        mView->disconnect(this);
+    }
+
     if (mFilter) {
         queryFilter = mFilter->filter();
     }
 
     mView = History::Manager::instance()->queryEvents((History::EventType)mType, querySort, queryFilter);
+    connect(mView.data(),
+            SIGNAL(eventsAdded(History::Events)),
+            SLOT(onEventsAdded(History::Events)));
+    connect(mView.data(),
+            SIGNAL(eventsModified(History::Events)),
+            SLOT(onEventsModified(History::Events)));
+    connect(mView.data(),
+            SIGNAL(eventsRemoved(History::Events)),
+            SLOT(onEventsRemoved(History::Events)));
     mCanFetchMore = true;
 
     // get an initial set of results
     fetchMore(QModelIndex());
+}
+
+void HistoryEventModel::onEventsAdded(const History::Events &events)
+{
+    if (!events.count()) {
+        return;
+    }
+
+    //FIXME: handle sorting
+    beginInsertRows(QModelIndex(), mEvents.count(), mEvents.count() + events.count() - 1);
+    mEvents << events;
+    endInsertRows();
+}
+
+void HistoryEventModel::onEventsModified(const History::Events &events)
+{
+    Q_FOREACH(const History::EventPtr &event, events) {
+        int pos = mEvents.indexOf(event);
+        if (pos >= 0) {
+            mEvents[pos] = event;
+            QModelIndex idx = index(pos);
+            Q_EMIT dataChanged(idx, idx);
+        }
+    }
+
+    // FIXME: append modified events that are not loaded yet and make sure they don´t
+    // get added twice to the model when new pages are requested
+}
+
+void HistoryEventModel::onEventsRemoved(const History::Events &events)
+{
+    Q_FOREACH(const History::EventPtr &event, events) {
+        int pos = mEvents.indexOf(event);
+        if (pos >= 0) {
+            beginRemoveRows(QModelIndex(), pos, pos);
+            mEvents.removeAt(pos);
+            endRemoveRows();
+        }
+    }
+
+    // FIXME: there is a corner case here: if an event was not loaded yet, but was already
+    // removed by another client, it will still show up when a new page is requested. Maybe it
+    // should be handle internally in History::EventView?
 }

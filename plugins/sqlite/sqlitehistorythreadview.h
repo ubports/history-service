@@ -30,13 +30,15 @@ class SQLiteHistoryReader;
 
 class SQLiteHistoryThreadView : public History::ThreadView
 {
+    Q_OBJECT
+
 public:
     SQLiteHistoryThreadView(SQLiteHistoryReader *reader,
                             History::EventType type,
                             const History::SortPtr &sort,
                             const History::FilterPtr &filter);
 
-    QList<History::ThreadPtr> nextPage();
+    History::Threads nextPage();
     bool isValid() const;
 
 private:

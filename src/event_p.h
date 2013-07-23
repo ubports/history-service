@@ -36,7 +36,7 @@ public:
     EventPrivate(const QString &theAccountId,
                        const QString &theThreadId,
                        const QString &theEventId,
-                       const QString &theSender,
+                       const QString &theSenderId,
                        const QDateTime &theTimestamp,
                        bool theNewEvent);
     virtual ~EventPrivate();
@@ -45,7 +45,7 @@ public:
     QString accountId;
     QString threadId;
     QString eventId;
-    QString sender;
+    QString senderId;
     QString receiver;
     QDateTime timestamp;
     bool newEvent;

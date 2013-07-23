@@ -21,10 +21,8 @@
 
 #include "telepathylogimporter.h"
 #include "telepathylogreader.h"
-#include "writer.h"
+#include "manager.h"
 #include "itemfactory.h"
-#include "pluginmanager.h"
-#include "plugin.h"
 #include "thread.h"
 #include "textevent.h"
 #include "voiceevent.h"
@@ -32,15 +30,8 @@
 
 
 TelepathyLogImporter::TelepathyLogImporter(QObject *parent) :
-    QObject(parent), mTextEvents(0), mVoiceEvents(0)
+    QObject(parent), mTextEventCount(0), mVoiceEventCount(0), mBatchSize(200)
 {
-    Q_FOREACH(History::PluginPtr plugin, History::PluginManager::instance()->plugins()) {
-        mWriter = plugin->writer();
-        if (mWriter) {
-            break;
-        }
-    }
-
     connect(TelepathyLogReader::instance(),
             SIGNAL(loadedCallEvent(Tpl::CallEventPtr)),
             SLOT(onCallEventLoaded(Tpl::CallEventPtr)));
@@ -52,21 +43,17 @@ TelepathyLogImporter::TelepathyLogImporter(QObject *parent) :
             SLOT(onFinished()));
 
     qDebug() << "Starting to import...";
-    mWriter->beginBatchOperation();
 }
 
 void TelepathyLogImporter::onCallEventLoaded(const Tpl::CallEventPtr &event)
 {
-    if (!mWriter) {
-        return;
-    }
-
     // FIXME: add support for conf call
     bool incoming = event->receiver()->entityType() == Tpl::EntityTypeSelf;
     Tpl::EntityPtr remote = incoming ? event->sender() : event->receiver();
-    History::ThreadPtr thread = mWriter->threadForParticipants(event->account()->uniqueIdentifier(),
-                                                               History::EventTypeVoice,
-                                                               QStringList() << remote->identifier());
+    History::ThreadPtr thread = History::Manager::instance()->threadForParticipants(event->account()->uniqueIdentifier(),
+                                                                                    History::EventTypeVoice,
+                                                                                    QStringList() << remote->identifier(),
+                                                                                    true);
     QString eventId = QString("%1:%2").arg(thread->threadId()).arg(event->timestamp().toString());
     History::VoiceEventPtr historyEvent = History::ItemFactory::instance()->createVoiceEvent(thread->accountId(),
                                                                                              thread->threadId(),
@@ -76,22 +63,24 @@ void TelepathyLogImporter::onCallEventLoaded(const Tpl::CallEventPtr &event)
                                                                                              false,
                                                                                              event->endReason() == Tp::CallStateChangeReasonNoAnswer,
                                                                                              event->duration());
-    mWriter->writeVoiceEvent(historyEvent);
-    mVoiceEvents++;
+
+    mVoiceEvents << historyEvent;
+    if (mVoiceEvents.count() >= mBatchSize) {
+        History::Manager::instance()->writeVoiceEvents(mVoiceEvents);
+        mVoiceEvents.clear();
+    }
+    mVoiceEventCount++;
 }
 
 void TelepathyLogImporter::onMessageEventLoaded(const Tpl::TextEventPtr &event)
 {
-    if (!mWriter) {
-        return;
-    }
-
     // FIXME: add support for conf call
     bool incoming = event->receiver()->entityType() == Tpl::EntityTypeSelf;
     Tpl::EntityPtr remote = incoming ? event->sender() : event->receiver();
-    History::ThreadPtr thread = mWriter->threadForParticipants(event->account()->uniqueIdentifier(),
-                                                               History::EventTypeText,
-                                                               QStringList() << remote->identifier());
+    History::ThreadPtr thread = History::Manager::instance()->threadForParticipants(event->account()->uniqueIdentifier(),
+                                                                                    History::EventTypeText,
+                                                                                    QStringList() << remote->identifier(),
+                                                                                    true);
     History::TextEventPtr historyEvent = History::ItemFactory::instance()->createTextEvent(thread->accountId(),
                                                                                            thread->threadId(),
                                                                                            event->messageToken(),
@@ -102,15 +91,30 @@ void TelepathyLogImporter::onMessageEventLoaded(const Tpl::TextEventPtr &event)
                                                                                            History::TextMessage,
                                                                                            History::MessageFlags(),
                                                                                            event->timestamp());
-    mWriter->writeTextEvent(historyEvent);
-    mTextEvents++;
+    mTextEvents << historyEvent;
+    if (mTextEvents.count() >= mBatchSize) {
+        History::Manager::instance()->writeTextEvents(mTextEvents);
+        mTextEvents.clear();
+    }
+    mTextEventCount++;
 }
 
 void TelepathyLogImporter::onFinished()
 {
+    // write the remaining items
+    if (!mTextEvents.isEmpty()) {
+       History::Manager::instance()->writeTextEvents(mTextEvents);
+       mTextEvents.clear();
+    }
+
+    if (!mVoiceEvents.isEmpty()) {
+        History::Manager::instance()->writeVoiceEvents(mVoiceEvents);
+        mVoiceEvents.clear();
+    }
+
     qDebug() << "... finished";
-    qDebug() << "Text events:" << mTextEvents;
-    qDebug() << "Voice events:" << mVoiceEvents;
-    mWriter->endBatchOperation();
+    qDebug() << "Text events:" << mTextEventCount;
+    qDebug() << "Voice events:" << mVoiceEventCount;
+
     qApp->quit();
 }

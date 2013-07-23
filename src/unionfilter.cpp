@@ -43,7 +43,7 @@ UnionFilter::~UnionFilter()
 {
 }
 
-void UnionFilter::setFilters(const QList<FilterPtr> &filters)
+void UnionFilter::setFilters(const Filters &filters)
 {
     Q_D(UnionFilter);
     d->filters = filters;
@@ -67,13 +67,33 @@ void UnionFilter::clear()
     d->filters.clear();
 }
 
-QList<FilterPtr> UnionFilter::filters() const
+bool UnionFilter::match(const QVariantMap properties) const
+{
+    Q_D(const UnionFilter);
+
+    // if the filter list is empty, assume it matches
+    if (d->filters.isEmpty()) {
+        return true;
+    }
+
+    // return true if any of the filters match
+    Q_FOREACH(const History::FilterPtr &filter, d->filters) {
+        if (filter->match(properties)) {
+            return true;
+        }
+    }
+
+    // if we reach this point it means none of the filters matched the properties
+    return false;
+}
+
+Filters UnionFilter::filters() const
 {
     Q_D(const UnionFilter);
     return d->filters;
 }
 
-QString UnionFilter::toString() const
+QString UnionFilter::toString(const QString &propertyPrefix) const
 {
     Q_D(const UnionFilter);
 
@@ -86,7 +106,7 @@ QString UnionFilter::toString() const
     QStringList output;
     // wrap each filter string around parenthesis
     Q_FOREACH(const FilterPtr &filter, d->filters) {
-        output << QString("(%1)").arg(filter->toString());
+        output << QString("(%1)").arg(filter->toString(propertyPrefix));
     }
 
     return output.join(" OR ");

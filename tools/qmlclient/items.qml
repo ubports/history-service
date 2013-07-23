@@ -54,7 +54,7 @@ ListView {
             }
             Text {
                 anchors.left: parent.left
-                text: "<b>Sender:</b> " + sender
+                text: "<b>Sender:</b> " + senderId
             }
             Text {
                 anchors.left: parent.left
