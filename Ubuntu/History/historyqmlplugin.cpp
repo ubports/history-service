@@ -25,6 +25,7 @@
 #include "historyqmlunionfilter.h"
 #include "historythreadmodel.h"
 #include "historyeventmodel.h"
+#include "sortproxymodel.h"
 #include <QQmlEngine>
 #include <qqml.h>
 
@@ -43,4 +44,5 @@ void HistoryQmlPlugin::registerTypes(const char *uri)
     qmlRegisterType<HistoryQmlFilter>(uri, 0, 1, "HistoryFilter");
     qmlRegisterType<HistoryQmlIntersectionFilter>(uri, 0, 1, "HistoryIntersectionFilter");
     qmlRegisterType<HistoryQmlUnionFilter>(uri, 0, 1, "HistoryUnionFilter");
+    qmlRegisterType<SortProxyModel>(uri, 0, 1, "SortProxyModel");
 }

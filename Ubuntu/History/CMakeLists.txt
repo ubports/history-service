@@ -7,6 +7,7 @@ set(plugin_SRCS
     historyqmlplugin.cpp
     historyqmlunionfilter.cpp
     historythreadmodel.cpp
+    sortproxymodel.cpp
     )
 
 set(plugin_HDRS
@@ -16,6 +17,7 @@ set(plugin_HDRS
     historyqmlplugin.h
     historyqmlunionfilter.h
     historythreadmodel.h
+    sortproxymodel.h
 )
 
 include_directories(
