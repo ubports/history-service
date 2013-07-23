@@ -166,7 +166,7 @@ Events ManagerDBus::eventsFromProperties(const QList<QVariantMap> &eventsPropert
 
         QString accountId = map["accountId"].toString();
         QString threadId = map["threadId"].toString();
-        QString eventId = map["eventIdId"].toString();
+        QString eventId = map["eventId"].toString();
         EventType type = (EventType) map["type"].toInt();
         QString senderId = map["senderId"].toString();
         QDateTime timestamp = map["timestamp"].toDateTime();
