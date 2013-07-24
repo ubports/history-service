@@ -38,9 +38,6 @@ SQLiteHistoryThreadView::SQLiteHistoryThreadView(SQLiteHistoryReader *reader,
     : History::ThreadView(type, sort, filter), mReader(reader), mType(type), mSort(sort),
       mFilter(filter), mPageSize(15), mQuery(SQLiteDatabase::instance()->database())
 {
-    // FIXME: sort the results property
-    Q_UNUSED(sort)
-
     mQuery.setForwardOnly(true);
 
     // FIXME: validate the filter
@@ -55,7 +52,7 @@ SQLiteHistoryThreadView::SQLiteHistoryThreadView(SQLiteHistoryReader *reader,
 
     QString order;
     if (!sort.isNull() && !sort->sortField().isNull()) {
-        order = QString("ORDER BY %1 %2").arg(sort->sortField(), sort->sortOrder() == Qt::AscendingOrder ? "ASC" : "DESC");
+        order = QString("ORDER BY threads.%1 %2").arg(sort->sortField(), sort->sortOrder() == Qt::AscendingOrder ? "ASC" : "DESC");
         // FIXME: check case sensitiviy
     }
 

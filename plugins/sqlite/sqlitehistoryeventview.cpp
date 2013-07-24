@@ -36,9 +36,6 @@ SQLiteHistoryEventView::SQLiteHistoryEventView(SQLiteHistoryReader *reader,
     : History::EventView(type, sort, filter), mType(type), mSort(sort), mFilter(filter),
       mQuery(SQLiteDatabase::instance()->database()), mPageSize(15), mReader(reader)
 {
-    // FIXME: sort the results properly
-    Q_UNUSED(sort)
-
     mQuery.setForwardOnly(true);
 
     // FIXME: validate the filter
