@@ -66,7 +66,6 @@ SQLiteHistoryEventView::SQLiteHistoryEventView(SQLiteHistoryReader *reader,
         break;
     }
 
-    qDebug() << "Query text:" << queryText;
     if (!mQuery.exec(queryText)) {
         qCritical() << "Error:" << mQuery.lastError() << mQuery.lastQuery();
         return;
