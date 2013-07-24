@@ -43,7 +43,6 @@ private Q_SLOTS:
 
 Q_SIGNALS:
     void ascendingChanged();
-    void modelChanged();
 
 private:
     bool mAscending;
