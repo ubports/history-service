@@ -26,11 +26,13 @@
 #include "types.h"
 
 class HistoryQmlFilter;
+class HistoryQmlSort;
 
 class HistoryThreadModel : public QAbstractListModel
 {
     Q_OBJECT
     Q_PROPERTY(HistoryQmlFilter *filter READ filter WRITE setFilter NOTIFY filterChanged)
+    Q_PROPERTY(HistoryQmlSort *sort READ sort WRITE setSort NOTIFY sortChanged)
     Q_PROPERTY(EventType type READ type WRITE setType NOTIFY typeChanged)
     Q_ENUMS(EventType)
     Q_ENUMS(Role)
@@ -72,11 +74,15 @@ public:
     HistoryQmlFilter *filter() const;
     void setFilter(HistoryQmlFilter *value);
 
+    HistoryQmlSort *sort() const;
+    void setSort(HistoryQmlSort *value);
+
     EventType type() const;
     void setType(EventType value);
 
 Q_SIGNALS:
     void filterChanged();
+    void sortChanged();
     void typeChanged();
 
 protected Q_SLOTS:
@@ -90,6 +96,7 @@ private:
     History::Threads mThreads;
     bool mCanFetchMore;
     HistoryQmlFilter *mFilter;
+    HistoryQmlSort *mSort;
     EventType mType;
     QHash<int, QByteArray> mRoles;
 };

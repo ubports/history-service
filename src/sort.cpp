@@ -29,8 +29,8 @@ namespace History
 
 SortPrivate::SortPrivate(const QString &theSortField,
                                        Qt::SortOrder theSortOrder,
-                                       Qt::CaseSensitivity theSortCase)
-    : sortField(theSortField), sortOrder(theSortOrder), sortCase(theSortCase)
+                                       Qt::CaseSensitivity theCaseSensitivity)
+    : sortField(theSortField), sortOrder(theSortOrder), caseSensitivity(theCaseSensitivity)
 {
 }
 
@@ -43,13 +43,8 @@ SortPrivate::~SortPrivate()
 
 Sort::Sort(const QString &sortField,
                          Qt::SortOrder sortOrder,
-                         Qt::CaseSensitivity sortCase)
-    : d_ptr(new SortPrivate(sortField, sortOrder, sortCase))
-{
-}
-
-Sort::Sort(const Sort &other)
-    : d_ptr(other.d_ptr)
+                         Qt::CaseSensitivity caseSensitivity)
+    : d_ptr(new SortPrivate(sortField, sortOrder, caseSensitivity))
 {
 }
 
@@ -57,37 +52,40 @@ Sort::~Sort()
 {
 }
 
-Sort &Sort::operator=(const Sort &other)
-{
-    if (&other == this) {
-        return *this;
-    }
-
-    d_ptr = other.d_ptr;
-    return *this;
-}
-
-QString Sort::sortField()
+QString Sort::sortField() const
 {
     Q_D(const Sort);
     return d->sortField;
 }
 
-Qt::SortOrder Sort::sortOrder()
+void Sort::setSortField(const QString &value)
+{
+    Q_D(Sort);
+    d->sortField = value;
+}
+
+Qt::SortOrder Sort::sortOrder() const
 {
     Q_D(const Sort);
     return d->sortOrder;
 }
 
-Qt::CaseSensitivity Sort::sortCase()
+void Sort::setSortOrder(Qt::SortOrder value)
 {
-    Q_D(const Sort);
-    return d->sortCase;
+    Q_D(Sort);
+    d->sortOrder = value;
 }
 
-SortPrivate *Sort::d_func()
+Qt::CaseSensitivity Sort::caseSensitivity() const
 {
-    return d_ptr.data();
+    Q_D(const Sort);
+    return d->caseSensitivity;
+}
+
+void Sort::setCaseSensitivity(Qt::CaseSensitivity value)
+{
+    Q_D(Sort);
+    d->caseSensitivity = value;
 }
 
 }

@@ -22,6 +22,7 @@
 #include "historyqmlplugin.h"
 #include "historyqmlfilter.h"
 #include "historyqmlintersectionfilter.h"
+#include "historyqmlsort.h"
 #include "historyqmlunionfilter.h"
 #include "historythreadmodel.h"
 #include "historyeventmodel.h"
@@ -43,6 +44,7 @@ void HistoryQmlPlugin::registerTypes(const char *uri)
     qmlRegisterType<HistoryThreadModel>(uri, 0, 1, "HistoryThreadModel");
     qmlRegisterType<HistoryQmlFilter>(uri, 0, 1, "HistoryFilter");
     qmlRegisterType<HistoryQmlIntersectionFilter>(uri, 0, 1, "HistoryIntersectionFilter");
+    qmlRegisterType<HistoryQmlSort>(uri, 0, 1, "HistorySort");
     qmlRegisterType<HistoryQmlUnionFilter>(uri, 0, 1, "HistoryUnionFilter");
     qmlRegisterType<SortProxyModel>(uri, 0, 1, "SortProxyModel");
     qmlRegisterUncreatableType<QAbstractItemModel>(uri, 0, 1, "QAbstractItemModel", "");

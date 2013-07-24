@@ -23,6 +23,7 @@
 #include "sqlitedatabase.h"
 #include "sqlitehistoryreader.h"
 #include "thread.h"
+#include "sort.h"
 #include "intersectionfilter.h"
 #include "itemfactory.h"
 #include "textevent.h"
@@ -37,9 +38,6 @@ SQLiteHistoryThreadView::SQLiteHistoryThreadView(SQLiteHistoryReader *reader,
     : History::ThreadView(type, sort, filter), mReader(reader), mType(type), mSort(sort),
       mFilter(filter), mPageSize(15), mQuery(SQLiteDatabase::instance()->database())
 {
-    // FIXME: sort the results property
-    Q_UNUSED(sort)
-
     mQuery.setForwardOnly(true);
 
     // FIXME: validate the filter
@@ -50,6 +48,12 @@ SQLiteHistoryThreadView::SQLiteHistoryThreadView(SQLiteHistoryReader *reader,
 
     if (!condition.isEmpty()) {
         condition.prepend(" AND ");
+    }
+
+    QString order;
+    if (!sort.isNull() && !sort->sortField().isNull()) {
+        order = QString("ORDER BY threads.%1 %2").arg(sort->sortField(), sort->sortOrder() == Qt::AscendingOrder ? "ASC" : "DESC");
+        // FIXME: check case sensitiviy
     }
 
     QStringList fields;
@@ -79,8 +83,8 @@ SQLiteHistoryThreadView::SQLiteHistoryThreadView(SQLiteHistoryReader *reader,
     fields << extraFields;
 
     QString queryText = QString("SELECT %1 FROM threads LEFT JOIN %2 ON threads.threadId=%2.threadId AND "
-                                "threads.accountId=%2.accountId AND threads.lastEventId=%2.eventId WHERE threads.type=%3 %4")
-                                .arg(fields.join(", "), table, QString::number((int)type), condition);
+                                "threads.accountId=%2.accountId AND threads.lastEventId=%2.eventId WHERE threads.type=%3 %4 %5")
+                                .arg(fields.join(", "), table, QString::number((int)type), condition, order);
 
     // FIXME: add support for sorting
     if (!mQuery.exec(queryText)) {

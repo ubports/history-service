@@ -29,6 +29,10 @@ ListView {
     height: 800
 
     model: HistoryThreadModel {
+        sort: HistorySort {
+            sortField: "lastEventTimestamp"
+            sortOrder: HistorySort.DescendingOrder
+        }
     }
 
     delegate: Rectangle {
