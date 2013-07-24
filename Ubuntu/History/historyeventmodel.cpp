@@ -21,6 +21,7 @@
 
 #include "historyeventmodel.h"
 #include "historyqmlfilter.h"
+#include "historyqmlsort.h"
 #include "eventview.h"
 #include "manager.h"
 #include "textevent.h"
@@ -29,7 +30,7 @@
 
 HistoryEventModel::HistoryEventModel(QObject *parent) :
     QAbstractListModel(parent), mCanFetchMore(true), mFilter(0),
-    mType(HistoryThreadModel::EventTypeText)
+    mSort(0), mType(HistoryThreadModel::EventTypeText)
 {
     // configure the roles
     mRoles[AccountIdRole] = "accountId";
@@ -191,6 +192,29 @@ void HistoryEventModel::setFilter(HistoryQmlFilter *value)
     updateQuery();
 }
 
+HistoryQmlSort *HistoryEventModel::sort() const
+{
+    return mSort;
+}
+
+void HistoryEventModel::setSort(HistoryQmlSort *value)
+{
+    // disconnect the previous sort
+    if (mSort) {
+        mSort->disconnect(this);
+    }
+
+    mSort = value;
+    if (mSort) {
+        connect(mSort,
+                SIGNAL(sortChanged()),
+                SLOT(updateQuery()));
+    }
+
+    Q_EMIT sortChanged();
+    updateQuery();
+}
+
 HistoryThreadModel::EventType HistoryEventModel::type() const
 {
     return mType;
@@ -221,6 +245,10 @@ void HistoryEventModel::updateQuery()
 
     if (mFilter) {
         queryFilter = mFilter->filter();
+    }
+
+    if (mSort) {
+        querySort = mSort->sort();
     }
 
     mView = History::Manager::instance()->queryEvents((History::EventType)mType, querySort, queryFilter);

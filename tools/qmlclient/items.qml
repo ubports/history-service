@@ -30,6 +30,10 @@ ListView {
 
     model: HistoryEventModel {
         type: HistoryThreadModel.EventTypeText
+        sort: HistorySort {
+            sortField: "timestamp"
+            sortOrder: HistorySort.DescendingOrder
+        }
     }
 
     delegate: Rectangle {

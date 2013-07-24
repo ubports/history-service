@@ -22,6 +22,7 @@
 #include "sqlitehistoryeventview.h"
 #include "sqlitedatabase.h"
 #include "filter.h"
+#include "sort.h"
 #include "itemfactory.h"
 #include "textevent.h"
 #include "voiceevent.h"
@@ -49,19 +50,26 @@ SQLiteHistoryEventView::SQLiteHistoryEventView(SQLiteHistoryReader *reader,
         condition.prepend(" WHERE ");
     }
 
+    QString order;
+    if (!sort.isNull() && !sort->sortField().isNull()) {
+        order = QString("ORDER BY %1 %2").arg(sort->sortField(), sort->sortOrder() == Qt::AscendingOrder ? "ASC" : "DESC");
+        // FIXME: check case sensitiviy
+    }
+
     QString queryText;
 
     switch (type) {
     case History::EventTypeText:
         queryText = QString("SELECT accountId, threadId, eventId, senderId, timestamp, newEvent,"
-                            "message, messageType, messageFlags, readTimestamp FROM text_events %1").arg(condition);
+                            "message, messageType, messageFlags, readTimestamp FROM text_events %1 %2").arg(condition, order);
         break;
     case History::EventTypeVoice:
         queryText = QString("SELECT accountId, threadId, eventId, senderId, timestamp, newEvent,"
-                            "duration, missed FROM voice_events %1").arg(condition);
+                            "duration, missed FROM voice_events %1 %2").arg(condition, order);
         break;
     }
 
+    qDebug() << "Query text:" << queryText;
     if (!mQuery.exec(queryText)) {
         qCritical() << "Error:" << mQuery.lastError() << mQuery.lastQuery();
         return;

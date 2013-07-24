@@ -22,6 +22,7 @@
 #include "historythreadmodel.h"
 #include "thread.h"
 #include "historyqmlfilter.h"
+#include "historyqmlsort.h"
 #include "manager.h"
 #include "threadview.h"
 #include "textevent.h"
@@ -29,7 +30,7 @@
 #include <QDebug>
 
 HistoryThreadModel::HistoryThreadModel(QObject *parent) :
-    QAbstractListModel(parent), mCanFetchMore(true), mFilter(0), mType(EventTypeText)
+    QAbstractListModel(parent), mCanFetchMore(true), mFilter(0), mSort(0), mType(EventTypeText)
 {
     // configure the roles
     mRoles[AccountIdRole] = "accountId";
@@ -215,6 +216,29 @@ void HistoryThreadModel::setFilter(HistoryQmlFilter *value)
     updateQuery();
 }
 
+HistoryQmlSort *HistoryThreadModel::sort() const
+{
+    return mSort;
+}
+
+void HistoryThreadModel::setSort(HistoryQmlSort *value)
+{
+    // disconnect the previous sort
+    if (mSort) {
+        mSort->disconnect(this);
+    }
+
+    mSort = value;
+    if (mSort) {
+        connect(mSort,
+                SIGNAL(sortChanged()),
+                SLOT(updateQuery()));
+    }
+
+    Q_EMIT sortChanged();
+    updateQuery();
+}
+
 HistoryThreadModel::EventType HistoryThreadModel::type() const
 {
     return mType;
@@ -248,6 +272,11 @@ void HistoryThreadModel::updateQuery()
     if (mFilter) {
         queryFilter = mFilter->filter();
     }
+
+    if (mSort) {
+        querySort = mSort->sort();
+    }
+
     mThreadView = History::Manager::instance()->queryThreads((History::EventType)mType, querySort, queryFilter);
     connect(mThreadView.data(),
             SIGNAL(threadsAdded(History::Threads)),

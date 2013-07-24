@@ -5,6 +5,7 @@ set(plugin_SRCS
     historyqmlfilter.cpp
     historyqmlintersectionfilter.cpp
     historyqmlplugin.cpp
+    historyqmlsort.cpp
     historyqmlunionfilter.cpp
     historythreadmodel.cpp
     sortproxymodel.cpp
@@ -15,6 +16,7 @@ set(plugin_HDRS
     historyqmlfilter.h
     historyqmlintersectionfilter.h
     historyqmlplugin.h
+    historyqmlsort.h
     historyqmlunionfilter.h
     historythreadmodel.h
     sortproxymodel.h
