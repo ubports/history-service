@@ -23,6 +23,7 @@
 #define HISTORYEVENTMODEL_H
 
 #include <QAbstractListModel>
+#include <QStringList>
 #include "historythreadmodel.h"
 
 class HistoryEventModel : public QAbstractListModel
@@ -63,6 +64,8 @@ public:
 
     HistoryThreadModel::EventType type() const;
     void setType(HistoryThreadModel::EventType value);
+
+    Q_INVOKABLE QString threadIdForParticipants(const QString &accountId, int eventType, const QStringList &participants);
 
 Q_SIGNALS:
     void filterChanged();

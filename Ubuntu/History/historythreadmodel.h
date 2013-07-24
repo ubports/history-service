@@ -75,6 +75,8 @@ public:
     EventType type() const;
     void setType(EventType value);
 
+    Q_INVOKABLE QString threadIdForParticipants(const QString &accountId, int eventType, const QStringList &participants);
+
 Q_SIGNALS:
     void filterChanged();
     void typeChanged();
