@@ -35,6 +35,16 @@ ListView {
         }
     }
 
+    Component {
+        id: sectionDelegate
+
+        Text {
+            text: section
+        }
+    }
+
+    section.property: "eventDate"
+    section.delegate: sectionDelegate 
     delegate: Rectangle {
         anchors.left: parent.left
         anchors.right: parent.right
