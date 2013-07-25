@@ -152,8 +152,11 @@ ThreadPtr Manager::getSingleThread(EventType type, const QString &accountId, con
 {
     Q_D(Manager);
 
-    ThreadPtr thread;
-    if (d->reader) {
+    // try to use the cached instance to avoid querying the backend
+    ThreadPtr thread = ItemFactory::instance()->cachedThread(accountId, threadId, type);
+
+    // and if it isn´t there, get from the backend
+    if (thread.isNull() && d->reader) {
         thread = d->reader->getSingleThread(type, accountId, threadId);
     }
 
@@ -174,12 +177,7 @@ bool Manager::writeTextEvents(const TextEvents &textEvents)
     Threads threads;
     Q_FOREACH(const TextEventPtr &textEvent, textEvents) {
         // save the thread so that the thread updated signal can be emitted
-        ThreadPtr thread = History::ItemFactory::instance()->cachedThread(textEvent->accountId(),
-                                                                          textEvent->threadId(),
-                                                                          EventTypeText);
-        if (thread.isNull()) {
-            thread = getSingleThread(EventTypeText, textEvent->accountId(), textEvent->threadId());
-        }
+        ThreadPtr thread = getSingleThread(EventTypeText, textEvent->accountId(), textEvent->threadId());
         if (!threads.contains(thread)) {
             threads << thread;
         }
@@ -208,12 +206,7 @@ bool Manager::writeVoiceEvents(const VoiceEvents &voiceEvents)
     Threads threads;
     Q_FOREACH(const VoiceEventPtr &voiceEvent, voiceEvents) {
         // save the thread so that the thread updated signal can be emitted
-        ThreadPtr thread = History::ItemFactory::instance()->cachedThread(voiceEvent->accountId(),
-                                                                          voiceEvent->threadId(),
-                                                                          EventTypeVoice);
-        if (thread.isNull()) {
-            thread = getSingleThread(EventTypeVoice, voiceEvent->accountId(), voiceEvent->threadId());
-        }
+        ThreadPtr thread = getSingleThread(EventTypeVoice, voiceEvent->accountId(), voiceEvent->threadId());
         if (!threads.contains(thread)) {
             threads << thread;
         }
