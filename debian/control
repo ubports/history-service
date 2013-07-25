@@ -36,7 +36,7 @@ Priority: extra
 Depends: ${misc:Depends},
          history-service (= ${binary:Version}),
          libhistoryservice0 (= ${binary:Version}),
-         qtdeclarative5-history-service-plugin (= ${binary:Version}),
+         qtdeclarative5-ubuntu-history-plugin (= ${binary:Version}),
 Description: debugging symbols for history-service
  This package contains the debugging symbols for history-service
 
@@ -59,7 +59,7 @@ Description: Client library to access data from the history service
  This package contains the client library to access the data stored by the
  history service.
 
-Package: qtdeclarative5-history-service-plugin
+Package: qtdeclarative5-ubuntu-history-plugin
 Architecture: any
 Section: libs
 Priority: extra
