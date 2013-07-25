@@ -50,6 +50,10 @@ ListView {
 
             Text {
                 anchors.left: parent.left
+                text: "<b>Participants:</b> " + participants
+            }
+            Text {
+                anchors.left: parent.left
                 text: "<b>AccountId:</b> " + accountId
             }
             Text {

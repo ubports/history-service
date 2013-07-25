@@ -26,6 +26,7 @@
 #include "manager.h"
 #include "thread.h"
 #include "textevent.h"
+#include "thread.h"
 #include "voiceevent.h"
 #include <QDebug>
 
@@ -36,6 +37,7 @@ HistoryEventModel::HistoryEventModel(QObject *parent) :
     // configure the roles
     mRoles[AccountIdRole] = "accountId";
     mRoles[ThreadIdRole] = "threadId";
+    mRoles[ParticipantsRole] = "participants";
     mRoles[TypeRole] = "type";
     mRoles[EventIdRole] = "eventId";
     mRoles[SenderIdRole] = "senderId";
@@ -71,6 +73,7 @@ QVariant HistoryEventModel::data(const QModelIndex &index, int role) const
     History::EventPtr event = mEvents[index.row()];
     History::TextEventPtr textEvent;
     History::VoiceEventPtr voiceEvent;
+    History::ThreadPtr thread;
 
     switch (event->type()) {
     case History::EventTypeText:
@@ -89,6 +92,12 @@ QVariant HistoryEventModel::data(const QModelIndex &index, int role) const
         break;
     case ThreadIdRole:
         result = event->threadId();
+        break;
+    case ParticipantsRole:
+        thread = History::Manager::instance()->getSingleThread(event->type(), event->accountId(), event->threadId());
+        if (!thread.isNull()) {
+            result = thread->participants();
+        }
         break;
     case TypeRole:
         result = event->type();

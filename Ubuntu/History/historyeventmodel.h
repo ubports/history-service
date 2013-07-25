@@ -37,6 +37,7 @@ public:
     enum Role {
         AccountIdRole = Qt::UserRole,
         ThreadIdRole,
+        ParticipantsRole,
         TypeRole,
         EventIdRole,
         SenderIdRole,
