@@ -39,6 +39,7 @@ HistoryEventModel::HistoryEventModel(QObject *parent) :
     mRoles[EventIdRole] = "eventId";
     mRoles[SenderIdRole] = "senderId";
     mRoles[TimestampRole] = "timestamp";
+    mRoles[DateRole] = "date";
     mRoles[NewEventRole] = "newEvent";
     mRoles[TextMessageRole] = "textMessage";
     mRoles[TextMessageTypeRole] = "textMessageType";
@@ -99,6 +100,9 @@ QVariant HistoryEventModel::data(const QModelIndex &index, int role) const
         break;
     case TimestampRole:
         result = event->timestamp();
+        break;
+    case DateRole:
+        result = event->timestamp().date();
         break;
     case NewEventRole:
         result = event->newEvent();

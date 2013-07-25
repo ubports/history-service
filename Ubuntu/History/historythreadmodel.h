@@ -52,6 +52,7 @@ public:
         LastEventIdRole,
         LastEventSenderIdRole,
         LastEventTimestampRole,
+        LastEventDateRole,
         LastEventNewRole,
         LastEventTextMessageRole,
         LastEventTextMessageTypeRole,

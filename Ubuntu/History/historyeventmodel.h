@@ -40,6 +40,7 @@ public:
         EventIdRole,
         SenderIdRole,
         TimestampRole,
+        DateRole,
         NewEventRole,
         TextMessageRole,
         TextMessageTypeRole,
