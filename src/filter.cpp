@@ -100,7 +100,7 @@ QString Filter::toString(const QString &propertyPrefix) const
 {
     Q_D(const Filter);
 
-    if (d->filterProperty.isEmpty()) {
+    if (d->filterProperty.isEmpty() || d->filterValue.isNull()) {
         return QString::null;
     }
 

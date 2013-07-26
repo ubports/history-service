@@ -106,7 +106,10 @@ QString UnionFilter::toString(const QString &propertyPrefix) const
     QStringList output;
     // wrap each filter string around parenthesis
     Q_FOREACH(const FilterPtr &filter, d->filters) {
-        output << QString("(%1)").arg(filter->toString(propertyPrefix));
+        QString value = filter->toString(propertyPrefix);
+        if (!value.isEmpty()) {
+            output << QString("(%1)").arg(value);
+        }
     }
 
     return output.join(" OR ");
