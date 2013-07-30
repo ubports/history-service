@@ -36,8 +36,10 @@ SQLiteHistoryThreadView::SQLiteHistoryThreadView(SQLiteHistoryReader *reader,
                                                  const History::SortPtr &sort,
                                                  const History::FilterPtr &filter)
     : History::ThreadView(type, sort, filter), mReader(reader), mType(type), mSort(sort),
-      mFilter(filter), mPageSize(15), mQuery(SQLiteDatabase::instance()->database())
+      mFilter(filter), mPageSize(15), mQuery(SQLiteDatabase::instance()->database()), mOffset(0)
 {
+
+    mTemporaryTable = QString("threadview%1%2").arg(QString::number((qulonglong)this), QDateTime::currentDateTimeUtc().toString("yyyyMMddhhmmsszzz"));
     mQuery.setForwardOnly(true);
 
     // FIXME: validate the filter
@@ -63,6 +65,12 @@ SQLiteHistoryThreadView::SQLiteHistoryThreadView(SQLiteHistoryReader *reader,
            << "threads.count"
            << "threads.unreadCount";
 
+    // get the participants in the query already
+    fields << "(SELECT group_concat(thread_participants.participantId,  \"|,|\") "
+              "FROM thread_participants WHERE thread_participants.accountId=threads.accountId "
+              "AND thread_participants.threadId=threads.threadId "
+              "AND thread_participants.type=threads.type GROUP BY accountId,threadId,type) as participants";
+
     QStringList extraFields;
     QString table;
 
@@ -82,12 +90,21 @@ SQLiteHistoryThreadView::SQLiteHistoryThreadView(SQLiteHistoryReader *reader,
            << QString("%1.newEvent").arg(table);
     fields << extraFields;
 
-    QString queryText = QString("SELECT %1 FROM threads LEFT JOIN %2 ON threads.threadId=%2.threadId AND "
-                                "threads.accountId=%2.accountId AND threads.lastEventId=%2.eventId WHERE threads.type=%3 %4 %5")
-                                .arg(fields.join(", "), table, QString::number((int)type), condition, order);
+    QString queryText = QString("CREATE TEMP TABLE %1 AS ").arg(mTemporaryTable);
+    queryText += QString("SELECT %1 FROM threads LEFT JOIN %2 ON threads.threadId=%2.threadId AND "
+                         "threads.accountId=%2.accountId AND threads.lastEventId=%2.eventId WHERE threads.type=%3 %4 %5")
+                         .arg(fields.join(", "), table, QString::number((int)type), condition, order);
 
-    // FIXME: add support for sorting
+    // create the temporary table
     if (!mQuery.exec(queryText)) {
+        qCritical() << "Error:" << mQuery.lastError() << mQuery.lastQuery();
+        return;
+    }
+}
+
+SQLiteHistoryThreadView::~SQLiteHistoryThreadView()
+{
+    if (!mQuery.exec(QString("DROP TABLE IF EXISTS %1").arg(mTemporaryTable))) {
         qCritical() << "Error:" << mQuery.lastError() << mQuery.lastQuery();
         return;
     }
@@ -96,31 +113,23 @@ SQLiteHistoryThreadView::SQLiteHistoryThreadView(SQLiteHistoryReader *reader,
 History::Threads SQLiteHistoryThreadView::nextPage()
 {
     History::Threads threads;
-    int remaining = mPageSize;
-    QSqlQuery secondaryQuery(SQLiteDatabase::instance()->database());
 
-    while (mQuery.next() && remaining-- > 0) {
+    // now prepare for selecting from it
+    mQuery.prepare(QString("SELECT * FROM %1 LIMIT %2 OFFSET %3").arg(mTemporaryTable,
+                                                                      QString::number(mPageSize), QString::number(mOffset)));
+    if (!mQuery.exec()) {
+        qCritical() << "Error:" << mQuery.lastError() << mQuery.lastQuery();
+        return threads;
+    }
+
+    while (mQuery.next()) {
         QString accountId = mQuery.value(0).toString();
         QString threadId = mQuery.value(1).toString();
         QString lastEventId = mQuery.value(2).toString();
         int count = mQuery.value(3).toInt();
         int unreadCount = mQuery.value(4).toInt();
 
-        // now for each thread we need to fetch the participants
-        secondaryQuery.prepare("SELECT participantId FROM thread_participants WHERE "
-                               "accountId=:accountId AND threadId=:threadId AND type=:type");
-        secondaryQuery.bindValue(":accountId", accountId);
-        secondaryQuery.bindValue(":threadId", threadId);
-        secondaryQuery.bindValue(":type", mType);
-        if (!secondaryQuery.exec()) {
-            qCritical() << "Error:" << secondaryQuery.lastError() << secondaryQuery.lastQuery();
-            return threads;
-        }
-
-        QStringList participants;
-        while (secondaryQuery.next()) {
-            participants << secondaryQuery.value(0).toString();
-        }
+        QStringList participants = mQuery.value(5).toString().split("|,|");
 
         // the next step is to get the last event
         History::EventPtr historyEvent;
@@ -130,23 +139,23 @@ History::Threads SQLiteHistoryThreadView::nextPage()
                 historyEvent = History::ItemFactory::instance()->createTextEvent(accountId,
                                                                                  threadId,
                                                                                  lastEventId,
-                                                                                 mQuery.value(5).toString(),
-                                                                                 mQuery.value(6).toDateTime(),
-                                                                                 mQuery.value(7).toBool(),
-                                                                                 mQuery.value(8).toString(),
-                                                                                 (History::MessageType)mQuery.value(9).toInt(),
-                                                                                 History::MessageFlags(mQuery.value(10).toInt()),
-                                                                                 mQuery.value(11).toDateTime());
+                                                                                 mQuery.value(6).toString(),
+                                                                                 mQuery.value(7).toDateTime(),
+                                                                                 mQuery.value(8).toBool(),
+                                                                                 mQuery.value(9).toString(),
+                                                                                 (History::MessageType)mQuery.value(10).toInt(),
+                                                                                 History::MessageFlags(mQuery.value(11).toInt()),
+                                                                                 mQuery.value(12).toDateTime());
                 break;
             case History::EventTypeVoice:
                 historyEvent = History::ItemFactory::instance()->createVoiceEvent(accountId,
                                                                                   threadId,
                                                                                   lastEventId,
-                                                                                  mQuery.value(5).toString(),
-                                                                                  mQuery.value(6).toDateTime(),
-                                                                                  mQuery.value(7).toBool(),
-                                                                                  mQuery.value(9).toBool(),
-                                                                                  QTime(0,0).addSecs(mQuery.value(8).toInt()));
+                                                                                  mQuery.value(6).toString(),
+                                                                                  mQuery.value(7).toDateTime(),
+                                                                                  mQuery.value(8).toBool(),
+                                                                                  mQuery.value(10).toBool(),
+                                                                                  QTime(0,0).addSecs(mQuery.value(9).toInt()));
                 break;
             }
         }
@@ -160,6 +169,9 @@ History::Threads SQLiteHistoryThreadView::nextPage()
                                                                                    unreadCount);
         threads << thread;
     }
+
+    mOffset += mPageSize;
+    mQuery.clear();
 
     return threads;
 }

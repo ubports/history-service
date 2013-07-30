@@ -34,8 +34,9 @@ SQLiteHistoryEventView::SQLiteHistoryEventView(SQLiteHistoryReader *reader,
                                              const History::SortPtr &sort,
                                              const History::FilterPtr &filter)
     : History::EventView(type, sort, filter), mType(type), mSort(sort), mFilter(filter),
-      mQuery(SQLiteDatabase::instance()->database()), mPageSize(15), mReader(reader)
+      mQuery(SQLiteDatabase::instance()->database()), mPageSize(15), mReader(reader), mOffset(0)
 {
+    mTemporaryTable = QString("eventview%1%2").arg(QString::number((qulonglong)this), QDateTime::currentDateTimeUtc().toString("yyyyMMddhhmmsszzz"));
     mQuery.setForwardOnly(true);
 
     // FIXME: validate the filter
@@ -53,16 +54,16 @@ SQLiteHistoryEventView::SQLiteHistoryEventView(SQLiteHistoryReader *reader,
         // FIXME: check case sensitiviy
     }
 
-    QString queryText;
+    QString queryText = QString("CREATE TEMP TABLE %1 AS ").arg(mTemporaryTable);
 
     switch (type) {
     case History::EventTypeText:
-        queryText = QString("SELECT accountId, threadId, eventId, senderId, timestamp, newEvent,"
-                            "message, messageType, messageFlags, readTimestamp FROM text_events %1 %2").arg(condition, order);
+        queryText += QString("SELECT accountId, threadId, eventId, senderId, timestamp, newEvent,"
+                             "message, messageType, messageFlags, readTimestamp FROM text_events %1 %2").arg(condition, order);
         break;
     case History::EventTypeVoice:
-        queryText = QString("SELECT accountId, threadId, eventId, senderId, timestamp, newEvent,"
-                            "duration, missed FROM voice_events %1 %2").arg(condition, order);
+        queryText += QString("SELECT accountId, threadId, eventId, senderId, timestamp, newEvent,"
+                             "duration, missed FROM voice_events %1 %2").arg(condition, order);
         break;
     }
 
@@ -72,12 +73,27 @@ SQLiteHistoryEventView::SQLiteHistoryEventView(SQLiteHistoryReader *reader,
     }
 }
 
+SQLiteHistoryEventView::~SQLiteHistoryEventView()
+{
+    if (!mQuery.exec(QString("DROP TABLE IF EXISTS %1").arg(mTemporaryTable))) {
+        qCritical() << "Error:" << mQuery.lastError() << mQuery.lastQuery();
+        return;
+    }
+}
+
 History::Events SQLiteHistoryEventView::nextPage()
 {
     History::Events events;
-    int remaining = mPageSize;
 
-    while (mQuery.next() && remaining-- > 0) {
+    // now prepare for selecting from it
+    mQuery.prepare(QString("SELECT * FROM %1 LIMIT %2 OFFSET %3").arg(mTemporaryTable,
+                                                                      QString::number(mPageSize), QString::number(mOffset)));
+    if (!mQuery.exec()) {
+        qCritical() << "Error:" << mQuery.lastError() << mQuery.lastQuery();
+        return events;
+    }
+
+    while (mQuery.next()) {
         switch (mType) {
         case History::EventTypeText:
             events << History::ItemFactory::instance()->createTextEvent(mQuery.value(0).toString(),
@@ -103,6 +119,9 @@ History::Events SQLiteHistoryEventView::nextPage()
             break;
         }
     }
+
+    mOffset += mPageSize;
+    mQuery.clear();
 
     return events;
 }
