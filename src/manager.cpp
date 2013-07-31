@@ -148,12 +148,15 @@ ThreadPtr Manager::threadForParticipants(const QString &accountId,
     return thread;
 }
 
-ThreadPtr Manager::getSingleThread(EventType type, const QString &accountId, const QString &threadId)
+ThreadPtr Manager::getSingleThread(EventType type, const QString &accountId, const QString &threadId, bool useCache)
 {
     Q_D(Manager);
 
     // try to use the cached instance to avoid querying the backend
-    ThreadPtr thread = ItemFactory::instance()->cachedThread(accountId, threadId, type);
+    ThreadPtr thread;
+    if (useCache) {
+        thread = ItemFactory::instance()->cachedThread(accountId, threadId, type);
+    }
 
     // and if it isn´t there, get from the backend
     if (thread.isNull() && d->reader) {
