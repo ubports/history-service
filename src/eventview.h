@@ -47,6 +47,7 @@ Q_SIGNALS:
     void eventsAdded(const History::Events &events);
     void eventsModified(const History::Events &events);
     void eventsRemoved(const History::Events &events);
+    void invalidated();
 
 private:
     Q_PRIVATE_SLOT(d_func(), void _d_eventsAdded(const History::Events &events))

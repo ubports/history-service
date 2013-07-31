@@ -48,6 +48,7 @@ Q_SIGNALS:
     void threadsAdded(const History::Threads &threads);
     void threadsModified(const History::Threads &threads);
     void threadsRemoved(const History::Threads &threads);
+    void invalidated();
 
 private:
     Q_PRIVATE_SLOT(d_func(), void _d_threadsAdded(const History::Threads &threads))

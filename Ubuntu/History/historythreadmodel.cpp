@@ -307,6 +307,9 @@ void HistoryThreadModel::updateQuery()
     connect(mThreadView.data(),
             SIGNAL(threadsRemoved(History::Threads)),
             SLOT(onThreadsRemoved(History::Threads)));
+    connect(mThreadView.data(),
+            SIGNAL(invalidated()),
+            SLOT(updateQuery()));
 
     fetchMore(QModelIndex());
 }

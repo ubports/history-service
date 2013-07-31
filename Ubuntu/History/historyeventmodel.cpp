@@ -289,6 +289,10 @@ void HistoryEventModel::updateQuery()
     connect(mView.data(),
             SIGNAL(eventsRemoved(History::Events)),
             SLOT(onEventsRemoved(History::Events)));
+    connect(mView.data(),
+            SIGNAL(invalidated()),
+            SLOT(updateQuery()));
+
     mCanFetchMore = true;
 
     // get an initial set of results
