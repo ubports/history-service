@@ -37,6 +37,7 @@ public:
                             History::EventType type,
                             const History::SortPtr &sort,
                             const History::FilterPtr &filter);
+    ~SQLiteHistoryThreadView();
 
     History::Threads nextPage();
     bool isValid() const;
@@ -48,6 +49,8 @@ private:
     QSqlQuery mQuery;
     int mPageSize;
     SQLiteHistoryReader *mReader;
+    QString mTemporaryTable;
+    int mOffset;
 };
 
 #endif // SQLITEHISTORYTHREADVIEW_H
