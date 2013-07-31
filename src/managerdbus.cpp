@@ -137,7 +137,7 @@ Threads ManagerDBus::threadsFromProperties(const QList<QVariantMap> &threadsProp
         QString accountId = map["accountId"].toString();
         QString threadId = map["threadId"].toString();
         EventType type = (EventType) map["type"].toInt();
-        ThreadPtr thread = manager->getSingleThread(type, accountId, threadId);
+        ThreadPtr thread = manager->getSingleThread(type, accountId, threadId, false);
         if (!thread.isNull()) {
             threads << thread;
         }
