@@ -28,7 +28,7 @@
 #include <QDir>
 
 SQLiteDatabase::SQLiteDatabase(QObject *parent) :
-    QObject(parent)
+    QObject(parent), mSchemaVersion(0)
 {
     initializeDatabase();
 }
@@ -58,17 +58,12 @@ bool SQLiteDatabase::initializeDatabase()
     mDatabase = QSqlDatabase::addDatabase("QSQLITE");
     mDatabase.setDatabaseName(mDatabasePath);
 
-    if (!QFile(mDatabasePath).exists() && !createDatabase()) {
-        qCritical() << "Failed to create the database";
-        return false;
-    } else if (!mDatabase.open()) {
-        qCritical() << "Failed to open the database";
+    // always run the createDatabase function at least during the development
+    if (!createOrUpdateDatabase()) {
+        qCritical() << "Failed to create or update the database";
         return false;
     }
 
-    qDebug() << "Successfully opened the database. Ready to start logging.";
-
-    // TODO: verify if the database structure is correct
     return true;
 }
 
@@ -92,21 +87,33 @@ bool SQLiteDatabase::rollbackTransaction()
     return mDatabase.rollback();
 }
 
-bool SQLiteDatabase::createDatabase()
+bool SQLiteDatabase::createOrUpdateDatabase()
 {
     qDebug() << __PRETTY_FUNCTION__;
+
+    bool needsUpdate = !QFile(mDatabasePath).exists();
+    QStringList statements = parseSchema();
+
     if (!mDatabase.open()) {
         return false;
     }
 
-    QFile schema(":/database/schema.sql");
-    if (!schema.open(QFile::ReadOnly)) {
-        return false;
+    QSqlQuery query(mDatabase);
+
+    // at this point if needsUpdate is false it means the database already exists
+    // but we still need to check its schema version
+    if (!needsUpdate) {
+        query.exec("SELECT * FROM schema_version");
+        if (!query.exec() || query.next() && query.value(0).toInt() < mSchemaVersion) {
+            needsUpdate = true;
+        }
     }
 
-    QTextStream stream(&schema);
-    QSqlQuery query(mDatabase);
-    QStringList statements = stream.readAll().split("#");
+    // if at this point needsUpdate is still false, it means the database is up-to-date
+    if (!needsUpdate) {
+        qDebug() << "Database up-to-date. No schema update needed.";
+        return true;
+    }
 
     beginTransation();
 
@@ -122,7 +129,46 @@ bool SQLiteDatabase::createDatabase()
         }
     }
 
+    // now set the new database schema version
+    if (!query.exec("DELETE FROM schema_version")) {
+        qCritical() << "Failed to remove previous schema versions. SQL Statement:" << query.lastQuery() << "Error:" << query.lastError();
+        rollbackTransaction();
+        return false;
+    }
+
+    if (!query.exec(QString("INSERT INTO schema_version VALUES (%1)").arg(mSchemaVersion))) {
+        qCritical() << "Failed to insert new schema version. SQL Statement:" << query.lastQuery() << "Error:" << query.lastError();
+        rollbackTransaction();
+        return false;
+    }
+
     finishTransaction();
 
     return true;
+}
+
+QStringList SQLiteDatabase::parseSchema()
+{
+    QFile schema(":/database/schema.sql");
+    if (!schema.open(QFile::ReadOnly)) {
+        return QStringList();
+    }
+
+    QTextStream stream(&schema);
+
+    QStringList lines;
+    while (!stream.atEnd()) {
+        QString line = stream.readLine();
+
+        // strip out comments
+        if (line.trimmed().startsWith("//")) {
+            if (line.indexOf("SCHEMA_VERSION") >= 0) {
+                mSchemaVersion = line.split("=")[1].toInt();
+                qDebug() << "Got schema version:" << mSchemaVersion;
+            }
+            continue;
+        }
+        lines << line;
+    }
+    return lines.join(" ").split("#");
 }
