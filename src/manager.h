@@ -54,6 +54,7 @@ public:
 
     bool writeTextEvents(const History::TextEvents &textEvents);
     bool writeVoiceEvents(const History::VoiceEvents &voiceEvents);
+
     bool removeThreads(const Threads &threads);
     bool removeEvents(const Events &events);
 

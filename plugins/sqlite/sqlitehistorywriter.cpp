@@ -76,6 +76,23 @@ History::ThreadPtr SQLiteHistoryWriter::createThreadForParticipants(const QStrin
     return thread;
 }
 
+bool SQLiteHistoryWriter::removeThread(const History::ThreadPtr &thread)
+{
+    QSqlQuery query(SQLiteDatabase::instance()->database());
+
+    query.prepare("DELETE FROM threads WHERE accountId=:accountId AND threadId=:threadId AND type=:type");
+    query.bindValue(":accountId", thread->accountId());
+    query.bindValue(":threadId", thread->threadId());
+    query.bindValue(":type", thread->type());
+
+    if (!query.exec()) {
+        qCritical() << "Failed to remove the thread: Error:" << query.lastError() << query.lastQuery();
+        return false;
+    }
+
+    return true;
+}
+
 bool SQLiteHistoryWriter::writeTextEvent(const History::TextEventPtr &event)
 {
     QSqlQuery query(SQLiteDatabase::instance()->database());
@@ -97,6 +114,23 @@ bool SQLiteHistoryWriter::writeTextEvent(const History::TextEventPtr &event)
 
     if (!query.exec()) {
         qCritical() << "Failed to save the text event: Error:" << query.lastError() << query.lastQuery();
+        return false;
+    }
+
+    return true;
+}
+
+bool SQLiteHistoryWriter::removeTextEvent(const History::TextEventPtr &event)
+{
+    QSqlQuery query(SQLiteDatabase::instance()->database());
+
+    query.prepare("DELETE FROM text_events WHERE accountId=:accountId AND threadId=:threadId AND eventId=:eventId");
+    query.bindValue(":accountId", event->accountId());
+    query.bindValue(":threadId", event->threadId());
+    query.bindValue(":eventId", event->eventId());
+
+    if (!query.exec()) {
+        qCritical() << "Failed to save the voice event: Error:" << query.lastError() << query.lastQuery();
         return false;
     }
 
@@ -128,6 +162,23 @@ bool SQLiteHistoryWriter::writeVoiceEvent(const History::VoiceEventPtr &event)
     return true;
 }
 
+bool SQLiteHistoryWriter::removeVoiceEvent(const History::VoiceEventPtr &event)
+{
+    QSqlQuery query(SQLiteDatabase::instance()->database());
+
+    query.prepare("DELETE FROM voice_events WHERE accountId=:accountId AND threadId=:threadId AND eventId=:eventId");
+    query.bindValue(":accountId", event->accountId());
+    query.bindValue(":threadId", event->threadId());
+    query.bindValue(":eventId", event->eventId());
+
+    if (!query.exec()) {
+        qCritical() << "Failed to save the voice event: Error:" << query.lastError() << query.lastQuery();
+        return false;
+    }
+
+    return true;
+}
+
 bool SQLiteHistoryWriter::beginBatchOperation()
 {
     return SQLiteDatabase::instance()->beginTransation();
@@ -136,4 +187,9 @@ bool SQLiteHistoryWriter::beginBatchOperation()
 bool SQLiteHistoryWriter::endBatchOperation()
 {
     return SQLiteDatabase::instance()->finishTransaction();
+}
+
+bool SQLiteHistoryWriter::rollbackBatchOperation()
+{
+    return SQLiteDatabase::instance()->rollbackTransaction();
 }
