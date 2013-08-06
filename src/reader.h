@@ -44,6 +44,10 @@ public:
     virtual ThreadPtr getSingleThread(EventType type,
                                       const QString &accountId,
                                       const QString &threadId) = 0;
+    virtual EventPtr getSingleEvent(EventType type,
+                                    const QString &accountId,
+                                    const QString &threadId,
+                                    const QString &eventId) = 0;
     virtual ThreadPtr threadForParticipants(const QString &accountId, EventType type, const QStringList &participants) = 0;
 };
 

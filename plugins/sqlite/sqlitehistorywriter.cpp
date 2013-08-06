@@ -172,7 +172,7 @@ bool SQLiteHistoryWriter::removeVoiceEvent(const History::VoiceEventPtr &event)
     query.bindValue(":eventId", event->eventId());
 
     if (!query.exec()) {
-        qCritical() << "Failed to save the voice event: Error:" << query.lastError() << query.lastQuery();
+        qCritical() << "Failed to remove the voice event: Error:" << query.lastError() << query.lastQuery();
         return false;
     }
 

@@ -72,6 +72,7 @@ public:
     void setType(HistoryThreadModel::EventType value);
 
     Q_INVOKABLE QString threadIdForParticipants(const QString &accountId, int eventType, const QStringList &participants);
+    Q_INVOKABLE bool removeEvent(const QString &accountId, const QString &threadId, const QString &eventId, int eventType);
 
 Q_SIGNALS:
     void filterChanged();

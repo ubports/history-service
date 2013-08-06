@@ -271,6 +271,11 @@ QString HistoryThreadModel::threadIdForParticipants(const QString &accountId, in
     return QString::null;
 }
 
+bool HistoryThreadModel::removeThread(const QString &accountId, const QString &threadId, int eventType)
+{
+    History::ThreadPtr thread = History::Manager::instance()->getSingleThread((History::EventType)eventType, accountId, threadId);
+    return History::Manager::instance()->removeThreads(History::Threads() << thread);
+}
 
 void HistoryThreadModel::updateQuery()
 {

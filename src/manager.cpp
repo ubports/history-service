@@ -129,6 +129,22 @@ EventViewPtr Manager::queryEvents(EventType type,
     return EventViewPtr();
 }
 
+EventPtr Manager::getSingleEvent(EventType type, const QString &accountId, const QString &threadId, const QString &eventId, bool useCache)
+{
+    Q_D(Manager);
+
+    EventPtr event;
+    if (useCache) {
+        event = ItemFactory::instance()->cachedEvent(accountId, threadId, eventId, type);
+    }
+
+    if (event.isNull() && d->reader) {
+        event = d->reader->getSingleEvent(type, accountId, threadId, eventId);
+    }
+
+    return event;
+}
+
 ThreadPtr Manager::threadForParticipants(const QString &accountId,
                                          EventType type,
                                          const QStringList &participants,
