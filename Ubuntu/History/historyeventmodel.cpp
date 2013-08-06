@@ -23,6 +23,7 @@
 #include "historyqmlfilter.h"
 #include "historyqmlsort.h"
 #include "eventview.h"
+#include "intersectionfilter.h"
 #include "manager.h"
 #include "thread.h"
 #include "textevent.h"
@@ -253,6 +254,12 @@ QString HistoryEventModel::threadIdForParticipants(const QString &accountId, int
     }
 
     return QString::null;
+}
+
+bool HistoryEventModel::removeEvent(const QString &accountId, const QString &threadId, const QString &eventId, int eventType)
+{
+    History::EventPtr event = History::Manager::instance()->getSingleEvent((History::EventType)eventType, accountId, threadId, eventId);
+    History::Manager::instance()->removeEvents(History::Events() << event);
 }
 
 
