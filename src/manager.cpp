@@ -281,7 +281,9 @@ bool Manager::removeThreads(const Threads &threads)
     }
 
     d->writer->endBatchOperation();
-    d->dbus->notifyThreadsRemoved(threads);
+    if (!removedThreads.isEmpty()) {
+        d->dbus->notifyThreadsRemoved(removedThreads);
+    }
 
     return removeEvents(events);
 }
