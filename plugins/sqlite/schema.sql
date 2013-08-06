@@ -1,4 +1,4 @@
-// SCHEMA_VERSION=1
+// SCHEMA_VERSION=2
 // Database schema version table
 CREATE TABLE IF NOT EXISTS schema_version (
     version int
@@ -91,26 +91,28 @@ BEGIN
         WHERE accountId=new.accountId AND threadId=new.threadId AND type=1;
 END#
 
+// this trigger was wrong in a previous version of the schema, so remove it and recreate
+DROP TRIGGER IF EXISTS voice_events_delete_trigger#
 CREATE TRIGGER IF NOT EXISTS voice_events_delete_trigger  AFTER DELETE ON voice_events
 FOR EACH ROW
 BEGIN
     UPDATE threads SET count=(SELECT count(eventId) FROM voice_events WHERE
-        accountId=new.accountId AND
-        threadId=new.threadId)
-        WHERE accountId=new.accountId AND threadId=new.threadId AND type=1;
+        accountId=old.accountId AND
+        threadId=old.threadId)
+        WHERE accountId=old.accountId AND threadId=old.threadId AND type=1;
     UPDATE threads SET unreadCount=(SELECT count(eventId) FROM voice_events WHERE
-        accountId=new.accountId AND threadId=new.threadId AND newEvent='true')
-        WHERE accountId=new.accountId AND threadId=new.threadId AND type=1;
+        accountId=old.accountId AND threadId=old.threadId AND newEvent='true')
+        WHERE accountId=old.accountId AND threadId=old.threadId AND type=1;
     UPDATE threads SET lastEventId=(SELECT eventId FROM voice_events WHERE
-        accountId=new.accountId AND
-        threadId=new.threadId
+        accountId=old.accountId AND
+        threadId=old.threadId
         ORDER BY timestamp DESC LIMIT 1)
-        WHERE accountId=new.accountId AND threadId=new.threadId AND type=1;
+        WHERE accountId=old.accountId AND threadId=old.threadId AND type=1;
     UPDATE threads SET lastEventTimestamp=(SELECT timestamp FROM voice_events WHERE
-        accountId=new.accountId AND
-        threadId=new.threadId
+        accountId=old.accountId AND
+        threadId=old.threadId
         ORDER BY timestamp DESC LIMIT 1)
-        WHERE accountId=new.accountId AND threadId=new.threadId AND type=1;
+        WHERE accountId=old.accountId AND threadId=old.threadId AND type=1;
 END#
 
 CREATE TRIGGER IF NOT EXISTS text_events_insert_trigger  AFTER INSERT ON text_events
@@ -157,26 +159,28 @@ BEGIN
         WHERE accountId=new.accountId AND threadId=new.threadId AND type=0;
 END#
 
+// this trigger was wrong in a previous version of the schema, so remove it and recreate
+DROP TRIGGER IF EXISTS text_events_delete_trigger#
 CREATE TRIGGER IF NOT EXISTS text_events_delete_trigger  AFTER DELETE ON text_events
 FOR EACH ROW
 BEGIN
     UPDATE threads SET count=(SELECT count(eventId) FROM text_events WHERE
-        accountId=new.accountId AND
-        threadId=new.threadId)
-        WHERE accountId=new.accountId AND threadId=new.threadId AND type=0;
+        accountId=old.accountId AND
+        threadId=old.threadId)
+        WHERE accountId=old.accountId AND threadId=old.threadId AND type=0;
     UPDATE threads SET unreadCount=(SELECT count(eventId) FROM text_events WHERE
-        accountId=new.accountId AND threadId=new.threadId AND newEvent='true')
-        WHERE accountId=new.accountId AND threadId=new.threadId AND type=0;
+        accountId=old.accountId AND threadId=old.threadId AND newEvent='true')
+        WHERE accountId=old.accountId AND threadId=old.threadId AND type=0;
     UPDATE threads SET lastEventId=(SELECT eventId FROM text_events WHERE
-        accountId=new.accountId AND
-        threadId=new.threadId
+        accountId=old.accountId AND
+        threadId=old.threadId
         ORDER BY timestamp DESC LIMIT 1)
-        WHERE accountId=new.accountId AND threadId=new.threadId AND type=0;
+        WHERE accountId=old.accountId AND threadId=old.threadId AND type=0;
     UPDATE threads SET lastEventTimestamp=(SELECT timestamp FROM text_events WHERE
-        accountId=new.accountId AND
-        threadId=new.threadId
+        accountId=old.accountId AND
+        threadId=old.threadId
         ORDER BY timestamp DESC LIMIT 1)
-        WHERE accountId=new.accountId AND threadId=new.threadId AND type=0;
+        WHERE accountId=old.accountId AND threadId=old.threadId AND type=0;
 END#
 
 // ***** schema updates section ******
