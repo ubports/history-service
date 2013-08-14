@@ -24,6 +24,7 @@
 #include "itemfactory.h"
 #include "thread.h"
 #include "textevent.h"
+#include "texteventattachment.h"
 #include "voiceevent.h"
 #include <QDebug>
 #include <QSqlQuery>
@@ -117,6 +118,23 @@ bool SQLiteHistoryWriter::writeTextEvent(const History::TextEventPtr &event)
         return false;
     }
 
+    if (event->messageType() == History::MultiPartMessage) {
+        // save the attachments
+        Q_FOREACH(const History::TextEventAttachmentPtr &attachment, event->attachments()) {
+            query.prepare("INSERT INTO text_event_attachments VALUES (:accountId, :threadId, :eventId, :attachmentId, :contentType, :fileName)");
+            query.bindValue(":accountId", attachment->accountId());
+            query.bindValue(":threadId", attachment->threadId());
+            query.bindValue(":eventId", attachment->eventId());
+            query.bindValue(":attachmentId", attachment->attachmentId());
+            query.bindValue(":contentType", attachment->contentType());
+            query.bindValue(":filePath", attachment->filePath());
+            if (!query.exec()) {
+                qCritical() << "Failed to save attachment to database" << attachment->attachmentId() << attachment->contentType();
+                return false;
+            }
+        }
+    }
+
     return true;
 }
 
@@ -132,6 +150,18 @@ bool SQLiteHistoryWriter::removeTextEvent(const History::TextEventPtr &event)
     if (!query.exec()) {
         qCritical() << "Failed to save the voice event: Error:" << query.lastError() << query.lastQuery();
         return false;
+    }
+
+    if (event->messageType() == History::MultiPartMessage) {
+        // remove the attachments
+        query.prepare("DELETE FROM text_event_attachments WHERE (:accountId, :threadId, :eventId)");
+        query.bindValue(":accountId", event->accountId());
+        query.bindValue(":threadId", event->threadId());
+        query.bindValue(":eventId", event->eventId());
+        if (!query.exec()) {
+            qCritical() << "Failed to remove attachment from database" << event->accountId() << event->threadId() << event->eventId();
+            return false;
+        }
     }
 
     return true;

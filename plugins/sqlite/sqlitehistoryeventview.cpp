@@ -25,6 +25,7 @@
 #include "sort.h"
 #include "itemfactory.h"
 #include "textevent.h"
+#include "texteventattachment.h"
 #include "voiceevent.h"
 #include <QDebug>
 #include <QSqlError>
@@ -96,15 +97,38 @@ History::Events SQLiteHistoryEventView::nextPage()
     while (mQuery.next()) {
         History::TextEventAttachments attachments;
         History::MessageType messageType;
+        QString accountId = mQuery.value(0).toString();
+        QString threadId = mQuery.value(1).toString();
+        QString eventId = mQuery.value(2).toString();
         switch (mType) {
         case History::EventTypeText:
             messageType = (History::MessageType) mQuery.value(7).toInt();
             if (messageType == History::MultiPartMessage)  {
-                // TODO create attachments
+                QSqlQuery attachmentsQuery(SQLiteDatabase::instance()->database());
+                attachmentsQuery.prepare("SELECT attachmentId, contentType, filePath FROM text_event_attachments"
+                                    "WHERE accountId=:accountId and threadId=:threadId and eventId=:eventId");
+                attachmentsQuery.bindValue(":accountId", accountId);
+                attachmentsQuery.bindValue(":threadId", threadId);
+                attachmentsQuery.bindValue(":eventId", eventId);
+                if (!attachmentsQuery.exec()) {
+                    qCritical() << "Error:" << attachmentsQuery.lastError() << attachmentsQuery.lastQuery();
+                }
+                while (attachmentsQuery.next()) {
+                    History::TextEventAttachmentPtr attachment = History::TextEventAttachmentPtr(
+                                new History::TextEventAttachment(accountId,
+                                                                 threadId,
+                                                                 eventId,
+                                                                 attachmentsQuery.value("attachmentId").toString(),
+                                                                 attachmentsQuery.value("contentType").toString(),
+                                                                 attachmentsQuery.value("filePath").toString()));
+                    attachments << attachment;
+
+                }
+                attachmentsQuery.clear();
             }
-            events << History::ItemFactory::instance()->createTextEvent(mQuery.value(0).toString(),
-                                                                        mQuery.value(1).toString(),
-                                                                        mQuery.value(2).toString(),
+            events << History::ItemFactory::instance()->createTextEvent(accountId,
+                                                                        threadId,
+                                                                        eventId,
                                                                         mQuery.value(3).toString(),
                                                                         mQuery.value(4).toDateTime(),
                                                                         mQuery.value(5).toBool(),
@@ -115,9 +139,9 @@ History::Events SQLiteHistoryEventView::nextPage()
                                                                         attachments);
             break;
         case History::EventTypeVoice:
-            events << History::ItemFactory::instance()->createVoiceEvent(mQuery.value(0).toString(),
-                                                                         mQuery.value(1).toString(),
-                                                                         mQuery.value(2).toString(),
+            events << History::ItemFactory::instance()->createVoiceEvent(accountId,
+                                                                         threadId,
+                                                                         eventId,
                                                                          mQuery.value(3).toString(),
                                                                          mQuery.value(4).toDateTime(),
                                                                          mQuery.value(5).toBool(),
