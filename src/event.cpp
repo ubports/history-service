@@ -26,9 +26,6 @@ namespace History
 {
 
 // ------------- EventPrivate ------------------------------------------------
-EventPrivate::EventPrivate()
-{
-}
 
 EventPrivate::EventPrivate(const QString &theAccountId,
                                        const QString &theThreadId,
