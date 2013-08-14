@@ -14,6 +14,8 @@ macro(generate_tests)
 endmacro(generate_tests)
 
 generate_tests(
+    ItemFactoryTest
+    ThreadTest
     TextEventTest
     VoiceEventTest
     )

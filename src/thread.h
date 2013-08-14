@@ -53,9 +53,6 @@ public:
     virtual QVariantMap properties() const;
 
 protected:
-    QScopedPointer<ThreadPrivate> d_ptr;
-
-private:
     Thread(const QString &accountId,
            const QString &threadId,
            EventType type,
@@ -63,6 +60,7 @@ private:
            const EventPtr &lastEvent = EventPtr(),
            int count = 0,
            int unreadCount = 0);
+    QScopedPointer<ThreadPrivate> d_ptr;
 };
 
 }
