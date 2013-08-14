@@ -33,7 +33,6 @@ class Thread;
 class ThreadPrivate
 {
 public:
-    ThreadPrivate();
     ThreadPrivate(const QString &theAccountId,
                          const QString &theThreadId,
                          EventType theType,

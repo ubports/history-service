@@ -27,10 +27,6 @@ namespace History
 
 // ------------- ThreadPrivate ------------------------------------------------
 
-ThreadPrivate::ThreadPrivate()
-{
-}
-
 ThreadPrivate::ThreadPrivate(const QString &theAccountId,
                                            const QString &theThreadId, EventType theType,
                                            const QStringList &theParticipants,

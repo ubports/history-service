@@ -56,7 +56,6 @@ protected:
     QScopedPointer<ThreadPrivate> d_ptr;
 
 private:
-    Thread();
     Thread(const QString &accountId,
            const QString &threadId,
            EventType type,
