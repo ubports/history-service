@@ -48,7 +48,6 @@ public:
     TextEventAttachments attachments() const;
 
 private:
-    TextEvent();
     TextEvent(const QString &accountId,
               const QString &threadId,
               const QString &eventId,

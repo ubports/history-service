@@ -45,7 +45,6 @@ public:
     QTime duration() const;
 
 private:
-    VoiceEvent();
     VoiceEvent(const QString &accountId,
                const QString &threadId,
                const QString &eventId,

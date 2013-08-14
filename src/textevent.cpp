@@ -27,10 +27,6 @@ namespace History {
 
 // ------------- TextEventPrivate ------------------------------------------------
 
-TextEventPrivate::TextEventPrivate()
-{
-}
-
 TextEventPrivate::TextEventPrivate(const QString &theAccountId,
                                  const QString &theThreadId,
                                  const QString &theEventId,
@@ -53,11 +49,6 @@ TextEventPrivate::~TextEventPrivate()
 }
 
 // ------------- TextEvent -------------------------------------------------------
-
-TextEvent::TextEvent()
-    : Event(*new TextEventPrivate())
-{
-}
 
 TextEvent::TextEvent(const QString &accountId,
                    const QString &threadId,
