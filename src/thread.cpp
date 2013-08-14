@@ -44,11 +44,6 @@ ThreadPrivate::~ThreadPrivate()
 
 // ------------- Thread ------------------------------------------------------
 
-Thread::Thread()
-    : d_ptr(new ThreadPrivate())
-{
-}
-
 Thread::Thread(const QString &accountId,
                const QString &threadId, EventType type,
                const QStringList &participants,
