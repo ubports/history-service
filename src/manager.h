@@ -49,11 +49,14 @@ public:
                              const SortPtr &sort = SortPtr(),
                              const FilterPtr &filter = FilterPtr());
 
+    EventPtr getSingleEvent(EventType type, const QString &accountId, const QString &threadId, const QString &eventId, bool useCache = true);
+
     ThreadPtr threadForParticipants(const QString &accountId, EventType type, const QStringList &participants, bool create=false);
     ThreadPtr getSingleThread(EventType type, const QString &accountId, const QString &threadId, bool useCache = true);
 
     bool writeTextEvents(const History::TextEvents &textEvents);
     bool writeVoiceEvents(const History::VoiceEvents &voiceEvents);
+
     bool removeThreads(const Threads &threads);
     bool removeEvents(const Events &events);
 

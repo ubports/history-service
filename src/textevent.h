@@ -47,7 +47,6 @@ public:
     QDateTime readTimestamp() const;
 
 protected:
-    TextEvent();
     TextEvent(const QString &accountId,
               const QString &threadId,
               const QString &eventId,

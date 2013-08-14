@@ -33,11 +33,17 @@ public:
     explicit SQLiteHistoryWriter(QObject *parent = 0);
 
     History::ThreadPtr createThreadForParticipants(const QString &accountId, History::EventType type, const QStringList &participants);
+    bool removeThread(const History::ThreadPtr &thread);
+
     bool writeTextEvent(const History::TextEventPtr &event);
+    bool removeTextEvent(const History::TextEventPtr &event);
+
     bool writeVoiceEvent(const History::VoiceEventPtr &event);
+    bool removeVoiceEvent(const History::VoiceEventPtr &event);
 
     bool beginBatchOperation();
     bool endBatchOperation();
+    bool rollbackBatchOperation();
 };
 
 #endif // SQLITEHISTORYWRITER_H

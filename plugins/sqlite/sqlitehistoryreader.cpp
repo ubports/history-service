@@ -133,3 +133,20 @@ History::ThreadPtr SQLiteHistoryReader::getSingleThread(History::EventType type,
 
     return thread;
 }
+
+History::EventPtr SQLiteHistoryReader::getSingleEvent(History::EventType type, const QString &accountId, const QString &threadId, const QString &eventId)
+{
+    History::IntersectionFilterPtr intersectionFilter(new History::IntersectionFilter());
+    intersectionFilter->append(History::FilterPtr(new History::Filter("accountId", accountId)));
+    intersectionFilter->append(History::FilterPtr(new History::Filter("threadId", threadId)));
+    intersectionFilter->append(History::FilterPtr(new History::Filter("eventId", eventId)));
+
+    History::EventViewPtr view = queryEvents(type, History::SortPtr(), intersectionFilter);
+    History::Events events = view->nextPage();
+    History::EventPtr event;
+    if (!events.isEmpty()) {
+        event = events.first();
+    }
+
+    return event;
+}

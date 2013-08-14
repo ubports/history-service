@@ -33,7 +33,6 @@ class TextEvent;
 class TextEventPrivate : public EventPrivate
 {
 public:
-    TextEventPrivate();
     TextEventPrivate(const QString &theAccountId,
                     const QString &theThreadId,
                     const QString &theEventId,

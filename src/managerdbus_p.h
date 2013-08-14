@@ -76,7 +76,7 @@ protected Q_SLOTS:
     void onEventsRemoved(const QList<QVariantMap> &events);
 
 protected:
-    Threads threadsFromProperties(const QList<QVariantMap> &threadsProperties);
+    Threads threadsFromProperties(const QList<QVariantMap> &threadsProperties, bool fakeIfNull = false);
     QList<QVariantMap> threadsToProperties(const Threads &threads);
 
     Events eventsFromProperties(const QList<QVariantMap> &eventsProperties);

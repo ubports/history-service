@@ -35,11 +35,17 @@ public:
     virtual ~Writer() {}
 
     virtual ThreadPtr createThreadForParticipants(const QString &accountId, EventType type, const QStringList &participants) = 0;
+    virtual bool removeThread(const History::ThreadPtr &thread) { return false; }
+
     virtual bool writeTextEvent(const TextEventPtr &event) = 0;
+    virtual bool removeTextEvent(const History::TextEventPtr &event) { return false; }
+
     virtual bool writeVoiceEvent(const VoiceEventPtr &event) = 0;
+    virtual bool removeVoiceEvent(const History::VoiceEventPtr &event) { return false; }
 
     virtual bool beginBatchOperation() {}
     virtual bool endBatchOperation() {}
+    virtual bool rollbackBatchOperation() {}
 
     // TODO: check if there is the need to write MMS entries
 };

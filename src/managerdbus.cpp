@@ -110,7 +110,7 @@ void ManagerDBus::onThreadsModified(const QList<QVariantMap> &threads)
 
 void ManagerDBus::onThreadsRemoved(const QList<QVariantMap> &threads)
 {
-    Q_EMIT threadsRemoved(threadsFromProperties(threads));
+    Q_EMIT threadsRemoved(threadsFromProperties(threads, true));
 }
 
 void ManagerDBus::onEventsAdded(const QList<QVariantMap> &events)
@@ -128,7 +128,7 @@ void ManagerDBus::onEventsRemoved(const QList<QVariantMap> &events)
     Q_EMIT eventsRemoved(eventsFromProperties(events));
 }
 
-Threads ManagerDBus::threadsFromProperties(const QList<QVariantMap> &threadsProperties)
+Threads ManagerDBus::threadsFromProperties(const QList<QVariantMap> &threadsProperties, bool fakeIfNull)
 {
     Threads threads;
     Manager *manager = Manager::instance();
@@ -140,6 +140,8 @@ Threads ManagerDBus::threadsFromProperties(const QList<QVariantMap> &threadsProp
         ThreadPtr thread = manager->getSingleThread(type, accountId, threadId, false);
         if (!thread.isNull()) {
             threads << thread;
+        } else if (fakeIfNull) {
+            threads << History::ItemFactory::instance()->createThread(accountId, threadId, type, QStringList());
         }
     }
 

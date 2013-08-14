@@ -40,6 +40,7 @@ public:
                                              const QStringList &participants);
 
     History::ThreadPtr getSingleThread(History::EventType type, const QString &accountId, const QString &threadId);
+    History::EventPtr getSingleEvent(History::EventType type, const QString &accountId, const QString &threadId, const QString &eventId);
 };
 
 #endif // SQLITEHISTORYREADER_H
