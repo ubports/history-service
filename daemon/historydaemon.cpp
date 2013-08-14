@@ -132,7 +132,7 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
                                                                                     message.received(),
                                                                                     true, // message is always unread until it reaches HistoryDaemon::onMessageRead
                                                                                     message.text(),
-                                                                                    History::TextMessage, // FIXME: add support for MMS
+                                                                                    History::MessageTypeText, // FIXME: add support for MMS
                                                                                     History::MessageFlags(),
                                                                                     QDateTime());
     History::Manager::instance()->writeTextEvents(History::TextEvents() << event);
@@ -163,7 +163,7 @@ void HistoryDaemon::onMessageSent(const Tp::TextChannelPtr textChannel, const Tp
                                                                                     QDateTime::currentDateTime(), // FIXME: check why message.sent() is empty
                                                                                     false, // outgoing messages are never new (unseen)
                                                                                     message.text(),
-                                                                                    History::TextMessage, // FIXME: add support for MMS
+                                                                                    History::MessageTypeText, // FIXME: add support for MMS
                                                                                     History::MessageFlags(),
                                                                                     QDateTime());
     History::Manager::instance()->writeTextEvents(History::TextEvents() << event);

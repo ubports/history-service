@@ -46,7 +46,7 @@ public:
     MessageFlags messageFlags() const;
     QDateTime readTimestamp() const;
 
-private:
+protected:
     TextEvent();
     TextEvent(const QString &accountId,
               const QString &threadId,

@@ -88,7 +88,7 @@ void TelepathyLogImporter::onMessageEventLoaded(const Tpl::TextEventPtr &event)
                                                                                            event->timestamp(),
                                                                                            false,
                                                                                            event->message(),
-                                                                                           History::TextMessage,
+                                                                                           History::MessageTypeText,
                                                                                            History::MessageFlags(),
                                                                                            event->timestamp());
     mTextEvents << historyEvent;

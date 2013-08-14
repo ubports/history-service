@@ -44,7 +44,7 @@ public:
     bool missed() const;
     QTime duration() const;
 
-private:
+protected:
     VoiceEvent();
     VoiceEvent(const QString &accountId,
                const QString &threadId,
