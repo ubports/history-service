@@ -32,7 +32,6 @@ namespace History
 class EventPrivate
 {
 public:
-    EventPrivate();
     EventPrivate(const QString &theAccountId,
                        const QString &theThreadId,
                        const QString &theEventId,
