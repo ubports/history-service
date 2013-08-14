@@ -21,6 +21,7 @@
 
 #include "textevent.h"
 #include "textevent_p.h"
+#include "texteventattachment.h"
 
 namespace History {
 
@@ -39,10 +40,11 @@ TextEventPrivate::TextEventPrivate(const QString &theAccountId,
                                  const QString &theMessage,
                                  MessageType theMessageType,
                                  MessageFlags theMessageFlags,
-                                 const QDateTime &theReadTimestamp) :
+                                 const QDateTime &theReadTimestamp,
+                                 const TextEventAttachments &theAttachments) :
     EventPrivate(theAccountId, theThreadId, theEventId, theSender, theTimestamp, theNewEvent),
     message(theMessage), messageType(theMessageType), messageFlags(theMessageFlags),
-    readTimestamp(theReadTimestamp)
+    readTimestamp(theReadTimestamp), attachments(theAttachments)
 {
 }
 
@@ -66,9 +68,10 @@ TextEvent::TextEvent(const QString &accountId,
                    const QString &message,
                    MessageType messageType,
                    MessageFlags messageFlags,
-                   const QDateTime &readTimestamp)
+                   const QDateTime &readTimestamp,
+                   const TextEventAttachments &attachments)
     : Event(*new TextEventPrivate(accountId, threadId, eventId, sender, timestamp, newEvent,
-                                       message, messageType, messageFlags, readTimestamp))
+                                       message, messageType, messageFlags, readTimestamp, attachments))
 {
 }
 
@@ -117,6 +120,12 @@ QDateTime TextEvent::readTimestamp() const
 {
     Q_D(const TextEvent);
     return d->readTimestamp;
+}
+
+TextEventAttachments TextEvent::attachments() const
+{
+    Q_D(const TextEvent);
+    return d->attachments;
 }
 
 }

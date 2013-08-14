@@ -94,8 +94,14 @@ History::Events SQLiteHistoryEventView::nextPage()
     }
 
     while (mQuery.next()) {
+        History::TextEventAttachments attachments;
+        History::MessageType messageType;
         switch (mType) {
         case History::EventTypeText:
+            messageType = (History::MessageType) mQuery.value(7).toInt();
+            if (messageType == History::MultiPartMessage)  {
+                // TODO create attachments
+            }
             events << History::ItemFactory::instance()->createTextEvent(mQuery.value(0).toString(),
                                                                         mQuery.value(1).toString(),
                                                                         mQuery.value(2).toString(),
@@ -103,9 +109,10 @@ History::Events SQLiteHistoryEventView::nextPage()
                                                                         mQuery.value(4).toDateTime(),
                                                                         mQuery.value(5).toBool(),
                                                                         mQuery.value(6).toString(),
-                                                                        (History::MessageType) mQuery.value(7).toInt(),
+                                                                        messageType,
                                                                         (History::MessageFlags) mQuery.value(8).toInt(),
-                                                                        mQuery.value(9).toDateTime());
+                                                                        mQuery.value(9).toDateTime(),
+                                                                        attachments);
             break;
         case History::EventTypeVoice:
             events << History::ItemFactory::instance()->createVoiceEvent(mQuery.value(0).toString(),
