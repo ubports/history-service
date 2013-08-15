@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/database">
         <file>schema.sql</file>
+        <file>upgrade/v1.sql</file>
     </qresource>
 </RCC>

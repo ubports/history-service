@@ -40,7 +40,7 @@ public:
 
 protected:
     bool createOrUpdateDatabase();
-    QStringList parseSchema();
+    QStringList parseSchemaFile(const QString &fileName);
 
 private:
     explicit SQLiteDatabase(QObject *parent = 0);

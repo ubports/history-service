@@ -91,8 +91,6 @@ BEGIN
         WHERE accountId=new.accountId AND threadId=new.threadId AND type=1;
 END#
 
-// this trigger was wrong in a previous version of the schema, so remove it and recreate
-DROP TRIGGER IF EXISTS voice_events_delete_trigger#
 CREATE TRIGGER IF NOT EXISTS voice_events_delete_trigger  AFTER DELETE ON voice_events
 FOR EACH ROW
 BEGIN
@@ -159,8 +157,6 @@ BEGIN
         WHERE accountId=new.accountId AND threadId=new.threadId AND type=0;
 END#
 
-// this trigger was wrong in a previous version of the schema, so remove it and recreate
-DROP TRIGGER IF EXISTS text_events_delete_trigger#
 CREATE TRIGGER IF NOT EXISTS text_events_delete_trigger  AFTER DELETE ON text_events
 FOR EACH ROW
 BEGIN
@@ -182,7 +178,3 @@ BEGIN
         ORDER BY timestamp DESC LIMIT 1)
         WHERE accountId=old.accountId AND threadId=old.threadId AND type=0;
 END#
-
-// ***** schema updates section ******
-DROP TRIGGER IF EXISTS text_threads_delete_trigger#
-DROP TRIGGER IF EXISTS voice_threads_delete_trigger#

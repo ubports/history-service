@@ -89,10 +89,7 @@ bool SQLiteDatabase::rollbackTransaction()
 
 bool SQLiteDatabase::createOrUpdateDatabase()
 {
-    qDebug() << __PRETTY_FUNCTION__;
-
-    bool needsUpdate = !QFile(mDatabasePath).exists();
-    QStringList statements = parseSchema();
+    bool create = !QFile(mDatabasePath).exists();
 
     if (!mDatabase.open()) {
         return false;
@@ -100,21 +97,32 @@ bool SQLiteDatabase::createOrUpdateDatabase()
 
     QSqlQuery query(mDatabase);
 
+    // even if we don´t need to create the database, we need to parse the schema to get the database version
+    QStringList statements = parseSchemaFile(":/database/schema.sql");
+
     // at this point if needsUpdate is false it means the database already exists
     // but we still need to check its schema version
-    if (!needsUpdate) {
+    if (!create) {
+        // if the database already exists, we don´t need to create the tables
+        statements.clear();
         query.exec("SELECT * FROM schema_version");
-        if (!query.exec() || query.next() && query.value(0).toInt() < mSchemaVersion) {
-            needsUpdate = true;
+        if (!query.exec() || !query.next()) {
+            return false;
+        }
+
+        int currentVersion = query.value(0).toInt();
+        while (currentVersion < mSchemaVersion) {
+            statements += parseSchemaFile(QString(":/database/upgrade/v%1.sql").arg(QString::number(currentVersion)));
+            ++currentVersion;
         }
     }
 
     // if at this point needsUpdate is still false, it means the database is up-to-date
-    if (!needsUpdate) {
-        qDebug() << "Database up-to-date. No schema update needed.";
+    if (statements.isEmpty()) {
         return true;
     }
 
+    qDebug() << "Database update required...";
     beginTransation();
 
     Q_FOREACH(QString statement, statements) {
@@ -143,14 +151,16 @@ bool SQLiteDatabase::createOrUpdateDatabase()
     }
 
     finishTransaction();
+    qDebug() << "... done.";
 
     return true;
 }
 
-QStringList SQLiteDatabase::parseSchema()
+QStringList SQLiteDatabase::parseSchemaFile(const QString &fileName)
 {
-    QFile schema(":/database/schema.sql");
+    QFile schema(fileName);
     if (!schema.open(QFile::ReadOnly)) {
+        qCritical() << "Failed to open " << fileName;
         return QStringList();
     }
 
