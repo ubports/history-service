@@ -105,7 +105,7 @@ History::Events SQLiteHistoryEventView::nextPage()
             messageType = (History::MessageType) mQuery.value(7).toInt();
             if (messageType == History::MultiPartMessage)  {
                 QSqlQuery attachmentsQuery(SQLiteDatabase::instance()->database());
-                attachmentsQuery.prepare("SELECT attachmentId, contentType, filePath FROM text_event_attachments"
+                attachmentsQuery.prepare("SELECT attachmentId, contentType, filePath FROM text_event_attachments "
                                     "WHERE accountId=:accountId and threadId=:threadId and eventId=:eventId");
                 attachmentsQuery.bindValue(":accountId", accountId);
                 attachmentsQuery.bindValue(":threadId", threadId);
