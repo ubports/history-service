@@ -2,6 +2,7 @@
 
 set(plugin_SRCS
     historyeventmodel.cpp
+    historyqmltexteventattachment.cpp
     historyqmlfilter.cpp
     historyqmlintersectionfilter.cpp
     historyqmlplugin.cpp
@@ -13,6 +14,7 @@ set(plugin_SRCS
 
 set(plugin_HDRS
     historyeventmodel.h
+    historyqmltexteventattachment.h
     historyqmlfilter.h
     historyqmlintersectionfilter.h
     historyqmlplugin.h

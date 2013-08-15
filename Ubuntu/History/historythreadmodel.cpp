@@ -26,8 +26,11 @@
 #include "manager.h"
 #include "threadview.h"
 #include "textevent.h"
+#include "texteventattachment.h"
 #include "voiceevent.h"
 #include <QDebug>
+
+Q_DECLARE_METATYPE(History::TextEventAttachments)
 
 HistoryThreadModel::HistoryThreadModel(QObject *parent) :
     QAbstractListModel(parent), mCanFetchMore(true), mFilter(0), mSort(0), mType(EventTypeText)
@@ -50,6 +53,7 @@ HistoryThreadModel::HistoryThreadModel(QObject *parent) :
     mRoles[LastEventTextMessageTypeRole] = "eventTextMessageType";
     mRoles[LastEventTextMessageFlagsRole] = "eventTextMessageFlags";
     mRoles[LastEventTextReadTimestampRole] = "eventTextReadTimestamp";
+    mRoles[LastEventTextAttachments] = "eventTextAttachments";
     mRoles[LastEventCallMissedRole] = "eventCallMissed";
     mRoles[LastEventCallDurationRole] = "eventCallDuration";
 
@@ -151,6 +155,11 @@ QVariant HistoryThreadModel::data(const QModelIndex &index, int role) const
     case LastEventTextReadTimestampRole:
         if (!textEvent.isNull()) {
             result = textEvent->readTimestamp();
+        }
+        break;
+    case LastEventTextAttachments:
+        if (!textEvent.isNull()) {
+            result = QVariant::fromValue(textEvent->attachments());
         }
         break;
     case LastEventCallMissedRole:

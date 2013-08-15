@@ -26,6 +26,7 @@
 #include "historyqmlunionfilter.h"
 #include "historythreadmodel.h"
 #include "historyeventmodel.h"
+#include "historyqmltexteventattachment.h"
 #include "sortproxymodel.h"
 #include <QQmlEngine>
 #include <qqml.h>
@@ -47,5 +48,6 @@ void HistoryQmlPlugin::registerTypes(const char *uri)
     qmlRegisterType<HistoryQmlSort>(uri, 0, 1, "HistorySort");
     qmlRegisterType<HistoryQmlUnionFilter>(uri, 0, 1, "HistoryUnionFilter");
     qmlRegisterType<SortProxyModel>(uri, 0, 1, "SortProxyModel");
+    qmlRegisterUncreatableType<HistoryQmlTextEventAttachment>(uri, 0, 1, "HistoryTextEventAttachment", "");
     qmlRegisterUncreatableType<QAbstractItemModel>(uri, 0, 1, "QAbstractItemModel", "");
 }

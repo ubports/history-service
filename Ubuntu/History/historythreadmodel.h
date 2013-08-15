@@ -58,6 +58,7 @@ public:
         LastEventTextMessageTypeRole,
         LastEventTextMessageFlagsRole,
         LastEventTextReadTimestampRole,
+        LastEventTextAttachments,
         LastEventCallMissedRole,
         LastEventCallDurationRole
     };
