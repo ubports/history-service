@@ -1,6 +1,9 @@
 <RCC>
     <qresource prefix="/database">
-        <file>schema.sql</file>
-        <file>upgrade/v1.sql</file>
+        <file>schema/schema.sql</file>
+        <file>schema/v10.sql</file>
+        <file>schema/v1.sql</file>
+        <file>schema/v2.sql</file>
+        <file>schema/version.info</file>
     </qresource>
 </RCC>
