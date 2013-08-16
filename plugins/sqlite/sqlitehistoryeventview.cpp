@@ -118,10 +118,10 @@ History::Events SQLiteHistoryEventView::nextPage()
                                 new History::TextEventAttachment(accountId,
                                                                  threadId,
                                                                  eventId,
-                                                                 attachmentsQuery.value("attachmentId").toString(),
-                                                                 attachmentsQuery.value("contentType").toString(),
-                                                                 attachmentsQuery.value("filePath").toString(),
-                                                                 (History::AttachmentFlag) attachmentsQuery.value("status").toInt()));
+                                                                 attachmentsQuery.value(0).toString(),
+                                                                 attachmentsQuery.value(1).toString(),
+                                                                 attachmentsQuery.value(2).toString(),
+                                                                 (History::AttachmentFlag) attachmentsQuery.value(3).toInt()));
                     attachments << attachment;
 
                 }
