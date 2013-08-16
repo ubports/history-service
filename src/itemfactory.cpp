@@ -124,6 +124,7 @@ TextEventPtr ItemFactory::createTextEvent(const QString &accountId,
                                           MessageType messageType,
                                           MessageFlags messageFlags,
                                           const QDateTime &readTimestamp,
+                                          const QString &subject,
                                           const TextEventAttachments &attachments)
 {
     Q_D(ItemFactory);
@@ -146,6 +147,7 @@ TextEventPtr ItemFactory::createTextEvent(const QString &accountId,
                                            messageType,
                                            messageFlags,
                                            readTimestamp,
+                                           subject,
                                            attachments));
         d->events[hash] = event;
     }

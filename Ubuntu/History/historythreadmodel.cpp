@@ -27,6 +27,7 @@
 #include "threadview.h"
 #include "textevent.h"
 #include "texteventattachment.h"
+#include "historyqmltexteventattachment.h"
 #include "voiceevent.h"
 #include <QDebug>
 
@@ -53,7 +54,8 @@ HistoryThreadModel::HistoryThreadModel(QObject *parent) :
     mRoles[LastEventTextMessageTypeRole] = "eventTextMessageType";
     mRoles[LastEventTextMessageFlagsRole] = "eventTextMessageFlags";
     mRoles[LastEventTextReadTimestampRole] = "eventTextReadTimestamp";
-    mRoles[LastEventTextAttachments] = "eventTextAttachments";
+    mRoles[LastEventTextAttachmentsRole] = "eventTextAttachments";
+    mRoles[LastEventTextSubjectRole] = "eventTextSubject";
     mRoles[LastEventCallMissedRole] = "eventCallMissed";
     mRoles[LastEventCallDurationRole] = "eventCallDuration";
 
@@ -157,9 +159,23 @@ QVariant HistoryThreadModel::data(const QModelIndex &index, int role) const
             result = textEvent->readTimestamp();
         }
         break;
-    case LastEventTextAttachments:
+    case LastEventTextSubjectRole:
         if (!textEvent.isNull()) {
-            result = QVariant::fromValue(textEvent->attachments());
+            result = textEvent->subject();
+        }
+        break;
+    case LastEventTextAttachmentsRole:
+        if (!textEvent.isNull()) {
+            if (mAttachmentCache.contains(textEvent)) {
+                result = mAttachmentCache.value(textEvent);
+            } else {
+                QList<QVariant> attachments;
+                Q_FOREACH(const History::TextEventAttachmentPtr &attachment, textEvent->attachments()) {
+                    attachments << QVariant::fromValue(new HistoryQmlTextEventAttachment(attachment));
+                }
+                mAttachmentCache[textEvent] = attachments;
+                result = attachments;
+            }
         }
         break;
     case LastEventCallMissedRole:

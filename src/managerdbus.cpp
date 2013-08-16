@@ -179,12 +179,13 @@ Events ManagerDBus::eventsFromProperties(const QList<QVariantMap> &eventsPropert
         switch (type) {
         case EventTypeText: {
             QString message = map["message"].toString();
+            QString subject = map["subject"].toString();
             MessageType messageType = (MessageType) map["messageType"].toInt();
             MessageFlags messageFlags = (MessageFlags) map["messageFlags"].toInt();
             QDateTime readTimestamp;
             map["readTimestamp"].value<QDBusArgument>() >> readTimestamp;
             event = History::ItemFactory::instance()->createTextEvent(accountId, threadId, eventId, senderId, timestamp, newEvent,
-                                                                      message, messageType, messageFlags, readTimestamp);
+                                                                      message, messageType, messageFlags, readTimestamp, subject);
             break;
         }
         case EventTypeVoice: {

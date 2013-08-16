@@ -56,6 +56,7 @@ public:
                                  MessageType messageType,
                                  MessageFlags messageFlags,
                                  const QDateTime &readTimestamp,
+                                 const QString &subject = QString(),
                                  const TextEventAttachments &attachments = TextEventAttachments());
     VoiceEventPtr createVoiceEvent(const QString &accountId,
                                    const QString &threadId,

@@ -45,6 +45,7 @@ public:
     MessageType messageType() const;
     MessageFlags messageFlags() const;
     QDateTime readTimestamp() const;
+    QString subject() const;
     TextEventAttachments attachments() const;
 
 private:
@@ -58,6 +59,7 @@ private:
               MessageType messageType,
               MessageFlags messageFlags,
               const QDateTime &readTimestamp,
+              const QString &subject = QString(),
               const TextEventAttachments &attachments = TextEventAttachments());
 };
 

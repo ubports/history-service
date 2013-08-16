@@ -58,7 +58,8 @@ public:
         LastEventTextMessageTypeRole,
         LastEventTextMessageFlagsRole,
         LastEventTextReadTimestampRole,
-        LastEventTextAttachments,
+        LastEventTextSubjectRole,
+        LastEventTextAttachmentsRole,
         LastEventCallMissedRole,
         LastEventCallDurationRole
     };
@@ -104,6 +105,7 @@ private:
     HistoryQmlSort *mSort;
     EventType mType;
     QHash<int, QByteArray> mRoles;
+    mutable QMap<History::TextEventPtr, QList<QVariant> > mAttachmentCache;
 };
 
 #endif // HISTORYTHREADMODEL_H

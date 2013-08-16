@@ -33,9 +33,10 @@ TextEventAttachmentPrivate::TextEventAttachmentPrivate(const QString &theAccount
                                            const QString &theEventId,
                                            const QString &theAttachmentId,
                                            const QString &theContentType,
-                                           const QString &theFilePath) :
+                                           const QString &theFilePath,
+                                           const AttachmentFlag &theStatus) :
     accountId(theAccountId), threadId(theThreadId), eventId(theEventId), attachmentId(theAttachmentId),
-    contentType(theContentType), filePath(theFilePath)
+    contentType(theContentType), filePath(theFilePath), status(theStatus)
 {
 }
 
@@ -49,8 +50,9 @@ TextEventAttachment::TextEventAttachment(const QString &accountId,
                const QString &threadId, const QString &eventId,
                const QString &attachmentId,
                const QString &contentType,
-               const QString &filePath)
-: d_ptr(new TextEventAttachmentPrivate(accountId, threadId, eventId, attachmentId, contentType, filePath))
+               const QString &filePath,
+               const AttachmentFlag &status)
+: d_ptr(new TextEventAttachmentPrivate(accountId, threadId, eventId, attachmentId, contentType, filePath, status))
 {
 }
 
@@ -94,6 +96,12 @@ QString TextEventAttachment::filePath() const
     return d->filePath;
 }
 
+AttachmentFlag TextEventAttachment::status() const
+{
+    Q_D(const TextEventAttachment);
+    return d->status;
+}
+
 QVariantMap TextEventAttachment::properties() const
 {
     Q_D(const TextEventAttachment);
@@ -105,6 +113,7 @@ QVariantMap TextEventAttachment::properties() const
     map["attachmentId"] = d->attachmentId;
     map["contentType"] = d->contentType;
     map["filePath"] = d->filePath;
+    map["status"] = d->status;
 
     return map;
 }

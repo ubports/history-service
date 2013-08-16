@@ -43,12 +43,14 @@ public:
                     MessageType theMessageType,
                     MessageFlags theMessageFlags,
                     const QDateTime &theReadTimestamp,
+                    const QString &theSubject,
                     const TextEventAttachments &theAttachments);
     ~TextEventPrivate();
     QString message;
     MessageType messageType;
     MessageFlags messageFlags;
     QDateTime readTimestamp;
+    QString subject;
     TextEventAttachments attachments;
 };
 

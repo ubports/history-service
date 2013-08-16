@@ -44,7 +44,8 @@ public:
            const QString &eventId,
            const QString &attachmentId,
            const QString &contentType,
-           const QString &filePath);
+           const QString &filePath,
+           const History::AttachmentFlag &status = History::AttachmentDownloaded);
     virtual ~TextEventAttachment();
 
     QString accountId() const;
@@ -53,6 +54,7 @@ public:
     QString attachmentId() const;
     QString contentType() const;
     QString filePath() const;
+    History::AttachmentFlag status() const;
     virtual QVariantMap properties() const;
 
 protected:

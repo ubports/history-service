@@ -60,7 +60,7 @@ SQLiteHistoryEventView::SQLiteHistoryEventView(SQLiteHistoryReader *reader,
     switch (type) {
     case History::EventTypeText:
         queryText += QString("SELECT accountId, threadId, eventId, senderId, timestamp, newEvent,"
-                             "message, messageType, messageFlags, readTimestamp FROM text_events %1 %2").arg(condition, order);
+                             "message, messageType, messageFlags, readTimestamp, subject FROM text_events %1 %2").arg(condition, order);
         break;
     case History::EventTypeVoice:
         queryText += QString("SELECT accountId, threadId, eventId, senderId, timestamp, newEvent,"
@@ -105,7 +105,7 @@ History::Events SQLiteHistoryEventView::nextPage()
             messageType = (History::MessageType) mQuery.value(7).toInt();
             if (messageType == History::MultiPartMessage)  {
                 QSqlQuery attachmentsQuery(SQLiteDatabase::instance()->database());
-                attachmentsQuery.prepare("SELECT attachmentId, contentType, filePath FROM text_event_attachments "
+                attachmentsQuery.prepare("SELECT attachmentId, contentType, filePath, status FROM text_event_attachments "
                                     "WHERE accountId=:accountId and threadId=:threadId and eventId=:eventId");
                 attachmentsQuery.bindValue(":accountId", accountId);
                 attachmentsQuery.bindValue(":threadId", threadId);
@@ -120,7 +120,8 @@ History::Events SQLiteHistoryEventView::nextPage()
                                                                  eventId,
                                                                  attachmentsQuery.value("attachmentId").toString(),
                                                                  attachmentsQuery.value("contentType").toString(),
-                                                                 attachmentsQuery.value("filePath").toString()));
+                                                                 attachmentsQuery.value("filePath").toString(),
+                                                                 (History::AttachmentFlag) attachmentsQuery.value("status").toInt()));
                     attachments << attachment;
 
                 }
@@ -136,6 +137,7 @@ History::Events SQLiteHistoryEventView::nextPage()
                                                                         messageType,
                                                                         (History::MessageFlags) mQuery.value(8).toInt(),
                                                                         mQuery.value(9).toDateTime(),
+                                                                        mQuery.value(10).toString(),
                                                                         attachments);
             break;
         case History::EventTypeVoice:

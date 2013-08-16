@@ -63,3 +63,8 @@ QString HistoryQmlTextEventAttachment::filePath() const
     return mAttachment->filePath();
 }
 
+int HistoryQmlTextEventAttachment::status() const
+{
+    return mAttachment->status();
+}
+

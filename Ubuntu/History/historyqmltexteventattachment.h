@@ -32,13 +32,13 @@ class HistoryQmlTextEventAttachment : public QObject
 {
     Q_OBJECT
     Q_ENUMS(AttachmentFlag)
-    Q_PROPERTY(QString accountId READ accountId NOTIFY accountIdChanged)
-    Q_PROPERTY(QString threadId READ threadId NOTIFY threadIdChanged)
-    Q_PROPERTY(QString eventId READ eventId NOTIFY eventIdChanged)
-    Q_PROPERTY(QString attachmentId READ attachmentId NOTIFY attachmentIdChanged)
-
-    Q_PROPERTY(QString contentType READ contentType NOTIFY contentTypeChanged)
-    Q_PROPERTY(QString filePath READ filePath NOTIFY filePathChanged)
+    Q_PROPERTY(QString accountId READ accountId)
+    Q_PROPERTY(QString threadId READ threadId)
+    Q_PROPERTY(QString eventId READ eventId)
+    Q_PROPERTY(QString attachmentId READ attachmentId)
+    Q_PROPERTY(QString contentType READ contentType)
+    Q_PROPERTY(QString filePath READ filePath)
+    Q_PROPERTY(int status READ status)
 public:
     enum AttachmentFlag
     {
@@ -54,14 +54,7 @@ public:
     QString attachmentId() const;
     QString contentType() const;
     QString filePath() const;
-
-Q_SIGNALS:
-    void accountIdChanged();
-    void threadIdChanged();
-    void eventIdChanged();
-    void attachmentIdChanged();
-    void contentTypeChanged();
-    void filePathChanged();
+    int status() const;
 
 protected:
     History::TextEventAttachmentPtr mAttachment;

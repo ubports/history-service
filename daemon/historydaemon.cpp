@@ -145,6 +145,10 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
         dir.cd("history-service");
 
         Q_FOREACH(const Tp::MessagePart &part, message.parts()) {
+            // ignore the header part
+            if (part["content-type"].variant().toString().isEmpty()) {
+                continue;
+            }
             mmsStoragePath = dir.absoluteFilePath(QString("attachments/%1/%2/%3/").
                                                   arg(normalizedAccountId,
                                                       normalizedThreadId,
@@ -177,6 +181,7 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
                                                                   History::MultiPartMessage,
                                                                   History::MessageFlags(),
                                                                   QDateTime(),
+                                                                  message.header()["subject"].variant().toString(),
                                                                   attachments);
 
     } else {

@@ -48,7 +48,8 @@ public:
         TextMessageTypeRole,
         TextMessageFlagsRole,
         TextReadTimestampRole,
-        TextMessageAttachments,
+        TextReadSubjectRole,
+        TextMessageAttachmentsRole,
         CallMissedRole,
         CallDurationRole
     };
