@@ -14,8 +14,11 @@ macro(generate_tests)
 endmacro(generate_tests)
 
 generate_tests(
+    FilterTest
+    IntersectionFilterTest
     ItemFactoryTest
     ThreadTest
     TextEventTest
+    UnionFilterTest
     VoiceEventTest
     )
