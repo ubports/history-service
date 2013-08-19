@@ -155,11 +155,12 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
                                                       normalizedEventId));
 
             QFile file(mmsStoragePath+QString::number(count++));
-            if (!file.open(QIODevice::WriteOnly)) {
+            if (!dir.mkpath(mmsStoragePath) || !file.open(QIODevice::WriteOnly)) {
                 qWarning() << "Failed to save attachment";
                 continue;
             }
             file.write(part["content"].variant().toByteArray());
+            file.close();
             History::TextEventAttachmentPtr attachment = History::TextEventAttachmentPtr(new History::TextEventAttachment(
                                                          thread->accountId(),
                                                          thread->threadId(),
@@ -167,7 +168,6 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
                                                          part["identifier"].variant().toString(),
                                                          part["content-type"].variant().toString(),
                                                          file.fileName()));
-            file.close();
             attachments << attachment;
         }
 
