@@ -1,8 +1,8 @@
-CREATE TABLE IF NOT EXISTS schema_version (
+CREATE TABLE schema_version (
     version int
 );
 
-CREATE TABLE IF NOT EXISTS threads (
+CREATE TABLE threads (
     accountId varchar(255),
     threadId varchar(255),
     type tinyint,
@@ -12,14 +12,14 @@ CREATE TABLE IF NOT EXISTS threads (
     unreadCount int
 );
 
-CREATE TABLE IF NOT EXISTS thread_participants (
+CREATE TABLE thread_participants (
     accountId varchar(255),
     threadId varchar(255),
     type tinyint,
     participantId varchar(255)
 );
 
-CREATE TABLE IF NOT EXISTS voice_events (
+CREATE TABLE voice_events (
     accountId varchar(255),
     threadId varchar(255),
     eventId varchar(255),
@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS voice_events (
     missed bool
 );
 
-CREATE TABLE IF NOT EXISTS text_events (
+CREATE TABLE text_events (
     accountId varchar(255),
     threadId varchar(255),
     eventId varchar(255),
@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS text_events (
     readTimestamp datetime
 );
 
-CREATE TRIGGER IF NOT EXISTS voice_events_insert_trigger  AFTER INSERT ON voice_events
+CREATE TRIGGER voice_events_insert_trigger  AFTER INSERT ON voice_events
 FOR EACH ROW
 BEGIN
     UPDATE threads SET count=(SELECT count(eventId) FROM voice_events WHERE
@@ -65,7 +65,7 @@ BEGIN
         WHERE accountId=new.accountId AND threadId=new.threadId AND type=1;
 END;
 
-CREATE TRIGGER IF NOT EXISTS voice_events_update_trigger  AFTER UPDATE ON voice_events
+CREATE TRIGGER voice_events_update_trigger  AFTER UPDATE ON voice_events
 FOR EACH ROW
 BEGIN
     UPDATE threads SET count=(SELECT count(eventId) FROM voice_events WHERE
@@ -87,7 +87,7 @@ BEGIN
         WHERE accountId=new.accountId AND threadId=new.threadId AND type=1;
 END;
 
-CREATE TRIGGER IF NOT EXISTS voice_events_delete_trigger  AFTER DELETE ON voice_events
+CREATE TRIGGER voice_events_delete_trigger  AFTER DELETE ON voice_events
 FOR EACH ROW
 BEGIN
     UPDATE threads SET count=(SELECT count(eventId) FROM voice_events WHERE
@@ -109,7 +109,7 @@ BEGIN
         WHERE accountId=new.accountId AND threadId=new.threadId AND type=1;
 END;
 
-CREATE TRIGGER IF NOT EXISTS text_events_insert_trigger  AFTER INSERT ON text_events
+CREATE TRIGGER text_events_insert_trigger  AFTER INSERT ON text_events
 FOR EACH ROW
 BEGIN
     UPDATE threads SET count=(SELECT count(eventId) FROM text_events WHERE
@@ -131,7 +131,7 @@ BEGIN
         WHERE accountId=new.accountId AND threadId=new.threadId AND type=0;
 END;
 
-CREATE TRIGGER IF NOT EXISTS text_events_update_trigger  AFTER UPDATE ON text_events
+CREATE TRIGGER text_events_update_trigger  AFTER UPDATE ON text_events
 FOR EACH ROW
 BEGIN
     UPDATE threads SET count=(SELECT count(eventId) FROM text_events WHERE
@@ -153,7 +153,7 @@ BEGIN
         WHERE accountId=new.accountId AND threadId=new.threadId AND type=0;
 END;
 
-CREATE TRIGGER IF NOT EXISTS text_events_delete_trigger  AFTER DELETE ON text_events
+CREATE TRIGGER text_events_delete_trigger  AFTER DELETE ON text_events
 FOR EACH ROW
 BEGIN
     UPDATE threads SET count=(SELECT count(eventId) FROM text_events WHERE
