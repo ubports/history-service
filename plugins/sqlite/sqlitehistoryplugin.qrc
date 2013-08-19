@@ -1,7 +1,6 @@
 <RCC>
     <qresource prefix="/database">
         <file>schema/schema.sql</file>
-        <file>schema/v10.sql</file>
         <file>schema/v1.sql</file>
         <file>schema/v2.sql</file>
         <file>schema/version.info</file>
