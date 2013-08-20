@@ -24,12 +24,7 @@
 #include "historyqmltexteventattachment.h"
 
 HistoryQmlTextEventAttachment::HistoryQmlTextEventAttachment(const History::TextEventAttachmentPtr &attachment, QObject *parent) :
-    QObject(parent), mAttachment(new History::TextEventAttachment(attachment->accountId(),
-                                                                  attachment->threadId(),
-                                                                  attachment->eventId(),
-                                                                  attachment->attachmentId(),
-                                                                  attachment->contentType(),
-                                                                  attachment->filePath()))
+    QObject(parent), mAttachment(attachment)
 {
 }
 
