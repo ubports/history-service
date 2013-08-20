@@ -154,7 +154,7 @@ QVariant HistoryEventModel::data(const QModelIndex &index, int role) const
             } else {
                 QList<QVariant> attachments;
                 Q_FOREACH(const History::TextEventAttachmentPtr &attachment, textEvent->attachments()) {
-                    attachments << QVariant::fromValue(new HistoryQmlTextEventAttachment(attachment));
+                    attachments << QVariant::fromValue(new HistoryQmlTextEventAttachment(attachment, const_cast<HistoryEventModel*>(this)));
                 }
                 mAttachmentCache[textEvent] = attachments;
                 result = attachments;
@@ -320,6 +320,14 @@ void HistoryEventModel::updateQuery()
             SIGNAL(eventsRemoved(History::Events)),
             SLOT(onEventsRemoved(History::Events)));
     mCanFetchMore = true;
+
+    Q_FOREACH(const QVariant &attachment, mAttachmentCache) {
+        HistoryQmlTextEventAttachment *qmlAttachment = attachment.value<HistoryQmlTextEventAttachment *>();
+        if(qmlAttachment) {
+            qmlAttachment->deleteLater();
+        }
+    }
+    mAttachmentCache.clear();
 
     // get an initial set of results
     fetchMore(QModelIndex());

@@ -171,7 +171,7 @@ QVariant HistoryThreadModel::data(const QModelIndex &index, int role) const
             } else {
                 QList<QVariant> attachments;
                 Q_FOREACH(const History::TextEventAttachmentPtr &attachment, textEvent->attachments()) {
-                    attachments << QVariant::fromValue(new HistoryQmlTextEventAttachment(attachment));
+                    attachments << QVariant::fromValue(new HistoryQmlTextEventAttachment(attachment, const_cast<HistoryThreadModel*>(this)));
                 }
                 mAttachmentCache[textEvent] = attachments;
                 result = attachments;
@@ -337,6 +337,14 @@ void HistoryThreadModel::updateQuery()
     connect(mThreadView.data(),
             SIGNAL(threadsRemoved(History::Threads)),
             SLOT(onThreadsRemoved(History::Threads)));
+
+    Q_FOREACH(const QVariant &attachment, mAttachmentCache) {
+        HistoryQmlTextEventAttachment *qmlAttachment = attachment.value<HistoryQmlTextEventAttachment *>();
+        if(qmlAttachment) {
+            qmlAttachment->deleteLater();
+        }
+    }
+    mAttachmentCache.clear();
 
     fetchMore(QModelIndex());
 }

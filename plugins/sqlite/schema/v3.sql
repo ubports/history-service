@@ -1,4 +1,4 @@
-ALTER TABLE text_events add column subject varchar(256);
+ALTER TABLE text_events ADD COLUMN subject varchar(256);
 
 CREATE TABLE IF NOT EXISTS text_event_attachments (
     accountId varchar(255),
