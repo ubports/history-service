@@ -46,6 +46,13 @@ TextEventAttachmentPrivate::~TextEventAttachmentPrivate()
 
 // ------------- TextEventAttachment ------------------------------------------------------
 
+/*!
+ * \class TextEventAttachment
+ *
+ * \brief The TextEventAttachment class provides a way to store a single attachment
+ *  belonging to a text event.
+ *
+ */
 TextEventAttachment::TextEventAttachment(const QString &accountId,
                const QString &threadId, const QString &eventId,
                const QString &attachmentId,
@@ -60,42 +67,64 @@ TextEventAttachment::~TextEventAttachment()
 {
 }
 
+
+/*!
+ * \brief Returns the account ID this attachment belongs to.
+ */
 QString TextEventAttachment::accountId() const
 {
     Q_D(const TextEventAttachment);
     return d->accountId;
 }
 
+/*!
+ * \brief Returns the thread ID this attachment belongs to.
+ */
 QString TextEventAttachment::threadId() const
 {
     Q_D(const TextEventAttachment);
     return d->threadId;
 }
 
+/*!
+ * \brief Returns the event ID this attachment belongs to.
+ */
 QString TextEventAttachment::eventId() const
 {
     Q_D(const TextEventAttachment);
     return d->eventId;
 }
 
+/*!
+ * \brief Returns the attachment ID
+ */
 QString TextEventAttachment::attachmentId() const
 {
     Q_D(const TextEventAttachment);
     return d->attachmentId;
 }
 
+/*!
+ * \brief Returns the content type of this attachment
+ */
 QString TextEventAttachment::contentType() const
 {
     Q_D(const TextEventAttachment);
     return d->contentType;
 }
 
+/*!
+ * \brief Returns the file path of this attachment
+ */
 QString TextEventAttachment::filePath() const
 {
     Q_D(const TextEventAttachment);
     return d->filePath;
 }
 
+/*!
+ * \brief Returns the status of this attachment
+ */
 AttachmentFlag TextEventAttachment::status() const
 {
     Q_D(const TextEventAttachment);
