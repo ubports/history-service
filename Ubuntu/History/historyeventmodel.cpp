@@ -27,6 +27,8 @@
 #include "manager.h"
 #include "thread.h"
 #include "textevent.h"
+#include "texteventattachment.h"
+#include "historyqmltexteventattachment.h"
 #include "thread.h"
 #include "voiceevent.h"
 #include <QDebug>
@@ -48,7 +50,9 @@ HistoryEventModel::HistoryEventModel(QObject *parent) :
     mRoles[TextMessageRole] = "textMessage";
     mRoles[TextMessageTypeRole] = "textMessageType";
     mRoles[TextMessageFlagsRole] = "textMessageFlags";
+    mRoles[TextMessageAttachmentsRole] = "textMessageAttachments";
     mRoles[TextReadTimestampRole] = "textReadTimestamp";
+    mRoles[TextReadSubjectRole] = "textSubject";
     mRoles[CallMissedRole] = "callMissed";
     mRoles[CallDurationRole] = "callDuration";
 
@@ -136,6 +140,25 @@ QVariant HistoryEventModel::data(const QModelIndex &index, int role) const
     case TextReadTimestampRole:
         if (!textEvent.isNull()) {
             result = textEvent->readTimestamp();
+        }
+        break;
+    case TextReadSubjectRole:
+        if (!textEvent.isNull()) {
+            result = textEvent->subject();
+        }
+        break;
+    case TextMessageAttachmentsRole:
+        if (!textEvent.isNull()) {
+            if (mAttachmentCache.contains(textEvent)) {
+                result = mAttachmentCache.value(textEvent);
+            } else {
+                QList<QVariant> attachments;
+                Q_FOREACH(const History::TextEventAttachmentPtr &attachment, textEvent->attachments()) {
+                    attachments << QVariant::fromValue(new HistoryQmlTextEventAttachment(attachment, const_cast<HistoryEventModel*>(this)));
+                }
+                mAttachmentCache[textEvent] = attachments;
+                result = attachments;
+            }
         }
         break;
     case CallMissedRole:
@@ -297,6 +320,14 @@ void HistoryEventModel::updateQuery()
             SIGNAL(eventsRemoved(History::Events)),
             SLOT(onEventsRemoved(History::Events)));
     mCanFetchMore = true;
+
+    Q_FOREACH(const QVariant &attachment, mAttachmentCache) {
+        HistoryQmlTextEventAttachment *qmlAttachment = attachment.value<HistoryQmlTextEventAttachment *>();
+        if(qmlAttachment) {
+            qmlAttachment->deleteLater();
+        }
+    }
+    mAttachmentCache.clear();
 
     // get an initial set of results
     fetchMore(QModelIndex());

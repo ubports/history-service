@@ -45,6 +45,8 @@ public:
     MessageType messageType() const;
     MessageFlags messageFlags() const;
     QDateTime readTimestamp() const;
+    QString subject() const;
+    TextEventAttachments attachments() const;
 
 private:
     TextEvent(const QString &accountId,
@@ -56,7 +58,9 @@ private:
               const QString &message,
               MessageType messageType,
               MessageFlags messageFlags,
-              const QDateTime &readTimestamp);
+              const QDateTime &readTimestamp,
+              const QString &subject = QString(),
+              const TextEventAttachments &attachments = TextEventAttachments());
 };
 
 }

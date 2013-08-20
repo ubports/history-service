@@ -26,8 +26,12 @@
 #include "manager.h"
 #include "threadview.h"
 #include "textevent.h"
+#include "texteventattachment.h"
+#include "historyqmltexteventattachment.h"
 #include "voiceevent.h"
 #include <QDebug>
+
+Q_DECLARE_METATYPE(History::TextEventAttachments)
 
 HistoryThreadModel::HistoryThreadModel(QObject *parent) :
     QAbstractListModel(parent), mCanFetchMore(true), mFilter(0), mSort(0), mType(EventTypeText)
@@ -50,6 +54,8 @@ HistoryThreadModel::HistoryThreadModel(QObject *parent) :
     mRoles[LastEventTextMessageTypeRole] = "eventTextMessageType";
     mRoles[LastEventTextMessageFlagsRole] = "eventTextMessageFlags";
     mRoles[LastEventTextReadTimestampRole] = "eventTextReadTimestamp";
+    mRoles[LastEventTextAttachmentsRole] = "eventTextAttachments";
+    mRoles[LastEventTextSubjectRole] = "eventTextSubject";
     mRoles[LastEventCallMissedRole] = "eventCallMissed";
     mRoles[LastEventCallDurationRole] = "eventCallDuration";
 
@@ -151,6 +157,25 @@ QVariant HistoryThreadModel::data(const QModelIndex &index, int role) const
     case LastEventTextReadTimestampRole:
         if (!textEvent.isNull()) {
             result = textEvent->readTimestamp();
+        }
+        break;
+    case LastEventTextSubjectRole:
+        if (!textEvent.isNull()) {
+            result = textEvent->subject();
+        }
+        break;
+    case LastEventTextAttachmentsRole:
+        if (!textEvent.isNull()) {
+            if (mAttachmentCache.contains(textEvent)) {
+                result = mAttachmentCache.value(textEvent);
+            } else {
+                QList<QVariant> attachments;
+                Q_FOREACH(const History::TextEventAttachmentPtr &attachment, textEvent->attachments()) {
+                    attachments << QVariant::fromValue(new HistoryQmlTextEventAttachment(attachment, const_cast<HistoryThreadModel*>(this)));
+                }
+                mAttachmentCache[textEvent] = attachments;
+                result = attachments;
+            }
         }
         break;
     case LastEventCallMissedRole:
@@ -312,6 +337,14 @@ void HistoryThreadModel::updateQuery()
     connect(mThreadView.data(),
             SIGNAL(threadsRemoved(History::Threads)),
             SLOT(onThreadsRemoved(History::Threads)));
+
+    Q_FOREACH(const QVariant &attachment, mAttachmentCache) {
+        HistoryQmlTextEventAttachment *qmlAttachment = attachment.value<HistoryQmlTextEventAttachment *>();
+        if(qmlAttachment) {
+            qmlAttachment->deleteLater();
+        }
+    }
+    mAttachmentCache.clear();
 
     fetchMore(QModelIndex());
 }

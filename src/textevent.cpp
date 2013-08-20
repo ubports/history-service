@@ -21,6 +21,7 @@
 
 #include "textevent.h"
 #include "textevent_p.h"
+#include "texteventattachment.h"
 
 namespace History {
 
@@ -35,10 +36,12 @@ TextEventPrivate::TextEventPrivate(const QString &theAccountId,
                                  const QString &theMessage,
                                  MessageType theMessageType,
                                  MessageFlags theMessageFlags,
-                                 const QDateTime &theReadTimestamp) :
+                                 const QDateTime &theReadTimestamp,
+                                 const QString &theSubject,
+                                 const TextEventAttachments &theAttachments) :
     EventPrivate(theAccountId, theThreadId, theEventId, theSender, theTimestamp, theNewEvent),
     message(theMessage), messageType(theMessageType), messageFlags(theMessageFlags),
-    readTimestamp(theReadTimestamp)
+    readTimestamp(theReadTimestamp), subject(theSubject), attachments(theAttachments)
 {
 }
 
@@ -57,9 +60,11 @@ TextEvent::TextEvent(const QString &accountId,
                    const QString &message,
                    MessageType messageType,
                    MessageFlags messageFlags,
-                   const QDateTime &readTimestamp)
+                   const QDateTime &readTimestamp,
+                   const QString &subject,
+                   const TextEventAttachments &attachments)
     : Event(*new TextEventPrivate(accountId, threadId, eventId, sender, timestamp, newEvent,
-                                       message, messageType, messageFlags, readTimestamp))
+                                       message, messageType, messageFlags, readTimestamp, subject, attachments))
 {
 }
 
@@ -82,6 +87,7 @@ QVariantMap TextEvent::properties() const
     map["messageType"] = (int)d->messageType;
     map["messageFlags"] = (int)d->messageFlags;
     map["readTimestamp"] = d->readTimestamp;
+    map["subject"] = d->subject;
 
     return map;
 }
@@ -108,6 +114,18 @@ QDateTime TextEvent::readTimestamp() const
 {
     Q_D(const TextEvent);
     return d->readTimestamp;
+}
+
+QString TextEvent::subject() const
+{
+    Q_D(const TextEvent);
+    return d->subject;
+}
+
+TextEventAttachments TextEvent::attachments() const
+{
+    Q_D(const TextEvent);
+    return d->attachments;
 }
 
 }
