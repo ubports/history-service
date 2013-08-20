@@ -1,4 +1,4 @@
-// SCHEMA_VERSION=3
+// SCHEMA_VERSION=2
 // Database schema version table
 CREATE TABLE IF NOT EXISTS schema_version (
     version int
@@ -44,15 +44,6 @@ CREATE TABLE IF NOT EXISTS text_events (
     messageType tinyint,
     messageFlags tinyint,
     readTimestamp datetime
-)#
-
-CREATE TABLE IF NOT EXISTS text_event_attachments (
-    accountId varchar(255),
-    threadId varchar(255),
-    eventId varchar(255),
-    attachmentId varchar(255),
-    contentType varchar(255),
-    filePath varchar(255)
 )#
 
 // ***** trigger creation section ******
