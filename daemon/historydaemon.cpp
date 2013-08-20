@@ -131,12 +131,18 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
     int count = 1;
     History::TextEventPtr event;
     History::TextEventAttachments attachments;
-    QString normalizedAccountId = QString(QCryptographicHash::hash(thread->accountId().toLatin1(), QCryptographicHash::Md5).toHex());
-    QString normalizedThreadId = QString(QCryptographicHash::hash(thread->threadId().toLatin1(), QCryptographicHash::Md5).toHex());
-    QString normalizedEventId = QString(QCryptographicHash::hash(message.messageToken().toLatin1(), QCryptographicHash::Md5).toHex());
+    History::MessageType type = History::TextMessage;
+    QString subject;
 
     if (message.hasNonTextContent()) {
+        QString normalizedAccountId = QString(QCryptographicHash::hash(thread->accountId().toLatin1(), QCryptographicHash::Md5).toHex());
+        QString normalizedThreadId = QString(QCryptographicHash::hash(thread->threadId().toLatin1(), QCryptographicHash::Md5).toHex());
+        QString normalizedEventId = QString(QCryptographicHash::hash(message.messageToken().toLatin1(), QCryptographicHash::Md5).toHex());
         QString mmsStoragePath = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation);
+
+        type = History::MultiPartMessage;
+        subject = message.header()["subject"].variant().toString();
+
         QDir dir(mmsStoragePath);
         if (!dir.exists("history-service") && !dir.mkpath("history-service")) {
             qDebug() << "Failed to create dir";
@@ -170,32 +176,21 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
                                                          file.fileName()));
             attachments << attachment;
         }
-
-        event = History::ItemFactory::instance()->createTextEvent(thread->accountId(),
-                                                                  thread->threadId(),
-                                                                  message.messageToken(),
-                                                                  message.sender()->id(),
-                                                                  message.received(),
-                                                                  true, // message is always unread until it reaches HistoryDaemon::onMessageRead
-                                                                  message.text(),
-                                                                  History::MultiPartMessage,
-                                                                  History::MessageFlags(),
-                                                                  QDateTime(),
-                                                                  message.header()["subject"].variant().toString(),
-                                                                  attachments);
-
-    } else {
-        event = History::ItemFactory::instance()->createTextEvent(thread->accountId(),
-                                                                  thread->threadId(),
-                                                                  message.messageToken(),
-                                                                  message.sender()->id(),
-                                                                  message.received(),
-                                                                  true, // message is always unread until it reaches HistoryDaemon::onMessageRead
-                                                                  message.text(),
-                                                                  History::TextMessage,
-                                                                  History::MessageFlags(),
-                                                                  QDateTime());
     }
+
+    event = History::ItemFactory::instance()->createTextEvent(thread->accountId(),
+                                                              thread->threadId(),
+                                                              message.messageToken(),
+                                                              message.sender()->id(),
+                                                              message.received(),
+                                                              true, // message is always unread until it reaches HistoryDaemon::onMessageRead
+                                                              message.text(),
+                                                              type,
+                                                              History::MessageFlags(),
+                                                              QDateTime(),
+                                                              subject,
+                                                              attachments);
+
     History::Manager::instance()->writeTextEvents(History::TextEvents() << event);
 }
 
