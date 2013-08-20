@@ -17,6 +17,7 @@ generate_tests(
     FilterTest
     IntersectionFilterTest
     ItemFactoryTest
+    SortTest
     ThreadTest
     TextEventTest
     UnionFilterTest
