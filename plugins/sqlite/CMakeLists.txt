@@ -28,10 +28,10 @@ add_library(sqlitehistoryplugin SHARED ${plugin_SRCS} ${plugin_HDRS} ${plugin_RE
 qt5_use_modules(sqlitehistoryplugin Core Sql)
 
 # update the .qrc file automatically when there are new schema files
-file(GLOB QRC_RESOURCE_FILES schema/*.sql schema/*.info)
+file(GLOB QRC_RESOURCE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/schema/*.sql ${CMAKE_CURRENT_SOURCE_DIR}/schema/*.info)
 set(QRC_FILE ${CMAKE_CURRENT_SOURCE_DIR}/sqlitehistoryplugin.qrc)
 add_custom_command(
-    TARGET qrc_update
+    OUTPUT ${QRC_FILE}
     COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/update_qrc.sh ${QRC_FILE}
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     DEPENDS ${QRC_RESOURCE_FILES}
