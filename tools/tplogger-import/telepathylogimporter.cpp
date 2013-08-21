@@ -53,6 +53,7 @@ void TelepathyLogImporter::onCallEventLoaded(const Tpl::CallEventPtr &event)
     History::ThreadPtr thread = History::Manager::instance()->threadForParticipants(event->account()->uniqueIdentifier(),
                                                                                     History::EventTypeVoice,
                                                                                     QStringList() << remote->identifier(),
+                                                                                    History::MatchCaseSensitive,
                                                                                     true);
     QString eventId = QString("%1:%2").arg(thread->threadId()).arg(event->timestamp().toString());
     History::VoiceEventPtr historyEvent = History::ItemFactory::instance()->createVoiceEvent(thread->accountId(),
@@ -80,6 +81,7 @@ void TelepathyLogImporter::onMessageEventLoaded(const Tpl::TextEventPtr &event)
     History::ThreadPtr thread = History::Manager::instance()->threadForParticipants(event->account()->uniqueIdentifier(),
                                                                                     History::EventTypeText,
                                                                                     QStringList() << remote->identifier(),
+                                                                                    History::MatchCaseSensitive,
                                                                                     true);
     History::TextEventPtr historyEvent = History::ItemFactory::instance()->createTextEvent(thread->accountId(),
                                                                                            thread->threadId(),

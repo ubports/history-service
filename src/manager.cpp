@@ -148,6 +148,7 @@ EventPtr Manager::getSingleEvent(EventType type, const QString &accountId, const
 ThreadPtr Manager::threadForParticipants(const QString &accountId,
                                          EventType type,
                                          const QStringList &participants,
+                                         MatchFlags matchFlags,
                                          bool create)
 {
     Q_D(Manager);
@@ -156,7 +157,7 @@ ThreadPtr Manager::threadForParticipants(const QString &accountId,
         return ThreadPtr();
     }
 
-    ThreadPtr thread = d->reader->threadForParticipants(accountId, type, participants);
+    ThreadPtr thread = d->reader->threadForParticipants(accountId, type, participants, matchFlags);
 
     // if the thread is null, create a new if possible/desired.
     if (thread.isNull() && create) {

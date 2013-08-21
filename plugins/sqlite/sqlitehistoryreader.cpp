@@ -19,6 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "phoneutils_p.h"
 #include "sqlitehistoryreader.h"
 #include "sqlitehistoryeventview.h"
 #include "sqlitehistorythreadview.h"
@@ -52,7 +53,10 @@ History::EventViewPtr SQLiteHistoryReader::queryEvents(History::EventType type,
     return History::EventViewPtr(new SQLiteHistoryEventView(this, type, sort, filter));
 }
 
-History::ThreadPtr SQLiteHistoryReader::threadForParticipants(const QString &accountId, History::EventType type, const QStringList &participants)
+History::ThreadPtr SQLiteHistoryReader::threadForParticipants(const QString &accountId,
+                                                              History::EventType type,
+                                                              const QStringList &participants,
+                                                              History::MatchFlags matchFlags)
 {
     if (participants.isEmpty()) {
         return History::ThreadPtr(0);
@@ -63,8 +67,15 @@ History::ThreadPtr SQLiteHistoryReader::threadForParticipants(const QString &acc
     // select all the threads the first participant is listed in, and from that list
     // check if any of the threads has all the other participants listed
     // FIXME: find a better way to do this
-    query.prepare("SELECT threadId FROM thread_participants WHERE "
-                  "participantId=:participantId AND type=:type AND accountId=:accountId");
+    QString queryString("SELECT threadId FROM thread_participants WHERE %1 AND type=:type AND accountId=:accountId");
+
+    // FIXME: for now we just compare differently when using MatchPhoneNumber
+    if (matchFlags & History::MatchPhoneNumber) {
+        queryString = queryString.arg("comparePhoneNumbers(participantId, :participantId)");
+    } else {
+        queryString = queryString.arg("participantId=:participantId");
+    }
+    query.prepare(queryString);
     query.bindValue(":participantId", participants[0]);
     query.bindValue(":type", type);
     query.bindValue(":accountId", accountId);
@@ -99,7 +110,21 @@ History::ThreadPtr SQLiteHistoryReader::threadForParticipants(const QString &acc
         // and now compare the lists
         bool found = true;
         Q_FOREACH(const QString &participant, participants) {
-            if (!threadParticipants.contains(participant)) {
+            if (matchFlags & History::MatchPhoneNumber) {
+                // we need to iterate the list and call the phone number comparing function for
+                // each participant from the given thread
+                bool inList = false;
+                Q_FOREACH(const QString &threadParticipant, threadParticipants) {
+                    if (PhoneUtils::comparePhoneNumbers(threadParticipant, participant)) {
+                        inList = true;
+                        break;
+                    }
+                }
+                if (!inList) {
+                    found = false;
+                    break;
+                }
+            } else if (!threadParticipants.contains(participant)) {
                 found = false;
                 break;
             }

@@ -54,6 +54,9 @@ HistoryDaemon::HistoryDaemon(QObject *parent)
     connect(&mTextObserver,
             SIGNAL(messageRead(Tp::TextChannelPtr,Tp::ReceivedMessage)),
             SLOT(onMessageRead(Tp::TextChannelPtr,Tp::ReceivedMessage)));
+
+    // FIXME: we need to do this in a better way, but for now this should do
+    mProtocolFlags["ofono"] = History::MatchPhoneNumber;
 }
 
 HistoryDaemon::~HistoryDaemon()
@@ -82,6 +85,7 @@ void HistoryDaemon::onCallEnded(const Tp::CallChannelPtr &channel)
     History::ThreadPtr thread = History::Manager::instance()->threadForParticipants(channel->property("accountId").toString(),
                                                                                     History::EventTypeVoice,
                                                                                     participants,
+                                                                                    matchFlagsForChannel(channel),
                                                                                     true);
 
     // fill the call info
@@ -127,6 +131,7 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
     History::ThreadPtr thread = History::Manager::instance()->threadForParticipants(textChannel->property("accountId").toString(),
                                                                                     History::EventTypeText,
                                                                                     participants,
+                                                                                    matchFlagsForChannel(textChannel),
                                                                                     true);
     int count = 1;
     History::TextEventPtr event;
@@ -211,6 +216,7 @@ void HistoryDaemon::onMessageSent(const Tp::TextChannelPtr textChannel, const Tp
     History::ThreadPtr thread = History::Manager::instance()->threadForParticipants(textChannel->property("accountId").toString(),
                                                                                     History::EventTypeText,
                                                                                     participants,
+                                                                                    matchFlagsForChannel(textChannel),
                                                                                     true);
     History::TextEventPtr event = History::ItemFactory::instance()->createTextEvent(thread->accountId(),
                                                                                     thread->threadId(),
@@ -223,4 +229,15 @@ void HistoryDaemon::onMessageSent(const Tp::TextChannelPtr textChannel, const Tp
                                                                                     History::MessageFlags(),
                                                                                     QDateTime());
     History::Manager::instance()->writeTextEvents(History::TextEvents() << event);
+}
+
+History::MatchFlags HistoryDaemon::matchFlagsForChannel(const Tp::ChannelPtr &channel)
+{
+    QString protocol = channel->connection()->protocolName();
+    if (mProtocolFlags.contains(protocol)) {
+        return mProtocolFlags[protocol];
+    }
+
+    // default to this value
+    return History::MatchCaseSensitive;
 }

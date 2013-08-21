@@ -19,13 +19,27 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "phoneutils_p.h"
+#include "sqlite3.h"
 #include "sqlitedatabase.h"
 #include <QStandardPaths>
+#include <QSqlDriver>
 #include <QSqlQuery>
 #include <QSqlError>
 #include <QDebug>
 #include <QFile>
 #include <QDir>
+
+Q_DECLARE_OPAQUE_POINTER(sqlite3*)
+Q_DECLARE_METATYPE(sqlite3*)
+
+// custom sqlite function "comparePhoneNumbers" used to compare IDs if necessary
+void comparePhoneNumbers(sqlite3_context *context, int argc, sqlite3_value **argv)
+{
+    QString arg1((const char*)sqlite3_value_text(argv[0]));
+    QString arg2((const char*)sqlite3_value_text(argv[1]));
+    sqlite3_result_int(context, (int)PhoneUtils::comparePhoneNumbers(arg1, arg2));
+}
 
 SQLiteDatabase::SQLiteDatabase(QObject *parent) :
     QObject(parent), mSchemaVersion(0)
@@ -94,6 +108,10 @@ bool SQLiteDatabase::createOrUpdateDatabase()
     if (!mDatabase.open()) {
         return false;
     }
+
+    // create the comparePhoneNumbers custom sqlite function
+    sqlite3 *handle = database().driver()->handle().value<sqlite3*>();
+    sqlite3_create_function(handle, "comparePhoneNumbers", 2, SQLITE_ANY, NULL, &comparePhoneNumbers, NULL, NULL);
 
     parseVersionInfo();
 
