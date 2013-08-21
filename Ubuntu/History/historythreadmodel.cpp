@@ -337,6 +337,9 @@ void HistoryThreadModel::updateQuery()
     connect(mThreadView.data(),
             SIGNAL(threadsRemoved(History::Threads)),
             SLOT(onThreadsRemoved(History::Threads)));
+    connect(mThreadView.data(),
+            SIGNAL(invalidated()),
+            SLOT(updateQuery()));
 
     Q_FOREACH(const QVariant &attachment, mAttachmentCache) {
         HistoryQmlTextEventAttachment *qmlAttachment = attachment.value<HistoryQmlTextEventAttachment *>();
