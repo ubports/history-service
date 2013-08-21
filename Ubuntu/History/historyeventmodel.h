@@ -48,6 +48,8 @@ public:
         TextMessageTypeRole,
         TextMessageFlagsRole,
         TextReadTimestampRole,
+        TextReadSubjectRole,
+        TextMessageAttachmentsRole,
         CallMissedRole,
         CallDurationRole
     };
@@ -93,6 +95,7 @@ private:
     HistoryQmlSort *mSort;
     HistoryThreadModel::EventType mType;
     QHash<int, QByteArray> mRoles;
+    mutable QMap<History::TextEventPtr, QList<QVariant> > mAttachmentCache;
 };
 
 #endif // HISTORYEVENTMODEL_H

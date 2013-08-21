@@ -89,41 +89,46 @@ bool SQLiteDatabase::rollbackTransaction()
 
 bool SQLiteDatabase::createOrUpdateDatabase()
 {
-    qDebug() << __PRETTY_FUNCTION__;
-
-    bool needsUpdate = !QFile(mDatabasePath).exists();
-    QStringList statements = parseSchema();
+    bool create = !QFile(mDatabasePath).exists();
 
     if (!mDatabase.open()) {
         return false;
     }
 
+    parseVersionInfo();
+
     QSqlQuery query(mDatabase);
 
-    // at this point if needsUpdate is false it means the database already exists
-    // but we still need to check its schema version
-    if (!needsUpdate) {
+    QStringList statements;
+
+    if (create) {
+         statements = parseSchemaFile(":/database/schema/schema.sql");
+    } else {
+        // if the database already exists, we don´t need to create the tables
+        // only check if an update is needed
         query.exec("SELECT * FROM schema_version");
-        if (!query.exec() || query.next() && query.value(0).toInt() < mSchemaVersion) {
-            needsUpdate = true;
+        if (!query.exec() || !query.next()) {
+            return false;
+        }
+
+        int upgradeToVersion = query.value(0).toInt() + 1;
+        while (upgradeToVersion <= mSchemaVersion) {
+            statements += parseSchemaFile(QString(":/database/schema/v%1.sql").arg(QString::number(upgradeToVersion)));
+            ++upgradeToVersion;
         }
     }
 
     // if at this point needsUpdate is still false, it means the database is up-to-date
-    if (!needsUpdate) {
-        qDebug() << "Database up-to-date. No schema update needed.";
+    if (statements.isEmpty()) {
         return true;
     }
 
+    qDebug() << "Database update required...";
     beginTransation();
 
-    Q_FOREACH(QString statement, statements) {
-        if (statement.trimmed().isEmpty()) {
-            continue;
-        }
-
-        if (!query.exec(statement.remove("#"))) {
-            qCritical() << "Failed to create table. SQL Statement:" << query.lastQuery() << "Error:" << query.lastError();
+    Q_FOREACH(const QString &statement, statements) {
+        if (!query.exec(statement)) {
+            qCritical() << "Failed to create or update database. SQL Statements:" << query.lastQuery() << "Error:" << query.lastError();
             rollbackTransaction();
             return false;
         }
@@ -143,32 +148,64 @@ bool SQLiteDatabase::createOrUpdateDatabase()
     }
 
     finishTransaction();
+    qDebug() << "... done.";
 
     return true;
 }
 
-QStringList SQLiteDatabase::parseSchema()
+QStringList SQLiteDatabase::parseSchemaFile(const QString &fileName)
 {
-    QFile schema(":/database/schema.sql");
+    QFile schema(fileName);
     if (!schema.open(QFile::ReadOnly)) {
+        qCritical() << "Failed to open " << fileName;
         return QStringList();
     }
 
-    QTextStream stream(&schema);
+    bool parsingBlock = false;
+    QString statement;
+    QStringList statements;
 
-    QStringList lines;
+    // FIXME: this parser is very basic, it needs to be improved in the future
+    //        it does a lot of assumptions based on the structure of the schema.sql file
+
+    QTextStream stream(&schema);
     while (!stream.atEnd()) {
         QString line = stream.readLine();
+        bool statementEnded = false;
 
-        // strip out comments
-        if (line.trimmed().startsWith("//")) {
-            if (line.indexOf("SCHEMA_VERSION") >= 0) {
-                mSchemaVersion = line.split("=")[1].toInt();
-                qDebug() << "Got schema version:" << mSchemaVersion;
+        statement += line;
+
+        // check if we are parsing a trigger command
+        if (line.trimmed().startsWith("CREATE TRIGGER", Qt::CaseInsensitive)) {
+            parsingBlock = true;
+        } else if (parsingBlock) {
+            if (line.contains("END;")) {
+                parsingBlock = false;
+                statementEnded = true;
             }
-            continue;
+        } else if (statement.contains(";")) {
+            statementEnded = true;
         }
-        lines << line;
+
+        statement += "\n";
+
+        if (statementEnded) {
+            statements.append(statement);
+            statement.clear();
+        }
     }
-    return lines.join(" ").split("#");
+
+    return statements;
+}
+
+void SQLiteDatabase::parseVersionInfo()
+{
+    QFile schema(":/database/schema/version.info");
+    if (!schema.open(QFile::ReadOnly)) {
+        qDebug() << schema.error();
+        qCritical() << "Failed to get database version";
+    }
+
+    QString version = schema.readAll();
+    mSchemaVersion = version.toInt();
 }

@@ -25,6 +25,7 @@
 #include "sort.h"
 #include "itemfactory.h"
 #include "textevent.h"
+#include "texteventattachment.h"
 #include "voiceevent.h"
 #include <QDebug>
 #include <QSqlError>
@@ -59,7 +60,7 @@ SQLiteHistoryEventView::SQLiteHistoryEventView(SQLiteHistoryReader *reader,
     switch (type) {
     case History::EventTypeText:
         queryText += QString("SELECT accountId, threadId, eventId, senderId, timestamp, newEvent,"
-                             "message, messageType, messageFlags, readTimestamp FROM text_events %1 %2").arg(condition, order);
+                             "message, messageType, messageFlags, readTimestamp, subject FROM text_events %1 %2").arg(condition, order);
         break;
     case History::EventTypeVoice:
         queryText += QString("SELECT accountId, threadId, eventId, senderId, timestamp, newEvent,"
@@ -94,23 +95,55 @@ History::Events SQLiteHistoryEventView::nextPage()
     }
 
     while (mQuery.next()) {
+        History::TextEventAttachments attachments;
+        History::MessageType messageType;
+        QString accountId = mQuery.value(0).toString();
+        QString threadId = mQuery.value(1).toString();
+        QString eventId = mQuery.value(2).toString();
         switch (mType) {
         case History::EventTypeText:
-            events << History::ItemFactory::instance()->createTextEvent(mQuery.value(0).toString(),
-                                                                        mQuery.value(1).toString(),
-                                                                        mQuery.value(2).toString(),
+            messageType = (History::MessageType) mQuery.value(7).toInt();
+            if (messageType == History::MessageTypeMultiParty)  {
+                QSqlQuery attachmentsQuery(SQLiteDatabase::instance()->database());
+                attachmentsQuery.prepare("SELECT attachmentId, contentType, filePath, status FROM text_event_attachments "
+                                    "WHERE accountId=:accountId and threadId=:threadId and eventId=:eventId");
+                attachmentsQuery.bindValue(":accountId", accountId);
+                attachmentsQuery.bindValue(":threadId", threadId);
+                attachmentsQuery.bindValue(":eventId", eventId);
+                if (!attachmentsQuery.exec()) {
+                    qCritical() << "Error:" << attachmentsQuery.lastError() << attachmentsQuery.lastQuery();
+                }
+                while (attachmentsQuery.next()) {
+                    History::TextEventAttachmentPtr attachment = History::TextEventAttachmentPtr(
+                                new History::TextEventAttachment(accountId,
+                                                                 threadId,
+                                                                 eventId,
+                                                                 attachmentsQuery.value(0).toString(),
+                                                                 attachmentsQuery.value(1).toString(),
+                                                                 attachmentsQuery.value(2).toString(),
+                                                                 (History::AttachmentFlag) attachmentsQuery.value(3).toInt()));
+                    attachments << attachment;
+
+                }
+                attachmentsQuery.clear();
+            }
+            events << History::ItemFactory::instance()->createTextEvent(accountId,
+                                                                        threadId,
+                                                                        eventId,
                                                                         mQuery.value(3).toString(),
                                                                         mQuery.value(4).toDateTime(),
                                                                         mQuery.value(5).toBool(),
                                                                         mQuery.value(6).toString(),
-                                                                        (History::MessageType) mQuery.value(7).toInt(),
+                                                                        messageType,
                                                                         (History::MessageFlags) mQuery.value(8).toInt(),
-                                                                        mQuery.value(9).toDateTime());
+                                                                        mQuery.value(9).toDateTime(),
+                                                                        mQuery.value(10).toString(),
+                                                                        attachments);
             break;
         case History::EventTypeVoice:
-            events << History::ItemFactory::instance()->createVoiceEvent(mQuery.value(0).toString(),
-                                                                         mQuery.value(1).toString(),
-                                                                         mQuery.value(2).toString(),
+            events << History::ItemFactory::instance()->createVoiceEvent(accountId,
+                                                                         threadId,
+                                                                         eventId,
                                                                          mQuery.value(3).toString(),
                                                                          mQuery.value(4).toDateTime(),
                                                                          mQuery.value(5).toBool(),

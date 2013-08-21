@@ -24,6 +24,7 @@
 #include "itemfactory.h"
 #include "thread.h"
 #include "textevent.h"
+#include "texteventattachment.h"
 #include "voiceevent.h"
 #include <QDebug>
 #include <QSqlQuery>
@@ -115,6 +116,24 @@ bool SQLiteHistoryWriter::writeTextEvent(const History::TextEventPtr &event)
     if (!query.exec()) {
         qCritical() << "Failed to save the text event: Error:" << query.lastError() << query.lastQuery();
         return false;
+    }
+
+    if (event->messageType() == History::MessageTypeMultiParty) {
+        // save the attachments
+        Q_FOREACH(const History::TextEventAttachmentPtr &attachment, event->attachments()) {
+            query.prepare("INSERT INTO text_event_attachments VALUES (:accountId, :threadId, :eventId, :attachmentId, :contentType, :filePath, :status)");
+            query.bindValue(":accountId", attachment->accountId());
+            query.bindValue(":threadId", attachment->threadId());
+            query.bindValue(":eventId", attachment->eventId());
+            query.bindValue(":attachmentId", attachment->attachmentId());
+            query.bindValue(":contentType", attachment->contentType());
+            query.bindValue(":filePath", attachment->filePath());
+            query.bindValue(":status", attachment->status());
+            if (!query.exec()) {
+                qCritical() << "Failed to save attachment to database" << query.lastError() << attachment->attachmentId() << attachment->contentType();
+                return false;
+            }
+        }
     }
 
     return true;

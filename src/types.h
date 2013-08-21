@@ -37,6 +37,7 @@ DefineSharedPointer(Plugin)
 DefineSharedPointer(Reader)
 DefineSharedPointer(Sort)
 DefineSharedPointer(TextEvent)
+DefineSharedPointer(TextEventAttachment)
 DefineSharedPointer(Thread)
 DefineSharedPointer(ThreadView)
 DefineSharedPointer(UnionFilter)
@@ -74,6 +75,15 @@ enum MessageType
     MessageTypeText,
     MessageTypeMultiParty
 };
+
+enum AttachmentFlag
+{
+    AttachmentDownloaded,
+    AttachmentPending,
+    AttachmentError
+};
+
+Q_DECLARE_FLAGS(AttachmentFlags, AttachmentFlag)
 
 }
 
