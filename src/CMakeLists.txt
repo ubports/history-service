@@ -87,3 +87,5 @@ qt5_use_modules(historyservice Core DBus)
 
 install(TARGETS historyservice DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install(FILES ${library_HDRS} DESTINATION include/history-service/History)
+
+add_subdirectory(tests)

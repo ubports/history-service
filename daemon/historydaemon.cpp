@@ -131,7 +131,7 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
     int count = 1;
     History::TextEventPtr event;
     History::TextEventAttachments attachments;
-    History::MessageType type = History::TextMessage;
+    History::MessageType type = History::MessageTypeText;
     QString subject;
 
     if (message.hasNonTextContent()) {
@@ -140,7 +140,7 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
         QString normalizedEventId = QString(QCryptographicHash::hash(message.messageToken().toLatin1(), QCryptographicHash::Md5).toHex());
         QString mmsStoragePath = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation);
 
-        type = History::MultiPartMessage;
+        type = History::MessageTypeMultiParty;
         subject = message.header()["subject"].variant().toString();
 
         QDir dir(mmsStoragePath);
@@ -219,7 +219,7 @@ void HistoryDaemon::onMessageSent(const Tp::TextChannelPtr textChannel, const Tp
                                                                                     QDateTime::currentDateTime(), // FIXME: check why message.sent() is empty
                                                                                     false, // outgoing messages are never new (unseen)
                                                                                     message.text(),
-                                                                                    History::TextMessage, // FIXME: add support for MMS
+                                                                                    History::MessageTypeText, // FIXME: add support for MMS
                                                                                     History::MessageFlags(),
                                                                                     QDateTime());
     History::Manager::instance()->writeTextEvents(History::TextEvents() << event);

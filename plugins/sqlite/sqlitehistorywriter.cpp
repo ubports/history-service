@@ -118,7 +118,7 @@ bool SQLiteHistoryWriter::writeTextEvent(const History::TextEventPtr &event)
         return false;
     }
 
-    if (event->messageType() == History::MultiPartMessage) {
+    if (event->messageType() == History::MessageTypeMultiParty) {
         // save the attachments
         Q_FOREACH(const History::TextEventAttachmentPtr &attachment, event->attachments()) {
             query.prepare("INSERT INTO text_event_attachments VALUES (:accountId, :threadId, :eventId, :attachmentId, :contentType, :filePath, :status)");

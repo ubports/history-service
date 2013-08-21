@@ -48,7 +48,7 @@ public:
     QString subject() const;
     TextEventAttachments attachments() const;
 
-private:
+protected:
     TextEvent(const QString &accountId,
               const QString &threadId,
               const QString &eventId,

@@ -27,10 +27,6 @@ namespace History
 
 // ------------- ThreadPrivate ------------------------------------------------
 
-ThreadPrivate::ThreadPrivate()
-{
-}
-
 ThreadPrivate::ThreadPrivate(const QString &theAccountId,
                                            const QString &theThreadId, EventType theType,
                                            const QStringList &theParticipants,
@@ -47,11 +43,6 @@ ThreadPrivate::~ThreadPrivate()
 }
 
 // ------------- Thread ------------------------------------------------------
-
-Thread::Thread()
-    : d_ptr(new ThreadPrivate())
-{
-}
 
 Thread::Thread(const QString &accountId,
                const QString &threadId, EventType type,

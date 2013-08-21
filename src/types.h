@@ -63,8 +63,8 @@ Q_DECLARE_FLAGS(MatchFlags, MatchFlag)
 
 enum MessageFlag
 {
-    Pending,
-    Delivered
+    MessageFlagPending,
+    MessageFlagDelivered
 };
 
 Q_DECLARE_FLAGS(MessageFlags, MessageFlag)
@@ -72,8 +72,8 @@ Q_DECLARE_OPERATORS_FOR_FLAGS(MessageFlags)
 
 enum MessageType
 {
-    TextMessage,
-    MultiPartMessage
+    MessageTypeText,
+    MessageTypeMultiParty
 };
 
 enum AttachmentFlag
