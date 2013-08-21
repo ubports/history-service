@@ -22,10 +22,13 @@
 #include "manager.h"
 #include "manager_p.h"
 #include "managerdbus_p.h"
+#include "eventview.h"
+#include "intersectionfilter.h"
 #include "itemfactory.h"
 #include "pluginmanager_p.h"
 #include "plugin.h"
 #include "textevent.h"
+#include "thread.h"
 #include "voiceevent.h"
 #include "reader.h"
 #include "writer.h"
@@ -126,6 +129,22 @@ EventViewPtr Manager::queryEvents(EventType type,
     return EventViewPtr();
 }
 
+EventPtr Manager::getSingleEvent(EventType type, const QString &accountId, const QString &threadId, const QString &eventId, bool useCache)
+{
+    Q_D(Manager);
+
+    EventPtr event;
+    if (useCache) {
+        event = ItemFactory::instance()->cachedEvent(accountId, threadId, eventId, type);
+    }
+
+    if (event.isNull() && d->reader) {
+        event = d->reader->getSingleEvent(type, accountId, threadId, eventId);
+    }
+
+    return event;
+}
+
 ThreadPtr Manager::threadForParticipants(const QString &accountId,
                                          EventType type,
                                          const QStringList &participants,
@@ -148,12 +167,15 @@ ThreadPtr Manager::threadForParticipants(const QString &accountId,
     return thread;
 }
 
-ThreadPtr Manager::getSingleThread(EventType type, const QString &accountId, const QString &threadId)
+ThreadPtr Manager::getSingleThread(EventType type, const QString &accountId, const QString &threadId, bool useCache)
 {
     Q_D(Manager);
 
     // try to use the cached instance to avoid querying the backend
-    ThreadPtr thread = ItemFactory::instance()->cachedThread(accountId, threadId, type);
+    ThreadPtr thread;
+    if (useCache) {
+        thread = ItemFactory::instance()->cachedThread(accountId, threadId, type);
+    }
 
     // and if it isn´t there, get from the backend
     if (thread.isNull() && d->reader) {
@@ -224,14 +246,117 @@ bool Manager::writeVoiceEvents(const VoiceEvents &voiceEvents)
 
 bool Manager::removeThreads(const Threads &threads)
 {
-    Q_UNUSED(threads)
-    // FIXME: implement
+    Q_D(Manager);
+
+    if (!d->writer) {
+        return false;
+    }
+
+    Events events;
+    Threads removedThreads;
+
+    d->writer->beginBatchOperation();
+
+    // remove all the threads that are empty.
+    // the threads that are not empty will be removed
+    // once their items are removed
+    Q_FOREACH(const ThreadPtr &thread, threads) {
+        if (thread->count() > 0) {
+            IntersectionFilterPtr filter(new IntersectionFilter());
+            filter->append(FilterPtr(new Filter("accountId", thread->accountId())));
+            filter->append(FilterPtr(new Filter("threadId", thread->threadId())));
+            EventViewPtr eventView = queryEvents(thread->type(), SortPtr(), filter);
+            Events page = eventView->nextPage();
+            while (page.count()) {
+                events << page;
+                page = eventView->nextPage();
+            }
+        } else {
+            if (!d->writer->removeThread(thread)) {
+                d->writer->rollbackBatchOperation();
+                return false;
+            }
+            removedThreads << thread;
+        }
+    }
+
+    d->writer->endBatchOperation();
+    if (!removedThreads.isEmpty()) {
+        d->dbus->notifyThreadsRemoved(removedThreads);
+    }
+
+    return removeEvents(events);
 }
 
 bool Manager::removeEvents(const Events &events)
 {
-    Q_UNUSED(events)
-    // FIXME: implement
+    Q_D(Manager);
+
+    if (!d->writer) {
+        return false;
+    }
+
+    Threads threadsToUpdate;
+
+    d->writer->beginBatchOperation();
+
+    Q_FOREACH(const EventPtr &event, events) {
+        QString accountId = event->accountId();
+        QString threadId = event->threadId();
+        EventType type = event->type();
+
+        TextEventPtr textEvent;
+        VoiceEventPtr voiceEvent;
+
+        switch (type) {
+        case EventTypeText:
+            textEvent = event.staticCast<TextEvent>();
+            if (!d->writer->removeTextEvent(textEvent)) {
+                d->writer->rollbackBatchOperation();
+                return false;
+            }
+            break;
+        case EventTypeVoice:
+            voiceEvent = event.staticCast<VoiceEvent>();
+            if (!d->writer->removeVoiceEvent(voiceEvent)) {
+                d->writer->rollbackBatchOperation();
+                return false;
+            }
+            break;
+        }
+
+        // get the thread from the item to check if it needs to update
+        ThreadPtr thread = getSingleThread(type, accountId, threadId, false);
+        if (!threadsToUpdate.contains(thread)) {
+            threadsToUpdate << thread;
+        }
+    }
+
+    d->writer->endBatchOperation();
+
+    d->dbus->notifyEventsRemoved(events);
+
+    // now update or remove threads
+    Threads threadsToRemove;
+    Threads threadsModified;
+
+    Q_FOREACH(const ThreadPtr &thread, threadsToUpdate) {
+        if (thread->count() == 0) {
+            threadsToRemove << thread;
+        } else {
+            threadsModified << thread;
+        }
+    }
+
+    if (!threadsToRemove.isEmpty()) {
+        removeThreads(threadsToRemove);
+    }
+
+    if (!threadsModified.isEmpty()) {
+        d->dbus->notifyThreadsModified(threadsModified);
+    }
+
+    return true;
 }
 
 }

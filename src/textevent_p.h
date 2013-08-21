@@ -33,7 +33,6 @@ class TextEvent;
 class TextEventPrivate : public EventPrivate
 {
 public:
-    TextEventPrivate();
     TextEventPrivate(const QString &theAccountId,
                     const QString &theThreadId,
                     const QString &theEventId,
@@ -43,12 +42,16 @@ public:
                     const QString &theMessage,
                     MessageType theMessageType,
                     MessageFlags theMessageFlags,
-                    const QDateTime &theReadTimestamp);
+                    const QDateTime &theReadTimestamp,
+                    const QString &theSubject,
+                    const TextEventAttachments &theAttachments);
     ~TextEventPrivate();
     QString message;
     MessageType messageType;
     MessageFlags messageFlags;
     QDateTime readTimestamp;
+    QString subject;
+    TextEventAttachments attachments;
 };
 
 }

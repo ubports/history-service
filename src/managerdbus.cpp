@@ -110,7 +110,7 @@ void ManagerDBus::onThreadsModified(const QList<QVariantMap> &threads)
 
 void ManagerDBus::onThreadsRemoved(const QList<QVariantMap> &threads)
 {
-    Q_EMIT threadsRemoved(threadsFromProperties(threads));
+    Q_EMIT threadsRemoved(threadsFromProperties(threads, true));
 }
 
 void ManagerDBus::onEventsAdded(const QList<QVariantMap> &events)
@@ -128,7 +128,7 @@ void ManagerDBus::onEventsRemoved(const QList<QVariantMap> &events)
     Q_EMIT eventsRemoved(eventsFromProperties(events));
 }
 
-Threads ManagerDBus::threadsFromProperties(const QList<QVariantMap> &threadsProperties)
+Threads ManagerDBus::threadsFromProperties(const QList<QVariantMap> &threadsProperties, bool fakeIfNull)
 {
     Threads threads;
     Manager *manager = Manager::instance();
@@ -137,9 +137,11 @@ Threads ManagerDBus::threadsFromProperties(const QList<QVariantMap> &threadsProp
         QString accountId = map["accountId"].toString();
         QString threadId = map["threadId"].toString();
         EventType type = (EventType) map["type"].toInt();
-        ThreadPtr thread = manager->getSingleThread(type, accountId, threadId);
+        ThreadPtr thread = manager->getSingleThread(type, accountId, threadId, false);
         if (!thread.isNull()) {
             threads << thread;
+        } else if (fakeIfNull) {
+            threads << History::ItemFactory::instance()->createThread(accountId, threadId, type, QStringList());
         }
     }
 
@@ -177,12 +179,13 @@ Events ManagerDBus::eventsFromProperties(const QList<QVariantMap> &eventsPropert
         switch (type) {
         case EventTypeText: {
             QString message = map["message"].toString();
+            QString subject = map["subject"].toString();
             MessageType messageType = (MessageType) map["messageType"].toInt();
             MessageFlags messageFlags = (MessageFlags) map["messageFlags"].toInt();
             QDateTime readTimestamp;
             map["readTimestamp"].value<QDBusArgument>() >> readTimestamp;
             event = History::ItemFactory::instance()->createTextEvent(accountId, threadId, eventId, senderId, timestamp, newEvent,
-                                                                      message, messageType, messageFlags, readTimestamp);
+                                                                      message, messageType, messageFlags, readTimestamp, subject);
             break;
         }
         case EventTypeVoice: {

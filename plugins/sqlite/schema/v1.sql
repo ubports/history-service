@@ -1,3 +1,7 @@
+CREATE TABLE schema_version (
+    version int
+);
+
 CREATE TABLE threads (
     accountId varchar(255),
     threadId varchar(255),
@@ -6,14 +10,14 @@ CREATE TABLE threads (
     lastEventTimestamp datetime,
     count int,
     unreadCount int
-)#
+);
 
 CREATE TABLE thread_participants (
     accountId varchar(255),
     threadId varchar(255),
     type tinyint,
     participantId varchar(255)
-)#
+);
 
 CREATE TABLE voice_events (
     accountId varchar(255),
@@ -24,7 +28,7 @@ CREATE TABLE voice_events (
     newEvent bool,
     duration int,
     missed bool
-)#
+);
 
 CREATE TABLE text_events (
     accountId varchar(255),
@@ -37,7 +41,7 @@ CREATE TABLE text_events (
     messageType tinyint,
     messageFlags tinyint,
     readTimestamp datetime
-)#
+);
 
 CREATE TRIGGER voice_events_insert_trigger  AFTER INSERT ON voice_events
 FOR EACH ROW
@@ -59,7 +63,7 @@ BEGIN
         threadId=new.threadId
         ORDER BY timestamp DESC LIMIT 1)
         WHERE accountId=new.accountId AND threadId=new.threadId AND type=1;
-END#
+END;
 
 CREATE TRIGGER voice_events_update_trigger  AFTER UPDATE ON voice_events
 FOR EACH ROW
@@ -81,7 +85,7 @@ BEGIN
         threadId=new.threadId
         ORDER BY timestamp DESC LIMIT 1)
         WHERE accountId=new.accountId AND threadId=new.threadId AND type=1;
-END#
+END;
 
 CREATE TRIGGER voice_events_delete_trigger  AFTER DELETE ON voice_events
 FOR EACH ROW
@@ -103,7 +107,7 @@ BEGIN
         threadId=new.threadId
         ORDER BY timestamp DESC LIMIT 1)
         WHERE accountId=new.accountId AND threadId=new.threadId AND type=1;
-END#
+END;
 
 CREATE TRIGGER text_events_insert_trigger  AFTER INSERT ON text_events
 FOR EACH ROW
@@ -125,7 +129,7 @@ BEGIN
         threadId=new.threadId
         ORDER BY timestamp DESC LIMIT 1)
         WHERE accountId=new.accountId AND threadId=new.threadId AND type=0;
-END#
+END;
 
 CREATE TRIGGER text_events_update_trigger  AFTER UPDATE ON text_events
 FOR EACH ROW
@@ -147,7 +151,7 @@ BEGIN
         threadId=new.threadId
         ORDER BY timestamp DESC LIMIT 1)
         WHERE accountId=new.accountId AND threadId=new.threadId AND type=0;
-END#
+END;
 
 CREATE TRIGGER text_events_delete_trigger  AFTER DELETE ON text_events
 FOR EACH ROW
@@ -169,5 +173,4 @@ BEGIN
         threadId=new.threadId
         ORDER BY timestamp DESC LIMIT 1)
         WHERE accountId=new.accountId AND threadId=new.threadId AND type=0;
-END#
-
+END;

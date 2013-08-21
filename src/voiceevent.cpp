@@ -27,10 +27,6 @@ namespace History
 
 // ------------- VoiceEventPrivate ------------------------------------------------
 
-VoiceEventPrivate::VoiceEventPrivate()
-{
-}
-
 VoiceEventPrivate::VoiceEventPrivate(const QString &theAccountId,
                                    const QString &theThreadId,
                                    const QString &theEventId,
@@ -49,11 +45,6 @@ VoiceEventPrivate::~VoiceEventPrivate()
 }
 
 // ------------- VoiceEvent -------------------------------------------------------
-
-VoiceEvent::VoiceEvent()
-    : Event(*new VoiceEventPrivate())
-{
-}
 
 VoiceEvent::VoiceEvent(const QString &accountId,
                      const QString &threadId,

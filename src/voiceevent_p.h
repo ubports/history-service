@@ -30,7 +30,6 @@ namespace History
 class VoiceEventPrivate : public EventPrivate
 {
 public:
-    VoiceEventPrivate();
     VoiceEventPrivate(const QString &theAccountId,
                     const QString &theThreadId,
                     const QString &theEventId,

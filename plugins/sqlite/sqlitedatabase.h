@@ -39,12 +39,15 @@ public:
     bool rollbackTransaction();
 
 protected:
-    bool createDatabase();
+    bool createOrUpdateDatabase();
+    QStringList parseSchemaFile(const QString &fileName);
+    void parseVersionInfo();
 
 private:
     explicit SQLiteDatabase(QObject *parent = 0);
     QString mDatabasePath;
     QSqlDatabase mDatabase;
+    int mSchemaVersion;
     
 };
 

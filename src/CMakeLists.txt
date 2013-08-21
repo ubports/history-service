@@ -9,6 +9,7 @@ set(library_SRCS
     pluginmanager.cpp
     sort.cpp
     textevent.cpp
+    texteventattachment.cpp
     thread.cpp
     threadview.cpp
     unionfilter.cpp
@@ -36,6 +37,8 @@ set(library_HDRS
     sort.h
     TextEvent
     textevent.h
+    TextEventAttachment
+    texteventattachment.h
     Thread
     thread.h
     ThreadView
@@ -61,6 +64,7 @@ set(library_PRIV_HDRS
     pluginmanager_p.h
     sort_p.h
     textevent_p.h
+    texteventattachment_p.h
     thread_p.h
     threadview_p.h
     unionfilter_p.h

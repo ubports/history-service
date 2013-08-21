@@ -3,6 +3,7 @@
  *
  * Authors:
  *  Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>
+ *  Tiago Salem Herrmann <tiago.herrmann@canonical.com>
  *
  * This file is part of history-service.
  *
@@ -19,37 +20,38 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef HISTORY_EVENT_P_H
-#define HISTORY_EVENT_P_H
+#ifndef HISTORY_TEXT_EVENT_ATTACHMENT_P_H
+#define HISTORY_TEXT_EVENT_ATTACHMENT_P_H
 
-#include <QDateTime>
 #include <QString>
 #include "types.h"
 
 namespace History
 {
 
-class EventPrivate
+class TextEventAttachment;
+
+class TextEventAttachmentPrivate
 {
 public:
-    EventPrivate(const QString &theAccountId,
-                       const QString &theThreadId,
-                       const QString &theEventId,
-                       const QString &theSenderId,
-                       const QDateTime &theTimestamp,
-                       bool theNewEvent);
-    virtual ~EventPrivate();
-
+    TextEventAttachmentPrivate(const QString &theAccountId,
+                         const QString &theThreadId,
+                         const QString &theEventId,
+                         const QString &theAttachmentId,
+                         const QString &theContentType,
+                         const QString &theFilePath,
+                         const History::AttachmentFlag &theStatus);
+    virtual ~TextEventAttachmentPrivate();
 
     QString accountId;
     QString threadId;
     QString eventId;
-    QString senderId;
-    QString receiver;
-    QDateTime timestamp;
-    bool newEvent;
+    QString attachmentId;
+    QString contentType;
+    QString filePath;
+    History::AttachmentFlag status;
 };
 
 }
 
-#endif // HISTORY_EVENT_P_H
+#endif // HISTORY_TEXT_EVENT_ATTACHMENT_P_H

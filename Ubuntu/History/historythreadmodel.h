@@ -58,6 +58,8 @@ public:
         LastEventTextMessageTypeRole,
         LastEventTextMessageFlagsRole,
         LastEventTextReadTimestampRole,
+        LastEventTextSubjectRole,
+        LastEventTextAttachmentsRole,
         LastEventCallMissedRole,
         LastEventCallDurationRole
     };
@@ -82,6 +84,7 @@ public:
     void setType(EventType value);
 
     Q_INVOKABLE QString threadIdForParticipants(const QString &accountId, int eventType, const QStringList &participants);
+    Q_INVOKABLE bool removeThread(const QString &accountId, const QString &threadId, int eventType);
 
 Q_SIGNALS:
     void filterChanged();
@@ -102,6 +105,7 @@ private:
     HistoryQmlSort *mSort;
     EventType mType;
     QHash<int, QByteArray> mRoles;
+    mutable QMap<History::TextEventPtr, QList<QVariant> > mAttachmentCache;
 };
 
 #endif // HISTORYTHREADMODEL_H
