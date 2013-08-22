@@ -83,7 +83,10 @@ public:
     EventType type() const;
     void setType(EventType value);
 
-    Q_INVOKABLE QString threadIdForParticipants(const QString &accountId, int eventType, const QStringList &participants);
+    Q_INVOKABLE QString threadIdForParticipants(const QString &accountId,
+                                                int eventType,
+                                                const QStringList &participants,
+                                                int matchFlags = (int)History::MatchCaseSensitive);
     Q_INVOKABLE bool removeThread(const QString &accountId, const QString &threadId, int eventType);
 
 Q_SIGNALS:

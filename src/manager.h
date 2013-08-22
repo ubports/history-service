@@ -51,7 +51,11 @@ public:
 
     EventPtr getSingleEvent(EventType type, const QString &accountId, const QString &threadId, const QString &eventId, bool useCache = true);
 
-    ThreadPtr threadForParticipants(const QString &accountId, EventType type, const QStringList &participants, bool create=false);
+    ThreadPtr threadForParticipants(const QString &accountId,
+                                    EventType type,
+                                    const QStringList &participants,
+                                    History::MatchFlags matchFlags = History::MatchCaseSensitive,
+                                    bool create=false);
     ThreadPtr getSingleThread(EventType type, const QString &accountId, const QString &threadId, bool useCache = true);
 
     bool writeTextEvents(const History::TextEvents &textEvents);

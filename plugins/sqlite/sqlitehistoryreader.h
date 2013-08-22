@@ -37,7 +37,8 @@ public:
                                       const History::FilterPtr &filter = History::FilterPtr());
     History::ThreadPtr threadForParticipants(const QString &accountId,
                                              History::EventType type,
-                                             const QStringList &participants);
+                                             const QStringList &participants,
+                                             History::MatchFlags matchFlags = History::MatchCaseSensitive);
 
     History::ThreadPtr getSingleThread(History::EventType type, const QString &accountId, const QString &threadId);
     History::EventPtr getSingleEvent(History::EventType type, const QString &accountId, const QString &threadId, const QString &eventId);

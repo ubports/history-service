@@ -43,6 +43,7 @@ execute_process(
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(TP_QT5 REQUIRED TelepathyQt5)
+pkg_check_modules(SQLITE3 REQUIRED sqlite3)
 pkg_check_modules(TPL_QT5 TelepathyLoggerQt5)
 pkg_check_modules(QTGLIB QtGLib-2.0)
 

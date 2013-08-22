@@ -44,9 +44,13 @@ private Q_SLOTS:
     void onMessageRead(const Tp::TextChannelPtr textChannel, const Tp::ReceivedMessage &message);
     void onMessageSent(const Tp::TextChannelPtr textChannel, const Tp::Message &message, const QString &messageToken);
 
+protected:
+    History::MatchFlags matchFlagsForChannel(const Tp::ChannelPtr &channel);
+
 private:
     CallChannelObserver mCallObserver;
     TextChannelObserver mTextObserver;
+    QMap<QString, History::MatchFlags> mProtocolFlags;
 };
 
 #endif
