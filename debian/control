@@ -22,6 +22,8 @@ Vcs-Browser: https://bazaar.launchpad.net/~phablet-team/history-service/trunk/fi
 
 Package: history-service
 Architecture: any
+Multi-Arch: foreign
+Pre-Depends: dpkg (>= 1.15.6~)
 Depends: ${misc:Depends},
          ${shlibs:Depends},
 Description: History service to store messages and calls
@@ -43,6 +45,8 @@ Description: debugging symbols for history-service
 
 Package: history-service-tools
 Architecture: any
+Multi-Arch: foreign
+Pre-Depends: dpkg (>= 1.15.6~)
 Section: utils
 Depends: ${misc:Depends},
          ${shlibs:Depends},
@@ -53,8 +57,9 @@ Description: Tools for the history service
 
 Package: libhistoryservice0
 Architecture: any
+Multi-Arch: same
+Pre-Depends: dpkg (>= 1.15.6~)
 Section: libs
-Priority: extra
 Depends: ${misc:Depends},
 Description: Client library to access data from the history service
  This package contains the client library to access the data stored by the
@@ -62,8 +67,9 @@ Description: Client library to access data from the history service
 
 Package: qtdeclarative5-ubuntu-history-plugin
 Architecture: any
+Multi-Arch: same
+Pre-Depends: dpkg (>= 1.15.6~)
 Section: libs
-Priority: extra
 Depends: ${misc:Depends},
 Description: QML plugin to access data from the history service
  This package contains a QML plugin that provides data models to access the data
@@ -71,8 +77,9 @@ Description: QML plugin to access data from the history service
 
 Package: libhistoryservice-dev
 Architecture: any
+Multi-Arch: same
+Pre-Depends: dpkg (>= 1.15.6~)
 Section: libdevel
-Priority: extra
 Depends: ${misc:Depends},
          libhistoryservice0 (= ${binary:Version}),
 Description: Development files for the history service client library
