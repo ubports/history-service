@@ -14,9 +14,10 @@ Build-Depends: cmake,
                qtbase5-dev (>= 5.0),
                qtdeclarative5-dev (>= 5.0),
 Standards-Version: 3.9.4
-Vcs-Bzr: lp:history-service
+Homepage: https://launchpad.net/history-service
 # If you aren't a member of ~phablet-team but need to upload packaging changes,
 # just go ahead.  ~phablet-team will notice and sync up the code again.
+Vcs-Bzr: https://code.launchpad.net/~phablet-team/history-service/trunk
 Vcs-Browser: https://bazaar.launchpad.net/~phablet-team/history-service/trunk/files
 
 Package: history-service
