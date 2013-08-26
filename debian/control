@@ -29,17 +29,6 @@ Description: History service to store messages and calls
  This package contains the history service daemon that watches for Telepathy
  events and stores.
 
-Package: history-service-dbg
-Architecture: any
-Section: debug
-Priority: extra
-Depends: history-service (= ${binary:Version}),
-         libhistoryservice0 (= ${binary:Version}),
-         qtdeclarative5-ubuntu-history-plugin (= ${binary:Version}),
-         ${misc:Depends},
-Description: debugging symbols for history-service
- This package contains the debugging symbols for history-service
-
 Package: history-service-tools
 Architecture: any
 Multi-Arch: foreign
@@ -57,6 +46,7 @@ Architecture: any
 Multi-Arch: same
 Pre-Depends: dpkg (>= 1.15.6~),
 Depends: ${misc:Depends},
+         ${shlibs:Depends},
 Description: Client library to access data from the history service
  This package contains the client library to access the data stored by the
  history service.
@@ -66,6 +56,7 @@ Architecture: any
 Multi-Arch: same
 Pre-Depends: dpkg (>= 1.15.6~),
 Depends: ${misc:Depends},
+         ${shlibs:Depends},
 Description: QML plugin to access data from the history service
  This package contains a QML plugin that provides data models to access the data
  stored by the history service.

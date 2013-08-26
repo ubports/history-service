@@ -1,6 +1,10 @@
 history-service (0.1-0ubuntu1) UNRELEASED; urgency=low
 
-    * Initial release.
+  [ Gustavo Pichorim Boiko ]
+  * Initial release.
+
+  [ Timo Jyrinki ]
+  * Automatic snapshot from revision 85 (bootstrap)
 
  -- Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>  Tue, 25 Jun 2013 22:05:43 -0300
 
