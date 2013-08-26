@@ -26,6 +26,7 @@ Depends: ${misc:Depends},
 Description: History service to store messages and calls
  A service to record the messages that are sent and received and the calls that
  are made in the Ubuntu Touch platform.
+ .
  This package contains the history service daemon that watches for Telepathy
  events and stores.
 
@@ -37,7 +38,10 @@ Section: utils
 Depends: history-service (= ${binary:Version}),
          ${misc:Depends},
          ${shlibs:Depends},
-Description: Tools for the history service
+Description: History service to store messages and calls - tools
+ A service to record the messages that are sent and received and the calls that
+ are made in the Ubuntu Touch platform.
+ .
  This package contains some tools to be used with the history service. Currently
  there is just one tool to import existing logs from Telepathy Logger.
 
@@ -47,7 +51,10 @@ Multi-Arch: same
 Pre-Depends: dpkg (>= 1.15.6~),
 Depends: ${misc:Depends},
          ${shlibs:Depends},
-Description: Client library to access data from the history service
+Description: History service to store messages and calls - client library
+ A service to record the messages that are sent and received and the calls that
+ are made in the Ubuntu Touch platform.
+ .
  This package contains the client library to access the data stored by the
  history service.
 
@@ -57,7 +64,10 @@ Multi-Arch: same
 Pre-Depends: dpkg (>= 1.15.6~),
 Depends: ${misc:Depends},
          ${shlibs:Depends},
-Description: QML plugin to access data from the history service
+Description: History service to store messages and calls - QML plugin
+ A service to record the messages that are sent and received and the calls that
+ are made in the Ubuntu Touch platform.
+ .
  This package contains a QML plugin that provides data models to access the data
  stored by the history service.
 
@@ -68,6 +78,9 @@ Pre-Depends: dpkg (>= 1.15.6~),
 Section: libdevel
 Depends: libhistoryservice0 (= ${binary:Version}),
          ${misc:Depends},
-Description: Development files for the history service client library
+Description: History service to store messages and calls - development files
+ A service to record the messages that are sent and received and the calls that
+ are made in the Ubuntu Touch platform.
+ .
  This package contains the development files for the history service client
  library.
