@@ -5,76 +5,85 @@ Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
 Build-Depends: cmake,
                debhelper (>= 9),
                dh-translations,
-               libtelepathy-qt5-dev,
-               libtelepathy-logger-qt5-dev,
                libsqlite3-dev,
+               libtelepathy-logger-qt5-dev,
+               libtelepathy-qt5-dev,
                pkg-config,
                python,
                qt5-default,
                qtbase5-dev (>= 5.0),
                qtdeclarative5-dev (>= 5.0),
 Standards-Version: 3.9.4
-# If you don't have commit rights to lp:history-service but need to upload
-# packaging changes, just go ahead.  The developers will notice and sync
-# up the code again.
-Vcs-Bzr: lp:history-service
+Homepage: https://launchpad.net/history-service
+# If you aren't a member of ~phablet-team but need to upload packaging changes,
+# just go ahead.  ~phablet-team will notice and sync up the code again.
+Vcs-Bzr: https://code.launchpad.net/~phablet-team/history-service/trunk
 Vcs-Browser: https://bazaar.launchpad.net/~phablet-team/history-service/trunk/files
 
 Package: history-service
 Architecture: any
+Multi-Arch: foreign
+Pre-Depends: dpkg (>= 1.15.6~),
 Depends: ${misc:Depends},
          ${shlibs:Depends},
 Description: History service to store messages and calls
  A service to record the messages that are sent and received and the calls that
  are made in the Ubuntu Touch platform.
+ .
  This package contains the history service daemon that watches for Telepathy
  events and stores.
 
-Package: history-service-dbg
-Architecture: any
-Section: debug
-Priority: extra
-Depends: ${misc:Depends},
-         history-service (= ${binary:Version}),
-         libhistoryservice0 (= ${binary:Version}),
-         qtdeclarative5-ubuntu-history-plugin (= ${binary:Version}),
-Description: debugging symbols for history-service
- This package contains the debugging symbols for history-service
-
 Package: history-service-tools
 Architecture: any
+Multi-Arch: foreign
+Pre-Depends: dpkg (>= 1.15.6~),
 Section: utils
-Depends: ${misc:Depends},
+Depends: history-service (= ${binary:Version}),
+         ${misc:Depends},
          ${shlibs:Depends},
-         history-service (= ${binary:Version}),
-Description: Tools for the history service
+Description: History service to store messages and calls - tools
+ A service to record the messages that are sent and received and the calls that
+ are made in the Ubuntu Touch platform.
+ .
  This package contains some tools to be used with the history service. Currently
  there is just one tool to import existing logs from Telepathy Logger.
 
 Package: libhistoryservice0
 Architecture: any
-Section: libs
-Priority: extra
+Multi-Arch: same
+Pre-Depends: dpkg (>= 1.15.6~),
 Depends: ${misc:Depends},
-Description: Client library to access data from the history service
+         ${shlibs:Depends},
+Description: History service to store messages and calls - client library
+ A service to record the messages that are sent and received and the calls that
+ are made in the Ubuntu Touch platform.
+ .
  This package contains the client library to access the data stored by the
  history service.
 
-Package: qtdeclarative5-ubuntu-history-plugin
+Package: qtdeclarative5-ubuntu-history0.1
 Architecture: any
-Section: libs
-Priority: extra
+Multi-Arch: same
+Pre-Depends: dpkg (>= 1.15.6~),
 Depends: ${misc:Depends},
-Description: QML plugin to access data from the history service
+         ${shlibs:Depends},
+Description: History service to store messages and calls - QML plugin
+ A service to record the messages that are sent and received and the calls that
+ are made in the Ubuntu Touch platform.
+ .
  This package contains a QML plugin that provides data models to access the data
  stored by the history service.
 
 Package: libhistoryservice-dev
 Architecture: any
+Multi-Arch: same
+Pre-Depends: dpkg (>= 1.15.6~),
 Section: libdevel
-Priority: extra
-Depends: ${misc:Depends},
-         libhistoryservice0 (= ${binary:Version}),
-Description: Development files for the history service client library
+Depends: libhistoryservice0 (= ${binary:Version}),
+         ${misc:Depends},
+Description: History service to store messages and calls - development files
+ A service to record the messages that are sent and received and the calls that
+ are made in the Ubuntu Touch platform.
+ .
  This package contains the development files for the history service client
  library.

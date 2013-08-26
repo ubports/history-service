@@ -22,6 +22,3 @@ override_dh_auto_test:
 	# (see http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=601774).
 	#$(MAKE) -C obj-$(DEB_HOST_GNU_TYPE) history-service.pot
 
-.PHONY: override_dh_strip
-override_dh_strip:
-	dh_strip --dbg-package=history-service-dbg
