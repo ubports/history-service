@@ -56,7 +56,6 @@ Package: libhistoryservice0
 Architecture: any
 Multi-Arch: same
 Pre-Depends: dpkg (>= 1.15.6~),
-Section: libs
 Depends: ${misc:Depends},
 Description: Client library to access data from the history service
  This package contains the client library to access the data stored by the
@@ -66,7 +65,6 @@ Package: qtdeclarative5-ubuntu-history-plugin
 Architecture: any
 Multi-Arch: same
 Pre-Depends: dpkg (>= 1.15.6~),
-Section: libs
 Depends: ${misc:Depends},
 Description: QML plugin to access data from the history service
  This package contains a QML plugin that provides data models to access the data
