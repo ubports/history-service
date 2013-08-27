@@ -1,3 +1,9 @@
+history-service (0.1+13.10.20130827-0ubuntu1) saucy; urgency=low
+
+  * Automatic snapshot from revision 87
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 27 Aug 2013 02:41:38 +0000
+
 history-service (0.1+13.10.20130826.1-0ubuntu1) saucy; urgency=low
 
   [ Gustavo Pichorim Boiko ]
