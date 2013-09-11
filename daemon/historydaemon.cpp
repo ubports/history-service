@@ -28,6 +28,11 @@
 #include "texteventattachment.h"
 #include "voiceevent.h"
 
+#include "pluginmanager_p.h"
+#include "plugin.h"
+#include "reader.h"
+#include "writer.h"
+
 #include <QStandardPaths>
 #include <QCryptographicHash>
 #include <TelepathyQt/CallChannel>
@@ -35,8 +40,22 @@
 HistoryDaemon::HistoryDaemon(QObject *parent)
     : QObject(parent), mCallObserver(this), mTextObserver(this)
 {
-    // trigger the creation of History::Manager so that plugins are loaded
-    History::Manager::instance();
+    // FIXME: maybe we should look for both at once
+    // try to find a plugin that has a reader
+    Q_FOREACH(History::PluginPtr plugin, History::PluginManager::instance()->plugins()) {
+        mReader = plugin->reader();
+        if (mReader) {
+            break;
+        }
+    }
+
+    // and now a plugin that has a writer
+    Q_FOREACH(History::PluginPtr plugin, History::PluginManager::instance()->plugins()) {
+        mWriter = plugin->writer();
+        if (mWriter) {
+            break;
+        }
+    }
 
     connect(TelepathyHelper::instance(),
             SIGNAL(channelObserverCreated(ChannelObserver*)),
@@ -63,6 +82,28 @@ HistoryDaemon::~HistoryDaemon()
 {
 }
 
+HistoryDaemon *HistoryDaemon::instance()
+{
+    static HistoryDaemon *self = new HistoryDaemon();
+    return self;
+}
+
+History::ThreadPtr HistoryDaemon::threadForParticipants(const QString &accountId,
+                                                        History::EventType type,
+                                                        const QStringList &participants,
+                                                        History::MatchFlags matchFlags,
+                                                        bool create)
+{
+    History::ThreadPtr thread = mReader->threadForParticipants(accountId,
+                                                               type,
+                                                               participants,
+                                                               matchFlags);
+    if (thread.isNull() && create) {
+        thread = mWriter->createThreadForParticipants(accountId, type, participants);
+    }
+    return thread;
+}
+
 void HistoryDaemon::onObserverCreated()
 {
     qDebug() << __PRETTY_FUNCTION__;
@@ -82,14 +123,14 @@ void HistoryDaemon::onCallEnded(const Tp::CallChannelPtr &channel)
         participants << contact->id();
     }
 
-    History::ThreadPtr thread = History::Manager::instance()->threadForParticipants(channel->property("accountId").toString(),
-                                                                                    History::EventTypeVoice,
-                                                                                    participants,
-                                                                                    matchFlagsForChannel(channel),
-                                                                                    true);
-
+    QString accountId = channel->property(History::FieldAccountId).toString();
+    History::ThreadPtr thread = threadForParticipants(accountId,
+                                                      History::EventTypeVoice,
+                                                      participants,
+                                                      matchFlagsForChannel(channel),
+                                                      true);
     // fill the call info
-    QDateTime timestamp = channel->property("timestamp").toDateTime();
+    QDateTime timestamp = channel->property(History::FieldTimestamp).toDateTime();
 
     // FIXME: check if checking for isRequested() is enough
     bool incoming = !channel->isRequested();
@@ -110,7 +151,7 @@ void HistoryDaemon::onCallEnded(const Tp::CallChannelPtr &channel)
                                                                                       missed, // only mark as a new (unseen) event if it is a missed call
                                                                                       missed,
                                                                                       duration);
-    History::Manager::instance()->writeVoiceEvents(History::VoiceEvents() << event);
+    mWriter->writeVoiceEvent(event);
 }
 
 void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, const Tp::ReceivedMessage &message)
@@ -128,11 +169,11 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
         participants << contact->id();
     }
 
-    History::ThreadPtr thread = History::Manager::instance()->threadForParticipants(textChannel->property("accountId").toString(),
-                                                                                    History::EventTypeText,
-                                                                                    participants,
-                                                                                    matchFlagsForChannel(textChannel),
-                                                                                    true);
+    History::ThreadPtr thread = threadForParticipants(textChannel->property("accountId").toString(),
+                                                                            History::EventTypeText,
+                                                                            participants,
+                                                                            matchFlagsForChannel(textChannel),
+                                                                            true);
     int count = 1;
     History::TextEventPtr event;
     History::TextEventAttachments attachments;
@@ -196,7 +237,7 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
                                                               subject,
                                                               attachments);
 
-    History::Manager::instance()->writeTextEvents(History::TextEvents() << event);
+    mWriter->writeTextEvent(event);
 }
 
 void HistoryDaemon::onMessageRead(const Tp::TextChannelPtr textChannel, const Tp::ReceivedMessage &message)
@@ -213,11 +254,11 @@ void HistoryDaemon::onMessageSent(const Tp::TextChannelPtr textChannel, const Tp
         participants << contact->id();
     }
 
-    History::ThreadPtr thread = History::Manager::instance()->threadForParticipants(textChannel->property("accountId").toString(),
-                                                                                    History::EventTypeText,
-                                                                                    participants,
-                                                                                    matchFlagsForChannel(textChannel),
-                                                                                    true);
+    History::ThreadPtr thread = threadForParticipants(textChannel->property("accountId").toString(),
+                                                      History::EventTypeText,
+                                                      participants,
+                                                      matchFlagsForChannel(textChannel),
+                                                      true);
     History::TextEventPtr event = History::ItemFactory::instance()->createTextEvent(thread->accountId(),
                                                                                     thread->threadId(),
                                                                                     messageToken,
@@ -228,7 +269,7 @@ void HistoryDaemon::onMessageSent(const Tp::TextChannelPtr textChannel, const Tp
                                                                                     History::MessageTypeText, // FIXME: add support for MMS
                                                                                     History::MessageFlags(),
                                                                                     QDateTime());
-    History::Manager::instance()->writeTextEvents(History::TextEvents() << event);
+    mWriter->writeTextEvent(event);
 }
 
 History::MatchFlags HistoryDaemon::matchFlagsForChannel(const Tp::ChannelPtr &channel)

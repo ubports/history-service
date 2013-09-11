@@ -9,6 +9,18 @@
         <dox:d>
           An interface to the history service
         </dox:d>
+        <method name="ThreadForParticipants">
+            <dox:d><![CDATA[
+                Return an existing thread for the given parameters.
+            ]]></dox:d>
+            <arg name="accountId" type="s" direction="in"/>
+            <arg name="type" type="i" direction="in"/>
+            <arg name="participants" type="as" direction="in"/>
+            <arg name="matchFlags" type="i" direction="in"/>
+            <arg name="create" type="b" direction="in"/>
+            <arg type="a{sv}" direction="out"/>
+            <annotation name="org.qtproject.QtDBus.QtTypeName.Out0" value="QVariantMap"/>
+        </method>
         <signal name="ThreadsAdded">
             <dox:d><![CDATA[
                 Threads were added to the storage. The argument is a list of threads.

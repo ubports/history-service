@@ -65,10 +65,10 @@ void TelepathyLogImporter::onCallEventLoaded(const Tpl::CallEventPtr &event)
                                                                                              event->endReason() == Tp::CallStateChangeReasonNoAnswer,
                                                                                              event->duration());
 
-    mVoiceEvents << historyEvent;
-    if (mVoiceEvents.count() >= mBatchSize) {
-        History::Manager::instance()->writeVoiceEvents(mVoiceEvents);
-        mVoiceEvents.clear();
+    mEvents << historyEvent;
+    if (mEvents.count() >= mBatchSize) {
+        History::Manager::instance()->writeEvents(mEvents);
+        mEvents.clear();
     }
     mVoiceEventCount++;
 }
@@ -93,10 +93,10 @@ void TelepathyLogImporter::onMessageEventLoaded(const Tpl::TextEventPtr &event)
                                                                                            History::MessageTypeText,
                                                                                            History::MessageFlags(),
                                                                                            event->timestamp());
-    mTextEvents << historyEvent;
-    if (mTextEvents.count() >= mBatchSize) {
-        History::Manager::instance()->writeTextEvents(mTextEvents);
-        mTextEvents.clear();
+    mEvents << historyEvent;
+    if (mEvents.count() >= mBatchSize) {
+        History::Manager::instance()->writeEvents(mEvents);
+        mEvents.clear();
     }
     mTextEventCount++;
 }
@@ -104,14 +104,9 @@ void TelepathyLogImporter::onMessageEventLoaded(const Tpl::TextEventPtr &event)
 void TelepathyLogImporter::onFinished()
 {
     // write the remaining items
-    if (!mTextEvents.isEmpty()) {
-       History::Manager::instance()->writeTextEvents(mTextEvents);
-       mTextEvents.clear();
-    }
-
-    if (!mVoiceEvents.isEmpty()) {
-        History::Manager::instance()->writeVoiceEvents(mVoiceEvents);
-        mVoiceEvents.clear();
+    if (!mEvents.isEmpty()) {
+       History::Manager::instance()->writeEvents(mEvents);
+       mEvents.clear();
     }
 
     qDebug() << "... finished";

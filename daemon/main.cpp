@@ -29,8 +29,7 @@ int main(int argc, char **argv)
     Tp::enableWarnings(true);
 
     QCoreApplication app(argc, argv);
-
-    HistoryDaemon daemon;
+    HistoryDaemon::instance();
 
     return app.exec();
 }

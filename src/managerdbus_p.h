@@ -22,7 +22,7 @@
 #ifndef MANAGERDBUS_P_H
 #define MANAGERDBUS_P_H
 
-#include <QDBusContext>
+#include <QDBusInterface>
 #include <QObject>
 #include "types.h"
 
@@ -31,32 +31,23 @@ class HistoryServiceAdaptor;
 namespace History
 {
 
-class ManagerDBus : public QObject, public QDBusContext
+class ManagerDBus : public QObject
 {
     Q_OBJECT
 public:
     explicit ManagerDBus(QObject *parent = 0);
 
-    bool connectToBus();
+    ThreadPtr threadForParticipants(const QString &accountId,
+                                    EventType type,
+                                    const QStringList &participants,
+                                    History::MatchFlags matchFlags,
+                                    bool create);
 
-    void notifyThreadsAdded(const Threads &threads);
-    void notifyThreadsModified(const Threads &threads);
-    void notifyThreadsRemoved(const Threads &threads);
-
-    void notifyEventsAdded(const Events &events);
-    void notifyEventsModified(const Events &events);
-    void notifyEventsRemoved(const Events &events);
+    bool writeEvents(const History::Events &events);
+    bool removeThreads(const Threads &threads);
+    bool removeEvents(const Events &events);
 
 Q_SIGNALS:
-    // signals that will be relayed into the bus
-    void ThreadsAdded(const QList<QVariantMap> &threads);
-    void ThreadsModified(const QList<QVariantMap> &threads);
-    void ThreadsRemoved(const QList<QVariantMap> &threads);
-
-    void EventsAdded(const QList<QVariantMap> &events);
-    void EventsModified(const QList<QVariantMap> &events);
-    void EventsRemoved(const QList<QVariantMap> &events);
-
     // signals that will be triggered after processing bus signals
     void threadsAdded(const History::Threads &threads);
     void threadsModified(const History::Threads &threads);
@@ -79,11 +70,13 @@ protected:
     Threads threadsFromProperties(const QList<QVariantMap> &threadsProperties, bool fakeIfNull = false);
     QList<QVariantMap> threadsToProperties(const Threads &threads);
 
+    EventPtr eventFromProperties(const QVariantMap &properties);
     Events eventsFromProperties(const QList<QVariantMap> &eventsProperties);
     QList<QVariantMap> eventsToProperties(const Events &events);
 
 private:
     HistoryServiceAdaptor *mAdaptor;
+    QDBusInterface mInterface;
 };
 
 }

@@ -28,15 +28,19 @@
 #include "textchannelobserver.h"
 #include "callchannelobserver.h"
 
-class HistoryWriter;
-
 class HistoryDaemon : public QObject
 {
     Q_OBJECT
 public:
-    HistoryDaemon(QObject *parent = 0);
     ~HistoryDaemon();
 
+    static HistoryDaemon *instance();
+
+    History::ThreadPtr threadForParticipants(const QString &accountId,
+                                             History::EventType type,
+                                             const QStringList &participants,
+                                             History::MatchFlags matchFlags = History::MatchCaseSensitive,
+                                             bool create = true);
 private Q_SLOTS:
     void onObserverCreated();
     void onCallEnded(const Tp::CallChannelPtr &channel);
@@ -48,9 +52,13 @@ protected:
     History::MatchFlags matchFlagsForChannel(const Tp::ChannelPtr &channel);
 
 private:
+    HistoryDaemon(QObject *parent = 0);
+
     CallChannelObserver mCallObserver;
     TextChannelObserver mTextObserver;
     QMap<QString, History::MatchFlags> mProtocolFlags;
+    History::ReaderPtr mReader;
+    History::WriterPtr mWriter;
 };
 
 #endif

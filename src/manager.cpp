@@ -57,23 +57,6 @@ Manager::Manager(const QString &backendPlugin)
 {
     Q_D(Manager);
 
-    // FIXME: maybe we should look for both at once
-    // try to find a plugin that has a reader
-    Q_FOREACH(PluginPtr plugin, PluginManager::instance()->plugins()) {
-        d->reader = plugin->reader();
-        if (d->reader) {
-            break;
-        }
-    }
-
-    // and now a plugin that has a writer
-    Q_FOREACH(PluginPtr plugin, PluginManager::instance()->plugins()) {
-        d->writer = plugin->writer();
-        if (d->writer) {
-            break;
-        }
-    }
-
     // Propagate the signals from the event watcher
     connect(d->dbus.data(),
             SIGNAL(threadsAdded(History::Threads)),
@@ -153,19 +136,7 @@ ThreadPtr Manager::threadForParticipants(const QString &accountId,
 {
     Q_D(Manager);
 
-    if (!d->reader || !d->writer) {
-        return ThreadPtr();
-    }
-
-    ThreadPtr thread = d->reader->threadForParticipants(accountId, type, participants, matchFlags);
-
-    // if the thread is null, create a new if possible/desired.
-    if (thread.isNull() && create) {
-        thread = d->writer->createThreadForParticipants(accountId, type, participants);
-        d->dbus->notifyThreadsAdded(Threads() << thread);
-    }
-
-    return thread;
+    return d->dbus->threadForParticipants(accountId, type, participants, matchFlags, create);
 }
 
 ThreadPtr Manager::getSingleThread(EventType type, const QString &accountId, const QString &threadId, bool useCache)
@@ -186,178 +157,22 @@ ThreadPtr Manager::getSingleThread(EventType type, const QString &accountId, con
     return thread;
 }
 
-bool Manager::writeTextEvents(const TextEvents &textEvents)
+bool Manager::writeEvents(const Events &events)
 {
     Q_D(Manager);
-
-    if (!d->writer) {
-        return false;
-    }
-
-    d->writer->beginBatchOperation();
-
-    Events events;
-    Threads threads;
-    Q_FOREACH(const TextEventPtr &textEvent, textEvents) {
-        // save the thread so that the thread updated signal can be emitted
-        ThreadPtr thread = getSingleThread(EventTypeText, textEvent->accountId(), textEvent->threadId());
-        if (!threads.contains(thread)) {
-            threads << thread;
-        }
-        d->writer->writeTextEvent(textEvent);
-        events << textEvent.staticCast<Event>();
-    }
-
-    d->writer->endBatchOperation();
-
-    d->dbus->notifyEventsAdded(events);
-    d->dbus->notifyThreadsModified(threads);
-    return true;
-}
-
-bool Manager::writeVoiceEvents(const VoiceEvents &voiceEvents)
-{
-    Q_D(Manager);
-
-    if (!d->writer) {
-        return false;
-    }
-
-    d->writer->beginBatchOperation();
-
-    Events events;
-    Threads threads;
-    Q_FOREACH(const VoiceEventPtr &voiceEvent, voiceEvents) {
-        // save the thread so that the thread updated signal can be emitted
-        ThreadPtr thread = getSingleThread(EventTypeVoice, voiceEvent->accountId(), voiceEvent->threadId());
-        if (!threads.contains(thread)) {
-            threads << thread;
-        }
-        d->writer->writeVoiceEvent(voiceEvent);
-        events << voiceEvent.staticCast<Event>();
-    }
-
-    d->writer->endBatchOperation();
-
-    d->dbus->notifyEventsAdded(events);
-    d->dbus->notifyThreadsModified(threads);
-
-    return true;
+    return d->dbus->writeEvents(events);
 }
 
 bool Manager::removeThreads(const Threads &threads)
 {
     Q_D(Manager);
-
-    if (!d->writer) {
-        return false;
-    }
-
-    Events events;
-    Threads removedThreads;
-
-    d->writer->beginBatchOperation();
-
-    // remove all the threads that are empty.
-    // the threads that are not empty will be removed
-    // once their items are removed
-    Q_FOREACH(const ThreadPtr &thread, threads) {
-        if (thread->count() > 0) {
-            IntersectionFilterPtr filter(new IntersectionFilter());
-            filter->append(FilterPtr(new Filter("accountId", thread->accountId())));
-            filter->append(FilterPtr(new Filter("threadId", thread->threadId())));
-            EventViewPtr eventView = queryEvents(thread->type(), SortPtr(), filter);
-            Events page = eventView->nextPage();
-            while (page.count()) {
-                events << page;
-                page = eventView->nextPage();
-            }
-        } else {
-            if (!d->writer->removeThread(thread)) {
-                d->writer->rollbackBatchOperation();
-                return false;
-            }
-            removedThreads << thread;
-        }
-    }
-
-    d->writer->endBatchOperation();
-    if (!removedThreads.isEmpty()) {
-        d->dbus->notifyThreadsRemoved(removedThreads);
-    }
-
-    return removeEvents(events);
+    return d->dbus->removeThreads(threads);
 }
 
 bool Manager::removeEvents(const Events &events)
 {
     Q_D(Manager);
-
-    if (!d->writer) {
-        return false;
-    }
-
-    Threads threadsToUpdate;
-
-    d->writer->beginBatchOperation();
-
-    Q_FOREACH(const EventPtr &event, events) {
-        QString accountId = event->accountId();
-        QString threadId = event->threadId();
-        EventType type = event->type();
-
-        TextEventPtr textEvent;
-        VoiceEventPtr voiceEvent;
-
-        switch (type) {
-        case EventTypeText:
-            textEvent = event.staticCast<TextEvent>();
-            if (!d->writer->removeTextEvent(textEvent)) {
-                d->writer->rollbackBatchOperation();
-                return false;
-            }
-            break;
-        case EventTypeVoice:
-            voiceEvent = event.staticCast<VoiceEvent>();
-            if (!d->writer->removeVoiceEvent(voiceEvent)) {
-                d->writer->rollbackBatchOperation();
-                return false;
-            }
-            break;
-        }
-
-        // get the thread from the item to check if it needs to update
-        ThreadPtr thread = getSingleThread(type, accountId, threadId, false);
-        if (!threadsToUpdate.contains(thread)) {
-            threadsToUpdate << thread;
-        }
-    }
-
-    d->writer->endBatchOperation();
-
-    d->dbus->notifyEventsRemoved(events);
-
-    // now update or remove threads
-    Threads threadsToRemove;
-    Threads threadsModified;
-
-    Q_FOREACH(const ThreadPtr &thread, threadsToUpdate) {
-        if (thread->count() == 0) {
-            threadsToRemove << thread;
-        } else {
-            threadsModified << thread;
-        }
-    }
-
-    if (!threadsToRemove.isEmpty()) {
-        removeThreads(threadsToRemove);
-    }
-
-    if (!threadsModified.isEmpty()) {
-        d->dbus->notifyThreadsModified(threadsModified);
-    }
-
-    return true;
+    return d->dbus->removeEvents(events);
 }
 
 }

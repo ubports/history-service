@@ -20,7 +20,7 @@ Makefile
 plugins/sqlite/*.depends
 plugins/sqlite/qrc_*
 */*.service
-src/historyserviceadaptor.*
+daemon/historyserviceadaptor.*
 src/libhistoryservice.so*
 Testing
 */tests/*Test

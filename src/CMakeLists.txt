@@ -77,8 +77,6 @@ set(library_PRIV_HDRS
 include_directories(${CMAKE_SOURCE_DIR}/src
                     ${CMAKE_CURRENT_BINARY_DIR})
 
-qt5_add_dbus_adaptor(library_SRCS HistoryService.xml managerdbus_p.h History::ManagerDBus)
-
 add_library(historyservice SHARED ${library_SRCS} ${library_HDRS} ${library_PRIV_HDRS})
 
 # Set the library version and the SOVERSION

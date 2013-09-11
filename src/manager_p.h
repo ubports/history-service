@@ -22,6 +22,7 @@
 #ifndef HISTORY_MANAGER_P_H
 #define HISTORY_MANAGER_P_H
 
+#include <QDBusInterface>
 #include <QString>
 #include "types.h"
 

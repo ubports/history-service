@@ -3,6 +3,7 @@ set(qt_SRCS
     callchannelobserver.cpp
     channelobserver.cpp
     historydaemon.cpp
+    historyservicedbus.cpp
     telepathyhelper.cpp
     textchannelobserver.cpp
     )
@@ -14,6 +15,8 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/src
     ${CMAKE_CURRENT_BINARY_DIR}
     )
+
+qt5_add_dbus_adaptor(daemon_SRCS HistoryService.xml historyservicedbus.h HistoryServiceDBus)
 
 add_executable(history-daemon ${daemon_SRCS} ${daemon_HDRS})
 qt5_use_modules(history-daemon Core DBus)

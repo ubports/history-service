@@ -89,6 +89,8 @@ QVariantMap TextEvent::properties() const
     map["readTimestamp"] = d->readTimestamp;
     map["subject"] = d->subject;
 
+    // FIXME: save the attachment properties
+
     return map;
 }
 

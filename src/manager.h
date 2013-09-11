@@ -55,12 +55,10 @@ public:
                                     EventType type,
                                     const QStringList &participants,
                                     History::MatchFlags matchFlags = History::MatchCaseSensitive,
-                                    bool create=false);
+                                    bool create = false);
     ThreadPtr getSingleThread(EventType type, const QString &accountId, const QString &threadId, bool useCache = true);
 
-    bool writeTextEvents(const History::TextEvents &textEvents);
-    bool writeVoiceEvents(const History::VoiceEvents &voiceEvents);
-
+    bool writeEvents(const History::Events &events);
     bool removeThreads(const Threads &threads);
     bool removeEvents(const Events &events);
 
