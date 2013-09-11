@@ -20,7 +20,6 @@
  */
 
 #include "managerdbus_p.h"
-#include "historyserviceadaptor.h"
 #include "event.h"
 #include "itemfactory.h"
 #include "manager.h"
@@ -28,6 +27,7 @@
 #include "textevent.h"
 #include "voiceevent.h"
 #include <QDBusReply>
+#include <QDBusMetaType>
 
 Q_DECLARE_METATYPE(QList< QVariantMap >)
 

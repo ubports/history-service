@@ -21,6 +21,33 @@
             <arg type="a{sv}" direction="out"/>
             <annotation name="org.qtproject.QtDBus.QtTypeName.Out0" value="QVariantMap"/>
         </method>
+        <method name="WriteEvents">
+            <dox:d><![CDATA[
+                Write the given events to the storage.
+                Returns true if succeeded in writing the events.
+            ]]></dox:d>
+            <arg name="events" type="a(a{sv})" direction="in"/>
+            <arg type="b" direction="out"/>
+            <annotation name="org.qtproject.QtDBus.QtTypeName.In0" value="QList &lt; QVariantMap &gt;"/>
+        </method>
+        <method name="RemoveEvents">
+            <dox:d><![CDATA[
+                Remove the given events from the storage.
+                Returns true if succeeded in removing the events.
+            ]]></dox:d>
+            <arg name="events" type="a(a{sv})" direction="in"/>
+            <arg type="b" direction="out"/>
+            <annotation name="org.qtproject.QtDBus.QtTypeName.In0" value="QList &lt; QVariantMap &gt;"/>
+        </method>
+        <method name="RemoveThreads">
+            <dox:d><![CDATA[
+                Remove the given threads from the storage.
+                Returns true if succeeded in removing the threads.
+            ]]></dox:d>
+            <arg name="events" type="a(a{sv})" direction="in"/>
+            <arg type="b" direction="out"/>
+            <annotation name="org.qtproject.QtDBus.QtTypeName.In0" value="QList &lt; QVariantMap &gt;"/>
+        </method>
         <signal name="ThreadsAdded">
             <dox:d><![CDATA[
                 Threads were added to the storage. The argument is a list of threads.

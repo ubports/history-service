@@ -50,6 +50,9 @@ public:
                                       const QStringList &participants,
                                       int matchFlags,
                                       bool create);
+    bool WriteEvents(const QList <QVariantMap> &events);
+    bool RemoveThreads(const QList <QVariantMap> &events);
+    bool RemoveEvents(const QList <QVariantMap> &events);
 
 Q_SIGNALS:
     // signals that will be relayed into the bus
