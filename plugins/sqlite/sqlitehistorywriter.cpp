@@ -91,16 +91,6 @@ bool SQLiteHistoryWriter::removeThread(const History::ThreadPtr &thread)
         return false;
     }
 
-    query.prepare("DELETE FROM thread_participants WHERE accountId=:accountId AND threadId=:threadId AND type=:type");
-    query.bindValue(":accountId", thread->accountId());
-    query.bindValue(":threadId", thread->threadId());
-    query.bindValue(":type", thread->type());
-
-    if (!query.exec()) {
-        qCritical() << "Failed to remove the thread: Error:" << query.lastError() << query.lastQuery();
-        return false;
-    }
-
     return true;
 }
 
