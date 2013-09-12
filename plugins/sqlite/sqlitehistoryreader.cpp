@@ -137,7 +137,7 @@ History::ThreadPtr SQLiteHistoryReader::threadForParticipants(const QString &acc
     }
 
     if (!existingThread.isNull()) {
-        return History::ItemFactory::instance()->createThread(accountId, existingThread, type, participants);
+        return getSingleThread(type, accountId, existingThread);
     }
 
     return History::ThreadPtr();

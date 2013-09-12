@@ -19,6 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "historydaemon.h"
 #include "historyservicedbus.h"
 #include "historyserviceadaptor.h"
 #include "types.h"
@@ -88,9 +89,18 @@ QVariantMap HistoryServiceDBus::ThreadForParticipants(const QString &accountId,
                                                       int matchFlags,
                                                       bool create)
 {
-    qDebug() << __PRETTY_FUNCTION__;
-    qDebug() << accountId << type << participants << matchFlags << create;
-    return QVariantMap();
+    History::ThreadPtr thread = HistoryDaemon::instance()->threadForParticipants(accountId,
+                                                                                 (History::EventType) type,
+                                                                                 participants,
+                                                                                 (History::MatchFlags) matchFlags,
+                                                                                 create);
+    QVariantMap properties;
+    if (thread) {
+        properties = thread->properties();
+        qDebug() << "Properties:" << properties;
+    }
+
+    return properties;
 }
 
 bool HistoryServiceDBus::WriteEvents(const QList<QVariantMap> &events)

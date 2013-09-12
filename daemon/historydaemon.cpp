@@ -28,7 +28,7 @@
 #include "texteventattachment.h"
 #include "voiceevent.h"
 
-#include "pluginmanager_p.h"
+#include "pluginmanager.h"
 #include "plugin.h"
 #include "reader.h"
 #include "writer.h"

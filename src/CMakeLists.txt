@@ -6,7 +6,6 @@ set(library_SRCS
     itemfactory.cpp
     manager.cpp
     managerdbus.cpp
-    pluginmanager.cpp
     phoneutils.cpp
     sort.cpp
     textevent.cpp
@@ -62,7 +61,6 @@ set(library_PRIV_HDRS
     itemfactory_p.h
     manager_p.h
     managerdbus_p.h
-    pluginmanager_p.h
     phonenumberutils_p.h
     phoneutils_p.h
     sort_p.h

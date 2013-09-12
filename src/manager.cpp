@@ -25,8 +25,6 @@
 #include "eventview.h"
 #include "intersectionfilter.h"
 #include "itemfactory.h"
-#include "pluginmanager_p.h"
-#include "plugin.h"
 #include "textevent.h"
 #include "thread.h"
 #include "threadview.h"

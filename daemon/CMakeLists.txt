@@ -4,6 +4,7 @@ set(qt_SRCS
     channelobserver.cpp
     historydaemon.cpp
     historyservicedbus.cpp
+    pluginmanager.cpp
     telepathyhelper.cpp
     textchannelobserver.cpp
     )

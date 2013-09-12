@@ -19,7 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "pluginmanager_p.h"
+#include "pluginmanager.h"
 #include "config.h"
 #include "plugin.h"
 #include <QDir>
