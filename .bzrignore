@@ -19,6 +19,7 @@ Makefile
 */moc_*
 plugins/sqlite/*.depends
 plugins/sqlite/qrc_*
+plugins/sqlite/schema/schema.sql
 */*.service
 src/historyserviceadaptor.*
 src/libhistoryservice.so*
