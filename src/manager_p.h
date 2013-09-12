@@ -35,12 +35,8 @@ class ManagerDBus;
 class ManagerPrivate
 {
 public:
-    ManagerPrivate(const QString &theBackend);
+    ManagerPrivate();
     ~ManagerPrivate();
-
-    QString backendPlugin;
-    ReaderPtr reader;
-    WriterPtr writer;
     QScopedPointer<ManagerDBus> dbus;
 };
 

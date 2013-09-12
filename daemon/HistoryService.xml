@@ -48,6 +48,49 @@
             <arg type="b" direction="out"/>
             <annotation name="org.qtproject.QtDBus.QtTypeName.In0" value="QList &lt; QVariantMap &gt;"/>
         </method>
+        <method name="QueryThreads">
+            <dox:d><![CDATA[
+                Creates a threads view with the given filter and sort order.
+                Returns the object path to the created view.
+            ]]></dox:d>
+            <arg name="type" type="i" direction="in"/>
+            <arg name="sort" type="a{sv}" direction="in"/>
+            <arg name="filter" type="s" direction="in"/>
+            <arg type="s" direction="out"/>
+            <annotation name="org.qtproject.QtDBus.QtTypeName.In1" value="QVariantMap"/>
+        </method>
+        <method name="QueryEvents">
+            <dox:d><![CDATA[
+                Creates an events view with the given filter and sort order.
+                Returns the object path to the created view.
+            ]]></dox:d>
+            <arg name="type" type="i" direction="in"/>
+            <arg name="sort" type="a{sv}" direction="in"/>
+            <arg name="filter" type="s" direction="in"/>
+            <arg type="s" direction="out"/>
+            <annotation name="org.qtproject.QtDBus.QtTypeName.In1" value="QVariantMap"/>
+        </method>
+        <method name="GetSingleThread">
+            <dox:d><![CDATA[
+                Returns one single thread for the given parameters
+            ]]></dox:d>
+            <arg name="type" type="i" direction="in"/>
+            <arg name="accountId" type="s" direction="in"/>
+            <arg name="threadId" type="s" direction="in"/>
+            <arg type="a{sv}" direction="out"/>
+            <annotation name="org.qtproject.QtDBus.QtTypeName.Out0" value="QVariantMap"/>
+        </method>
+        <method name="GetSingleEvent">
+            <dox:d><![CDATA[
+                Returns one single event for the given parameters
+            ]]></dox:d>
+            <arg name="type" type="i" direction="in"/>
+            <arg name="accountId" type="s" direction="in"/>
+            <arg name="threadId" type="s" direction="in"/>
+            <arg name="eventId" type="s" direction="in"/>
+            <arg type="a{sv}" direction="out"/>
+            <annotation name="org.qtproject.QtDBus.QtTypeName.Out0" value="QVariantMap"/>
+        </method>
         <signal name="ThreadsAdded">
             <dox:d><![CDATA[
                 Threads were added to the storage. The argument is a list of threads.

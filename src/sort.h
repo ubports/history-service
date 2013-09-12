@@ -25,6 +25,7 @@
 #include <QScopedPointer>
 #include <QString>
 #include <Qt>
+#include <QVariantMap>
 
 namespace History
 {
@@ -48,6 +49,8 @@ public:
 
     Qt::CaseSensitivity caseSensitivity() const;
     void setCaseSensitivity(Qt::CaseSensitivity value);
+
+    QVariantMap properties() const;
 
 protected:
     QScopedPointer<SortPrivate> d_ptr;

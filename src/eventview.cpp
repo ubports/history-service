@@ -23,7 +23,13 @@
 #include "eventview_p.h"
 #include "event.h"
 #include "filter.h"
+#include "itemfactory.h"
 #include "manager.h"
+#include "sort.h"
+#include "textevent.h"
+#include "voiceevent.h"
+#include <QDBusInterface>
+#include <QDBusReply>
 
 namespace History
 {
@@ -33,7 +39,7 @@ namespace History
 EventViewPrivate::EventViewPrivate(History::EventType theType,
                                    const History::SortPtr &theSort,
                                    const History::FilterPtr &theFilter)
-    : type(theType), sort(theSort), filter(theFilter)
+    : type(theType), sort(theSort), filter(theFilter), valid(true), dbus(0)
 {
 }
 
@@ -91,6 +97,22 @@ EventView::EventView(EventType type, const SortPtr &sort, const FilterPtr &filte
 {
     d_ptr->q_ptr = this;
 
+    QDBusInterface interface(History::DBusService, History::DBusObjectPath, History::DBusInterface);
+
+    QDBusReply<QString> reply = interface.call("QueryEvents",
+                                               (int) type,
+                                               sort ? sort->properties() : QVariantMap(),
+                                               filter ? filter->toString() : "");
+    if (!reply.isValid()) {
+        Q_EMIT invalidated();
+        d_ptr->valid = false;
+        return;
+    }
+
+    d_ptr->objectPath = reply.value();
+    d_ptr->dbus = new QDBusInterface(History::DBusService, d_ptr->objectPath, History::EventViewInterface,
+                                     QDBusConnection::sessionBus(), this);
+
     connect(Manager::instance(),
             SIGNAL(eventsAdded(History::Events)),
             SLOT(_d_eventsAdded(History::Events)));
@@ -104,6 +126,53 @@ EventView::EventView(EventType type, const SortPtr &sort, const FilterPtr &filte
 
 EventView::~EventView()
 {
+    Q_D(EventView);
+    if (d->valid) {
+        d->dbus->call("Destroy");
+    }
+}
+
+Events EventView::nextPage()
+{
+    Q_D(EventView);
+    Events events;
+
+    if (!d->valid) {
+        return events;
+    }
+
+    QDBusReply<QList<QVariantMap> > reply = d->dbus->call("NextPage");
+
+    if (!reply.isValid()) {
+        d->valid = false;
+        Q_EMIT invalidated();
+        return events;
+    }
+
+    QList<QVariantMap> eventsProperties = reply.value();
+    Q_FOREACH(const QVariantMap &properties, eventsProperties) {
+        EventPtr event;
+        switch (d->type) {
+        case EventTypeText:
+            event = ItemFactory::instance()->createTextEvent(properties);
+            break;
+        case EventTypeVoice:
+            event = ItemFactory::instance()->createVoiceEvent(properties);
+            break;
+        }
+
+        if (!event.isNull()) {
+            events << event;
+        }
+    }
+
+    return events;
+}
+
+bool EventView::isValid() const
+{
+    Q_D(const EventView);
+    return d->valid;
 }
 
 }

@@ -29,9 +29,8 @@
 #include "plugin.h"
 #include "textevent.h"
 #include "thread.h"
+#include "threadview.h"
 #include "voiceevent.h"
-#include "reader.h"
-#include "writer.h"
 #include <QDebug>
 
 #define HISTORY_INTERFACE "com.canonical.HistoryService"
@@ -41,7 +40,7 @@ namespace History
 
 // ------------- ManagerPrivate ------------------------------------------------
 
-ManagerPrivate::ManagerPrivate(const QString &theBackend)
+ManagerPrivate::ManagerPrivate()
     : dbus(new ManagerDBus())
 {
 }
@@ -52,8 +51,8 @@ ManagerPrivate::~ManagerPrivate()
 
 // ------------- Manager -------------------------------------------------------
 
-Manager::Manager(const QString &backendPlugin)
-    : d_ptr(new ManagerPrivate(backendPlugin))
+Manager::Manager()
+    : d_ptr(new ManagerPrivate())
 {
     Q_D(Manager);
 
@@ -92,24 +91,14 @@ ThreadViewPtr Manager::queryThreads(EventType type,
                                     const SortPtr &sort,
                                     const FilterPtr &filter)
 {
-    Q_D(Manager);
-    if (d->reader) {
-        return d->reader->queryThreads(type, sort, filter);
-    }
-
-    return ThreadViewPtr();
+    return ThreadViewPtr(new ThreadView(type, sort, filter));
 }
 
 EventViewPtr Manager::queryEvents(EventType type,
                                   const SortPtr &sort,
                                   const FilterPtr &filter)
 {
-    Q_D(Manager);
-    if (d->reader) {
-        return d->reader->queryEvents(type, sort, filter);
-    }
-
-    return EventViewPtr();
+    return EventViewPtr(new EventView(type, sort, filter));
 }
 
 EventPtr Manager::getSingleEvent(EventType type, const QString &accountId, const QString &threadId, const QString &eventId, bool useCache)
@@ -121,8 +110,8 @@ EventPtr Manager::getSingleEvent(EventType type, const QString &accountId, const
         event = ItemFactory::instance()->cachedEvent(accountId, threadId, eventId, type);
     }
 
-    if (event.isNull() && d->reader) {
-        event = d->reader->getSingleEvent(type, accountId, threadId, eventId);
+    if (event.isNull()) {
+        event = d->dbus->getSingleEvent(type, accountId, threadId, eventId);
     }
 
     return event;
@@ -143,17 +132,14 @@ ThreadPtr Manager::getSingleThread(EventType type, const QString &accountId, con
 {
     Q_D(Manager);
 
-    // try to use the cached instance to avoid querying the backend
     ThreadPtr thread;
     if (useCache) {
         thread = ItemFactory::instance()->cachedThread(accountId, threadId, type);
     }
 
-    // and if it isn´t there, get from the backend
-    if (thread.isNull() && d->reader) {
-        thread = d->reader->getSingleThread(type, accountId, threadId);
+    if (thread.isNull()) {
+        thread = d->dbus->getSingleThread(type, accountId, threadId);
     }
-
     return thread;
 }
 

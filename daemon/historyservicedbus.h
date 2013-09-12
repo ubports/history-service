@@ -54,6 +54,12 @@ public:
     bool RemoveThreads(const QList <QVariantMap> &events);
     bool RemoveEvents(const QList <QVariantMap> &events);
 
+    // views
+    QString QueryThreads(int type, const QVariantMap &sort, const QString &filter);
+    QString QueryEvents(int type, const QVariantMap &sort, const QString &filter);
+    QVariantMap GetSingleThread(int type, const QString &accountId, const QString &threadId);
+    QVariantMap GetSingleEvent(int type, const QString &accountId, const QString &threadId, const QString &eventId);
+
 Q_SIGNALS:
     // signals that will be relayed into the bus
     void ThreadsAdded(const QList<QVariantMap> &threads);

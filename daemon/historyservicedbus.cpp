@@ -114,3 +114,31 @@ bool HistoryServiceDBus::RemoveEvents(const QList<QVariantMap> &events)
     return true;
 }
 
+QString HistoryServiceDBus::QueryThreads(int type, const QVariantMap &sort, const QString &filter)
+{
+    qDebug() << __PRETTY_FUNCTION__;
+    qDebug() << type << sort << filter;
+    return QString::null;
+}
+
+QString HistoryServiceDBus::QueryEvents(int type, const QVariantMap &sort, const QString &filter)
+{
+    qDebug() << __PRETTY_FUNCTION__;
+    qDebug() << type << sort << filter;
+    return QString::null;
+}
+
+QVariantMap HistoryServiceDBus::GetSingleThread(int type, const QString &accountId, const QString &threadId)
+{
+    qDebug() << __PRETTY_FUNCTION__;
+    qDebug() << type << accountId << threadId;
+    return QVariantMap();
+}
+
+QVariantMap HistoryServiceDBus::GetSingleEvent(int type, const QString &accountId, const QString &threadId, const QString &eventId)
+{
+    qDebug() << __PRETTY_FUNCTION__;
+    qDebug() << type << accountId << threadId;
+    return QVariantMap();
+}
+

@@ -40,6 +40,7 @@ ManagerDBus::ManagerDBus(QObject *parent) :
                                              DBusInterface)
 {
     qDBusRegisterMetaType<QList<QVariantMap> >();
+    qRegisterMetaType<QList<QVariantMap> >();
 
     // listen for signals coming from the bus
     QDBusConnection connection = QDBusConnection::sessionBus();
@@ -76,17 +77,68 @@ ThreadPtr ManagerDBus::threadForParticipants(const QString &accountId,
 
 bool ManagerDBus::writeEvents(const Events &events)
 {
-    // FIXME: implement
+    QList<QVariantMap> eventMap = eventsToProperties(events);
+    if (eventMap.isEmpty()) {
+        return false;
+    }
+
+    QDBusReply<bool> reply = mInterface.call("WriteEvents", QVariant::fromValue(eventMap));
+    if (!reply.isValid()) {
+        return false;
+    }
+    return reply.value();
 }
 
 bool ManagerDBus::removeThreads(const Threads &threads)
 {
-    // FIXME: implement
+    QList<QVariantMap> threadMap = threadsToProperties(threads);
+    if (threadMap.isEmpty()) {
+        return false;
+    }
+
+    QDBusReply<bool> reply = mInterface.call("RemoveThreads", QVariant::fromValue(threadMap));
+    if (!reply.isValid()) {
+        return false;
+    }
+    return reply.value();
 }
 
 bool ManagerDBus::removeEvents(const Events &events)
 {
-    // FIXME: implement
+    QList<QVariantMap> eventMap = eventsToProperties(events);
+    if (eventMap.isEmpty()) {
+        return false;
+    }
+
+    QDBusReply<bool> reply = mInterface.call("RemoveEvents", QVariant::fromValue(eventMap));
+    if (!reply.isValid()) {
+        return false;
+    }
+    return reply.value();
+}
+
+ThreadPtr ManagerDBus::getSingleThread(EventType type, const QString &accountId, const QString &threadId)
+{
+    ThreadPtr thread;
+    QDBusReply<QVariantMap> reply = mInterface.call("GetSingleThread", (int)type, accountId, threadId);
+    if (!reply.isValid()) {
+        return thread;
+    }
+
+    thread = ItemFactory::instance()->createThread(reply.value());
+    return thread;
+}
+
+EventPtr ManagerDBus::getSingleEvent(EventType type, const QString &accountId, const QString &threadId, const QString &eventId)
+{
+    EventPtr event;
+    QDBusReply<QVariantMap> reply = mInterface.call("GetSingleEvent", (int)type, accountId, threadId, eventId);
+    if (!reply.isValid()) {
+        return event;
+    }
+
+    event = eventFromProperties(reply.value());
+    return event;
 }
 
 void ManagerDBus::onThreadsAdded(const QList<QVariantMap> &threads)

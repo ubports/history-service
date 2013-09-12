@@ -40,8 +40,8 @@ public:
               const History::FilterPtr &filter);
     virtual ~EventView();
 
-    virtual History::Events nextPage() = 0;
-    virtual bool isValid() const = 0;
+    History::Events nextPage();
+    bool isValid() const;
 
 Q_SIGNALS:
     void eventsAdded(const History::Events &events);

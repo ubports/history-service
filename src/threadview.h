@@ -41,8 +41,8 @@ public:
                const History::FilterPtr &filter);
     virtual ~ThreadView();
 
-    virtual Threads nextPage() = 0;
-    virtual bool isValid() const = 0;
+    Threads nextPage();
+    bool isValid() const;
 
 Q_SIGNALS:
     void threadsAdded(const History::Threads &threads);

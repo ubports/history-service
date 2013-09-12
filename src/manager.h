@@ -72,7 +72,7 @@ Q_SIGNALS:
     void eventsRemoved(const History::Events &events);
 
 private:
-    Manager(const QString &backendPlugin = QString::null);
+    Manager();
     QScopedPointer<ManagerPrivate> d_ptr;
 };
 

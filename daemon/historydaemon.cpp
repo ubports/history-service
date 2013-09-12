@@ -76,6 +76,8 @@ HistoryDaemon::HistoryDaemon(QObject *parent)
 
     // FIXME: we need to do this in a better way, but for now this should do
     mProtocolFlags["ofono"] = History::MatchPhoneNumber;
+
+    mDBus.connectToBus();
 }
 
 HistoryDaemon::~HistoryDaemon()

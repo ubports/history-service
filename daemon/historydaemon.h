@@ -27,6 +27,7 @@
 #include "types.h"
 #include "textchannelobserver.h"
 #include "callchannelobserver.h"
+#include "historyservicedbus.h"
 
 class HistoryDaemon : public QObject
 {
@@ -59,6 +60,7 @@ private:
     QMap<QString, History::MatchFlags> mProtocolFlags;
     History::ReaderPtr mReader;
     History::WriterPtr mWriter;
+    HistoryServiceDBus mDBus;
 };
 
 #endif

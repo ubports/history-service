@@ -22,8 +22,12 @@
 #include "threadview.h"
 #include "threadview_p.h"
 #include "filter.h"
+#include "itemfactory.h"
 #include "manager.h"
+#include "sort.h"
 #include "thread.h"
+#include <QDBusInterface>
+#include <QDBusReply>
 
 namespace History
 {
@@ -33,7 +37,7 @@ namespace History
 ThreadViewPrivate::ThreadViewPrivate(History::EventType theType,
                                      const History::SortPtr &theSort,
                                      const History::FilterPtr &theFilter)
-    : type(theType), sort(theSort), filter(theFilter)
+    : type(theType), sort(theSort), filter(theFilter), valid(false), dbus(0)
 {
 }
 
@@ -93,6 +97,23 @@ ThreadView::ThreadView(History::EventType type,
 {
     d_ptr->q_ptr = this;
 
+    QDBusInterface interface(History::DBusService, History::DBusObjectPath, History::DBusInterface);
+
+    QDBusReply<QString> reply = interface.call("QueryThreads",
+                                               (int) type,
+                                               sort ? sort->properties() : QVariantMap(),
+                                               filter ? filter->toString() : "");
+    if (!reply.isValid()) {
+        Q_EMIT invalidated();
+        d_ptr->valid = false;
+        return;
+    }
+
+    d_ptr->objectPath = reply.value();
+
+    d_ptr->dbus = new QDBusInterface(History::DBusService, d_ptr->objectPath, History::ThreadViewInterface,
+                                     QDBusConnection::sessionBus(), this);
+
     connect(Manager::instance(),
             SIGNAL(threadsAdded(History::Threads)),
             SLOT(_d_threadsAdded(History::Threads)));
@@ -106,6 +127,43 @@ ThreadView::ThreadView(History::EventType type,
 
 ThreadView::~ThreadView()
 {
+    Q_D(ThreadView);
+    if (d->valid) {
+        d->dbus->call("Destroy");
+    }
+}
+
+Threads ThreadView::nextPage()
+{
+    Threads threads;
+    Q_D(ThreadView);
+    if (!d->valid) {
+        return threads;
+    }
+
+    QDBusReply<QList<QVariantMap> > reply = d->dbus->call("NextPage");
+
+    if (!reply.isValid()) {
+        d->valid = false;
+        Q_EMIT invalidated();
+        return threads;
+    }
+
+    QList<QVariantMap> threadsProperties = reply.value();
+    Q_FOREACH(const QVariantMap &properties, threadsProperties) {
+        ThreadPtr thread = ItemFactory::instance()->createThread(properties);
+        if (!thread.isNull()) {
+            threads << thread;
+        }
+    }
+
+    return threads;
+}
+
+bool ThreadView::isValid() const
+{
+    Q_D(const ThreadView);
+    return d->valid;
 }
 
 }

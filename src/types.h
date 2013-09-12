@@ -89,6 +89,8 @@ Q_DECLARE_FLAGS(AttachmentFlags, AttachmentFlag)
 static const char* DBusService = "com.canonical.HistoryService";
 static const char* DBusObjectPath = "/com/canonical/HistoryService";
 static const char* DBusInterface = "com.canonical.HistoryService";
+static const char* ThreadViewInterface = "com.canonical.HistoryService.ThreadView";
+static const char* EventViewInterface = "com.canonical.HistoryService.EventView";
 
 // fields
 static const char* FieldAccountId = "accountId";
@@ -113,6 +115,11 @@ static const char* FieldAttachments = "attachments";
 // voice event fields
 static const char* FieldMissed = "missed";
 static const char* FieldDuration = "duration";
+
+// sort stuff
+static const char* SortField = "sortField";
+static const char* SortOrder = "sortOrder";
+static const char* CaseSensitivity = "caseSensitivity";
 
 }
 
