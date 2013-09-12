@@ -38,8 +38,7 @@ public:
     ~ManagerPrivate();
 
     QString backendPlugin;
-    ReaderPtr reader;
-    WriterPtr writer;
+    PluginPtr backend;
     QScopedPointer<ManagerDBus> dbus;
 };
 
