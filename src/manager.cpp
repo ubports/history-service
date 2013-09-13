@@ -31,8 +31,6 @@
 #include "voiceevent.h"
 #include <QDebug>
 
-#define HISTORY_INTERFACE "com.canonical.HistoryService"
-
 namespace History
 {
 
