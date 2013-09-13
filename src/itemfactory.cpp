@@ -211,6 +211,7 @@ TextEventPtr ItemFactory::createTextEvent(const QVariantMap &properties)
     properties["readTimestamp"].value<QDBusArgument>() >> readTimestamp;
     event = createTextEvent(accountId, threadId, eventId, senderId, timestamp, newEvent,
                             message, messageType, messageFlags, readTimestamp, subject);
+    // FIXME: handle attachments
     return event;
 }
 

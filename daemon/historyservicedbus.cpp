@@ -133,8 +133,7 @@ QString HistoryServiceDBus::QueryThreads(int type, const QVariantMap &sort, cons
 QString HistoryServiceDBus::QueryEvents(int type, const QVariantMap &sort, const QString &filter)
 {
     qDebug() << __PRETTY_FUNCTION__;
-    qDebug() << type << sort << filter;
-    return QString::null;
+    return HistoryDaemon::instance()->queryEvents(type, sort, filter);
 }
 
 QVariantMap HistoryServiceDBus::GetSingleThread(int type, const QString &accountId, const QString &threadId)

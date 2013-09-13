@@ -24,6 +24,7 @@ plugins/sqlite/schema/schema.sql
 daemon/historyserviceadaptor.*
 src/libhistoryservice.so*
 src/pluginthreadviewadaptor.*
+src/plugineventviewadaptor.*
 Testing
 */tests/*Test
 test_*.xml

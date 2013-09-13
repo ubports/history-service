@@ -33,18 +33,15 @@
 SQLiteHistoryEventView::SQLiteHistoryEventView(SQLiteHistoryPlugin *plugin,
                                              History::EventType type,
                                              const History::SortPtr &sort,
-                                             const History::FilterPtr &filter)
-    : History::EventView(type, sort, filter), mType(type), mSort(sort), mFilter(filter),
-      mQuery(SQLiteDatabase::instance()->database()), mPageSize(15), mPlugin(plugin), mOffset(0)
+                                             const QString &filter)
+    : History::PluginEventView(), mType(type), mSort(sort), mFilter(filter),
+      mQuery(SQLiteDatabase::instance()->database()), mPageSize(15), mPlugin(plugin), mOffset(0), mValid(true)
 {
     mTemporaryTable = QString("eventview%1%2").arg(QString::number((qulonglong)this), QDateTime::currentDateTimeUtc().toString("yyyyMMddhhmmsszzz"));
     mQuery.setForwardOnly(true);
 
     // FIXME: validate the filter
-    QString condition;
-    if (!filter.isNull()) {
-        condition = filter->toString();
-    }
+    QString condition = filter;
     if (!condition.isEmpty()) {
         condition.prepend(" WHERE ");
     }
@@ -69,6 +66,8 @@ SQLiteHistoryEventView::SQLiteHistoryEventView(SQLiteHistoryPlugin *plugin,
     }
 
     if (!mQuery.exec(queryText)) {
+        mValid = false;
+        Q_EMIT Invalidated();
         qCritical() << "Error:" << mQuery.lastError() << mQuery.lastQuery();
         return;
     }
@@ -82,24 +81,30 @@ SQLiteHistoryEventView::~SQLiteHistoryEventView()
     }
 }
 
-History::Events SQLiteHistoryEventView::nextPage()
+QList<QVariantMap> SQLiteHistoryEventView::NextPage()
 {
-    History::Events events;
+    QList<QVariantMap> events;
 
     // now prepare for selecting from it
     mQuery.prepare(QString("SELECT * FROM %1 LIMIT %2 OFFSET %3").arg(mTemporaryTable,
                                                                       QString::number(mPageSize), QString::number(mOffset)));
     if (!mQuery.exec()) {
+        mValid = false;
+        Q_EMIT Invalidated();
         qCritical() << "Error:" << mQuery.lastError() << mQuery.lastQuery();
         return events;
     }
 
     while (mQuery.next()) {
-        History::TextEventAttachments attachments;
+        QVariantMap event;
         History::MessageType messageType;
-        QString accountId = mQuery.value(0).toString();
-        QString threadId = mQuery.value(1).toString();
-        QString eventId = mQuery.value(2).toString();
+        event[History::FieldAccountId] = mQuery.value(0);
+        event[History::FieldThreadId] = mQuery.value(1);
+        event[History::FieldEventId] = mQuery.value(2);
+        event[History::FieldSenderId] = mQuery.value(3);
+        event[History::FieldTimestamp] = mQuery.value(4);
+        event[History::FieldNewEvent] = mQuery.value(5);
+
         switch (mType) {
         case History::EventTypeText:
             messageType = (History::MessageType) mQuery.value(7).toInt();
@@ -107,13 +112,14 @@ History::Events SQLiteHistoryEventView::nextPage()
                 QSqlQuery attachmentsQuery(SQLiteDatabase::instance()->database());
                 attachmentsQuery.prepare("SELECT attachmentId, contentType, filePath, status FROM text_event_attachments "
                                     "WHERE accountId=:accountId and threadId=:threadId and eventId=:eventId");
-                attachmentsQuery.bindValue(":accountId", accountId);
-                attachmentsQuery.bindValue(":threadId", threadId);
-                attachmentsQuery.bindValue(":eventId", eventId);
+                attachmentsQuery.bindValue(":accountId", event[History::FieldAccountId]);
+                attachmentsQuery.bindValue(":threadId", event[History::FieldThreadId]);
+                attachmentsQuery.bindValue(":eventId", event[History::FieldEventId]);
                 if (!attachmentsQuery.exec()) {
                     qCritical() << "Error:" << attachmentsQuery.lastError() << attachmentsQuery.lastQuery();
                 }
-                while (attachmentsQuery.next()) {
+                // FIXME: reimplement
+                /*while (attachmentsQuery.next()) {
                     History::TextEventAttachmentPtr attachment = History::TextEventAttachmentPtr(
                                 new History::TextEventAttachment(accountId,
                                                                  threadId,
@@ -124,33 +130,21 @@ History::Events SQLiteHistoryEventView::nextPage()
                                                                  (History::AttachmentFlag) attachmentsQuery.value(3).toInt()));
                     attachments << attachment;
 
-                }
+                }*/
                 attachmentsQuery.clear();
             }
-            events << History::ItemFactory::instance()->createTextEvent(accountId,
-                                                                        threadId,
-                                                                        eventId,
-                                                                        mQuery.value(3).toString(),
-                                                                        mQuery.value(4).toDateTime(),
-                                                                        mQuery.value(5).toBool(),
-                                                                        mQuery.value(6).toString(),
-                                                                        messageType,
-                                                                        (History::MessageFlags) mQuery.value(8).toInt(),
-                                                                        mQuery.value(9).toDateTime(),
-                                                                        mQuery.value(10).toString(),
-                                                                        attachments);
+            event[History::FieldMessage] = mQuery.value(6);
+            event[History::FieldMessageType] = mQuery.value(7);
+            event[History::FieldMessageFlags] = mQuery.value(8);
+            event[History::FieldReadTimestamp] = mQuery.value(9);
             break;
         case History::EventTypeVoice:
-            events << History::ItemFactory::instance()->createVoiceEvent(accountId,
-                                                                         threadId,
-                                                                         eventId,
-                                                                         mQuery.value(3).toString(),
-                                                                         mQuery.value(4).toDateTime(),
-                                                                         mQuery.value(5).toBool(),
-                                                                         mQuery.value(7).toBool(),
-                                                                         QTime(0,0).addSecs(mQuery.value(6).toInt()));
+            event[History::FieldDuration] = QTime(0,0).addSecs(mQuery.value(6).toInt());
+            event[History::FieldMissed] = mQuery.value(7);
             break;
         }
+
+        events << event;
     }
 
     mOffset += mPageSize;
@@ -159,7 +153,7 @@ History::Events SQLiteHistoryEventView::nextPage()
     return events;
 }
 
-bool SQLiteHistoryEventView::isValid() const
+bool SQLiteHistoryEventView::IsValid() const
 {
     return mQuery.isActive();
 }

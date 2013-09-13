@@ -8,6 +8,7 @@ set(library_SRCS
     managerdbus.cpp
     phoneutils.cpp
     pluginthreadview.cpp
+    plugineventview.cpp
     sort.cpp
     textevent.cpp
     texteventattachment.cpp
@@ -34,6 +35,8 @@ set(library_HDRS
     plugin.h
     PluginThreadView
     pluginthreadview.h
+    PluginEventView
+    plugineventview.h
     Sort
     sort.h
     TextEvent
@@ -63,6 +66,7 @@ set(library_PRIV_HDRS
     phonenumberutils_p.h
     phoneutils_p.h
     pluginthreadview_p.h
+    plugineventview_p.h
     sort_p.h
     textevent_p.h
     texteventattachment_p.h
@@ -73,6 +77,7 @@ set(library_PRIV_HDRS
 )
 
 qt5_add_dbus_adaptor(library_SRCS PluginThreadView.xml pluginthreadview.h History::PluginThreadView)
+qt5_add_dbus_adaptor(library_SRCS PluginEventView.xml plugineventview.h History::PluginEventView)
 
 include_directories(${CMAKE_SOURCE_DIR}/src
                     ${CMAKE_CURRENT_BINARY_DIR})

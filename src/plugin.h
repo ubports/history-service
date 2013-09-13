@@ -29,6 +29,7 @@ namespace History
 {
 
 class PluginThreadView;
+class PluginEventView;
 
 class Plugin
 {
@@ -39,9 +40,9 @@ public:
     virtual PluginThreadView* queryThreads(EventType type,
                                        const SortPtr &sort = SortPtr(),
                                        const QString &filter = QString::null) = 0;
-    virtual EventViewPtr queryEvents(EventType type,
-                                     const SortPtr &sort = SortPtr(),
-                                     const FilterPtr &filter = FilterPtr()) = 0;
+    virtual PluginEventView* queryEvents(EventType type,
+                                         const SortPtr &sort = SortPtr(),
+                                         const QString &filter = QString::null) = 0;
     virtual ThreadPtr getSingleThread(EventType type,
                                       const QString &accountId,
                                       const QString &threadId) = 0;

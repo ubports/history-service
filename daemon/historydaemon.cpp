@@ -32,6 +32,7 @@
 #include "pluginmanager.h"
 #include "plugin.h"
 #include "pluginthreadview.h"
+#include "plugineventview.h"
 
 #include <QStandardPaths>
 #include <QCryptographicHash>
@@ -102,6 +103,24 @@ QString HistoryDaemon::queryThreads(int type, const QVariantMap &sort, const QSt
 
     History::SortPtr sortPtr = History::Sort::fromProperties(sort);
     History::PluginThreadView *view = mBackend->queryThreads((History::EventType)type, sortPtr, filter);
+
+    if (!view) {
+        return QString::null;
+    }
+
+    // FIXME: maybe we should keep a list of views to manually remove them at some point?
+    view->setParent(this);
+    return view->objectPath();
+}
+
+QString HistoryDaemon::queryEvents(int type, const QVariantMap &sort, const QString &filter)
+{
+    if (!mBackend) {
+        return QString::null;
+    }
+
+    History::SortPtr sortPtr = History::Sort::fromProperties(sort);
+    History::PluginEventView *view = mBackend->queryEvents((History::EventType)type, sortPtr, filter);
 
     if (!view) {
         return QString::null;

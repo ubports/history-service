@@ -43,9 +43,9 @@ public:
     History::PluginThreadView* queryThreads(History::EventType type,
                                             const History::SortPtr &sort = History::SortPtr(),
                                             const QString &filter = QString::null);
-    History::EventViewPtr queryEvents(History::EventType type,
-                                      const History::SortPtr &sort = History::SortPtr(),
-                                      const History::FilterPtr &filter = History::FilterPtr());
+    History::PluginEventView* queryEvents(History::EventType type,
+                                          const History::SortPtr &sort = History::SortPtr(),
+                                          const QString &filter = QString::null);
     History::ThreadPtr threadForParticipants(const QString &accountId,
                                              History::EventType type,
                                              const QStringList &participants,

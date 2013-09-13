@@ -1,0 +1,6 @@
+#ifndef PLUGINEVENTVIEW_H
+#define PLUGINEVENTVIEW_H
+
+#include "plugineventview.h"
+
+#endif // PLUGINEVENTVIEW_H

@@ -43,6 +43,7 @@ public:
                                              History::MatchFlags matchFlags = History::MatchCaseSensitive,
                                              bool create = true);
     QString queryThreads(int type, const QVariantMap &sort, const QString &filter);
+    QString queryEvents(int type, const QVariantMap &sort, const QString &filter);
 
 private Q_SLOTS:
     void onObserverCreated();
