@@ -30,6 +30,7 @@ PluginThreadView::PluginThreadView(QObject *parent) :
 
 PluginThreadView::~PluginThreadView()
 {
+    qDebug() << __PRETTY_FUNCTION__;
     Q_D(PluginThreadView);
     QDBusConnection::sessionBus().unregisterObject(d->objectPath);
 }

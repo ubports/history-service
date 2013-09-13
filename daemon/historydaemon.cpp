@@ -101,7 +101,7 @@ QString HistoryDaemon::queryThreads(int type, const QVariantMap &sort, const QSt
     }
 
     History::SortPtr sortPtr = History::Sort::fromProperties(sort);
-    History::PluginThreadViewPtr view = mBackend->queryThreads((History::EventType)type, sortPtr, filter);
+    History::PluginThreadView *view = mBackend->queryThreads((History::EventType)type, sortPtr, filter);
 
     if (!view) {
         return QString::null;

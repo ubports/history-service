@@ -40,11 +40,11 @@ SQLiteHistoryPlugin::SQLiteHistoryPlugin(QObject *parent) :
 }
 
 // Reader
-History::PluginThreadViewPtr SQLiteHistoryPlugin::queryThreads(History::EventType type,
+History::PluginThreadView *SQLiteHistoryPlugin::queryThreads(History::EventType type,
                                                          const History::SortPtr &sort,
                                                          const QString &filter)
 {
-    return History::PluginThreadViewPtr(new SQLiteHistoryThreadView(this, type, sort, filter));
+    return new SQLiteHistoryThreadView(this, type, sort, filter);
 }
 
 History::EventViewPtr SQLiteHistoryPlugin::queryEvents(History::EventType type,

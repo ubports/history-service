@@ -28,8 +28,7 @@
 namespace History
 {
 
-class Writer;
-class Reader;
+class PluginThreadView;
 
 class Plugin
 {
@@ -37,7 +36,7 @@ public:
     virtual ~Plugin() {}
 
     // Reader part of the plugin
-    virtual PluginThreadViewPtr queryThreads(EventType type,
+    virtual PluginThreadView* queryThreads(EventType type,
                                        const SortPtr &sort = SortPtr(),
                                        const QString &filter = QString::null) = 0;
     virtual EventViewPtr queryEvents(EventType type,
