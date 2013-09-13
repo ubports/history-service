@@ -33,18 +33,22 @@
 SQLiteHistoryThreadView::SQLiteHistoryThreadView(SQLiteHistoryPlugin *plugin,
                                                  History::EventType type,
                                                  const History::SortPtr &sort,
-                                                 const History::FilterPtr &filter)
-    : History::ThreadView(type, sort, filter), mPlugin(plugin), mType(type), mSort(sort),
-      mFilter(filter), mPageSize(15), mQuery(SQLiteDatabase::instance()->database()), mOffset(0)
+                                                 const QString &filter)
+    : History::PluginThreadView(), mPlugin(plugin), mType(type), mSort(sort),
+      mFilter(filter), mPageSize(15), mQuery(SQLiteDatabase::instance()->database()), mOffset(0), mValid(true)
 {
-
+    qDebug() << __PRETTY_FUNCTION__;
     mTemporaryTable = QString("threadview%1%2").arg(QString::number((qulonglong)this), QDateTime::currentDateTimeUtc().toString("yyyyMMddhhmmsszzz"));
     mQuery.setForwardOnly(true);
 
     // FIXME: validate the filter
-    QString condition;
+    QString condition = filter;
     if (!filter.isNull()) {
-        condition = filter->toString("threads");
+        // FIXME: the filters should be implemented in a better way
+        condition.replace("accountId=", "threads.accountId=");
+        condition.replace("threadId=", "threads.threadId=");
+        condition.replace("count=", "threads.count=");
+        condition.replace("unreadCount=", "threads.unreadCount=");
     }
 
     if (!condition.isEmpty()) {
@@ -97,6 +101,8 @@ SQLiteHistoryThreadView::SQLiteHistoryThreadView(SQLiteHistoryPlugin *plugin,
     // create the temporary table
     if (!mQuery.exec(queryText)) {
         qCritical() << "Error:" << mQuery.lastError() << mQuery.lastQuery();
+        mValid = false;
+        Q_EMIT Invalidated();
         return;
     }
 }
@@ -109,73 +115,61 @@ SQLiteHistoryThreadView::~SQLiteHistoryThreadView()
     }
 }
 
-History::Threads SQLiteHistoryThreadView::nextPage()
+QList<QVariantMap> SQLiteHistoryThreadView::NextPage()
 {
-    History::Threads threads;
+    qDebug() << __PRETTY_FUNCTION__;
+    QList<QVariantMap> threads;
 
     // now prepare for selecting from it
     mQuery.prepare(QString("SELECT * FROM %1 LIMIT %2 OFFSET %3").arg(mTemporaryTable,
                                                                       QString::number(mPageSize), QString::number(mOffset)));
     if (!mQuery.exec()) {
         qCritical() << "Error:" << mQuery.lastError() << mQuery.lastQuery();
+        mValid = false;
+        Q_EMIT Invalidated();
         return threads;
     }
 
     while (mQuery.next()) {
-        QString accountId = mQuery.value(0).toString();
-        QString threadId = mQuery.value(1).toString();
-        QString lastEventId = mQuery.value(2).toString();
-        int count = mQuery.value(3).toInt();
-        int unreadCount = mQuery.value(4).toInt();
+        QVariantMap thread;
+        thread[History::FieldAccountId] = mQuery.value(0);
+        thread[History::FieldThreadId] = mQuery.value(1);
 
-        QStringList participants = mQuery.value(5).toString().split("|,|");
+        thread[History::FieldEventId] = mQuery.value(2);
+        thread[History::FieldCount] = mQuery.value(3);
+        thread[History::FieldUnreadCount] = mQuery.value(4);
+        thread[History::FieldParticipants] = mQuery.value(5).toString().split("|,|");
+
+        // the generic event fields
+        thread[History::FieldSenderId] = mQuery.value(6);
+        thread[History::FieldTimestamp] = mQuery.value(7);
+        thread[History::FieldNewEvent] = mQuery.value(8);
 
         // the next step is to get the last event
-        History::EventPtr historyEvent;
-        if (!lastEventId.isEmpty()) {
-            switch (mType) {
-            case History::EventTypeText:
-                historyEvent = History::ItemFactory::instance()->createTextEvent(accountId,
-                                                                                 threadId,
-                                                                                 lastEventId,
-                                                                                 mQuery.value(6).toString(),
-                                                                                 mQuery.value(7).toDateTime(),
-                                                                                 mQuery.value(8).toBool(),
-                                                                                 mQuery.value(9).toString(),
-                                                                                 (History::MessageType)mQuery.value(10).toInt(),
-                                                                                 History::MessageFlags(mQuery.value(11).toInt()),
-                                                                                 mQuery.value(12).toDateTime());
-                break;
-            case History::EventTypeVoice:
-                historyEvent = History::ItemFactory::instance()->createVoiceEvent(accountId,
-                                                                                  threadId,
-                                                                                  lastEventId,
-                                                                                  mQuery.value(6).toString(),
-                                                                                  mQuery.value(7).toDateTime(),
-                                                                                  mQuery.value(8).toBool(),
-                                                                                  mQuery.value(10).toBool(),
-                                                                                  QTime(0,0).addSecs(mQuery.value(9).toInt()));
-                break;
-            }
+        switch (mType) {
+        case History::EventTypeText:
+            thread[History::FieldMessage] = mQuery.value(9);
+            thread[History::FieldMessageType] = mQuery.value(10);
+            thread[History::FieldMessageFlags] = mQuery.value(11);
+            thread[History::FieldReadTimestamp] = mQuery.value(12);
+            break;
+        case History::EventTypeVoice:
+            thread[History::FieldMissed] = mQuery.value(10);
+            thread[History::FieldDuration] = QTime(0,0).addSecs(mQuery.value(9).toInt());
+            break;
         }
-        // and last but not least, create the thread and append it to the result set
-        History::ThreadPtr thread = History::ItemFactory::instance()->createThread(accountId,
-                                                                                   threadId,
-                                                                                   mType,
-                                                                                   participants,
-                                                                                   historyEvent,
-                                                                                   count,
-                                                                                   unreadCount);
         threads << thread;
     }
 
     mOffset += mPageSize;
     mQuery.clear();
 
+    qDebug() << "Threads:" << threads;
+
     return threads;
 }
 
-bool SQLiteHistoryThreadView::isValid() const
+bool SQLiteHistoryThreadView::IsValid() const
 {
-    return mQuery.isActive();
+    return mValid;
 }

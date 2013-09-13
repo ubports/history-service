@@ -100,4 +100,17 @@ QVariantMap Sort::properties() const
     return map;
 }
 
+SortPtr Sort::fromProperties(const QVariantMap &properties)
+{
+    SortPtr sort;
+    if (properties.isEmpty()) {
+        return sort;
+    }
+
+    sort = SortPtr(new Sort(properties[SortField].toString(),
+                            (Qt::SortOrder) properties[SortOrder].toInt(),
+                            (Qt::CaseSensitivity) properties[CaseSensitivity].toInt()));
+    return sort;
+}
+
 }

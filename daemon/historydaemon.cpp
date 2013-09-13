@@ -24,12 +24,14 @@
 #include "itemfactory.h"
 #include "thread.h"
 #include "manager.h"
+#include "sort.h"
 #include "textevent.h"
 #include "texteventattachment.h"
 #include "voiceevent.h"
 
 #include "pluginmanager.h"
 #include "plugin.h"
+#include "pluginthreadview.h"
 
 #include <QStandardPaths>
 #include <QCryptographicHash>
@@ -90,6 +92,24 @@ History::ThreadPtr HistoryDaemon::threadForParticipants(const QString &accountId
         thread = mBackend->createThreadForParticipants(accountId, type, participants);
     }
     return thread;
+}
+
+QString HistoryDaemon::queryThreads(int type, const QVariantMap &sort, const QString &filter)
+{
+    if (!mBackend) {
+        return QString::null;
+    }
+
+    History::SortPtr sortPtr = History::Sort::fromProperties(sort);
+    History::PluginThreadViewPtr view = mBackend->queryThreads((History::EventType)type, sortPtr, filter);
+
+    if (!view) {
+        return QString::null;
+    }
+
+    // FIXME: maybe we should keep a list of views to manually remove them at some point?
+    view->setParent(this);
+    return view->objectPath();
 }
 
 void HistoryDaemon::onObserverCreated()

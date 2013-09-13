@@ -28,6 +28,7 @@
 #include "thread.h"
 #include <QDBusInterface>
 #include <QDBusReply>
+#include <QDebug>
 
 namespace History
 {
@@ -144,6 +145,7 @@ Threads ThreadView::nextPage()
     QDBusReply<QList<QVariantMap> > reply = d->dbus->call("NextPage");
 
     if (!reply.isValid()) {
+        qDebug() << "Error:" << reply.error();
         d->valid = false;
         Q_EMIT invalidated();
         return threads;

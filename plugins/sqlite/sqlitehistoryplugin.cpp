@@ -40,11 +40,11 @@ SQLiteHistoryPlugin::SQLiteHistoryPlugin(QObject *parent) :
 }
 
 // Reader
-History::ThreadViewPtr SQLiteHistoryPlugin::queryThreads(History::EventType type,
+History::PluginThreadViewPtr SQLiteHistoryPlugin::queryThreads(History::EventType type,
                                                          const History::SortPtr &sort,
-                                                         const History::FilterPtr &filter)
+                                                         const QString &filter)
 {
-    return History::ThreadViewPtr(new SQLiteHistoryThreadView(this, type, sort, filter));
+    return History::PluginThreadViewPtr(new SQLiteHistoryThreadView(this, type, sort, filter));
 }
 
 History::EventViewPtr SQLiteHistoryPlugin::queryEvents(History::EventType type,
@@ -146,7 +146,7 @@ History::ThreadPtr SQLiteHistoryPlugin::threadForParticipants(const QString &acc
 
 History::ThreadPtr SQLiteHistoryPlugin::getSingleThread(History::EventType type, const QString &accountId, const QString &threadId)
 {
-    History::IntersectionFilterPtr intersectionFilter(new History::IntersectionFilter());
+    /*History::IntersectionFilterPtr intersectionFilter(new History::IntersectionFilter());
     intersectionFilter->append(History::FilterPtr(new History::Filter("accountId", accountId)));
     intersectionFilter->append(History::FilterPtr(new History::Filter("threadId", threadId)));
     History::ThreadViewPtr view = queryThreads(type, History::SortPtr(), intersectionFilter);
@@ -157,7 +157,9 @@ History::ThreadPtr SQLiteHistoryPlugin::getSingleThread(History::EventType type,
         thread = threads.first();
     }
 
-    return thread;
+    return thread;*/
+    //FIXME: reimplement
+    return History::ThreadPtr();
 }
 
 History::EventPtr SQLiteHistoryPlugin::getSingleEvent(History::EventType type, const QString &accountId, const QString &threadId, const QString &eventId)

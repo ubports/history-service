@@ -37,9 +37,9 @@ public:
     virtual ~Plugin() {}
 
     // Reader part of the plugin
-    virtual ThreadViewPtr queryThreads(EventType type,
+    virtual PluginThreadViewPtr queryThreads(EventType type,
                                        const SortPtr &sort = SortPtr(),
-                                       const FilterPtr &filter = FilterPtr()) = 0;
+                                       const QString &filter = QString::null) = 0;
     virtual EventViewPtr queryEvents(EventType type,
                                      const SortPtr &sort = SortPtr(),
                                      const FilterPtr &filter = FilterPtr()) = 0;

@@ -127,8 +127,7 @@ bool HistoryServiceDBus::RemoveEvents(const QList<QVariantMap> &events)
 QString HistoryServiceDBus::QueryThreads(int type, const QVariantMap &sort, const QString &filter)
 {
     qDebug() << __PRETTY_FUNCTION__;
-    qDebug() << type << sort << filter;
-    return QString::null;
+    return HistoryDaemon::instance()->queryThreads(type, sort, filter);
 }
 
 QString HistoryServiceDBus::QueryEvents(int type, const QVariantMap &sort, const QString &filter)

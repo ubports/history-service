@@ -42,6 +42,8 @@ public:
                                              const QStringList &participants,
                                              History::MatchFlags matchFlags = History::MatchCaseSensitive,
                                              bool create = true);
+    QString queryThreads(int type, const QVariantMap &sort, const QString &filter);
+
 private Q_SLOTS:
     void onObserverCreated();
     void onCallEnded(const Tp::CallChannelPtr &channel);

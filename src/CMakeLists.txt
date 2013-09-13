@@ -62,6 +62,7 @@ set(library_PRIV_HDRS
     managerdbus_p.h
     phonenumberutils_p.h
     phoneutils_p.h
+    pluginthreadview_p.h
     sort_p.h
     textevent_p.h
     texteventattachment_p.h
@@ -70,6 +71,8 @@ set(library_PRIV_HDRS
     unionfilter_p.h
     voiceevent_p.h
 )
+
+qt5_add_dbus_adaptor(library_SRCS PluginThreadView.xml pluginthreadview.h History::PluginThreadView)
 
 include_directories(${CMAKE_SOURCE_DIR}/src
                     ${CMAKE_CURRENT_BINARY_DIR})

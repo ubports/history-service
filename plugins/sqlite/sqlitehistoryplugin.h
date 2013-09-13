@@ -40,9 +40,9 @@ public:
     explicit SQLiteHistoryPlugin(QObject *parent = 0);
 
     // Reader part of the plugin
-    History::ThreadViewPtr queryThreads(History::EventType type,
-                                        const History::SortPtr &sort = History::SortPtr(),
-                                        const History::FilterPtr &filter = History::FilterPtr());
+    History::PluginThreadViewPtr queryThreads(History::EventType type,
+                                              const History::SortPtr &sort = History::SortPtr(),
+                                              const QString &filter = QString::null);
     History::EventViewPtr queryEvents(History::EventType type,
                                       const History::SortPtr &sort = History::SortPtr(),
                                       const History::FilterPtr &filter = History::FilterPtr());
