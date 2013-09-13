@@ -5,8 +5,6 @@ set(plugin_SRCS
     sqlitehistoryeventview.cpp
     sqlitehistorythreadview.cpp
     sqlitehistoryplugin.cpp
-    sqlitehistoryreader.cpp
-    sqlitehistorywriter.cpp
     )
 
 set (plugin_HDRS
@@ -14,8 +12,6 @@ set (plugin_HDRS
     sqlitehistoryeventview.h
     sqlitehistorythreadview.h
     sqlitehistoryplugin.h
-    sqlitehistoryreader.h
-    sqlitehistorywriter.h
 )
 
 include_directories(

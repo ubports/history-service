@@ -30,12 +30,12 @@
 #include <QDebug>
 #include <QSqlError>
 
-SQLiteHistoryEventView::SQLiteHistoryEventView(SQLiteHistoryReader *reader,
+SQLiteHistoryEventView::SQLiteHistoryEventView(SQLiteHistoryPlugin *plugin,
                                              History::EventType type,
                                              const History::SortPtr &sort,
                                              const History::FilterPtr &filter)
     : History::EventView(type, sort, filter), mType(type), mSort(sort), mFilter(filter),
-      mQuery(SQLiteDatabase::instance()->database()), mPageSize(15), mReader(reader), mOffset(0)
+      mQuery(SQLiteDatabase::instance()->database()), mPageSize(15), mPlugin(plugin), mOffset(0)
 {
     mTemporaryTable = QString("eventview%1%2").arg(QString::number((qulonglong)this), QDateTime::currentDateTimeUtc().toString("yyyyMMddhhmmsszzz"));
     mQuery.setForwardOnly(true);

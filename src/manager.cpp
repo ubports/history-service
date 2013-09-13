@@ -30,8 +30,6 @@
 #include "textevent.h"
 #include "thread.h"
 #include "voiceevent.h"
-#include "reader.h"
-#include "writer.h"
 #include <QDebug>
 
 #define HISTORY_INTERFACE "com.canonical.HistoryService"
@@ -57,21 +55,8 @@ Manager::Manager(const QString &backendPlugin)
 {
     Q_D(Manager);
 
-    // FIXME: maybe we should look for both at once
-    // try to find a plugin that has a reader
-    Q_FOREACH(PluginPtr plugin, PluginManager::instance()->plugins()) {
-        d->reader = plugin->reader();
-        if (d->reader) {
-            break;
-        }
-    }
-
-    // and now a plugin that has a writer
-    Q_FOREACH(PluginPtr plugin, PluginManager::instance()->plugins()) {
-        d->writer = plugin->writer();
-        if (d->writer) {
-            break;
-        }
+    if (!PluginManager::instance()->plugins().isEmpty()) {
+        d->backend = PluginManager::instance()->plugins().first();
     }
 
     // Propagate the signals from the event watcher
@@ -110,8 +95,8 @@ ThreadViewPtr Manager::queryThreads(EventType type,
                                     const FilterPtr &filter)
 {
     Q_D(Manager);
-    if (d->reader) {
-        return d->reader->queryThreads(type, sort, filter);
+    if (d->backend) {
+        return d->backend->queryThreads(type, sort, filter);
     }
 
     return ThreadViewPtr();
@@ -122,8 +107,8 @@ EventViewPtr Manager::queryEvents(EventType type,
                                   const FilterPtr &filter)
 {
     Q_D(Manager);
-    if (d->reader) {
-        return d->reader->queryEvents(type, sort, filter);
+    if (d->backend) {
+        return d->backend->queryEvents(type, sort, filter);
     }
 
     return EventViewPtr();
@@ -138,8 +123,8 @@ EventPtr Manager::getSingleEvent(EventType type, const QString &accountId, const
         event = ItemFactory::instance()->cachedEvent(accountId, threadId, eventId, type);
     }
 
-    if (event.isNull() && d->reader) {
-        event = d->reader->getSingleEvent(type, accountId, threadId, eventId);
+    if (event.isNull() && d->backend) {
+        event = d->backend->getSingleEvent(type, accountId, threadId, eventId);
     }
 
     return event;
@@ -153,15 +138,15 @@ ThreadPtr Manager::threadForParticipants(const QString &accountId,
 {
     Q_D(Manager);
 
-    if (!d->reader || !d->writer) {
+    if (!d->backend) {
         return ThreadPtr();
     }
 
-    ThreadPtr thread = d->reader->threadForParticipants(accountId, type, participants, matchFlags);
+    ThreadPtr thread = d->backend->threadForParticipants(accountId, type, participants, matchFlags);
 
     // if the thread is null, create a new if possible/desired.
     if (thread.isNull() && create) {
-        thread = d->writer->createThreadForParticipants(accountId, type, participants);
+        thread = d->backend->createThreadForParticipants(accountId, type, participants);
         d->dbus->notifyThreadsAdded(Threads() << thread);
     }
 
@@ -179,8 +164,8 @@ ThreadPtr Manager::getSingleThread(EventType type, const QString &accountId, con
     }
 
     // and if it isn´t there, get from the backend
-    if (thread.isNull() && d->reader) {
-        thread = d->reader->getSingleThread(type, accountId, threadId);
+    if (thread.isNull() && d->backend) {
+        thread = d->backend->getSingleThread(type, accountId, threadId);
     }
 
     return thread;
@@ -190,11 +175,11 @@ bool Manager::writeTextEvents(const TextEvents &textEvents)
 {
     Q_D(Manager);
 
-    if (!d->writer) {
+    if (!d->backend) {
         return false;
     }
 
-    d->writer->beginBatchOperation();
+    d->backend->beginBatchOperation();
 
     Events events;
     Threads threads;
@@ -204,11 +189,11 @@ bool Manager::writeTextEvents(const TextEvents &textEvents)
         if (!threads.contains(thread)) {
             threads << thread;
         }
-        d->writer->writeTextEvent(textEvent);
+        d->backend->writeTextEvent(textEvent);
         events << textEvent.staticCast<Event>();
     }
 
-    d->writer->endBatchOperation();
+    d->backend->endBatchOperation();
 
     d->dbus->notifyEventsAdded(events);
     d->dbus->notifyThreadsModified(threads);
@@ -219,11 +204,11 @@ bool Manager::writeVoiceEvents(const VoiceEvents &voiceEvents)
 {
     Q_D(Manager);
 
-    if (!d->writer) {
+    if (!d->backend) {
         return false;
     }
 
-    d->writer->beginBatchOperation();
+    d->backend->beginBatchOperation();
 
     Events events;
     Threads threads;
@@ -233,11 +218,11 @@ bool Manager::writeVoiceEvents(const VoiceEvents &voiceEvents)
         if (!threads.contains(thread)) {
             threads << thread;
         }
-        d->writer->writeVoiceEvent(voiceEvent);
+        d->backend->writeVoiceEvent(voiceEvent);
         events << voiceEvent.staticCast<Event>();
     }
 
-    d->writer->endBatchOperation();
+    d->backend->endBatchOperation();
 
     d->dbus->notifyEventsAdded(events);
     d->dbus->notifyThreadsModified(threads);
@@ -249,14 +234,14 @@ bool Manager::removeThreads(const Threads &threads)
 {
     Q_D(Manager);
 
-    if (!d->writer) {
+    if (!d->backend) {
         return false;
     }
 
     Events events;
     Threads removedThreads;
 
-    d->writer->beginBatchOperation();
+    d->backend->beginBatchOperation();
 
     // remove all the threads that are empty.
     // the threads that are not empty will be removed
@@ -273,15 +258,15 @@ bool Manager::removeThreads(const Threads &threads)
                 page = eventView->nextPage();
             }
         } else {
-            if (!d->writer->removeThread(thread)) {
-                d->writer->rollbackBatchOperation();
+            if (!d->backend->removeThread(thread)) {
+                d->backend->rollbackBatchOperation();
                 return false;
             }
             removedThreads << thread;
         }
     }
 
-    d->writer->endBatchOperation();
+    d->backend->endBatchOperation();
     if (!removedThreads.isEmpty()) {
         d->dbus->notifyThreadsRemoved(removedThreads);
     }
@@ -293,13 +278,13 @@ bool Manager::removeEvents(const Events &events)
 {
     Q_D(Manager);
 
-    if (!d->writer) {
+    if (!d->backend) {
         return false;
     }
 
     Threads threadsToUpdate;
 
-    d->writer->beginBatchOperation();
+    d->backend->beginBatchOperation();
 
     Q_FOREACH(const EventPtr &event, events) {
         QString accountId = event->accountId();
@@ -312,15 +297,15 @@ bool Manager::removeEvents(const Events &events)
         switch (type) {
         case EventTypeText:
             textEvent = event.staticCast<TextEvent>();
-            if (!d->writer->removeTextEvent(textEvent)) {
-                d->writer->rollbackBatchOperation();
+            if (!d->backend->removeTextEvent(textEvent)) {
+                d->backend->rollbackBatchOperation();
                 return false;
             }
             break;
         case EventTypeVoice:
             voiceEvent = event.staticCast<VoiceEvent>();
-            if (!d->writer->removeVoiceEvent(voiceEvent)) {
-                d->writer->rollbackBatchOperation();
+            if (!d->backend->removeVoiceEvent(voiceEvent)) {
+                d->backend->rollbackBatchOperation();
                 return false;
             }
             break;
@@ -333,7 +318,7 @@ bool Manager::removeEvents(const Events &events)
         }
     }
 
-    d->writer->endBatchOperation();
+    d->backend->endBatchOperation();
 
     d->dbus->notifyEventsRemoved(events);
 
