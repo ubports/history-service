@@ -15,6 +15,7 @@ include_directories(
     ${TP_QT5_INCLUDE_DIRS}
     ${CMAKE_SOURCE_DIR}/src
     ${CMAKE_CURRENT_BINARY_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}
     )
 
 qt5_add_dbus_adaptor(daemon_SRCS HistoryService.xml historyservicedbus.h HistoryServiceDBus)
