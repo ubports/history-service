@@ -7,6 +7,7 @@ set(library_SRCS
     manager.cpp
     managerdbus.cpp
     phoneutils.cpp
+    pluginthreadview.cpp
     sort.cpp
     textevent.cpp
     texteventattachment.cpp
@@ -31,6 +32,8 @@ set(library_HDRS
     manager.h
     Plugin
     plugin.h
+    PluginThreadView
+    pluginthreadview.h
     Reader
     reader.h
     Sort

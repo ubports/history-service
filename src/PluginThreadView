@@ -1,0 +1,5 @@
+#ifndef PLUGINTHREADVIEW_H
+#define PLUGINTHREADVIEW_H
+
+#include "pluginthreadview.h"
+#endif // PLUGINTHREADVIEW_H
