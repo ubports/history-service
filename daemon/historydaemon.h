@@ -44,6 +44,10 @@ public:
                                              bool create = true);
     QString queryThreads(int type, const QVariantMap &sort, const QString &filter);
     QString queryEvents(int type, const QVariantMap &sort, const QString &filter);
+    QVariantMap getSingleThread(int type, const QString &accountId, const QString &threadId);
+    QVariantMap getSingleEvent(int type, const QString &accountId, const QString &threadId, const QString &eventId);
+
+    bool writeEvents(const QList<QVariantMap> &events);
 
 private Q_SLOTS:
     void onObserverCreated();

@@ -139,14 +139,12 @@ QString HistoryServiceDBus::QueryEvents(int type, const QVariantMap &sort, const
 QVariantMap HistoryServiceDBus::GetSingleThread(int type, const QString &accountId, const QString &threadId)
 {
     qDebug() << __PRETTY_FUNCTION__;
-    qDebug() << type << accountId << threadId;
-    return QVariantMap();
+    return HistoryDaemon::instance()->getSingleThread(type, accountId, threadId);
 }
 
 QVariantMap HistoryServiceDBus::GetSingleEvent(int type, const QString &accountId, const QString &threadId, const QString &eventId)
 {
     qDebug() << __PRETTY_FUNCTION__;
-    qDebug() << type << accountId << threadId;
-    return QVariantMap();
+    return HistoryDaemon::instance()->getSingleEvent(type, accountId, threadId, eventId);
 }
 

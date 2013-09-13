@@ -43,13 +43,13 @@ public:
     virtual PluginEventView* queryEvents(EventType type,
                                          const SortPtr &sort = SortPtr(),
                                          const QString &filter = QString::null) = 0;
-    virtual ThreadPtr getSingleThread(EventType type,
-                                      const QString &accountId,
-                                      const QString &threadId) = 0;
-    virtual EventPtr getSingleEvent(EventType type,
-                                    const QString &accountId,
-                                    const QString &threadId,
-                                    const QString &eventId) = 0;
+    virtual QVariantMap getSingleThread(EventType type,
+                                        const QString &accountId,
+                                        const QString &threadId) = 0;
+    virtual QVariantMap getSingleEvent(EventType type,
+                                       const QString &accountId,
+                                       const QString &threadId,
+                                       const QString &eventId) = 0;
     virtual ThreadPtr threadForParticipants(const QString &accountId,
                                             EventType type,
                                             const QStringList &participants,

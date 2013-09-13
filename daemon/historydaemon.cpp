@@ -131,6 +131,29 @@ QString HistoryDaemon::queryEvents(int type, const QVariantMap &sort, const QStr
     return view->objectPath();
 }
 
+QVariantMap HistoryDaemon::getSingleThread(int type, const QString &accountId, const QString &threadId)
+{
+    if (!mBackend) {
+        return QVariantMap();
+    }
+
+    return mBackend->getSingleThread((History::EventType)type, accountId, threadId);
+}
+
+QVariantMap HistoryDaemon::getSingleEvent(int type, const QString &accountId, const QString &threadId, const QString &eventId)
+{
+    if (!mBackend) {
+        return QVariantMap();
+    }
+
+    return mBackend->getSingleEvent((History::EventType)type, accountId, threadId, eventId);
+}
+
+bool HistoryDaemon::writeEvents(const QList<QVariantMap> &events)
+{
+    // FIXME: implement
+}
+
 void HistoryDaemon::onObserverCreated()
 {
     qDebug() << __PRETTY_FUNCTION__;

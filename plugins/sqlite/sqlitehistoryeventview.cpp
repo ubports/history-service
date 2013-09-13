@@ -21,6 +21,7 @@
 
 #include "sqlitehistoryeventview.h"
 #include "sqlitedatabase.h"
+#include "sqlitehistoryplugin.h"
 #include "filter.h"
 #include "sort.h"
 #include "itemfactory.h"
@@ -42,10 +43,6 @@ SQLiteHistoryEventView::SQLiteHistoryEventView(SQLiteHistoryPlugin *plugin,
 
     // FIXME: validate the filter
     QString condition = filter;
-    if (!condition.isEmpty()) {
-        condition.prepend(" WHERE ");
-    }
-
     QString order;
     if (!sort.isNull() && !sort->sortField().isNull()) {
         order = QString("ORDER BY %1 %2").arg(sort->sortField(), sort->sortOrder() == Qt::AscendingOrder ? "ASC" : "DESC");
@@ -53,17 +50,7 @@ SQLiteHistoryEventView::SQLiteHistoryEventView(SQLiteHistoryPlugin *plugin,
     }
 
     QString queryText = QString("CREATE TEMP TABLE %1 AS ").arg(mTemporaryTable);
-
-    switch (type) {
-    case History::EventTypeText:
-        queryText += QString("SELECT accountId, threadId, eventId, senderId, timestamp, newEvent,"
-                             "message, messageType, messageFlags, readTimestamp, subject FROM text_events %1 %2").arg(condition, order);
-        break;
-    case History::EventTypeVoice:
-        queryText += QString("SELECT accountId, threadId, eventId, senderId, timestamp, newEvent,"
-                             "duration, missed FROM voice_events %1 %2").arg(condition, order);
-        break;
-    }
+    queryText += mPlugin->sqlQueryForEvents(type, condition, order);
 
     if (!mQuery.exec(queryText)) {
         mValid = false;
@@ -95,58 +82,7 @@ QList<QVariantMap> SQLiteHistoryEventView::NextPage()
         return events;
     }
 
-    while (mQuery.next()) {
-        QVariantMap event;
-        History::MessageType messageType;
-        event[History::FieldAccountId] = mQuery.value(0);
-        event[History::FieldThreadId] = mQuery.value(1);
-        event[History::FieldEventId] = mQuery.value(2);
-        event[History::FieldSenderId] = mQuery.value(3);
-        event[History::FieldTimestamp] = mQuery.value(4);
-        event[History::FieldNewEvent] = mQuery.value(5);
-
-        switch (mType) {
-        case History::EventTypeText:
-            messageType = (History::MessageType) mQuery.value(7).toInt();
-            if (messageType == History::MessageTypeMultiParty)  {
-                QSqlQuery attachmentsQuery(SQLiteDatabase::instance()->database());
-                attachmentsQuery.prepare("SELECT attachmentId, contentType, filePath, status FROM text_event_attachments "
-                                    "WHERE accountId=:accountId and threadId=:threadId and eventId=:eventId");
-                attachmentsQuery.bindValue(":accountId", event[History::FieldAccountId]);
-                attachmentsQuery.bindValue(":threadId", event[History::FieldThreadId]);
-                attachmentsQuery.bindValue(":eventId", event[History::FieldEventId]);
-                if (!attachmentsQuery.exec()) {
-                    qCritical() << "Error:" << attachmentsQuery.lastError() << attachmentsQuery.lastQuery();
-                }
-                // FIXME: reimplement
-                /*while (attachmentsQuery.next()) {
-                    History::TextEventAttachmentPtr attachment = History::TextEventAttachmentPtr(
-                                new History::TextEventAttachment(accountId,
-                                                                 threadId,
-                                                                 eventId,
-                                                                 attachmentsQuery.value(0).toString(),
-                                                                 attachmentsQuery.value(1).toString(),
-                                                                 attachmentsQuery.value(2).toString(),
-                                                                 (History::AttachmentFlag) attachmentsQuery.value(3).toInt()));
-                    attachments << attachment;
-
-                }*/
-                attachmentsQuery.clear();
-            }
-            event[History::FieldMessage] = mQuery.value(6);
-            event[History::FieldMessageType] = mQuery.value(7);
-            event[History::FieldMessageFlags] = mQuery.value(8);
-            event[History::FieldReadTimestamp] = mQuery.value(9);
-            break;
-        case History::EventTypeVoice:
-            event[History::FieldDuration] = QTime(0,0).addSecs(mQuery.value(6).toInt());
-            event[History::FieldMissed] = mQuery.value(7);
-            break;
-        }
-
-        events << event;
-    }
-
+    events = mPlugin->parseEventResults(mType, mQuery);
     mOffset += mPageSize;
     mQuery.clear();
 

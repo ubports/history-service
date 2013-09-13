@@ -24,6 +24,7 @@
 
 #include "plugin.h"
 #include <QObject>
+#include <QSqlQuery>
 
 class SQLiteHistoryReader;
 class SQLiteHistoryWriter;
@@ -51,8 +52,8 @@ public:
                                              const QStringList &participants,
                                              History::MatchFlags matchFlags = History::MatchCaseSensitive);
 
-    History::ThreadPtr getSingleThread(History::EventType type, const QString &accountId, const QString &threadId);
-    History::EventPtr getSingleEvent(History::EventType type, const QString &accountId, const QString &threadId, const QString &eventId);
+    QVariantMap getSingleThread(History::EventType type, const QString &accountId, const QString &threadId);
+    QVariantMap getSingleEvent(History::EventType type, const QString &accountId, const QString &threadId, const QString &eventId);
 
     // Writer part of the plugin
     History::ThreadPtr createThreadForParticipants(const QString &accountId, History::EventType type, const QStringList &participants);
@@ -68,6 +69,12 @@ public:
     bool endBatchOperation();
     bool rollbackBatchOperation();
 
+    // functions to be used internally
+    QString sqlQueryForThreads(History::EventType type, const QString &condition, const QString &order);
+    QList<QVariantMap> parseThreadResults(History::EventType type, QSqlQuery &query);
+
+    QString sqlQueryForEvents(History::EventType type, const QString &condition, const QString &order);
+    QList<QVariantMap> parseEventResults(History::EventType type, QSqlQuery &query);
 };
 
 #endif // SQLITEHISTORYPLUGIN_H
