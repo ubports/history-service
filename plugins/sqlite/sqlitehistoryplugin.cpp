@@ -465,7 +465,7 @@ QString SQLiteHistoryPlugin::sqlQueryForEvents(History::EventType type, const QS
     switch (type) {
     case History::EventTypeText:
         queryText = QString("SELECT accountId, threadId, eventId, senderId, timestamp, newEvent,"
-                            "message, messageType, messageFlags, readTimestamp, subject FROM text_events %1 %2").arg(condition, order);
+                            "message, messageType, messageFlags, readTimestamp, subject FROM text_events %1 %2").arg(modifiedCondition, order);
         break;
     case History::EventTypeVoice:
         queryText = QString("SELECT accountId, threadId, eventId, senderId, timestamp, newEvent,"

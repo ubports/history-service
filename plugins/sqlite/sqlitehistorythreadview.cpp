@@ -44,14 +44,6 @@ SQLiteHistoryThreadView::SQLiteHistoryThreadView(SQLiteHistoryPlugin *plugin,
 
     // FIXME: validate the filter
     QString condition = filter;
-    if (!filter.isNull()) {
-        // FIXME: the filters should be implemented in a better way
-        condition.replace("accountId=", "threads.accountId=");
-        condition.replace("threadId=", "threads.threadId=");
-        condition.replace("count=", "threads.count=");
-        condition.replace("unreadCount=", "threads.unreadCount=");
-    }
-
     QString order;
     if (!sort.isNull() && !sort->sortField().isNull()) {
         order = QString("ORDER BY threads.%1 %2").arg(sort->sortField(), sort->sortOrder() == Qt::AscendingOrder ? "ASC" : "DESC");

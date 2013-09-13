@@ -200,15 +200,13 @@ TextEventPtr ItemFactory::createTextEvent(const QVariantMap &properties)
     QString threadId = properties["threadId"].toString();
     QString eventId = properties["eventId"].toString();
     QString senderId = properties["senderId"].toString();
-    QDateTime timestamp;
-    properties["timestamp"].value<QDBusArgument>() >> timestamp;
+    QDateTime timestamp = QDateTime::fromString(properties["timestamp"].toString(), Qt::ISODate);
     bool newEvent = properties["newEvent"].toBool();
     QString message = properties["message"].toString();
     QString subject = properties["subject"].toString();
     MessageType messageType = (MessageType) properties["messageType"].toInt();
     MessageFlags messageFlags = (MessageFlags) properties["messageFlags"].toInt();
-    QDateTime readTimestamp;
-    properties["readTimestamp"].value<QDBusArgument>() >> readTimestamp;
+    QDateTime readTimestamp = QDateTime::fromString(properties["readTimestamp"].toString(), Qt::ISODate);
     event = createTextEvent(accountId, threadId, eventId, senderId, timestamp, newEvent,
                             message, messageType, messageFlags, readTimestamp, subject);
     // FIXME: handle attachments
@@ -264,8 +262,7 @@ VoiceEventPtr ItemFactory::createVoiceEvent(const QVariantMap &properties)
     QString threadId = properties["threadId"].toString();
     QString eventId = properties["eventId"].toString();
     QString senderId = properties["senderId"].toString();
-    QDateTime timestamp;
-    properties["timestamp"].value<QDBusArgument>() >> timestamp;
+    QDateTime timestamp = QDateTime::fromString(properties["timestamp"].toString(), Qt::ISODate);
     bool newEvent = properties["newEvent"].toBool();
     bool missed = properties["missed"].toBool();
     QTime duration = QTime(0,0,0).addSecs(properties["duration"].toInt());
