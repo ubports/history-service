@@ -282,7 +282,7 @@ void HistoryThreadModel::setType(HistoryThreadModel::EventType value)
     updateQuery();
 }
 
-QString HistoryThreadModel::threadIdForParticipants(const QString &accountId, int eventType, const QStringList &participants, int matchFlags)
+QString HistoryThreadModel::threadIdForParticipants(const QString &accountId, int eventType, const QStringList &participants, int matchFlags, bool create)
 {
     if (participants.isEmpty()) {
         return QString::null;
@@ -291,7 +291,8 @@ QString HistoryThreadModel::threadIdForParticipants(const QString &accountId, in
     History::ThreadPtr thread = History::Manager::instance()->threadForParticipants(accountId,
                                                                                     (History::EventType)eventType,
                                                                                     participants,
-                                                                                    History::MatchFlags(matchFlags));
+                                                                                    (History::MatchFlags)matchFlags,
+                                                                                    create);
     if (!thread.isNull()) {
         return thread->threadId();
     }
