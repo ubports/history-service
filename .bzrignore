@@ -23,9 +23,11 @@ plugins/sqlite/schema/schema.sql
 */*.service
 daemon/historyserviceadaptor.*
 src/libhistoryservice.so*
+src/pluginthreadviewadaptor.*
 Testing
 */tests/*Test
 test_*.xml
 tools/reader/history-reader
 tools/tplogger-import/history-tplogger-import
 *.user
+install_manifest.txt
