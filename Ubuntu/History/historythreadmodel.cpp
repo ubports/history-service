@@ -291,7 +291,7 @@ QString HistoryThreadModel::threadIdForParticipants(const QString &accountId, in
     History::ThreadPtr thread = History::Manager::instance()->threadForParticipants(accountId,
                                                                                     (History::EventType)eventType,
                                                                                     participants,
-                                                                                    History::MatchFlags(matchFlags));
+                                                                                    (History::MatchFlags)matchFlags);
     if (!thread.isNull()) {
         return thread->threadId();
     }

@@ -36,10 +36,18 @@ class HistoryThreadModel : public QAbstractListModel
     Q_PROPERTY(EventType type READ type WRITE setType NOTIFY typeChanged)
     Q_ENUMS(EventType)
     Q_ENUMS(Role)
+    Q_ENUMS(MatchFlag)
 public:
     enum EventType {
         EventTypeText = History::EventTypeText,
         EventTypeVoice = History::EventTypeVoice
+    };
+
+    enum MatchFlag {
+        MatchCaseSensitive = History::MatchCaseSensitive,
+        MatchCaseInsensitive = History::MatchCaseInsensitive,
+        MatchContains = History::MatchContains,
+        MatchPhoneNumber = History::MatchPhoneNumber
     };
 
     enum Role {
