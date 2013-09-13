@@ -35,8 +35,39 @@ class Plugin
 {
 public:
     virtual ~Plugin() {}
-    virtual WriterPtr writer() const = 0;
-    virtual ReaderPtr reader() const = 0;
+
+    // Reader part of the plugin
+    virtual ThreadViewPtr queryThreads(EventType type,
+                                       const SortPtr &sort = SortPtr(),
+                                       const FilterPtr &filter = FilterPtr()) = 0;
+    virtual EventViewPtr queryEvents(EventType type,
+                                     const SortPtr &sort = SortPtr(),
+                                     const FilterPtr &filter = FilterPtr()) = 0;
+    virtual ThreadPtr getSingleThread(EventType type,
+                                      const QString &accountId,
+                                      const QString &threadId) = 0;
+    virtual EventPtr getSingleEvent(EventType type,
+                                    const QString &accountId,
+                                    const QString &threadId,
+                                    const QString &eventId) = 0;
+    virtual ThreadPtr threadForParticipants(const QString &accountId,
+                                            EventType type,
+                                            const QStringList &participants,
+                                            History::MatchFlags matchFlags = History::MatchCaseSensitive) = 0;
+
+    // Writer part of the plugin
+    virtual ThreadPtr createThreadForParticipants(const QString &accountId, EventType type, const QStringList &participants) { return ThreadPtr(); }
+    virtual bool removeThread(const History::ThreadPtr &thread) { return false; }
+
+    virtual bool writeTextEvent(const TextEventPtr &event) { return false; }
+    virtual bool removeTextEvent(const History::TextEventPtr &event) { return false; }
+
+    virtual bool writeVoiceEvent(const VoiceEventPtr &event) { return false; }
+    virtual bool removeVoiceEvent(const History::VoiceEventPtr &event) { return false; }
+
+    virtual bool beginBatchOperation() {}
+    virtual bool endBatchOperation() {}
+    virtual bool rollbackBatchOperation() {}
 };
 
 }

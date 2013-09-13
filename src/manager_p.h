@@ -37,6 +37,7 @@ class ManagerPrivate
 public:
     ManagerPrivate();
     ~ManagerPrivate();
+
     QScopedPointer<ManagerDBus> dbus;
 };
 

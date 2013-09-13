@@ -26,14 +26,14 @@
 #include "types.h"
 #include <QSqlQuery>
 
-class SQLiteHistoryReader;
+class SQLiteHistoryPlugin;
 
 class SQLiteHistoryThreadView : public History::ThreadView
 {
     Q_OBJECT
 
 public:
-    SQLiteHistoryThreadView(SQLiteHistoryReader *reader,
+    SQLiteHistoryThreadView(SQLiteHistoryPlugin *plugin,
                             History::EventType type,
                             const History::SortPtr &sort,
                             const History::FilterPtr &filter);
@@ -48,7 +48,7 @@ private:
     History::FilterPtr mFilter;
     QSqlQuery mQuery;
     int mPageSize;
-    SQLiteHistoryReader *mReader;
+    SQLiteHistoryPlugin *mPlugin;
     QString mTemporaryTable;
     int mOffset;
 };

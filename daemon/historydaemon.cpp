@@ -30,8 +30,6 @@
 
 #include "pluginmanager.h"
 #include "plugin.h"
-#include "reader.h"
-#include "writer.h"
 
 #include <QStandardPaths>
 #include <QCryptographicHash>
@@ -40,21 +38,9 @@
 HistoryDaemon::HistoryDaemon(QObject *parent)
     : QObject(parent), mCallObserver(this), mTextObserver(this)
 {
-    // FIXME: maybe we should look for both at once
-    // try to find a plugin that has a reader
-    Q_FOREACH(History::PluginPtr plugin, History::PluginManager::instance()->plugins()) {
-        mReader = plugin->reader();
-        if (mReader) {
-            break;
-        }
-    }
-
-    // and now a plugin that has a writer
-    Q_FOREACH(History::PluginPtr plugin, History::PluginManager::instance()->plugins()) {
-        mWriter = plugin->writer();
-        if (mWriter) {
-            break;
-        }
+    // get the first plugin
+    if (!History::PluginManager::instance()->plugins().isEmpty()) {
+        mBackend = History::PluginManager::instance()->plugins().first();
     }
 
     connect(TelepathyHelper::instance(),
@@ -96,12 +82,12 @@ History::ThreadPtr HistoryDaemon::threadForParticipants(const QString &accountId
                                                         History::MatchFlags matchFlags,
                                                         bool create)
 {
-    History::ThreadPtr thread = mReader->threadForParticipants(accountId,
-                                                               type,
-                                                               participants,
-                                                               matchFlags);
+    History::ThreadPtr thread = mBackend->threadForParticipants(accountId,
+                                                                type,
+                                                                participants,
+                                                                matchFlags);
     if (thread.isNull() && create) {
-        thread = mWriter->createThreadForParticipants(accountId, type, participants);
+        thread = mBackend->createThreadForParticipants(accountId, type, participants);
     }
     return thread;
 }
@@ -153,7 +139,7 @@ void HistoryDaemon::onCallEnded(const Tp::CallChannelPtr &channel)
                                                                                       missed, // only mark as a new (unseen) event if it is a missed call
                                                                                       missed,
                                                                                       duration);
-    mWriter->writeVoiceEvent(event);
+    mBackend->writeVoiceEvent(event);
 }
 
 void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, const Tp::ReceivedMessage &message)
@@ -239,7 +225,7 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
                                                               subject,
                                                               attachments);
 
-    mWriter->writeTextEvent(event);
+    mBackend->writeTextEvent(event);
 }
 
 void HistoryDaemon::onMessageRead(const Tp::TextChannelPtr textChannel, const Tp::ReceivedMessage &message)
@@ -271,7 +257,7 @@ void HistoryDaemon::onMessageSent(const Tp::TextChannelPtr textChannel, const Tp
                                                                                     History::MessageTypeText, // FIXME: add support for MMS
                                                                                     History::MessageFlags(),
                                                                                     QDateTime());
-    mWriter->writeTextEvent(event);
+    mBackend->writeTextEvent(event);
 }
 
 History::MatchFlags HistoryDaemon::matchFlagsForChannel(const Tp::ChannelPtr &channel)

@@ -58,8 +58,7 @@ private:
     CallChannelObserver mCallObserver;
     TextChannelObserver mTextObserver;
     QMap<QString, History::MatchFlags> mProtocolFlags;
-    History::ReaderPtr mReader;
-    History::WriterPtr mWriter;
+    History::PluginPtr mBackend;
     HistoryServiceDBus mDBus;
 };
 

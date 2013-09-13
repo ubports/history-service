@@ -138,6 +138,7 @@ ThreadPtr Manager::getSingleThread(EventType type, const QString &accountId, con
     if (thread.isNull()) {
         thread = d->dbus->getSingleThread(type, accountId, threadId);
     }
+
     return thread;
 }
 

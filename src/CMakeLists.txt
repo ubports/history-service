@@ -34,8 +34,6 @@ set(library_HDRS
     plugin.h
     PluginThreadView
     pluginthreadview.h
-    Reader
-    reader.h
     Sort
     sort.h
     TextEvent
@@ -52,8 +50,6 @@ set(library_HDRS
     unionfilter.h
     VoiceEvent
     voiceevent.h
-    Writer
-    writer.h
 )
 
 set(library_PRIV_HDRS

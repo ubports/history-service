@@ -39,12 +39,35 @@ class SQLiteHistoryPlugin : public QObject, History::Plugin
 public:
     explicit SQLiteHistoryPlugin(QObject *parent = 0);
 
-    History::WriterPtr writer() const;
-    History::ReaderPtr reader() const;
+    // Reader part of the plugin
+    History::ThreadViewPtr queryThreads(History::EventType type,
+                                        const History::SortPtr &sort = History::SortPtr(),
+                                        const History::FilterPtr &filter = History::FilterPtr());
+    History::EventViewPtr queryEvents(History::EventType type,
+                                      const History::SortPtr &sort = History::SortPtr(),
+                                      const History::FilterPtr &filter = History::FilterPtr());
+    History::ThreadPtr threadForParticipants(const QString &accountId,
+                                             History::EventType type,
+                                             const QStringList &participants,
+                                             History::MatchFlags matchFlags = History::MatchCaseSensitive);
 
-private:
-    SQLiteHistoryReaderPtr mReader;
-    SQLiteHistoryWriterPtr mWriter;
+    History::ThreadPtr getSingleThread(History::EventType type, const QString &accountId, const QString &threadId);
+    History::EventPtr getSingleEvent(History::EventType type, const QString &accountId, const QString &threadId, const QString &eventId);
+
+    // Writer part of the plugin
+    History::ThreadPtr createThreadForParticipants(const QString &accountId, History::EventType type, const QStringList &participants);
+    bool removeThread(const History::ThreadPtr &thread);
+
+    bool writeTextEvent(const History::TextEventPtr &event);
+    bool removeTextEvent(const History::TextEventPtr &event);
+
+    bool writeVoiceEvent(const History::VoiceEventPtr &event);
+    bool removeVoiceEvent(const History::VoiceEventPtr &event);
+
+    bool beginBatchOperation();
+    bool endBatchOperation();
+    bool rollbackBatchOperation();
+
 };
 
 #endif // SQLITEHISTORYPLUGIN_H

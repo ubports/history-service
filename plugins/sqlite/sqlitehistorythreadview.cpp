@@ -21,7 +21,6 @@
 
 #include "sqlitehistorythreadview.h"
 #include "sqlitedatabase.h"
-#include "sqlitehistoryreader.h"
 #include "thread.h"
 #include "sort.h"
 #include "intersectionfilter.h"
@@ -31,11 +30,11 @@
 #include <QDebug>
 #include <QSqlError>
 
-SQLiteHistoryThreadView::SQLiteHistoryThreadView(SQLiteHistoryReader *reader,
+SQLiteHistoryThreadView::SQLiteHistoryThreadView(SQLiteHistoryPlugin *plugin,
                                                  History::EventType type,
                                                  const History::SortPtr &sort,
                                                  const History::FilterPtr &filter)
-    : History::ThreadView(type, sort, filter), mReader(reader), mType(type), mSort(sort),
+    : History::ThreadView(type, sort, filter), mPlugin(plugin), mType(type), mSort(sort),
       mFilter(filter), mPageSize(15), mQuery(SQLiteDatabase::instance()->database()), mOffset(0)
 {
 
