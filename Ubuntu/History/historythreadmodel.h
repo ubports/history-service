@@ -94,7 +94,8 @@ public:
     Q_INVOKABLE QString threadIdForParticipants(const QString &accountId,
                                                 int eventType,
                                                 const QStringList &participants,
-                                                int matchFlags = (int)History::MatchCaseSensitive);
+                                                int matchFlags = (int)History::MatchCaseSensitive,
+                                                bool create = false);
     Q_INVOKABLE bool removeThread(const QString &accountId, const QString &threadId, int eventType);
 
 Q_SIGNALS:
