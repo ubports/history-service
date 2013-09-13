@@ -164,8 +164,6 @@ QList<QVariantMap> SQLiteHistoryThreadView::NextPage()
     mOffset += mPageSize;
     mQuery.clear();
 
-    qDebug() << "Threads:" << threads;
-
     return threads;
 }
 

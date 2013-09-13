@@ -24,26 +24,24 @@ PluginThreadView::PluginThreadView(QObject *parent) :
 
     QString id = QString("threadview%1%2").arg(QString::number((qulonglong)this), QDateTime::currentDateTimeUtc().toString("yyyyMMddhhmmsszzz"));
     d->objectPath = QString("%1/%2").arg(History::DBusObjectPath, id);
-    qDebug() << "Registering: " << QDBusConnection::sessionBus().registerObject(d->objectPath, this);
-    qDebug() << "Object path:" << d->objectPath;
+    QDBusConnection::sessionBus().registerObject(d->objectPath, this);
 }
 
 PluginThreadView::~PluginThreadView()
 {
-    qDebug() << __PRETTY_FUNCTION__;
     Q_D(PluginThreadView);
     QDBusConnection::sessionBus().unregisterObject(d->objectPath);
 }
 
 void PluginThreadView::Destroy()
 {
+    qDebug() << __PRETTY_FUNCTION__;
     Q_D(PluginThreadView);
     deleteLater();
 }
 
 bool PluginThreadView::IsValid()
 {
-    qDebug() << __PRETTY_FUNCTION__;
     return true;
 }
 

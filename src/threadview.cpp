@@ -38,7 +38,7 @@ namespace History
 ThreadViewPrivate::ThreadViewPrivate(History::EventType theType,
                                      const History::SortPtr &theSort,
                                      const History::FilterPtr &theFilter)
-    : type(theType), sort(theSort), filter(theFilter), valid(false), dbus(0)
+    : type(theType), sort(theSort), filter(theFilter), valid(true), dbus(0)
 {
 }
 

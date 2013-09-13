@@ -39,7 +39,7 @@ public:
     ThreadView(History::EventType type,
                const History::SortPtr &sort,
                const History::FilterPtr &filter);
-    virtual ~ThreadView();
+    ~ThreadView();
 
     Threads nextPage();
     bool isValid() const;
