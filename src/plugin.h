@@ -51,15 +51,15 @@ public:
                                        const QString &accountId,
                                        const QString &threadId,
                                        const QString &eventId) = 0;
-    virtual ThreadPtr threadForParticipants(const QString &accountId,
-                                            EventType type,
-                                            const QStringList &participants,
-                                            History::MatchFlags matchFlags = History::MatchCaseSensitive) = 0;
+    virtual QVariantMap threadForParticipants(const QString &accountId,
+                                              EventType type,
+                                              const QStringList &participants,
+                                              History::MatchFlags matchFlags = History::MatchCaseSensitive) = 0;
 
     virtual QList<QVariantMap> eventsForThread(const QVariantMap &thread) = 0;
 
     // Writer part of the plugin
-    virtual ThreadPtr createThreadForParticipants(const QString &accountId, EventType type, const QStringList &participants) { return ThreadPtr(); }
+    virtual QVariantMap createThreadForParticipants(const QString &accountId, EventType type, const QStringList &participants) { return QVariantMap(); }
     virtual bool removeThread(const QVariantMap &thread) { return false; }
 
     virtual bool writeTextEvent(const QVariantMap &event) { return false; }

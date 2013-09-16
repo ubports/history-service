@@ -22,7 +22,6 @@
 #include "historydaemon.h"
 #include "telepathyhelper.h"
 #include "sort.h"
-#include "thread.h"
 
 #include "pluginmanager.h"
 #include "plugin.h"
@@ -74,20 +73,24 @@ HistoryDaemon *HistoryDaemon::instance()
     return self;
 }
 
-History::ThreadPtr HistoryDaemon::threadForParticipants(const QString &accountId,
-                                                        History::EventType type,
-                                                        const QStringList &participants,
-                                                        History::MatchFlags matchFlags,
-                                                        bool create)
+QVariantMap HistoryDaemon::threadForParticipants(const QString &accountId,
+                                                 History::EventType type,
+                                                 const QStringList &participants,
+                                                 History::MatchFlags matchFlags,
+                                                 bool create)
 {
-    History::ThreadPtr thread = mBackend->threadForParticipants(accountId,
-                                                                type,
-                                                                participants,
-                                                                matchFlags);
-    if (thread.isNull() && create) {
+    if (!mBackend) {
+        return QVariantMap();
+    }
+
+    QVariantMap thread = mBackend->threadForParticipants(accountId,
+                                                         type,
+                                                         participants,
+                                                         matchFlags);
+    if (thread.isEmpty() && create) {
         thread = mBackend->createThreadForParticipants(accountId, type, participants);
-        if (!thread.isNull()) {
-            mDBus.notifyThreadsAdded(QList<QVariantMap>() << thread->properties());
+        if (!thread.isEmpty()) {
+            mDBus.notifyThreadsAdded(QList<QVariantMap>() << thread);
         }
     }
     return thread;
@@ -302,11 +305,11 @@ void HistoryDaemon::onCallEnded(const Tp::CallChannelPtr &channel)
     }
 
     QString accountId = channel->property(History::FieldAccountId).toString();
-    History::ThreadPtr thread = threadForParticipants(accountId,
-                                                      History::EventTypeVoice,
-                                                      participants,
-                                                      matchFlagsForChannel(channel),
-                                                      true);
+    QVariantMap thread = threadForParticipants(accountId,
+                                               History::EventTypeVoice,
+                                               participants,
+                                               matchFlagsForChannel(channel),
+                                               true);
     // fill the call info
     QDateTime timestamp = channel->property(History::FieldTimestamp).toDateTime();
 
@@ -320,11 +323,11 @@ void HistoryDaemon::onCallEnded(const Tp::CallChannelPtr &channel)
         duration = duration.addSecs(activeTime.secsTo(QDateTime::currentDateTime()));
     }
 
-    QString eventId = QString("%1:%2").arg(thread->threadId()).arg(timestamp.toString());
+    QString eventId = QString("%1:%2").arg(thread[History::FieldThreadId].toString()).arg(timestamp.toString());
     QVariantMap event;
     event[History::FieldType] = History::EventTypeVoice;
-    event[History::FieldAccountId] = thread->accountId();
-    event[History::FieldThreadId] = thread->threadId();
+    event[History::FieldAccountId] = thread[History::FieldAccountId];
+    event[History::FieldThreadId] = thread[History::FieldThreadId];
     event[History::FieldEventId] = eventId;
     event[History::FieldSenderId] = incoming ? channel->initiatorContact()->id() : "self";
     event[History::FieldTimestamp] = timestamp;
@@ -348,19 +351,19 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
         participants << contact->id();
     }
 
-    History::ThreadPtr thread = threadForParticipants(textChannel->property("accountId").toString(),
-                                                                            History::EventTypeText,
-                                                                            participants,
-                                                                            matchFlagsForChannel(textChannel),
-                                                                            true);
+    QVariantMap thread = threadForParticipants(textChannel->property("accountId").toString(),
+                                                                     History::EventTypeText,
+                                                                     participants,
+                                                                     matchFlagsForChannel(textChannel),
+                                                                     true);
     int count = 1;
     QList<QVariantMap> attachments;
     History::MessageType type = History::MessageTypeText;
     QString subject;
 
     if (message.hasNonTextContent()) {
-        QString normalizedAccountId = QString(QCryptographicHash::hash(thread->accountId().toLatin1(), QCryptographicHash::Md5).toHex());
-        QString normalizedThreadId = QString(QCryptographicHash::hash(thread->threadId().toLatin1(), QCryptographicHash::Md5).toHex());
+        QString normalizedAccountId = QString(QCryptographicHash::hash(thread[History::FieldAccountId].toString().toLatin1(), QCryptographicHash::Md5).toHex());
+        QString normalizedThreadId = QString(QCryptographicHash::hash(thread[History::FieldThreadId].toString().toLatin1(), QCryptographicHash::Md5).toHex());
         QString normalizedEventId = QString(QCryptographicHash::hash(message.messageToken().toLatin1(), QCryptographicHash::Md5).toHex());
         QString mmsStoragePath = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation);
 
@@ -393,8 +396,8 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
             file.close();
 
             QVariantMap attachment;
-            attachment[History::FieldAccountId] = thread->accountId();
-            attachment[History::FieldThreadId] = thread->threadId();
+            attachment[History::FieldAccountId] = thread[History::FieldAccountId];
+            attachment[History::FieldThreadId] = thread[History::FieldThreadId];
             attachment[History::FieldEventId] = message.messageToken();
             attachment[History::FieldAttachmentId] = part["identifier"].variant();
             attachment[History::FieldContentType] = part["content-type"].variant();
@@ -406,8 +409,8 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
 
     QVariantMap event;
     event[History::FieldType] = History::EventTypeText;
-    event[History::FieldAccountId] = thread->accountId();
-    event[History::FieldThreadId] = thread->threadId();
+    event[History::FieldAccountId] = thread[History::FieldAccountId];
+    event[History::FieldThreadId] = thread[History::FieldThreadId];
     event[History::FieldEventId] = message.messageToken();
     event[History::FieldSenderId] = message.sender()->id();
     event[History::FieldTimestamp] = message.received();
@@ -436,15 +439,15 @@ void HistoryDaemon::onMessageSent(const Tp::TextChannelPtr textChannel, const Tp
         participants << contact->id();
     }
 
-    History::ThreadPtr thread = threadForParticipants(textChannel->property("accountId").toString(),
-                                                      History::EventTypeText,
-                                                      participants,
-                                                      matchFlagsForChannel(textChannel),
-                                                      true);
+   QVariantMap thread = threadForParticipants(textChannel->property("accountId").toString(),
+                                              History::EventTypeText,
+                                              participants,
+                                              matchFlagsForChannel(textChannel),
+                                              true);
     QVariantMap event;
     event[History::FieldType] = History::EventTypeText;
-    event[History::FieldAccountId] = thread->accountId();
-    event[History::FieldThreadId] = thread->threadId();
+    event[History::FieldAccountId] = thread[History::FieldAccountId];
+    event[History::FieldThreadId] = thread[History::FieldThreadId];
     event[History::FieldEventId] = messageToken;
     event[History::FieldSenderId] = "self";
     event[History::FieldTimestamp] = QDateTime::currentDateTime(); // FIXME: check why message.sent() is empty

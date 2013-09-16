@@ -23,7 +23,6 @@
 #define SQLITEHISTORYEVENTVIEW_H
 
 #include "plugineventview.h"
-#include "event.h"
 #include "types.h"
 #include <QSqlQuery>
 

@@ -20,16 +20,11 @@
  */
 
 #include "sqlitehistoryplugin.h"
-#include "intersectionfilter.h"
-#include "itemfactory.h"
 #include "phoneutils_p.h"
 #include "sqlitedatabase.h"
 #include "sqlitehistoryeventview.h"
 #include "sqlitehistorythreadview.h"
-#include "textevent.h"
-#include "texteventattachment.h"
-#include "thread.h"
-#include "voiceevent.h"
+#include <QDateTime>
 #include <QDebug>
 #include <QStringList>
 #include <QSqlError>
@@ -43,26 +38,26 @@ SQLiteHistoryPlugin::SQLiteHistoryPlugin(QObject *parent) :
 
 // Reader
 History::PluginThreadView *SQLiteHistoryPlugin::queryThreads(History::EventType type,
-                                                         const History::SortPtr &sort,
-                                                         const QString &filter)
+                                                             const History::SortPtr &sort,
+                                                             const QString &filter)
 {
     return new SQLiteHistoryThreadView(this, type, sort, filter);
 }
 
 History::PluginEventView *SQLiteHistoryPlugin::queryEvents(History::EventType type,
-                                                       const History::SortPtr &sort,
-                                                       const QString &filter)
+                                                           const History::SortPtr &sort,
+                                                           const QString &filter)
 {
     return new SQLiteHistoryEventView(this, type, sort, filter);
 }
 
-History::ThreadPtr SQLiteHistoryPlugin::threadForParticipants(const QString &accountId,
-                                                              History::EventType type,
-                                                              const QStringList &participants,
-                                                              History::MatchFlags matchFlags)
+QVariantMap SQLiteHistoryPlugin::threadForParticipants(const QString &accountId,
+                                                       History::EventType type,
+                                                       const QStringList &participants,
+                                                       History::MatchFlags matchFlags)
 {
     if (participants.isEmpty()) {
-        return History::ThreadPtr(0);
+        return QVariantMap();
     }
 
     QSqlQuery query(SQLiteDatabase::instance()->database());
@@ -84,7 +79,7 @@ History::ThreadPtr SQLiteHistoryPlugin::threadForParticipants(const QString &acc
     query.bindValue(":accountId", accountId);
     if (!query.exec()) {
         qCritical() << "Error:" << query.lastError() << query.lastQuery();
-        return History::ThreadPtr(0);
+        return QVariantMap();
     }
 
     QStringList threadIds;
@@ -102,7 +97,7 @@ History::ThreadPtr SQLiteHistoryPlugin::threadForParticipants(const QString &acc
         query.bindValue(":accountId", accountId);
         if (!query.exec()) {
             qCritical() << "Error:" << query.lastError() << query.lastQuery();
-            return History::ThreadPtr(0);
+            return QVariantMap();
         }
 
         QStringList threadParticipants;
@@ -139,11 +134,15 @@ History::ThreadPtr SQLiteHistoryPlugin::threadForParticipants(const QString &acc
         }
     }
 
+    QVariantMap thread;
     if (!existingThread.isNull()) {
-        return History::ItemFactory::instance()->createThread(accountId, existingThread, type, participants);
+        thread[History::FieldAccountId] = accountId;
+        thread[History::FieldThreadId] = existingThread;
+        thread[History::FieldType] = (int) type;
+        thread[History::FieldParticipants] = participants;
     }
 
-    return History::ThreadPtr();
+    return thread;
 }
 
 QList<QVariantMap> SQLiteHistoryPlugin::eventsForThread(const QVariantMap &thread)
@@ -212,9 +211,11 @@ QVariantMap SQLiteHistoryPlugin::getSingleEvent(History::EventType type, const Q
 }
 
 // Writer
-History::ThreadPtr SQLiteHistoryPlugin::createThreadForParticipants(const QString &accountId, History::EventType type, const QStringList &participants)
+QVariantMap SQLiteHistoryPlugin::createThreadForParticipants(const QString &accountId, History::EventType type, const QStringList &participants)
 {
     // WARNING: this function does NOT test to check if the thread is already created, you should check using HistoryReader::threadForParticipants()
+
+    QVariantMap thread;
 
     // Create a new thread
     // FIXME: define what the threadId will be
@@ -230,7 +231,7 @@ History::ThreadPtr SQLiteHistoryPlugin::createThreadForParticipants(const QStrin
     query.bindValue(":unreadCount", 0);
     if (!query.exec()) {
         qCritical() << "Error:" << query.lastError() << query.lastQuery();
-        return History::ThreadPtr(0);
+        return QVariantMap();
     }
 
     // and insert the participants
@@ -243,12 +244,16 @@ History::ThreadPtr SQLiteHistoryPlugin::createThreadForParticipants(const QStrin
         query.bindValue(":participantId", participant);
         if (!query.exec()) {
             qCritical() << "Error:" << query.lastError() << query.lastQuery();
-            return History::ThreadPtr(0);
+            return QVariantMap();
         }
     }
 
     // and finally create the thread
-    History::ThreadPtr thread = History::ItemFactory::instance()->createThread(accountId, threadId, type, participants);
+    thread[History::FieldAccountId] = accountId;
+    thread[History::FieldThreadId] = threadId;
+    thread[History::FieldType] = (int) type;
+    thread[History::FieldParticipants] = participants;
+
     return thread;
 }
 

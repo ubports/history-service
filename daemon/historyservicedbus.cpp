@@ -23,12 +23,6 @@
 #include "historyservicedbus.h"
 #include "historyserviceadaptor.h"
 #include "types.h"
-#include "event.h"
-#include "itemfactory.h"
-#include "manager.h"
-#include "thread.h"
-#include "textevent.h"
-#include "voiceevent.h"
 
 Q_DECLARE_METATYPE(QList< QVariantMap >)
 
@@ -89,17 +83,11 @@ QVariantMap HistoryServiceDBus::ThreadForParticipants(const QString &accountId,
                                                       int matchFlags,
                                                       bool create)
 {
-    History::ThreadPtr thread = HistoryDaemon::instance()->threadForParticipants(accountId,
-                                                                                 (History::EventType) type,
-                                                                                 participants,
-                                                                                 (History::MatchFlags) matchFlags,
-                                                                                 create);
-    QVariantMap properties;
-    if (thread) {
-        properties = thread->properties();
-    }
-
-    return properties;
+    return HistoryDaemon::instance()->threadForParticipants(accountId,
+                                                            (History::EventType) type,
+                                                            participants,
+                                                            (History::MatchFlags) matchFlags,
+                                                            create);
 }
 
 bool HistoryServiceDBus::WriteEvents(const QList<QVariantMap> &events)

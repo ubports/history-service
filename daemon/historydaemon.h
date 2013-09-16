@@ -37,11 +37,11 @@ public:
 
     static HistoryDaemon *instance();
 
-    History::ThreadPtr threadForParticipants(const QString &accountId,
-                                             History::EventType type,
-                                             const QStringList &participants,
-                                             History::MatchFlags matchFlags = History::MatchCaseSensitive,
-                                             bool create = true);
+    QVariantMap threadForParticipants(const QString &accountId,
+                                      History::EventType type,
+                                      const QStringList &participants,
+                                      History::MatchFlags matchFlags = History::MatchCaseSensitive,
+                                      bool create = true);
     QString queryThreads(int type, const QVariantMap &sort, const QString &filter);
     QString queryEvents(int type, const QVariantMap &sort, const QString &filter);
     QVariantMap getSingleThread(int type, const QString &accountId, const QString &threadId);

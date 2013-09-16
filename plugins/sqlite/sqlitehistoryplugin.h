@@ -47,10 +47,10 @@ public:
     History::PluginEventView* queryEvents(History::EventType type,
                                           const History::SortPtr &sort = History::SortPtr(),
                                           const QString &filter = QString::null);
-    History::ThreadPtr threadForParticipants(const QString &accountId,
-                                             History::EventType type,
-                                             const QStringList &participants,
-                                             History::MatchFlags matchFlags = History::MatchCaseSensitive);
+    QVariantMap threadForParticipants(const QString &accountId,
+                                      History::EventType type,
+                                      const QStringList &participants,
+                                      History::MatchFlags matchFlags = History::MatchCaseSensitive);
 
     QList<QVariantMap> eventsForThread(const QVariantMap &thread);
 
@@ -58,7 +58,7 @@ public:
     QVariantMap getSingleEvent(History::EventType type, const QString &accountId, const QString &threadId, const QString &eventId);
 
     // Writer part of the plugin
-    History::ThreadPtr createThreadForParticipants(const QString &accountId, History::EventType type, const QStringList &participants);
+    QVariantMap createThreadForParticipants(const QString &accountId, History::EventType type, const QStringList &participants);
     bool removeThread(const QVariantMap &thread);
 
     bool writeTextEvent(const QVariantMap &event);

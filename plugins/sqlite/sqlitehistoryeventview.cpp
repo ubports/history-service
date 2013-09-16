@@ -22,12 +22,8 @@
 #include "sqlitehistoryeventview.h"
 #include "sqlitedatabase.h"
 #include "sqlitehistoryplugin.h"
-#include "filter.h"
 #include "sort.h"
-#include "itemfactory.h"
-#include "textevent.h"
-#include "texteventattachment.h"
-#include "voiceevent.h"
+#include <QDateTime>
 #include <QDebug>
 #include <QSqlError>
 
