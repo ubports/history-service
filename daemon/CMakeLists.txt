@@ -41,7 +41,12 @@ foreach(DESKTOP_FILE ${desktop_FILES})
 endforeach(DESKTOP_FILE)
 
 configure_file(org.freedesktop.Telepathy.Client.HistoryDaemonObserver.service.in org.freedesktop.Telepathy.Client.HistoryDaemonObserver.service)
+configure_file(com.canonical.HistoryService.service.in com.canonical.HistoryService.service)
 install(TARGETS history-daemon RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/org.freedesktop.Telepathy.Client.HistoryDaemonObserver.service DESTINATION share/dbus-1/services)
+install(FILES
+        ${CMAKE_CURRENT_BINARY_DIR}/org.freedesktop.Telepathy.Client.HistoryDaemonObserver.service
+        ${CMAKE_CURRENT_BINARY_DIR}/com.canonical.HistoryService.service
+        DESTINATION share/dbus-1/services
+        )
 install(FILES HistoryDaemonObserver.client DESTINATION share/telepathy/clients)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/history-daemon.desktop DESTINATION ${CMAKE_INSTALL_DATADIR}/applications)
