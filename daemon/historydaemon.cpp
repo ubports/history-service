@@ -21,13 +21,8 @@
 
 #include "historydaemon.h"
 #include "telepathyhelper.h"
-#include "itemfactory.h"
-#include "thread.h"
-#include "manager.h"
 #include "sort.h"
-#include "textevent.h"
-#include "texteventattachment.h"
-#include "voiceevent.h"
+#include "thread.h"
 
 #include "pluginmanager.h"
 #include "plugin.h"
@@ -359,7 +354,7 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
                                                                             matchFlagsForChannel(textChannel),
                                                                             true);
     int count = 1;
-    History::TextEventAttachments attachments;
+    QList<QVariantMap> attachments;
     History::MessageType type = History::MessageTypeText;
     QString subject;
 
@@ -396,13 +391,15 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
             }
             file.write(part["content"].variant().toByteArray());
             file.close();
-            History::TextEventAttachmentPtr attachment = History::TextEventAttachmentPtr(new History::TextEventAttachment(
-                                                         thread->accountId(),
-                                                         thread->threadId(),
-                                                         message.messageToken(),
-                                                         part["identifier"].variant().toString(),
-                                                         part["content-type"].variant().toString(),
-                                                         file.fileName()));
+
+            QVariantMap attachment;
+            attachment[History::FieldAccountId] = thread->accountId();
+            attachment[History::FieldThreadId] = thread->threadId();
+            attachment[History::FieldEventId] = message.messageToken();
+            attachment[History::FieldAttachmentId] = part["identifier"].variant();
+            attachment[History::FieldContentType] = part["content-type"].variant();
+            attachment[History::FieldFilePath] = file.fileName();
+            attachment[History::FieldStatus] = (int) History::AttachmentDownloaded;
             attachments << attachment;
         }
     }
@@ -420,7 +417,7 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
     event[History::FieldMessageFlags] = (int)History::MessageFlags();
     event[History::FieldReadTimestamp] = QDateTime();
     event[History::FieldSubject] = subject;
-    // FIXME: save the attachments
+    event[History::FieldAttachments] = QVariant::fromValue(attachments);
 
     writeEvents(QList<QVariantMap>() << event);
 }

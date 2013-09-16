@@ -34,7 +34,7 @@ TextEventAttachmentPrivate::TextEventAttachmentPrivate(const QString &theAccount
                                            const QString &theAttachmentId,
                                            const QString &theContentType,
                                            const QString &theFilePath,
-                                           const AttachmentFlag &theStatus) :
+                                           const AttachmentFlags &theStatus) :
     accountId(theAccountId), threadId(theThreadId), eventId(theEventId), attachmentId(theAttachmentId),
     contentType(theContentType), filePath(theFilePath), status(theStatus)
 {
@@ -58,7 +58,7 @@ TextEventAttachment::TextEventAttachment(const QString &accountId,
                const QString &attachmentId,
                const QString &contentType,
                const QString &filePath,
-               const AttachmentFlag &status)
+               const AttachmentFlags &status)
 : d_ptr(new TextEventAttachmentPrivate(accountId, threadId, eventId, attachmentId, contentType, filePath, status))
 {
 }
@@ -125,7 +125,7 @@ QString TextEventAttachment::filePath() const
 /*!
  * \brief Returns the status of this attachment
  */
-AttachmentFlag TextEventAttachment::status() const
+AttachmentFlags TextEventAttachment::status() const
 {
     Q_D(const TextEventAttachment);
     return d->status;
@@ -136,15 +136,32 @@ QVariantMap TextEventAttachment::properties() const
     Q_D(const TextEventAttachment);
 
     QVariantMap map;
-    map["accountId"] = d->accountId;
-    map["threadId"] = d->threadId;
-    map["eventId"] = d->eventId;
-    map["attachmentId"] = d->attachmentId;
-    map["contentType"] = d->contentType;
-    map["filePath"] = d->filePath;
-    map["status"] = d->status;
+    map[FieldAccountId] = d->accountId;
+    map[FieldThreadId] = d->threadId;
+    map[FieldEventId] = d->eventId;
+    map[FieldAttachmentId] = d->attachmentId;
+    map[FieldContentType] = d->contentType;
+    map[FieldFilePath] = d->filePath;
+    map[FieldStatus] = (int)d->status;
 
     return map;
+}
+
+TextEventAttachmentPtr TextEventAttachment::fromProperties(const QVariantMap &properties)
+{
+    TextEventAttachmentPtr attachment;
+    if (properties.isEmpty()) {
+        return attachment;
+    }
+
+    attachment = TextEventAttachmentPtr(new TextEventAttachment(properties[FieldAccountId].toString(),
+                                                                properties[FieldThreadId].toString(),
+                                                                properties[FieldEventId].toString(),
+                                                                properties[FieldAttachmentId].toString(),
+                                                                properties[FieldContentType].toString(),
+                                                                properties[FieldFilePath].toString(),
+                                                                (History::AttachmentFlags)properties[FieldStatus].toInt()));
+    return attachment;
 }
 
 }

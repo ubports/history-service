@@ -112,6 +112,13 @@ static const char* FieldReadTimestamp = "readTimestamp";
 static const char* FieldSubject = "subject";
 static const char* FieldAttachments = "attachments";
 
+// text attachment fields
+
+static const char* FieldAttachmentId = "attachmentId";
+static const char* FieldContentType = "contentType";
+static const char* FieldFilePath = "filePath";
+static const char* FieldStatus = "status";
+
 // voice event fields
 static const char* FieldMissed = "missed";
 static const char* FieldDuration = "duration";

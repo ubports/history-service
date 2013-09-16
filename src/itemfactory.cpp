@@ -26,6 +26,7 @@
 #include "voiceevent.h"
 #include "thread_p.h"
 #include "textevent_p.h"
+#include "texteventattachment.h"
 #include "voiceevent_p.h"
 #include <QDBusArgument>
 
@@ -196,20 +197,33 @@ TextEventPtr ItemFactory::createTextEvent(const QVariantMap &properties)
 {
     TextEventPtr event;
 
-    QString accountId = properties["accountId"].toString();
-    QString threadId = properties["threadId"].toString();
-    QString eventId = properties["eventId"].toString();
-    QString senderId = properties["senderId"].toString();
-    QDateTime timestamp = QDateTime::fromString(properties["timestamp"].toString(), Qt::ISODate);
-    bool newEvent = properties["newEvent"].toBool();
-    QString message = properties["message"].toString();
-    QString subject = properties["subject"].toString();
-    MessageType messageType = (MessageType) properties["messageType"].toInt();
-    MessageFlags messageFlags = (MessageFlags) properties["messageFlags"].toInt();
-    QDateTime readTimestamp = QDateTime::fromString(properties["readTimestamp"].toString(), Qt::ISODate);
+    QString accountId = properties[FieldAccountId].toString();
+    QString threadId = properties[FieldThreadId].toString();
+    QString eventId = properties[FieldEventId].toString();
+    QString senderId = properties[FieldSenderId].toString();
+    QDateTime timestamp = QDateTime::fromString(properties[FieldTimestamp].toString(), Qt::ISODate);
+    bool newEvent = properties[FieldNewEvent].toBool();
+    QString message = properties[FieldMessage].toString();
+    QString subject = properties[FieldSubject].toString();
+    MessageType messageType = (MessageType) properties[FieldMessageType].toInt();
+    MessageFlags messageFlags = (MessageFlags) properties[FieldMessageFlags].toInt();
+    QDateTime readTimestamp = QDateTime::fromString(properties[FieldReadTimestamp].toString(), Qt::ISODate);
+
+    // read the attachments
+    QList<QVariantMap> attachmentProperties = properties[FieldAttachments].value<QList<QVariantMap> >();
+    TextEventAttachments attachments;
+    Q_FOREACH(const QVariantMap &map, attachmentProperties) {
+        TextEventAttachmentPtr attachment = TextEventAttachment::fromProperties(map);
+        if (!attachment.isNull()) {
+            attachments << attachment;
+        }
+    }
+
+    // and finally create the event
     event = createTextEvent(accountId, threadId, eventId, senderId, timestamp, newEvent,
-                            message, messageType, messageFlags, readTimestamp, subject);
-    // FIXME: handle attachments
+                            message, messageType, messageFlags, readTimestamp, subject, attachments);
+
+
     return event;
 }
 

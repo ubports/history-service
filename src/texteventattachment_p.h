@@ -40,7 +40,7 @@ public:
                          const QString &theAttachmentId,
                          const QString &theContentType,
                          const QString &theFilePath,
-                         const History::AttachmentFlag &theStatus);
+                         const History::AttachmentFlags &theStatus);
     virtual ~TextEventAttachmentPrivate();
 
     QString accountId;
@@ -49,7 +49,7 @@ public:
     QString attachmentId;
     QString contentType;
     QString filePath;
-    History::AttachmentFlag status;
+    History::AttachmentFlags status;
 };
 
 }

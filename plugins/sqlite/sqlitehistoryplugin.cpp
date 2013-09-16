@@ -507,10 +507,13 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseEventResults(History::EventType typ
     while (query.next()) {
         QVariantMap event;
         History::MessageType messageType;
+        QString accountId = query.value(0).toString();
+        QString threadId = query.value(1).toString();
+        QString eventId = query.value(2).toString();
         event[History::FieldType] = (int) type;
-        event[History::FieldAccountId] = query.value(0);
-        event[History::FieldThreadId] = query.value(1);
-        event[History::FieldEventId] = query.value(2);
+        event[History::FieldAccountId] = accountId;
+        event[History::FieldThreadId] = threadId;
+        event[History::FieldEventId] = eventId;
         event[History::FieldSenderId] = query.value(3);
         event[History::FieldTimestamp] = query.value(4);
         event[History::FieldNewEvent] = query.value(5);
@@ -522,26 +525,28 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseEventResults(History::EventType typ
                 QSqlQuery attachmentsQuery(SQLiteDatabase::instance()->database());
                 attachmentsQuery.prepare("SELECT attachmentId, contentType, filePath, status FROM text_event_attachments "
                                     "WHERE accountId=:accountId and threadId=:threadId and eventId=:eventId");
-                attachmentsQuery.bindValue(":accountId", event[History::FieldAccountId]);
-                attachmentsQuery.bindValue(":threadId", event[History::FieldThreadId]);
-                attachmentsQuery.bindValue(":eventId", event[History::FieldEventId]);
+                attachmentsQuery.bindValue(":accountId", accountId);
+                attachmentsQuery.bindValue(":threadId", threadId);
+                attachmentsQuery.bindValue(":eventId", eventId);
                 if (!attachmentsQuery.exec()) {
                     qCritical() << "Error:" << attachmentsQuery.lastError() << attachmentsQuery.lastQuery();
                 }
-                // FIXME: reimplement
-                /*while (attachmentsQuery.next()) {
-                    History::TextEventAttachmentPtr attachment = History::TextEventAttachmentPtr(
-                                new History::TextEventAttachment(accountId,
-                                                                 threadId,
-                                                                 eventId,
-                                                                 attachmentsQuery.value(0).toString(),
-                                                                 attachmentsQuery.value(1).toString(),
-                                                                 attachmentsQuery.value(2).toString(),
-                                                                 (History::AttachmentFlag) attachmentsQuery.value(3).toInt()));
+
+                QList<QVariantMap> attachments;
+                while (attachmentsQuery.next()) {
+                    QVariantMap attachment;
+                    attachment[History::FieldAccountId] = accountId;
+                    attachment[History::FieldThreadId] = threadId;
+                    attachment[History::FieldEventId] = eventId;
+                    attachment[History::FieldAttachmentId] = attachmentsQuery.value(0);
+                    attachment[History::FieldContentType] = attachmentsQuery.value(1);
+                    attachment[History::FieldFilePath] = attachmentsQuery.value(2);
+                    attachment[History::FieldStatus] = attachmentsQuery.value(3);
                     attachments << attachment;
 
-                }*/
+                }
                 attachmentsQuery.clear();
+                event[History::FieldAttachments] = QVariant::fromValue(attachments);
             }
             event[History::FieldMessage] = query.value(6);
             event[History::FieldMessageType] = query.value(7);
