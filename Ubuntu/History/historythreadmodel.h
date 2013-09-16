@@ -36,10 +36,18 @@ class HistoryThreadModel : public QAbstractListModel
     Q_PROPERTY(EventType type READ type WRITE setType NOTIFY typeChanged)
     Q_ENUMS(EventType)
     Q_ENUMS(Role)
+    Q_ENUMS(MatchFlag)
 public:
     enum EventType {
         EventTypeText = History::EventTypeText,
         EventTypeVoice = History::EventTypeVoice
+    };
+
+    enum MatchFlag {
+        MatchCaseSensitive = History::MatchCaseSensitive,
+        MatchCaseInsensitive = History::MatchCaseInsensitive,
+        MatchContains = History::MatchContains,
+        MatchPhoneNumber = History::MatchPhoneNumber
     };
 
     enum Role {
@@ -86,7 +94,8 @@ public:
     Q_INVOKABLE QString threadIdForParticipants(const QString &accountId,
                                                 int eventType,
                                                 const QStringList &participants,
-                                                int matchFlags = (int)History::MatchCaseSensitive);
+                                                int matchFlags = (int)History::MatchCaseSensitive,
+                                                bool create = false);
     Q_INVOKABLE bool removeThread(const QString &accountId, const QString &threadId, int eventType);
 
 Q_SIGNALS:
