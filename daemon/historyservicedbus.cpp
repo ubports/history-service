@@ -106,22 +106,19 @@ QVariantMap HistoryServiceDBus::ThreadForParticipants(const QString &accountId,
 bool HistoryServiceDBus::WriteEvents(const QList<QVariantMap> &events)
 {
     qDebug() << __PRETTY_FUNCTION__;
-    qDebug() << events;
-    return true;
+    return HistoryDaemon::instance()->writeEvents(events);
 }
 
-bool HistoryServiceDBus::RemoveThreads(const QList<QVariantMap> &events)
+bool HistoryServiceDBus::RemoveThreads(const QList<QVariantMap> &threads)
 {
     qDebug() << __PRETTY_FUNCTION__;
-    qDebug() << events;
-    return true;
+    return HistoryDaemon::instance()->removeThreads(threads);
 }
 
 bool HistoryServiceDBus::RemoveEvents(const QList<QVariantMap> &events)
 {
     qDebug() << __PRETTY_FUNCTION__;
-    qDebug() << events;
-    return true;
+    return HistoryDaemon::instance()->removeEvents(events);
 }
 
 QString HistoryServiceDBus::QueryThreads(int type, const QVariantMap &sort, const QString &filter)

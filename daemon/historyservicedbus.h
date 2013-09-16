@@ -51,7 +51,7 @@ public:
                                       int matchFlags,
                                       bool create);
     bool WriteEvents(const QList <QVariantMap> &events);
-    bool RemoveThreads(const QList <QVariantMap> &events);
+    bool RemoveThreads(const QList <QVariantMap> &threads);
     bool RemoveEvents(const QList <QVariantMap> &events);
 
     // views
