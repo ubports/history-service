@@ -54,7 +54,7 @@ ManagerDBus::ManagerDBus(QObject *parent) :
     connection.connect(DBusService, DBusObjectPath, DBusInterface, "EventsAdded",
                        this, SLOT(onEventsAdded(QList<QVariantMap>)));
     connection.connect(DBusService, DBusObjectPath, DBusInterface, "EventsModified",
-                       this, SLOT(onEventsAdded(QList<QVariantMap>)));
+                       this, SLOT(onEventsModified(QList<QVariantMap>)));
     connection.connect(DBusService, DBusObjectPath, DBusInterface, "EventsRemoved",
                        this, SLOT(onEventsRemoved(QList<QVariantMap>)));
 }
