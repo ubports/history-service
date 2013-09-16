@@ -97,7 +97,6 @@ QVariantMap HistoryServiceDBus::ThreadForParticipants(const QString &accountId,
     QVariantMap properties;
     if (thread) {
         properties = thread->properties();
-        qDebug() << "Properties:" << properties;
     }
 
     return properties;

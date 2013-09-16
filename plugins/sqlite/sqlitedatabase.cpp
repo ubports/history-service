@@ -42,7 +42,7 @@ void comparePhoneNumbers(sqlite3_context *context, int argc, sqlite3_value **arg
 }
 
 SQLiteDatabase::SQLiteDatabase(QObject *parent) :
-    QObject(parent), mSchemaVersion(0), mInTransaction(false)
+    QObject(parent), mSchemaVersion(0)
 {
     initializeDatabase();
 }

@@ -91,6 +91,9 @@ History::ThreadPtr HistoryDaemon::threadForParticipants(const QString &accountId
                                                                 matchFlags);
     if (thread.isNull() && create) {
         thread = mBackend->createThreadForParticipants(accountId, type, participants);
+        if (!thread.isNull()) {
+            mDBus.notifyThreadsAdded(QList<QVariantMap>() << thread->properties());
+        }
     }
     return thread;
 }
@@ -176,20 +179,19 @@ bool HistoryDaemon::writeEvents(const QList<QVariantMap> &events)
     }
 
     mBackend->endBatchOperation();
-    // FIXME: notify changes
+    //FIXME: we need to handle modifications
+    mDBus.notifyEventsAdded(events);
     return true;
 }
 
-bool HistoryDaemon::removeEvents(const QList<QVariantMap> &events, bool useBatchOperation)
+bool HistoryDaemon::removeEvents(const QList<QVariantMap> &events)
 {
     qDebug() << __PRETTY_FUNCTION__;
     if (!mBackend) {
         return false;
     }
 
-    if (useBatchOperation) {
-        mBackend->beginBatchOperation();
-    }
+    mBackend->beginBatchOperation();
 
     Q_FOREACH(const QVariantMap &event, events) {
         History::EventType type = (History::EventType) event[History::FieldType].toInt();
@@ -209,10 +211,44 @@ bool HistoryDaemon::removeEvents(const QList<QVariantMap> &events, bool useBatch
         }
     }
 
-    if (useBatchOperation) {
-        mBackend->endBatchOperation();
+    // now we need to get all the threads that were affected by the removal of events
+    // this loop needs to be separate from the item removal loop because we rely on the
+    // count property of threads to decide if they were just modified or if they need to
+    // be removed.
+    QList<QVariantMap> removedThreads;
+    QList<QVariantMap> modifiedThreads;
+    Q_FOREACH(const QVariantMap &event, events) {
+         History::EventType type = (History::EventType) event[History::FieldType].toInt();
+         QString accountId = event[History::FieldAccountId].toString();
+         QString threadId = event[History::FieldThreadId].toString();
+
+         QVariantMap thread = mBackend->getSingleThread(type, accountId, threadId);
+         if (thread.isEmpty()) {
+             continue;
+         }
+
+         if (thread[History::FieldCount].toInt() > 0 && !modifiedThreads.contains(thread)) {
+             // the thread still has items and we should notify it was modified
+             modifiedThreads << thread;
+         } else if (!removedThreads.contains(thread)) {
+             // the thread is now empty and needs to be removed
+             if (!mBackend->removeThread(thread)) {
+                 mBackend->rollbackBatchOperation();
+                 return false;
+             }
+             removedThreads << thread;
+         }
     }
-    //FIXME: notify
+
+
+    mBackend->endBatchOperation();
+    mDBus.notifyEventsRemoved(events);
+    if (!removedThreads.isEmpty()) {
+        mDBus.notifyThreadsRemoved(removedThreads);
+    }
+    if (!modifiedThreads.isEmpty()) {
+        mDBus.notifyThreadsModified(modifiedThreads);
+    }
     return true;
 }
 
@@ -223,25 +259,15 @@ bool HistoryDaemon::removeThreads(const QList<QVariantMap> &threads)
         return false;
     }
 
-    mBackend->beginBatchOperation();
-
+    // In order to remove a thread all we have to do is to remove all its items
+    // then it is going to be removed by removeEvents() once it detects the thread is
+    // empty.
+    QList<QVariantMap> events;
     Q_FOREACH(const QVariantMap &thread, threads) {
-        // start by removing the events
-        QList<QVariantMap> events = mBackend->eventsForThread(thread);
-        if (!events.isEmpty() && !removeEvents(events, false)) {
-            mBackend->rollbackBatchOperation();
-            return false;
-        }
-
-        if (!mBackend->removeThread(thread)) {
-            mBackend->rollbackBatchOperation();
-            return false;
-        }
+        events += mBackend->eventsForThread(thread);
     }
 
-    mBackend->endBatchOperation();
-    // FIXME: notify
-    return true;
+    return removeEvents(events);
 }
 
 void HistoryDaemon::onObserverCreated()
