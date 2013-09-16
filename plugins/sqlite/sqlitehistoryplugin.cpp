@@ -297,22 +297,21 @@ bool SQLiteHistoryPlugin::writeTextEvent(const QVariantMap &event)
 
     if (messageType == History::MessageTypeMultiParty) {
         // save the attachments
-
-        // FIXME: reimplement
-        /*Q_FOREACH(const History::TextEventAttachmentPtr &attachment, event->attachments()) {
+        QList<QVariantMap> attachments = event[History::FieldAttachments].value<QList<QVariantMap> >();
+        Q_FOREACH(const QVariantMap &attachment, attachments) {
             query.prepare("INSERT INTO text_event_attachments VALUES (:accountId, :threadId, :eventId, :attachmentId, :contentType, :filePath, :status)");
-            query.bindValue(":accountId", attachment->accountId());
-            query.bindValue(":threadId", attachment->threadId());
-            query.bindValue(":eventId", attachment->eventId());
-            query.bindValue(":attachmentId", attachment->attachmentId());
-            query.bindValue(":contentType", attachment->contentType());
-            query.bindValue(":filePath", attachment->filePath());
-            query.bindValue(":status", attachment->status());
+            query.bindValue(":accountId", attachment[History::FieldAccountId]);
+            query.bindValue(":threadId", attachment[History::FieldThreadId]);
+            query.bindValue(":eventId", attachment[History::FieldEventId]);
+            query.bindValue(":attachmentId", attachment[History::FieldAttachmentId]);
+            query.bindValue(":contentType", attachment[History::FieldContentType]);
+            query.bindValue(":filePath", attachment[History::FieldFilePath]);
+            query.bindValue(":status", attachment[History::FieldStatus]);
             if (!query.exec()) {
-                qCritical() << "Failed to save attachment to database" << query.lastError() << attachment->attachmentId() << attachment->contentType();
+                qCritical() << "Failed to save attachment to database" << query.lastError() << attachment;
                 return false;
             }
-        }*/
+        }
     }
 
     return true;
