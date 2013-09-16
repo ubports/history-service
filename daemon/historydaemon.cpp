@@ -151,7 +151,70 @@ QVariantMap HistoryDaemon::getSingleEvent(int type, const QString &accountId, co
 
 bool HistoryDaemon::writeEvents(const QList<QVariantMap> &events)
 {
-    // FIXME: implement
+    if (!mBackend) {
+        return false;
+    }
+
+    mBackend->beginBatchOperation();
+
+    Q_FOREACH(const QVariantMap &event, events) {
+        History::EventType type = (History::EventType) event[History::FieldType].toInt();
+        bool success = true;
+        switch (type) {
+        case History::EventTypeText:
+            success = mBackend->writeTextEvent(event);
+            break;
+        case History::EventTypeVoice:
+            success = mBackend->writeVoiceEvent(event);
+            break;
+        }
+
+        if (!success) {
+            mBackend->rollbackBatchOperation();
+            return false;
+        }
+    }
+
+    mBackend->endBatchOperation();
+    // FIXME: notify changes
+    return true;
+}
+
+bool HistoryDaemon::removeEvents(const QList<QVariantMap> &events)
+{
+    qDebug() << __PRETTY_FUNCTION__;
+    if (!mBackend) {
+        return false;
+    }
+
+    mBackend->beginBatchOperation();
+
+    Q_FOREACH(const QVariantMap &event, events) {
+        History::EventType type = (History::EventType) event[History::FieldType].toInt();
+        bool success = true;
+        switch (type) {
+        case History::EventTypeText:
+            success = mBackend->removeTextEvent(event);
+            break;
+        case History::EventTypeVoice:
+            success = mBackend->removeVoiceEvent(event);
+            break;
+        }
+
+        if (!success) {
+            mBackend->rollbackBatchOperation();
+            return false;
+        }
+    }
+
+    mBackend->endBatchOperation();
+    //FIXME: notify
+    return true;
+}
+
+bool HistoryDaemon::removeThreads(const QList<QVariantMap> &events)
+{
+    qDebug() << __PRETTY_FUNCTION__;
 }
 
 void HistoryDaemon::onObserverCreated()
@@ -193,21 +256,21 @@ void HistoryDaemon::onCallEnded(const Tp::CallChannelPtr &channel)
     }
 
     QString eventId = QString("%1:%2").arg(thread->threadId()).arg(timestamp.toString());
-    History::VoiceEventPtr event = History::ItemFactory::instance()->createVoiceEvent(thread->accountId(),
-                                                                                      thread->threadId(),
-                                                                                      eventId,
-                                                                                      incoming ? channel->initiatorContact()->id() : "self",
-                                                                                      timestamp,
-                                                                                      missed, // only mark as a new (unseen) event if it is a missed call
-                                                                                      missed,
-                                                                                      duration);
-    mBackend->writeVoiceEvent(event);
+    QVariantMap event;
+    event[History::FieldAccountId] = thread->accountId();
+    event[History::FieldThreadId] = thread->threadId();
+    event[History::FieldEventId] = eventId;
+    event[History::FieldSenderId] = incoming ? channel->initiatorContact()->id() : "self";
+    event[History::FieldTimestamp] = timestamp;
+    event[History::FieldNewEvent] = missed; // only mark as a new (unseen) event if it is a missed call
+    event[History::FieldMissed] = missed;
+    event[History::FieldDuration] = duration;
+    writeEvents(QList<QVariantMap>() << event);
 }
 
 void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, const Tp::ReceivedMessage &message)
 {
     qDebug() << __PRETTY_FUNCTION__;
-
     // ignore delivery reports for now.
     // FIXME: maybe we should set the readTimestamp when a delivery report is received
     if (message.isDeliveryReport() || message.isRescued() || message.isScrollback()) {
@@ -225,7 +288,6 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
                                                                             matchFlagsForChannel(textChannel),
                                                                             true);
     int count = 1;
-    History::TextEventPtr event;
     History::TextEventAttachments attachments;
     History::MessageType type = History::MessageTypeText;
     QString subject;
@@ -274,20 +336,21 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
         }
     }
 
-    event = History::ItemFactory::instance()->createTextEvent(thread->accountId(),
-                                                              thread->threadId(),
-                                                              message.messageToken(),
-                                                              message.sender()->id(),
-                                                              message.received(),
-                                                              true, // message is always unread until it reaches HistoryDaemon::onMessageRead
-                                                              message.text(),
-                                                              type,
-                                                              History::MessageFlags(),
-                                                              QDateTime(),
-                                                              subject,
-                                                              attachments);
+    QVariantMap event;
+    event[History::FieldAccountId] = thread->accountId();
+    event[History::FieldThreadId] = thread->threadId();
+    event[History::FieldEventId] = message.messageToken();
+    event[History::FieldSenderId] = message.sender()->id();
+    event[History::FieldTimestamp] = message.received();
+    event[History::FieldNewEvent] = true; // message is always unread until it reaches HistoryDaemon::onMessageRead
+    event[History::FieldMessage] = message.text();
+    event[History::FieldMessageType] = (int)type;
+    event[History::FieldMessageFlags] = (int)History::MessageFlags();
+    event[History::FieldReadTimestamp] = QDateTime();
+    event[History::FieldSubject] = subject;
+    // FIXME: save the attachments
 
-    mBackend->writeTextEvent(event);
+    writeEvents(QList<QVariantMap>() << event);
 }
 
 void HistoryDaemon::onMessageRead(const Tp::TextChannelPtr textChannel, const Tp::ReceivedMessage &message)
@@ -309,17 +372,20 @@ void HistoryDaemon::onMessageSent(const Tp::TextChannelPtr textChannel, const Tp
                                                       participants,
                                                       matchFlagsForChannel(textChannel),
                                                       true);
-    History::TextEventPtr event = History::ItemFactory::instance()->createTextEvent(thread->accountId(),
-                                                                                    thread->threadId(),
-                                                                                    messageToken,
-                                                                                    "self",
-                                                                                    QDateTime::currentDateTime(), // FIXME: check why message.sent() is empty
-                                                                                    false, // outgoing messages are never new (unseen)
-                                                                                    message.text(),
-                                                                                    History::MessageTypeText, // FIXME: add support for MMS
-                                                                                    History::MessageFlags(),
-                                                                                    QDateTime());
-    mBackend->writeTextEvent(event);
+    QVariantMap event;
+    event[History::FieldAccountId] = thread->accountId();
+    event[History::FieldThreadId] = thread->threadId();
+    event[History::FieldEventId] = messageToken;
+    event[History::FieldSenderId] = "self";
+    event[History::FieldTimestamp] = QDateTime::currentDateTime(); // FIXME: check why message.sent() is empty
+    event[History::FieldNewEvent] =  false; // outgoing messages are never new (unseen)
+    event[History::FieldMessage] = message.text();
+    event[History::FieldMessageType] = (int)History::MessageTypeText; // FIXME: add support for MMS
+    event[History::FieldMessageFlags] = (int)History::MessageFlags();
+    event[History::FieldReadTimestamp] = QDateTime();
+    event[History::FieldSubject] = "";
+
+    writeEvents(QList<QVariantMap>() << event);
 }
 
 History::MatchFlags HistoryDaemon::matchFlagsForChannel(const Tp::ChannelPtr &channel)

@@ -37,6 +37,8 @@
 SQLiteHistoryPlugin::SQLiteHistoryPlugin(QObject *parent) :
     QObject(parent)
 {
+    // just trigger the database creation or update
+    SQLiteDatabase::instance();
 }
 
 // Reader
@@ -231,14 +233,14 @@ History::ThreadPtr SQLiteHistoryPlugin::createThreadForParticipants(const QStrin
     return thread;
 }
 
-bool SQLiteHistoryPlugin::removeThread(const History::ThreadPtr &thread)
+bool SQLiteHistoryPlugin::removeThread(const QVariantMap &thread)
 {
     QSqlQuery query(SQLiteDatabase::instance()->database());
 
     query.prepare("DELETE FROM threads WHERE accountId=:accountId AND threadId=:threadId AND type=:type");
-    query.bindValue(":accountId", thread->accountId());
-    query.bindValue(":threadId", thread->threadId());
-    query.bindValue(":type", thread->type());
+    query.bindValue(":accountId", thread[History::FieldAccountId]);
+    query.bindValue(":threadId", thread[History::FieldThreadId]);
+    query.bindValue(":type", thread[History::FieldType]);
 
     if (!query.exec()) {
         qCritical() << "Failed to remove the thread: Error:" << query.lastError() << query.lastQuery();
@@ -248,7 +250,7 @@ bool SQLiteHistoryPlugin::removeThread(const History::ThreadPtr &thread)
     return true;
 }
 
-bool SQLiteHistoryPlugin::writeTextEvent(const History::TextEventPtr &event)
+bool SQLiteHistoryPlugin::writeTextEvent(const QVariantMap &event)
 {
     QSqlQuery query(SQLiteDatabase::instance()->database());
 
@@ -256,25 +258,29 @@ bool SQLiteHistoryPlugin::writeTextEvent(const History::TextEventPtr &event)
 
     query.prepare("INSERT INTO text_events (accountId, threadId, eventId, senderId, timestamp, newEvent, message, messageType, messageFlags, readTimestamp) "
                   "VALUES (:accountId, :threadId, :eventId, :senderId, :timestamp, :newEvent, :message, :messageType, :messageFlags, :readTimestamp)");
-    query.bindValue(":accountId", event->accountId());
-    query.bindValue(":threadId", event->threadId());
-    query.bindValue(":eventId", event->eventId());
-    query.bindValue(":senderId", event->senderId());
-    query.bindValue(":timestamp", event->timestamp());
-    query.bindValue(":newEvent", event->newEvent());
-    query.bindValue(":message", event->message());
-    query.bindValue(":messageType", event->messageType());
-    query.bindValue(":messageFlags", (int) event->messageFlags());
-    query.bindValue(":readTimestamp", event->readTimestamp());
+    query.bindValue(":accountId", event[History::FieldAccountId]);
+    query.bindValue(":threadId", event[History::FieldThreadId]);
+    query.bindValue(":eventId", event[History::FieldEventId]);
+    query.bindValue(":senderId", event[History::FieldSenderId]);
+    query.bindValue(":timestamp", QDateTime::fromString(event[History::FieldTimestamp].toString(), Qt::ISODate));
+    query.bindValue(":newEvent", event[History::FieldNewEvent]);
+    query.bindValue(":message", event[History::FieldMessage]);
+    query.bindValue(":messageType", event[History::FieldMessageType]);
+    query.bindValue(":messageFlags", event[History::FieldMessageFlags]);
+    query.bindValue(":readTimestamp", QDateTime::fromString(event[History::FieldReadTimestamp].toString(), Qt::ISODate));
 
     if (!query.exec()) {
         qCritical() << "Failed to save the text event: Error:" << query.lastError() << query.lastQuery();
         return false;
     }
 
-    if (event->messageType() == History::MessageTypeMultiParty) {
+    History::MessageType messageType = (History::MessageType) event[History::FieldMessageType].toInt();
+
+    if (messageType == History::MessageTypeMultiParty) {
         // save the attachments
-        Q_FOREACH(const History::TextEventAttachmentPtr &attachment, event->attachments()) {
+
+        // FIXME: reimplement
+        /*Q_FOREACH(const History::TextEventAttachmentPtr &attachment, event->attachments()) {
             query.prepare("INSERT INTO text_event_attachments VALUES (:accountId, :threadId, :eventId, :attachmentId, :contentType, :filePath, :status)");
             query.bindValue(":accountId", attachment->accountId());
             query.bindValue(":threadId", attachment->threadId());
@@ -287,20 +293,20 @@ bool SQLiteHistoryPlugin::writeTextEvent(const History::TextEventPtr &event)
                 qCritical() << "Failed to save attachment to database" << query.lastError() << attachment->attachmentId() << attachment->contentType();
                 return false;
             }
-        }
+        }*/
     }
 
     return true;
 }
 
-bool SQLiteHistoryPlugin::removeTextEvent(const History::TextEventPtr &event)
+bool SQLiteHistoryPlugin::removeTextEvent(const QVariantMap &event)
 {
     QSqlQuery query(SQLiteDatabase::instance()->database());
 
     query.prepare("DELETE FROM text_events WHERE accountId=:accountId AND threadId=:threadId AND eventId=:eventId");
-    query.bindValue(":accountId", event->accountId());
-    query.bindValue(":threadId", event->threadId());
-    query.bindValue(":eventId", event->eventId());
+    query.bindValue(":accountId", event[History::FieldAccountId]);
+    query.bindValue(":threadId", event[History::FieldThreadId]);
+    query.bindValue(":eventId", event[History::FieldEventId]);
 
     if (!query.exec()) {
         qCritical() << "Failed to save the voice event: Error:" << query.lastError() << query.lastQuery();
@@ -310,7 +316,7 @@ bool SQLiteHistoryPlugin::removeTextEvent(const History::TextEventPtr &event)
     return true;
 }
 
-bool SQLiteHistoryPlugin::writeVoiceEvent(const History::VoiceEventPtr &event)
+bool SQLiteHistoryPlugin::writeVoiceEvent(const QVariantMap &event)
 {
     QSqlQuery query(SQLiteDatabase::instance()->database());
 
@@ -318,14 +324,14 @@ bool SQLiteHistoryPlugin::writeVoiceEvent(const History::VoiceEventPtr &event)
 
     query.prepare("INSERT INTO voice_events (accountId, threadId, eventId, senderId, timestamp, newEvent, duration, missed) "
                   "VALUES (:accountId, :threadId, :eventId, :senderId, :timestamp, :newEvent, :duration, :missed)");
-    query.bindValue(":accountId", event->accountId());
-    query.bindValue(":threadId", event->threadId());
-    query.bindValue(":eventId", event->eventId());
-    query.bindValue(":senderId", event->senderId());
-    query.bindValue(":timestamp", event->timestamp());
-    query.bindValue(":newEvent", event->newEvent());
-    query.bindValue(":duration", QTime(0,0,0,0).secsTo(event->duration()));
-    query.bindValue(":missed", event->missed());
+    query.bindValue(":accountId", event[History::FieldAccountId]);
+    query.bindValue(":threadId", event[History::FieldThreadId]);
+    query.bindValue(":eventId", event[History::FieldEventId]);
+    query.bindValue(":senderId", event[History::FieldSenderId]);
+    query.bindValue(":timestamp", event[History::FieldTimestamp]);
+    query.bindValue(":newEvent", event[History::FieldNewEvent]);
+    query.bindValue(":duration", QTime(0,0,0,0).secsTo(event[History::FieldDuration].toTime()));
+    query.bindValue(":missed", event[History::FieldMissed]);
 
     if (!query.exec()) {
         qCritical() << "Failed to save the voice event: Error:" << query.lastError() << query.lastQuery();
@@ -335,14 +341,14 @@ bool SQLiteHistoryPlugin::writeVoiceEvent(const History::VoiceEventPtr &event)
     return true;
 }
 
-bool SQLiteHistoryPlugin::removeVoiceEvent(const History::VoiceEventPtr &event)
+bool SQLiteHistoryPlugin::removeVoiceEvent(const QVariantMap &event)
 {
     QSqlQuery query(SQLiteDatabase::instance()->database());
 
     query.prepare("DELETE FROM voice_events WHERE accountId=:accountId AND threadId=:threadId AND eventId=:eventId");
-    query.bindValue(":accountId", event->accountId());
-    query.bindValue(":threadId", event->threadId());
-    query.bindValue(":eventId", event->eventId());
+    query.bindValue(":accountId", event[History::FieldAccountId]);
+    query.bindValue(":threadId", event[History::FieldThreadId]);
+    query.bindValue(":eventId", event[History::FieldEventId]);
 
     if (!query.exec()) {
         qCritical() << "Failed to remove the voice event: Error:" << query.lastError() << query.lastQuery();

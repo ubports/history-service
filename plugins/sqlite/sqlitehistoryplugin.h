@@ -57,13 +57,13 @@ public:
 
     // Writer part of the plugin
     History::ThreadPtr createThreadForParticipants(const QString &accountId, History::EventType type, const QStringList &participants);
-    bool removeThread(const History::ThreadPtr &thread);
+    bool removeThread(const QVariantMap &thread);
 
-    bool writeTextEvent(const History::TextEventPtr &event);
-    bool removeTextEvent(const History::TextEventPtr &event);
+    bool writeTextEvent(const QVariantMap &event);
+    bool removeTextEvent(const QVariantMap &event);
 
-    bool writeVoiceEvent(const History::VoiceEventPtr &event);
-    bool removeVoiceEvent(const History::VoiceEventPtr &event);
+    bool writeVoiceEvent(const QVariantMap &event);
+    bool removeVoiceEvent(const QVariantMap &event);
 
     bool beginBatchOperation();
     bool endBatchOperation();

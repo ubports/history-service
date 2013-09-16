@@ -24,6 +24,7 @@
 
 #include <QtPlugin>
 #include "types.h"
+#include <QVariantMap>
 
 namespace History
 {
@@ -57,13 +58,13 @@ public:
 
     // Writer part of the plugin
     virtual ThreadPtr createThreadForParticipants(const QString &accountId, EventType type, const QStringList &participants) { return ThreadPtr(); }
-    virtual bool removeThread(const History::ThreadPtr &thread) { return false; }
+    virtual bool removeThread(const QVariantMap &thread) { return false; }
 
-    virtual bool writeTextEvent(const TextEventPtr &event) { return false; }
-    virtual bool removeTextEvent(const History::TextEventPtr &event) { return false; }
+    virtual bool writeTextEvent(const QVariantMap &event) { return false; }
+    virtual bool removeTextEvent(const QVariantMap &event) { return false; }
 
-    virtual bool writeVoiceEvent(const VoiceEventPtr &event) { return false; }
-    virtual bool removeVoiceEvent(const History::VoiceEventPtr &event) { return false; }
+    virtual bool writeVoiceEvent(const QVariantMap &event) { return false; }
+    virtual bool removeVoiceEvent(const QVariantMap &event) { return false; }
 
     virtual bool beginBatchOperation() {}
     virtual bool endBatchOperation() {}
