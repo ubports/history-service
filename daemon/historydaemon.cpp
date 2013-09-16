@@ -178,9 +178,26 @@ bool HistoryDaemon::writeEvents(const QList<QVariantMap> &events)
         }
     }
 
+    // now get the threads for the events to notify their modifications
+    QList<QVariantMap> threads;
+    Q_FOREACH(const QVariantMap &event, events) {
+        History::EventType type = (History::EventType) event[History::FieldType].toInt();
+        QString accountId = event[History::FieldAccountId].toString();
+        QString threadId = event[History::FieldThreadId].toString();
+
+        QVariantMap thread = getSingleThread(type, accountId, threadId);
+        if (!thread.isEmpty() && !threads.contains(thread)) {
+            threads << thread;
+        }
+
+    }
+
     mBackend->endBatchOperation();
     //FIXME: we need to handle modifications
     mDBus.notifyEventsAdded(events);
+    if (!threads.isEmpty()) {
+        mDBus.notifyThreadsModified(threads);
+    }
     return true;
 }
 
@@ -240,8 +257,8 @@ bool HistoryDaemon::removeEvents(const QList<QVariantMap> &events)
          }
     }
 
-
     mBackend->endBatchOperation();
+
     mDBus.notifyEventsRemoved(events);
     if (!removedThreads.isEmpty()) {
         mDBus.notifyThreadsRemoved(removedThreads);
