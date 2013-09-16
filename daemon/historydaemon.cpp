@@ -351,7 +351,7 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
         participants << contact->id();
     }
 
-    QVariantMap thread = threadForParticipants(textChannel->property("accountId").toString(),
+    QVariantMap thread = threadForParticipants(textChannel->property(History::FieldAccountId).toString(),
                                                                      History::EventTypeText,
                                                                      participants,
                                                                      matchFlagsForChannel(textChannel),
@@ -439,7 +439,7 @@ void HistoryDaemon::onMessageSent(const Tp::TextChannelPtr textChannel, const Tp
         participants << contact->id();
     }
 
-   QVariantMap thread = threadForParticipants(textChannel->property("accountId").toString(),
+   QVariantMap thread = threadForParticipants(textChannel->property(History::FieldAccountId).toString(),
                                               History::EventTypeText,
                                               participants,
                                               matchFlagsForChannel(textChannel),

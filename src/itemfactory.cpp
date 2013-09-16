@@ -272,14 +272,14 @@ VoiceEventPtr ItemFactory::createVoiceEvent(const QVariantMap &properties)
 {
     VoiceEventPtr event;
 
-    QString accountId = properties["accountId"].toString();
-    QString threadId = properties["threadId"].toString();
-    QString eventId = properties["eventId"].toString();
-    QString senderId = properties["senderId"].toString();
-    QDateTime timestamp = QDateTime::fromString(properties["timestamp"].toString(), Qt::ISODate);
-    bool newEvent = properties["newEvent"].toBool();
-    bool missed = properties["missed"].toBool();
-    QTime duration = QTime(0,0,0).addSecs(properties["duration"].toInt());
+    QString accountId = properties[FieldAccountId].toString();
+    QString threadId = properties[FieldThreadId].toString();
+    QString eventId = properties[FieldEventId].toString();
+    QString senderId = properties[FieldSenderId].toString();
+    QDateTime timestamp = QDateTime::fromString(properties[FieldTimestamp].toString(), Qt::ISODate);
+    bool newEvent = properties[FieldNewEvent].toBool();
+    bool missed = properties[FieldMissed].toBool();
+    QTime duration = QTime(0,0,0).addSecs(properties[FieldDuration].toInt());
     event = createVoiceEvent(accountId, threadId, eventId, senderId, timestamp, newEvent,
                              missed, duration);
     return event;

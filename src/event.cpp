@@ -137,13 +137,13 @@ QVariantMap Event::properties() const
 
     QVariantMap map;
 
-    map["accountId"] = d->accountId;
-    map["threadId"] = d->threadId;
-    map["eventId"] = d->eventId;
-    map["senderId"] = d->senderId;
-    map["timestamp"] = d->timestamp;
-    map["newEvent"] = d->newEvent;
-    map["type"] = type();
+    map[FieldAccountId] = d->accountId;
+    map[FieldThreadId] = d->threadId;
+    map[FieldEventId] = d->eventId;
+    map[FieldSenderId] = d->senderId;
+    map[FieldTimestamp] = d->timestamp;
+    map[FieldNewEvent] = d->newEvent;
+    map[FieldType] = type();
 
     return map;
 }
