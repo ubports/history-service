@@ -52,6 +52,8 @@ public:
                                              const QStringList &participants,
                                              History::MatchFlags matchFlags = History::MatchCaseSensitive);
 
+    QList<QVariantMap> eventsForThread(const QVariantMap &thread);
+
     QVariantMap getSingleThread(History::EventType type, const QString &accountId, const QString &threadId);
     QVariantMap getSingleEvent(History::EventType type, const QString &accountId, const QString &threadId, const QString &eventId);
 

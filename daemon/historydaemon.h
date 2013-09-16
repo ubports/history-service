@@ -48,8 +48,8 @@ public:
     QVariantMap getSingleEvent(int type, const QString &accountId, const QString &threadId, const QString &eventId);
 
     bool writeEvents(const QList<QVariantMap> &events);
-    bool removeEvents(const QList<QVariantMap> &events);
-    bool removeThreads(const QList<QVariantMap> &events);
+    bool removeEvents(const QList<QVariantMap> &events, bool useBatchOperation = true);
+    bool removeThreads(const QList<QVariantMap> &threads);
 
 private Q_SLOTS:
     void onObserverCreated();

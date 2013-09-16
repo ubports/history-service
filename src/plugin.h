@@ -56,6 +56,8 @@ public:
                                             const QStringList &participants,
                                             History::MatchFlags matchFlags = History::MatchCaseSensitive) = 0;
 
+    virtual QList<QVariantMap> eventsForThread(const QVariantMap &thread) = 0;
+
     // Writer part of the plugin
     virtual ThreadPtr createThreadForParticipants(const QString &accountId, EventType type, const QStringList &participants) { return ThreadPtr(); }
     virtual bool removeThread(const QVariantMap &thread) { return false; }

@@ -180,14 +180,16 @@ bool HistoryDaemon::writeEvents(const QList<QVariantMap> &events)
     return true;
 }
 
-bool HistoryDaemon::removeEvents(const QList<QVariantMap> &events)
+bool HistoryDaemon::removeEvents(const QList<QVariantMap> &events, bool useBatchOperation)
 {
     qDebug() << __PRETTY_FUNCTION__;
     if (!mBackend) {
         return false;
     }
 
-    mBackend->beginBatchOperation();
+    if (useBatchOperation) {
+        mBackend->beginBatchOperation();
+    }
 
     Q_FOREACH(const QVariantMap &event, events) {
         History::EventType type = (History::EventType) event[History::FieldType].toInt();
@@ -207,14 +209,39 @@ bool HistoryDaemon::removeEvents(const QList<QVariantMap> &events)
         }
     }
 
-    mBackend->endBatchOperation();
+    if (useBatchOperation) {
+        mBackend->endBatchOperation();
+    }
     //FIXME: notify
     return true;
 }
 
-bool HistoryDaemon::removeThreads(const QList<QVariantMap> &events)
+bool HistoryDaemon::removeThreads(const QList<QVariantMap> &threads)
 {
     qDebug() << __PRETTY_FUNCTION__;
+    if (!mBackend) {
+        return false;
+    }
+
+    mBackend->beginBatchOperation();
+
+    Q_FOREACH(const QVariantMap &thread, threads) {
+        // start by removing the events
+        QList<QVariantMap> events = mBackend->eventsForThread(thread);
+        if (!events.isEmpty() && !removeEvents(events, false)) {
+            mBackend->rollbackBatchOperation();
+            return false;
+        }
+
+        if (!mBackend->removeThread(thread)) {
+            mBackend->rollbackBatchOperation();
+            return false;
+        }
+    }
+
+    mBackend->endBatchOperation();
+    // FIXME: notify
+    return true;
 }
 
 void HistoryDaemon::onObserverCreated()

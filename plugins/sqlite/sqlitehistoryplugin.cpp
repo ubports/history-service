@@ -146,6 +146,25 @@ History::ThreadPtr SQLiteHistoryPlugin::threadForParticipants(const QString &acc
     return History::ThreadPtr();
 }
 
+QList<QVariantMap> SQLiteHistoryPlugin::eventsForThread(const QVariantMap &thread)
+{
+    QList<QVariantMap> results;
+    QString accountId = thread[History::FieldAccountId].toString();
+    QString threadId = thread[History::FieldThreadId].toString();
+    History::EventType type = (History::EventType) thread[History::FieldType].toInt();
+    QString condition = QString("accountId=\"%1\" AND threadId=\"%2\"").arg(accountId, threadId);
+    QString queryText = sqlQueryForEvents(type, condition, "");
+
+    QSqlQuery query(SQLiteDatabase::instance()->database());
+    if (!query.exec(queryText)) {
+        qCritical() << "Error:" << query.lastError() << query.lastQuery();
+        return results;
+    }
+
+    results = parseEventResults(type, query);
+    return results;
+}
+
 QVariantMap SQLiteHistoryPlugin::getSingleThread(History::EventType type, const QString &accountId, const QString &threadId)
 {
     QVariantMap result;
@@ -154,7 +173,7 @@ QVariantMap SQLiteHistoryPlugin::getSingleThread(History::EventType type, const 
     QString queryText = sqlQueryForThreads(type, condition, QString::null);
     queryText += " LIMIT 1";
 
-    QSqlQuery query;
+    QSqlQuery query(SQLiteDatabase::instance()->database());
     if (!query.exec(queryText)) {
         qCritical() << "Error:" << query.lastError() << query.lastQuery();
         return result;
@@ -177,7 +196,7 @@ QVariantMap SQLiteHistoryPlugin::getSingleEvent(History::EventType type, const Q
     QString queryText = sqlQueryForEvents(type, condition, QString::null);
     queryText += " LIMIT 1";
 
-    QSqlQuery query;
+    QSqlQuery query(SQLiteDatabase::instance()->database());
     if (!query.exec(queryText)) {
         qCritical() << "Error:" << query.lastError() << query.lastQuery();
         return result;
