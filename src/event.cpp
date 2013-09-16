@@ -141,7 +141,7 @@ QVariantMap Event::properties() const
     map[FieldThreadId] = d->threadId;
     map[FieldEventId] = d->eventId;
     map[FieldSenderId] = d->senderId;
-    map[FieldTimestamp] = d->timestamp;
+    map[FieldTimestamp] = d->timestamp.toString(Qt::ISODate);
     map[FieldNewEvent] = d->newEvent;
     map[FieldType] = type();
 

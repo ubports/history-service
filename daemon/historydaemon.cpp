@@ -330,7 +330,7 @@ void HistoryDaemon::onCallEnded(const Tp::CallChannelPtr &channel)
     event[History::FieldThreadId] = thread[History::FieldThreadId];
     event[History::FieldEventId] = eventId;
     event[History::FieldSenderId] = incoming ? channel->initiatorContact()->id() : "self";
-    event[History::FieldTimestamp] = timestamp;
+    event[History::FieldTimestamp] = timestamp.toString(Qt::ISODate);
     event[History::FieldNewEvent] = missed; // only mark as a new (unseen) event if it is a missed call
     event[History::FieldMissed] = missed;
     event[History::FieldDuration] = duration;
@@ -413,7 +413,7 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
     event[History::FieldThreadId] = thread[History::FieldThreadId];
     event[History::FieldEventId] = message.messageToken();
     event[History::FieldSenderId] = message.sender()->id();
-    event[History::FieldTimestamp] = message.received();
+    event[History::FieldTimestamp] = message.received().toString(Qt::ISODate);
     event[History::FieldNewEvent] = true; // message is always unread until it reaches HistoryDaemon::onMessageRead
     event[History::FieldMessage] = message.text();
     event[History::FieldMessageType] = (int)type;
@@ -450,7 +450,7 @@ void HistoryDaemon::onMessageSent(const Tp::TextChannelPtr textChannel, const Tp
     event[History::FieldThreadId] = thread[History::FieldThreadId];
     event[History::FieldEventId] = messageToken;
     event[History::FieldSenderId] = "self";
-    event[History::FieldTimestamp] = QDateTime::currentDateTime(); // FIXME: check why message.sent() is empty
+    event[History::FieldTimestamp] = QDateTime::currentDateTime().toString(Qt::ISODate); // FIXME: check why message.sent() is empty
     event[History::FieldNewEvent] =  false; // outgoing messages are never new (unseen)
     event[History::FieldMessage] = message.text();
     event[History::FieldMessageType] = (int)History::MessageTypeText; // FIXME: add support for MMS
