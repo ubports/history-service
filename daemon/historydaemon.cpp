@@ -327,6 +327,7 @@ void HistoryDaemon::onCallEnded(const Tp::CallChannelPtr &channel)
 
     QString eventId = QString("%1:%2").arg(thread->threadId()).arg(timestamp.toString());
     QVariantMap event;
+    event[History::FieldType] = History::EventTypeVoice;
     event[History::FieldAccountId] = thread->accountId();
     event[History::FieldThreadId] = thread->threadId();
     event[History::FieldEventId] = eventId;
@@ -407,6 +408,7 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
     }
 
     QVariantMap event;
+    event[History::FieldType] = History::EventTypeText;
     event[History::FieldAccountId] = thread->accountId();
     event[History::FieldThreadId] = thread->threadId();
     event[History::FieldEventId] = message.messageToken();
@@ -443,6 +445,7 @@ void HistoryDaemon::onMessageSent(const Tp::TextChannelPtr textChannel, const Tp
                                                       matchFlagsForChannel(textChannel),
                                                       true);
     QVariantMap event;
+    event[History::FieldType] = History::EventTypeText;
     event[History::FieldAccountId] = thread->accountId();
     event[History::FieldThreadId] = thread->threadId();
     event[History::FieldEventId] = messageToken;
