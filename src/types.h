@@ -85,6 +85,49 @@ enum AttachmentFlag
 
 Q_DECLARE_FLAGS(AttachmentFlags, AttachmentFlag)
 
+// dbus service, object path and interface
+static const char* DBusService = "com.canonical.HistoryService";
+static const char* DBusObjectPath = "/com/canonical/HistoryService";
+static const char* DBusInterface = "com.canonical.HistoryService";
+static const char* ThreadViewInterface = "com.canonical.HistoryService.ThreadView";
+static const char* EventViewInterface = "com.canonical.HistoryService.EventView";
+
+// fields
+static const char* FieldAccountId = "accountId";
+static const char* FieldThreadId = "threadId";
+static const char* FieldEventId = "eventId";
+static const char* FieldType = "type";
+static const char* FieldParticipants = "participants";
+static const char* FieldCount = "count";
+static const char* FieldUnreadCount = "unreadCount";
+static const char* FieldSenderId = "senderId";
+static const char* FieldTimestamp = "timestamp";
+static const char* FieldNewEvent = "newEvent";
+
+// text event fields
+static const char* FieldMessage = "message";
+static const char* FieldMessageType = "messageType";
+static const char* FieldMessageFlags = "messageFlags";
+static const char* FieldReadTimestamp = "readTimestamp";
+static const char* FieldSubject = "subject";
+static const char* FieldAttachments = "attachments";
+
+// text attachment fields
+
+static const char* FieldAttachmentId = "attachmentId";
+static const char* FieldContentType = "contentType";
+static const char* FieldFilePath = "filePath";
+static const char* FieldStatus = "status";
+
+// voice event fields
+static const char* FieldMissed = "missed";
+static const char* FieldDuration = "duration";
+
+// sort stuff
+static const char* SortField = "sortField";
+static const char* SortOrder = "sortOrder";
+static const char* CaseSensitivity = "caseSensitivity";
+
 }
 
 #endif // TYPES_H

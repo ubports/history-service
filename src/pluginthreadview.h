@@ -19,45 +19,41 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef HISTORY_SORT_H
-#define HISTORY_SORT_H
+#ifndef PLUGINTHREADVIEW_H
+#define PLUGINTHREADVIEW_H
 
+#include <QObject>
+#include <QDBusContext>
 #include <QScopedPointer>
-#include <QString>
-#include <Qt>
 #include <QVariantMap>
-#include "types.h"
 
-namespace History
+namespace History {
+
+class PluginThreadViewPrivate;
+
+class PluginThreadView : public QObject, public QDBusContext
 {
-
-class SortPrivate;
-
-class Sort
-{
-    Q_DECLARE_PRIVATE(Sort)
+    Q_OBJECT
+    Q_DECLARE_PRIVATE(PluginThreadView)
 public:
-    Sort(const QString &sortField = "timestamp",
-                Qt::SortOrder sortOrder = Qt::AscendingOrder,
-                Qt::CaseSensitivity caseSensitivity = Qt::CaseInsensitive);
-    ~Sort();
+    explicit PluginThreadView(QObject *parent = 0);
+    virtual ~PluginThreadView();
 
-    QString sortField() const;
-    void setSortField(const QString &value);
+    // DBus exposed methods
+    Q_NOREPLY void Destroy();
+    virtual QList<QVariantMap> NextPage() = 0;
+    virtual bool IsValid();
 
-    Qt::SortOrder sortOrder() const;
-    void setSortOrder(Qt::SortOrder value);
+    // other methods
+    QString objectPath() const;
 
-    Qt::CaseSensitivity caseSensitivity() const;
-    void setCaseSensitivity(Qt::CaseSensitivity value);
+Q_SIGNALS:
+    void Invalidated();
 
-    QVariantMap properties() const;
-    static SortPtr fromProperties(const QVariantMap &properties);
-
-protected:
-    QScopedPointer<SortPrivate> d_ptr;
+private:
+    QScopedPointer<PluginThreadViewPrivate> d_ptr;
 };
 
 }
 
-#endif // HISTORY_SORT_H
+#endif // PLUGINTHREADVIEW_H

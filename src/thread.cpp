@@ -105,12 +105,12 @@ QVariantMap Thread::properties() const
     Q_D(const Thread);
 
     QVariantMap map;
-    map["accountId"] = d->accountId;
-    map["threadId"] = d->threadId;
-    map["type"] = d->type;
-    map["participants"] = d->participants;
-    map["count"] = d->count;
-    map["unreadCount"] = d->unreadCount;
+    map[FieldAccountId] = d->accountId;
+    map[FieldThreadId] = d->threadId;
+    map[FieldType] = d->type;
+    map[FieldParticipants] = d->participants;
+    map[FieldCount] = d->count;
+    map[FieldUnreadCount] = d->unreadCount;
 
     return map;
 }

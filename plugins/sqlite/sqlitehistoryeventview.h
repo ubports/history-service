@@ -22,14 +22,13 @@
 #ifndef SQLITEHISTORYEVENTVIEW_H
 #define SQLITEHISTORYEVENTVIEW_H
 
-#include "eventview.h"
-#include "event.h"
+#include "plugineventview.h"
 #include "types.h"
 #include <QSqlQuery>
 
 class SQLiteHistoryPlugin;
 
-class SQLiteHistoryEventView : public History::EventView
+class SQLiteHistoryEventView : public History::PluginEventView
 {
     Q_OBJECT
 
@@ -37,11 +36,11 @@ public:
     SQLiteHistoryEventView(SQLiteHistoryPlugin *plugin,
                           History::EventType type,
                           const History::SortPtr &sort,
-                          const History::FilterPtr &filter);
+                          const QString &filter);
     ~SQLiteHistoryEventView();
 
-    History::Events nextPage();
-    bool isValid() const;
+    QList<QVariantMap> NextPage();
+    bool IsValid() const;
 
 protected:
 
@@ -49,12 +48,13 @@ protected:
 private:
     History::EventType mType;
     History::SortPtr mSort;
-    History::FilterPtr mFilter;
+    QString mFilter;
     QSqlQuery mQuery;
     int mPageSize;
     SQLiteHistoryPlugin *mPlugin;
     QString mTemporaryTable;
     int mOffset;
+    bool mValid;
 };
 
 #endif // SQLITEHISTORYEVENTVIEW_H

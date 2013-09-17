@@ -45,7 +45,7 @@ public:
            const QString &attachmentId,
            const QString &contentType,
            const QString &filePath,
-           const History::AttachmentFlag &status = History::AttachmentDownloaded);
+           const History::AttachmentFlags &status = History::AttachmentDownloaded);
     virtual ~TextEventAttachment();
 
     QString accountId() const;
@@ -54,8 +54,9 @@ public:
     QString attachmentId() const;
     QString contentType() const;
     QString filePath() const;
-    History::AttachmentFlag status() const;
+    History::AttachmentFlags status() const;
     virtual QVariantMap properties() const;
+    static TextEventAttachmentPtr fromProperties(const QVariantMap &properties);
 
 protected:
     QScopedPointer<TextEventAttachmentPrivate> d_ptr;

@@ -73,8 +73,8 @@ QVariantMap VoiceEvent::properties() const
 
     QVariantMap map = Event::properties();
 
-    map["missed"] = d->missed;
-    map["duration"] = d->duration;
+    map[FieldMissed] = d->missed;
+    map[FieldDuration] = d->duration;
 
     return map;
 }

@@ -3,6 +3,8 @@ set(qt_SRCS
     callchannelobserver.cpp
     channelobserver.cpp
     historydaemon.cpp
+    historyservicedbus.cpp
+    pluginmanager.cpp
     telepathyhelper.cpp
     textchannelobserver.cpp
     )
@@ -13,7 +15,10 @@ include_directories(
     ${TP_QT5_INCLUDE_DIRS}
     ${CMAKE_SOURCE_DIR}/src
     ${CMAKE_CURRENT_BINARY_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}
     )
+
+qt5_add_dbus_adaptor(daemon_SRCS HistoryService.xml historyservicedbus.h HistoryServiceDBus)
 
 add_executable(history-daemon ${daemon_SRCS} ${daemon_HDRS})
 qt5_use_modules(history-daemon Core DBus)
@@ -36,7 +41,12 @@ foreach(DESKTOP_FILE ${desktop_FILES})
 endforeach(DESKTOP_FILE)
 
 configure_file(org.freedesktop.Telepathy.Client.HistoryDaemonObserver.service.in org.freedesktop.Telepathy.Client.HistoryDaemonObserver.service)
+configure_file(com.canonical.HistoryService.service.in com.canonical.HistoryService.service)
 install(TARGETS history-daemon RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/org.freedesktop.Telepathy.Client.HistoryDaemonObserver.service DESTINATION share/dbus-1/services)
+install(FILES
+        ${CMAKE_CURRENT_BINARY_DIR}/org.freedesktop.Telepathy.Client.HistoryDaemonObserver.service
+        ${CMAKE_CURRENT_BINARY_DIR}/com.canonical.HistoryService.service
+        DESTINATION share/dbus-1/services
+        )
 install(FILES HistoryDaemonObserver.client DESTINATION share/telepathy/clients)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/history-daemon.desktop DESTINATION ${CMAKE_INSTALL_DATADIR}/applications)

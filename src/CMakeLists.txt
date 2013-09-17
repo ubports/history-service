@@ -6,8 +6,9 @@ set(library_SRCS
     itemfactory.cpp
     manager.cpp
     managerdbus.cpp
-    pluginmanager.cpp
     phoneutils.cpp
+    pluginthreadview.cpp
+    plugineventview.cpp
     sort.cpp
     textevent.cpp
     texteventattachment.cpp
@@ -32,6 +33,10 @@ set(library_HDRS
     manager.h
     Plugin
     plugin.h
+    PluginThreadView
+    pluginthreadview.h
+    PluginEventView
+    plugineventview.h
     Sort
     sort.h
     TextEvent
@@ -58,9 +63,10 @@ set(library_PRIV_HDRS
     itemfactory_p.h
     manager_p.h
     managerdbus_p.h
-    pluginmanager_p.h
     phonenumberutils_p.h
     phoneutils_p.h
+    pluginthreadview_p.h
+    plugineventview_p.h
     sort_p.h
     textevent_p.h
     texteventattachment_p.h
@@ -70,10 +76,11 @@ set(library_PRIV_HDRS
     voiceevent_p.h
 )
 
+qt5_add_dbus_adaptor(library_SRCS PluginThreadView.xml pluginthreadview.h History::PluginThreadView)
+qt5_add_dbus_adaptor(library_SRCS PluginEventView.xml plugineventview.h History::PluginEventView)
+
 include_directories(${CMAKE_SOURCE_DIR}/src
                     ${CMAKE_CURRENT_BINARY_DIR})
-
-qt5_add_dbus_adaptor(library_SRCS HistoryService.xml managerdbus_p.h History::ManagerDBus)
 
 add_library(historyservice SHARED ${library_SRCS} ${library_HDRS} ${library_PRIV_HDRS})
 

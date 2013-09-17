@@ -23,6 +23,16 @@
 #include <TelepathyQt/Types>
 #include <TelepathyQt/Debug>
 
+bool checkApplicationRunning()
+{
+    bool result = false;
+    QDBusReply<bool> reply = QDBusConnection::sessionBus().interface()->isServiceRegistered(History::DBusService);
+    if (reply.isValid()) {
+        result = reply.value();
+    }
+
+    return result;
+}
 int main(int argc, char **argv)
 {
     Tp::registerTypes();
@@ -30,7 +40,10 @@ int main(int argc, char **argv)
 
     QCoreApplication app(argc, argv);
 
-    HistoryDaemon daemon;
+    if (checkApplicationRunning()) {
+        return 1;
+    }
 
+    HistoryDaemon::instance();
     return app.exec();
 }

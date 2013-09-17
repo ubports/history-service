@@ -22,35 +22,35 @@
 #ifndef SQLITEHISTORYTHREADVIEW_H
 #define SQLITEHISTORYTHREADVIEW_H
 
-#include "threadview.h"
+#include "pluginthreadview.h"
 #include "types.h"
 #include <QSqlQuery>
 
 class SQLiteHistoryPlugin;
 
-class SQLiteHistoryThreadView : public History::ThreadView
+class SQLiteHistoryThreadView : public History::PluginThreadView
 {
     Q_OBJECT
-
 public:
     SQLiteHistoryThreadView(SQLiteHistoryPlugin *plugin,
                             History::EventType type,
                             const History::SortPtr &sort,
-                            const History::FilterPtr &filter);
+                            const QString &filter);
     ~SQLiteHistoryThreadView();
 
-    History::Threads nextPage();
-    bool isValid() const;
+    QList<QVariantMap> NextPage();
+    bool IsValid() const;
 
 private:
     History::EventType mType;
     History::SortPtr mSort;
-    History::FilterPtr mFilter;
+    QString mFilter;
     QSqlQuery mQuery;
     int mPageSize;
     SQLiteHistoryPlugin *mPlugin;
     QString mTemporaryTable;
     int mOffset;
+    bool mValid;
 };
 
 #endif // SQLITEHISTORYTHREADVIEW_H

@@ -1,0 +1,37 @@
+<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN" "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
+<node xmlns:dox="http://www.ayatana.org/dbus/dox.dtd">
+    <dox:d><![CDATA[
+      @mainpage
+
+      An interface to the history service thread view
+    ]]></dox:d>
+    <interface name="com.canonical.HistoryService.ThreadView" xmlns:dox="http://www.ayatana.org/dbus/dox.dtd">
+        <dox:d>
+          An interface to the history service ThreadView object.
+        </dox:d>
+        <method name="NextPage">
+            <dox:d><![CDATA[
+                Return the next page of results.
+                If an empty list is returned, it means the end of results was reached.
+            ]]></dox:d>
+            <arg type="a(a{sv})" direction="out"/>
+            <annotation name="org.qtproject.QtDBus.QtTypeName.Out0" value="QList &lt; QVariantMap &gt;"/>
+        </method>
+        <method name="Destroy">
+            <dox:d><![CDATA[
+                Destroy the view object.
+            ]]></dox:d>
+        </method>
+        <method name="IsValid">
+            <dox:d><![CDATA[
+                Returns true if this view is still valid.
+            ]]></dox:d>
+            <arg type="b" direction="out"/>
+        </method>
+        <signal name="Invalidated">
+            <dox:d><![CDATA[
+                Notifies that this view is no longer valid.
+            ]]></dox:d>
+        </signal>
+    </interface>
+</node>

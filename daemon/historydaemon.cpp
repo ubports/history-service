@@ -21,12 +21,12 @@
 
 #include "historydaemon.h"
 #include "telepathyhelper.h"
-#include "itemfactory.h"
-#include "thread.h"
-#include "manager.h"
-#include "textevent.h"
-#include "texteventattachment.h"
-#include "voiceevent.h"
+#include "sort.h"
+
+#include "pluginmanager.h"
+#include "plugin.h"
+#include "pluginthreadview.h"
+#include "plugineventview.h"
 
 #include <QStandardPaths>
 #include <QCryptographicHash>
@@ -35,8 +35,10 @@
 HistoryDaemon::HistoryDaemon(QObject *parent)
     : QObject(parent), mCallObserver(this), mTextObserver(this)
 {
-    // trigger the creation of History::Manager so that plugins are loaded
-    History::Manager::instance();
+    // get the first plugin
+    if (!History::PluginManager::instance()->plugins().isEmpty()) {
+        mBackend = History::PluginManager::instance()->plugins().first();
+    }
 
     connect(TelepathyHelper::instance(),
             SIGNAL(channelObserverCreated(ChannelObserver*)),
@@ -57,10 +59,230 @@ HistoryDaemon::HistoryDaemon(QObject *parent)
 
     // FIXME: we need to do this in a better way, but for now this should do
     mProtocolFlags["ofono"] = History::MatchPhoneNumber;
+
+    mDBus.connectToBus();
 }
 
 HistoryDaemon::~HistoryDaemon()
 {
+}
+
+HistoryDaemon *HistoryDaemon::instance()
+{
+    static HistoryDaemon *self = new HistoryDaemon();
+    return self;
+}
+
+QVariantMap HistoryDaemon::threadForParticipants(const QString &accountId,
+                                                 History::EventType type,
+                                                 const QStringList &participants,
+                                                 History::MatchFlags matchFlags,
+                                                 bool create)
+{
+    if (!mBackend) {
+        return QVariantMap();
+    }
+
+    QVariantMap thread = mBackend->threadForParticipants(accountId,
+                                                         type,
+                                                         participants,
+                                                         matchFlags);
+    if (thread.isEmpty() && create) {
+        thread = mBackend->createThreadForParticipants(accountId, type, participants);
+        if (!thread.isEmpty()) {
+            mDBus.notifyThreadsAdded(QList<QVariantMap>() << thread);
+        }
+    }
+    return thread;
+}
+
+QString HistoryDaemon::queryThreads(int type, const QVariantMap &sort, const QString &filter)
+{
+    if (!mBackend) {
+        return QString::null;
+    }
+
+    History::SortPtr sortPtr = History::Sort::fromProperties(sort);
+    History::PluginThreadView *view = mBackend->queryThreads((History::EventType)type, sortPtr, filter);
+
+    if (!view) {
+        return QString::null;
+    }
+
+    // FIXME: maybe we should keep a list of views to manually remove them at some point?
+    view->setParent(this);
+    return view->objectPath();
+}
+
+QString HistoryDaemon::queryEvents(int type, const QVariantMap &sort, const QString &filter)
+{
+    if (!mBackend) {
+        return QString::null;
+    }
+
+    History::SortPtr sortPtr = History::Sort::fromProperties(sort);
+    History::PluginEventView *view = mBackend->queryEvents((History::EventType)type, sortPtr, filter);
+
+    if (!view) {
+        return QString::null;
+    }
+
+    // FIXME: maybe we should keep a list of views to manually remove them at some point?
+    view->setParent(this);
+    return view->objectPath();
+}
+
+QVariantMap HistoryDaemon::getSingleThread(int type, const QString &accountId, const QString &threadId)
+{
+    if (!mBackend) {
+        return QVariantMap();
+    }
+
+    return mBackend->getSingleThread((History::EventType)type, accountId, threadId);
+}
+
+QVariantMap HistoryDaemon::getSingleEvent(int type, const QString &accountId, const QString &threadId, const QString &eventId)
+{
+    if (!mBackend) {
+        return QVariantMap();
+    }
+
+    return mBackend->getSingleEvent((History::EventType)type, accountId, threadId, eventId);
+}
+
+bool HistoryDaemon::writeEvents(const QList<QVariantMap> &events)
+{
+    if (!mBackend) {
+        return false;
+    }
+
+    mBackend->beginBatchOperation();
+
+    Q_FOREACH(const QVariantMap &event, events) {
+        History::EventType type = (History::EventType) event[History::FieldType].toInt();
+        bool success = true;
+        switch (type) {
+        case History::EventTypeText:
+            success = mBackend->writeTextEvent(event);
+            break;
+        case History::EventTypeVoice:
+            success = mBackend->writeVoiceEvent(event);
+            break;
+        }
+
+        if (!success) {
+            mBackend->rollbackBatchOperation();
+            return false;
+        }
+    }
+
+    // now get the threads for the events to notify their modifications
+    QList<QVariantMap> threads;
+    Q_FOREACH(const QVariantMap &event, events) {
+        History::EventType type = (History::EventType) event[History::FieldType].toInt();
+        QString accountId = event[History::FieldAccountId].toString();
+        QString threadId = event[History::FieldThreadId].toString();
+
+        QVariantMap thread = getSingleThread(type, accountId, threadId);
+        if (!thread.isEmpty() && !threads.contains(thread)) {
+            threads << thread;
+        }
+
+    }
+
+    mBackend->endBatchOperation();
+    //FIXME: we need to handle modifications
+    mDBus.notifyEventsAdded(events);
+    if (!threads.isEmpty()) {
+        mDBus.notifyThreadsModified(threads);
+    }
+    return true;
+}
+
+bool HistoryDaemon::removeEvents(const QList<QVariantMap> &events)
+{
+    qDebug() << __PRETTY_FUNCTION__;
+    if (!mBackend) {
+        return false;
+    }
+
+    mBackend->beginBatchOperation();
+
+    Q_FOREACH(const QVariantMap &event, events) {
+        History::EventType type = (History::EventType) event[History::FieldType].toInt();
+        bool success = true;
+        switch (type) {
+        case History::EventTypeText:
+            success = mBackend->removeTextEvent(event);
+            break;
+        case History::EventTypeVoice:
+            success = mBackend->removeVoiceEvent(event);
+            break;
+        }
+
+        if (!success) {
+            mBackend->rollbackBatchOperation();
+            return false;
+        }
+    }
+
+    // now we need to get all the threads that were affected by the removal of events
+    // this loop needs to be separate from the item removal loop because we rely on the
+    // count property of threads to decide if they were just modified or if they need to
+    // be removed.
+    QList<QVariantMap> removedThreads;
+    QList<QVariantMap> modifiedThreads;
+    Q_FOREACH(const QVariantMap &event, events) {
+         History::EventType type = (History::EventType) event[History::FieldType].toInt();
+         QString accountId = event[History::FieldAccountId].toString();
+         QString threadId = event[History::FieldThreadId].toString();
+
+         QVariantMap thread = mBackend->getSingleThread(type, accountId, threadId);
+         if (thread.isEmpty()) {
+             continue;
+         }
+
+         if (thread[History::FieldCount].toInt() > 0 && !modifiedThreads.contains(thread)) {
+             // the thread still has items and we should notify it was modified
+             modifiedThreads << thread;
+         } else if (!removedThreads.contains(thread)) {
+             // the thread is now empty and needs to be removed
+             if (!mBackend->removeThread(thread)) {
+                 mBackend->rollbackBatchOperation();
+                 return false;
+             }
+             removedThreads << thread;
+         }
+    }
+
+    mBackend->endBatchOperation();
+
+    mDBus.notifyEventsRemoved(events);
+    if (!removedThreads.isEmpty()) {
+        mDBus.notifyThreadsRemoved(removedThreads);
+    }
+    if (!modifiedThreads.isEmpty()) {
+        mDBus.notifyThreadsModified(modifiedThreads);
+    }
+    return true;
+}
+
+bool HistoryDaemon::removeThreads(const QList<QVariantMap> &threads)
+{
+    qDebug() << __PRETTY_FUNCTION__;
+    if (!mBackend) {
+        return false;
+    }
+
+    // In order to remove a thread all we have to do is to remove all its items
+    // then it is going to be removed by removeEvents() once it detects the thread is
+    // empty.
+    QList<QVariantMap> events;
+    Q_FOREACH(const QVariantMap &thread, threads) {
+        events += mBackend->eventsForThread(thread);
+    }
+
+    return removeEvents(events);
 }
 
 void HistoryDaemon::onObserverCreated()
@@ -82,14 +304,14 @@ void HistoryDaemon::onCallEnded(const Tp::CallChannelPtr &channel)
         participants << contact->id();
     }
 
-    History::ThreadPtr thread = History::Manager::instance()->threadForParticipants(channel->property("accountId").toString(),
-                                                                                    History::EventTypeVoice,
-                                                                                    participants,
-                                                                                    matchFlagsForChannel(channel),
-                                                                                    true);
-
+    QString accountId = channel->property(History::FieldAccountId).toString();
+    QVariantMap thread = threadForParticipants(accountId,
+                                               History::EventTypeVoice,
+                                               participants,
+                                               matchFlagsForChannel(channel),
+                                               true);
     // fill the call info
-    QDateTime timestamp = channel->property("timestamp").toDateTime();
+    QDateTime timestamp = channel->property(History::FieldTimestamp).toDateTime();
 
     // FIXME: check if checking for isRequested() is enough
     bool incoming = !channel->isRequested();
@@ -101,22 +323,23 @@ void HistoryDaemon::onCallEnded(const Tp::CallChannelPtr &channel)
         duration = duration.addSecs(activeTime.secsTo(QDateTime::currentDateTime()));
     }
 
-    QString eventId = QString("%1:%2").arg(thread->threadId()).arg(timestamp.toString());
-    History::VoiceEventPtr event = History::ItemFactory::instance()->createVoiceEvent(thread->accountId(),
-                                                                                      thread->threadId(),
-                                                                                      eventId,
-                                                                                      incoming ? channel->initiatorContact()->id() : "self",
-                                                                                      timestamp,
-                                                                                      missed, // only mark as a new (unseen) event if it is a missed call
-                                                                                      missed,
-                                                                                      duration);
-    History::Manager::instance()->writeVoiceEvents(History::VoiceEvents() << event);
+    QString eventId = QString("%1:%2").arg(thread[History::FieldThreadId].toString()).arg(timestamp.toString());
+    QVariantMap event;
+    event[History::FieldType] = History::EventTypeVoice;
+    event[History::FieldAccountId] = thread[History::FieldAccountId];
+    event[History::FieldThreadId] = thread[History::FieldThreadId];
+    event[History::FieldEventId] = eventId;
+    event[History::FieldSenderId] = incoming ? channel->initiatorContact()->id() : "self";
+    event[History::FieldTimestamp] = timestamp.toString(Qt::ISODate);
+    event[History::FieldNewEvent] = missed; // only mark as a new (unseen) event if it is a missed call
+    event[History::FieldMissed] = missed;
+    event[History::FieldDuration] = duration;
+    writeEvents(QList<QVariantMap>() << event);
 }
 
 void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, const Tp::ReceivedMessage &message)
 {
     qDebug() << __PRETTY_FUNCTION__;
-
     // ignore delivery reports for now.
     // FIXME: maybe we should set the readTimestamp when a delivery report is received
     if (message.isDeliveryReport() || message.isRescued() || message.isScrollback()) {
@@ -128,20 +351,19 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
         participants << contact->id();
     }
 
-    History::ThreadPtr thread = History::Manager::instance()->threadForParticipants(textChannel->property("accountId").toString(),
-                                                                                    History::EventTypeText,
-                                                                                    participants,
-                                                                                    matchFlagsForChannel(textChannel),
-                                                                                    true);
+    QVariantMap thread = threadForParticipants(textChannel->property(History::FieldAccountId).toString(),
+                                                                     History::EventTypeText,
+                                                                     participants,
+                                                                     matchFlagsForChannel(textChannel),
+                                                                     true);
     int count = 1;
-    History::TextEventPtr event;
-    History::TextEventAttachments attachments;
+    QList<QVariantMap> attachments;
     History::MessageType type = History::MessageTypeText;
     QString subject;
 
     if (message.hasNonTextContent()) {
-        QString normalizedAccountId = QString(QCryptographicHash::hash(thread->accountId().toLatin1(), QCryptographicHash::Md5).toHex());
-        QString normalizedThreadId = QString(QCryptographicHash::hash(thread->threadId().toLatin1(), QCryptographicHash::Md5).toHex());
+        QString normalizedAccountId = QString(QCryptographicHash::hash(thread[History::FieldAccountId].toString().toLatin1(), QCryptographicHash::Md5).toHex());
+        QString normalizedThreadId = QString(QCryptographicHash::hash(thread[History::FieldThreadId].toString().toLatin1(), QCryptographicHash::Md5).toHex());
         QString normalizedEventId = QString(QCryptographicHash::hash(message.messageToken().toLatin1(), QCryptographicHash::Md5).toHex());
         QString mmsStoragePath = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation);
 
@@ -172,31 +394,35 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
             }
             file.write(part["content"].variant().toByteArray());
             file.close();
-            History::TextEventAttachmentPtr attachment = History::TextEventAttachmentPtr(new History::TextEventAttachment(
-                                                         thread->accountId(),
-                                                         thread->threadId(),
-                                                         message.messageToken(),
-                                                         part["identifier"].variant().toString(),
-                                                         part["content-type"].variant().toString(),
-                                                         file.fileName()));
+
+            QVariantMap attachment;
+            attachment[History::FieldAccountId] = thread[History::FieldAccountId];
+            attachment[History::FieldThreadId] = thread[History::FieldThreadId];
+            attachment[History::FieldEventId] = message.messageToken();
+            attachment[History::FieldAttachmentId] = part["identifier"].variant();
+            attachment[History::FieldContentType] = part["content-type"].variant();
+            attachment[History::FieldFilePath] = file.fileName();
+            attachment[History::FieldStatus] = (int) History::AttachmentDownloaded;
             attachments << attachment;
         }
     }
 
-    event = History::ItemFactory::instance()->createTextEvent(thread->accountId(),
-                                                              thread->threadId(),
-                                                              message.messageToken(),
-                                                              message.sender()->id(),
-                                                              message.received(),
-                                                              true, // message is always unread until it reaches HistoryDaemon::onMessageRead
-                                                              message.text(),
-                                                              type,
-                                                              History::MessageFlags(),
-                                                              QDateTime(),
-                                                              subject,
-                                                              attachments);
+    QVariantMap event;
+    event[History::FieldType] = History::EventTypeText;
+    event[History::FieldAccountId] = thread[History::FieldAccountId];
+    event[History::FieldThreadId] = thread[History::FieldThreadId];
+    event[History::FieldEventId] = message.messageToken();
+    event[History::FieldSenderId] = message.sender()->id();
+    event[History::FieldTimestamp] = message.received().toString(Qt::ISODate);
+    event[History::FieldNewEvent] = true; // message is always unread until it reaches HistoryDaemon::onMessageRead
+    event[History::FieldMessage] = message.text();
+    event[History::FieldMessageType] = (int)type;
+    event[History::FieldMessageFlags] = (int)History::MessageFlags();
+    event[History::FieldReadTimestamp] = QDateTime().toString(Qt::ISODate);
+    event[History::FieldSubject] = subject;
+    event[History::FieldAttachments] = QVariant::fromValue(attachments);
 
-    History::Manager::instance()->writeTextEvents(History::TextEvents() << event);
+    writeEvents(QList<QVariantMap>() << event);
 }
 
 void HistoryDaemon::onMessageRead(const Tp::TextChannelPtr textChannel, const Tp::ReceivedMessage &message)
@@ -213,22 +439,26 @@ void HistoryDaemon::onMessageSent(const Tp::TextChannelPtr textChannel, const Tp
         participants << contact->id();
     }
 
-    History::ThreadPtr thread = History::Manager::instance()->threadForParticipants(textChannel->property("accountId").toString(),
-                                                                                    History::EventTypeText,
-                                                                                    participants,
-                                                                                    matchFlagsForChannel(textChannel),
-                                                                                    true);
-    History::TextEventPtr event = History::ItemFactory::instance()->createTextEvent(thread->accountId(),
-                                                                                    thread->threadId(),
-                                                                                    messageToken,
-                                                                                    "self",
-                                                                                    QDateTime::currentDateTime(), // FIXME: check why message.sent() is empty
-                                                                                    false, // outgoing messages are never new (unseen)
-                                                                                    message.text(),
-                                                                                    History::MessageTypeText, // FIXME: add support for MMS
-                                                                                    History::MessageFlags(),
-                                                                                    QDateTime());
-    History::Manager::instance()->writeTextEvents(History::TextEvents() << event);
+   QVariantMap thread = threadForParticipants(textChannel->property(History::FieldAccountId).toString(),
+                                              History::EventTypeText,
+                                              participants,
+                                              matchFlagsForChannel(textChannel),
+                                              true);
+    QVariantMap event;
+    event[History::FieldType] = History::EventTypeText;
+    event[History::FieldAccountId] = thread[History::FieldAccountId];
+    event[History::FieldThreadId] = thread[History::FieldThreadId];
+    event[History::FieldEventId] = messageToken;
+    event[History::FieldSenderId] = "self";
+    event[History::FieldTimestamp] = QDateTime::currentDateTime().toString(Qt::ISODate); // FIXME: check why message.sent() is empty
+    event[History::FieldNewEvent] =  false; // outgoing messages are never new (unseen)
+    event[History::FieldMessage] = message.text();
+    event[History::FieldMessageType] = (int)History::MessageTypeText; // FIXME: add support for MMS
+    event[History::FieldMessageFlags] = (int)History::MessageFlags();
+    event[History::FieldReadTimestamp] = QDateTime().toString(Qt::ISODate);
+    event[History::FieldSubject] = "";
+
+    writeEvents(QList<QVariantMap>() << event);
 }
 
 History::MatchFlags HistoryDaemon::matchFlagsForChannel(const Tp::ChannelPtr &channel)

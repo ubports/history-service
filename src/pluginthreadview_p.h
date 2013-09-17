@@ -19,28 +19,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef HISTORY_MANAGER_P_H
-#define HISTORY_MANAGER_P_H
+#ifndef PLUGINTHREADVIEW_P_H
+#define PLUGINTHREADVIEW_P_H
 
-#include <QDBusInterface>
-#include <QString>
-#include "types.h"
+#include <QScopedPointer>
 
-namespace History
-{
+class ThreadViewAdaptor;
 
-class Manager;
-class ManagerDBus;
+namespace History {
 
-class ManagerPrivate
+class PluginThreadViewPrivate
 {
 public:
-    ManagerPrivate();
-    ~ManagerPrivate();
+    PluginThreadViewPrivate();
 
-    QScopedPointer<ManagerDBus> dbus;
+    ThreadViewAdaptor *adaptor;
+    QString objectPath;
 };
 
 }
 
-#endif // HISTORY_MANAGER_P_H
+#endif // PLUGINTHREADVIEW_P_H

@@ -41,8 +41,7 @@ public Q_SLOTS:
 private:
     int mTextEventCount;
     int mVoiceEventCount;
-    History::TextEvents mTextEvents;
-    History::VoiceEvents mVoiceEvents;
+    History::Events mEvents;
     int mBatchSize;
 
 };

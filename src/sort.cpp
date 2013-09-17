@@ -88,4 +88,29 @@ void Sort::setCaseSensitivity(Qt::CaseSensitivity value)
     d->caseSensitivity = value;
 }
 
+QVariantMap Sort::properties() const
+{
+    Q_D(const Sort);
+    QVariantMap map;
+
+    map[SortField] = d->sortField;
+    map[SortOrder] = (int)d->sortOrder;
+    map[CaseSensitivity] = (int)d->caseSensitivity;
+
+    return map;
+}
+
+SortPtr Sort::fromProperties(const QVariantMap &properties)
+{
+    SortPtr sort;
+    if (properties.isEmpty()) {
+        return sort;
+    }
+
+    sort = SortPtr(new Sort(properties[SortField].toString(),
+                            (Qt::SortOrder) properties[SortOrder].toInt(),
+                            (Qt::CaseSensitivity) properties[CaseSensitivity].toInt()));
+    return sort;
+}
+
 }

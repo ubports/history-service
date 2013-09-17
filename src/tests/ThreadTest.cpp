@@ -110,12 +110,12 @@ void ThreadTest::testCreateNewThread()
     QCOMPARE(threadItem.unreadCount(), unreadCount);
 
     QVariantMap properties = threadItem.properties();
-    QCOMPARE(properties["accountId"].toString(), accountId);
-    QCOMPARE(properties["threadId"].toString(), threadId);
-    QCOMPARE(properties["type"].toInt(), (int)type);
-    QCOMPARE(properties["participants"].toStringList(), participants);
-    QCOMPARE(properties["count"].toInt(), count);
-    QCOMPARE(properties["unreadCount"].toInt(), unreadCount);
+    QCOMPARE(properties[History::FieldAccountId].toString(), accountId);
+    QCOMPARE(properties[History::FieldThreadId].toString(), threadId);
+    QCOMPARE(properties[History::FieldType].toInt(), (int)type);
+    QCOMPARE(properties[History::FieldParticipants].toStringList(), participants);
+    QCOMPARE(properties[History::FieldCount].toInt(), count);
+    QCOMPARE(properties[History::FieldUnreadCount].toInt(), unreadCount);
 }
 
 QTEST_MAIN(ThreadTest)

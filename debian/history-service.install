@@ -1,4 +1,5 @@
 usr/bin/history-daemon
 usr/share/applications/history-daemon.desktop
 usr/share/dbus-1/services/*HistoryDaemon*.service
+usr/share/dbus-1/services/*HistoryService*.service
 usr/share/telepathy/clients/HistoryDaemon*.client

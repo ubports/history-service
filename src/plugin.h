@@ -24,12 +24,13 @@
 
 #include <QtPlugin>
 #include "types.h"
+#include <QVariantMap>
 
 namespace History
 {
 
-class Writer;
-class Reader;
+class PluginThreadView;
+class PluginEventView;
 
 class Plugin
 {
@@ -37,33 +38,35 @@ public:
     virtual ~Plugin() {}
 
     // Reader part of the plugin
-    virtual ThreadViewPtr queryThreads(EventType type,
+    virtual PluginThreadView* queryThreads(EventType type,
                                        const SortPtr &sort = SortPtr(),
-                                       const FilterPtr &filter = FilterPtr()) = 0;
-    virtual EventViewPtr queryEvents(EventType type,
-                                     const SortPtr &sort = SortPtr(),
-                                     const FilterPtr &filter = FilterPtr()) = 0;
-    virtual ThreadPtr getSingleThread(EventType type,
-                                      const QString &accountId,
-                                      const QString &threadId) = 0;
-    virtual EventPtr getSingleEvent(EventType type,
-                                    const QString &accountId,
-                                    const QString &threadId,
-                                    const QString &eventId) = 0;
-    virtual ThreadPtr threadForParticipants(const QString &accountId,
-                                            EventType type,
-                                            const QStringList &participants,
-                                            History::MatchFlags matchFlags = History::MatchCaseSensitive) = 0;
+                                       const QString &filter = QString::null) = 0;
+    virtual PluginEventView* queryEvents(EventType type,
+                                         const SortPtr &sort = SortPtr(),
+                                         const QString &filter = QString::null) = 0;
+    virtual QVariantMap getSingleThread(EventType type,
+                                        const QString &accountId,
+                                        const QString &threadId) = 0;
+    virtual QVariantMap getSingleEvent(EventType type,
+                                       const QString &accountId,
+                                       const QString &threadId,
+                                       const QString &eventId) = 0;
+    virtual QVariantMap threadForParticipants(const QString &accountId,
+                                              EventType type,
+                                              const QStringList &participants,
+                                              History::MatchFlags matchFlags = History::MatchCaseSensitive) = 0;
+
+    virtual QList<QVariantMap> eventsForThread(const QVariantMap &thread) = 0;
 
     // Writer part of the plugin
-    virtual ThreadPtr createThreadForParticipants(const QString &accountId, EventType type, const QStringList &participants) { return ThreadPtr(); }
-    virtual bool removeThread(const History::ThreadPtr &thread) { return false; }
+    virtual QVariantMap createThreadForParticipants(const QString &accountId, EventType type, const QStringList &participants) { return QVariantMap(); }
+    virtual bool removeThread(const QVariantMap &thread) { return false; }
 
-    virtual bool writeTextEvent(const TextEventPtr &event) { return false; }
-    virtual bool removeTextEvent(const History::TextEventPtr &event) { return false; }
+    virtual bool writeTextEvent(const QVariantMap &event) { return false; }
+    virtual bool removeTextEvent(const QVariantMap &event) { return false; }
 
-    virtual bool writeVoiceEvent(const VoiceEventPtr &event) { return false; }
-    virtual bool removeVoiceEvent(const History::VoiceEventPtr &event) { return false; }
+    virtual bool writeVoiceEvent(const QVariantMap &event) { return false; }
+    virtual bool removeVoiceEvent(const QVariantMap &event) { return false; }
 
     virtual bool beginBatchOperation() {}
     virtual bool endBatchOperation() {}

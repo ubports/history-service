@@ -46,6 +46,7 @@ public:
                            const EventPtr &lastEvent = EventPtr(),
                            int count = 0,
                            int unreadCount = 0);
+    ThreadPtr createThread(const QVariantMap &properties);
     TextEventPtr createTextEvent(const QString &accountId,
                                  const QString &threadId,
                                  const QString &eventId,
@@ -58,6 +59,7 @@ public:
                                  const QDateTime &readTimestamp,
                                  const QString &subject = QString(),
                                  const TextEventAttachments &attachments = TextEventAttachments());
+    TextEventPtr createTextEvent(const QVariantMap &properties);
     VoiceEventPtr createVoiceEvent(const QString &accountId,
                                    const QString &threadId,
                                    const QString &eventId,
@@ -66,6 +68,7 @@ public:
                                    bool newEvent,
                                    bool missed,
                                    const QTime &duration = QTime());
+    VoiceEventPtr createVoiceEvent(const QVariantMap &properties);
 
     ThreadPtr cachedThread(const QString &accountId,
                            const QString &threadId,

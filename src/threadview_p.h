@@ -23,6 +23,7 @@
 #define THREADVIEW_P_H
 
 #include "types.h"
+#include <QDBusInterface>
 
 namespace History
 {
@@ -39,6 +40,9 @@ namespace History
         EventType type;
         SortPtr sort;
         FilterPtr filter;
+        QString objectPath;
+        bool valid;
+        QDBusInterface *dbus;
 
         Threads filteredThreads(const Threads &threads);
 

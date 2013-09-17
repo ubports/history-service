@@ -97,8 +97,8 @@ int main(int argc, char **argv)
 
                 // now print the events for this thread
                 History::IntersectionFilterPtr filter(new History::IntersectionFilter());
-                filter->append(History::FilterPtr(new History::Filter("threadId", thread->threadId())));
-                filter->append(History::FilterPtr(new History::Filter("accountId", thread->accountId())));
+                filter->append(History::FilterPtr(new History::Filter(History::FieldThreadId, thread->threadId())));
+                filter->append(History::FilterPtr(new History::Filter(History::FieldAccountId, thread->accountId())));
                 History::EventViewPtr eventView = manager->queryEvents(type, History::SortPtr(), filter);
                 History::Events events = eventView->nextPage();
                 while (!events.isEmpty()) {

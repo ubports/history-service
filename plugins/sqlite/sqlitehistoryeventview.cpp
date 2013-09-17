@@ -21,34 +21,24 @@
 
 #include "sqlitehistoryeventview.h"
 #include "sqlitedatabase.h"
-#include "filter.h"
+#include "sqlitehistoryplugin.h"
 #include "sort.h"
-#include "itemfactory.h"
-#include "textevent.h"
-#include "texteventattachment.h"
-#include "voiceevent.h"
+#include <QDateTime>
 #include <QDebug>
 #include <QSqlError>
 
 SQLiteHistoryEventView::SQLiteHistoryEventView(SQLiteHistoryPlugin *plugin,
                                              History::EventType type,
                                              const History::SortPtr &sort,
-                                             const History::FilterPtr &filter)
-    : History::EventView(type, sort, filter), mType(type), mSort(sort), mFilter(filter),
-      mQuery(SQLiteDatabase::instance()->database()), mPageSize(15), mPlugin(plugin), mOffset(0)
+                                             const QString &filter)
+    : History::PluginEventView(), mType(type), mSort(sort), mFilter(filter),
+      mQuery(SQLiteDatabase::instance()->database()), mPageSize(15), mPlugin(plugin), mOffset(0), mValid(true)
 {
     mTemporaryTable = QString("eventview%1%2").arg(QString::number((qulonglong)this), QDateTime::currentDateTimeUtc().toString("yyyyMMddhhmmsszzz"));
     mQuery.setForwardOnly(true);
 
     // FIXME: validate the filter
-    QString condition;
-    if (!filter.isNull()) {
-        condition = filter->toString();
-    }
-    if (!condition.isEmpty()) {
-        condition.prepend(" WHERE ");
-    }
-
+    QString condition = filter;
     QString order;
     if (!sort.isNull() && !sort->sortField().isNull()) {
         order = QString("ORDER BY %1 %2").arg(sort->sortField(), sort->sortOrder() == Qt::AscendingOrder ? "ASC" : "DESC");
@@ -56,19 +46,11 @@ SQLiteHistoryEventView::SQLiteHistoryEventView(SQLiteHistoryPlugin *plugin,
     }
 
     QString queryText = QString("CREATE TEMP TABLE %1 AS ").arg(mTemporaryTable);
-
-    switch (type) {
-    case History::EventTypeText:
-        queryText += QString("SELECT accountId, threadId, eventId, senderId, timestamp, newEvent,"
-                             "message, messageType, messageFlags, readTimestamp, subject FROM text_events %1 %2").arg(condition, order);
-        break;
-    case History::EventTypeVoice:
-        queryText += QString("SELECT accountId, threadId, eventId, senderId, timestamp, newEvent,"
-                             "duration, missed FROM voice_events %1 %2").arg(condition, order);
-        break;
-    }
+    queryText += mPlugin->sqlQueryForEvents(type, condition, order);
 
     if (!mQuery.exec(queryText)) {
+        mValid = false;
+        Q_EMIT Invalidated();
         qCritical() << "Error:" << mQuery.lastError() << mQuery.lastQuery();
         return;
     }
@@ -82,84 +64,28 @@ SQLiteHistoryEventView::~SQLiteHistoryEventView()
     }
 }
 
-History::Events SQLiteHistoryEventView::nextPage()
+QList<QVariantMap> SQLiteHistoryEventView::NextPage()
 {
-    History::Events events;
+    QList<QVariantMap> events;
 
     // now prepare for selecting from it
     mQuery.prepare(QString("SELECT * FROM %1 LIMIT %2 OFFSET %3").arg(mTemporaryTable,
                                                                       QString::number(mPageSize), QString::number(mOffset)));
     if (!mQuery.exec()) {
+        mValid = false;
+        Q_EMIT Invalidated();
         qCritical() << "Error:" << mQuery.lastError() << mQuery.lastQuery();
         return events;
     }
 
-    while (mQuery.next()) {
-        History::TextEventAttachments attachments;
-        History::MessageType messageType;
-        QString accountId = mQuery.value(0).toString();
-        QString threadId = mQuery.value(1).toString();
-        QString eventId = mQuery.value(2).toString();
-        switch (mType) {
-        case History::EventTypeText:
-            messageType = (History::MessageType) mQuery.value(7).toInt();
-            if (messageType == History::MessageTypeMultiParty)  {
-                QSqlQuery attachmentsQuery(SQLiteDatabase::instance()->database());
-                attachmentsQuery.prepare("SELECT attachmentId, contentType, filePath, status FROM text_event_attachments "
-                                    "WHERE accountId=:accountId and threadId=:threadId and eventId=:eventId");
-                attachmentsQuery.bindValue(":accountId", accountId);
-                attachmentsQuery.bindValue(":threadId", threadId);
-                attachmentsQuery.bindValue(":eventId", eventId);
-                if (!attachmentsQuery.exec()) {
-                    qCritical() << "Error:" << attachmentsQuery.lastError() << attachmentsQuery.lastQuery();
-                }
-                while (attachmentsQuery.next()) {
-                    History::TextEventAttachmentPtr attachment = History::TextEventAttachmentPtr(
-                                new History::TextEventAttachment(accountId,
-                                                                 threadId,
-                                                                 eventId,
-                                                                 attachmentsQuery.value(0).toString(),
-                                                                 attachmentsQuery.value(1).toString(),
-                                                                 attachmentsQuery.value(2).toString(),
-                                                                 (History::AttachmentFlag) attachmentsQuery.value(3).toInt()));
-                    attachments << attachment;
-
-                }
-                attachmentsQuery.clear();
-            }
-            events << History::ItemFactory::instance()->createTextEvent(accountId,
-                                                                        threadId,
-                                                                        eventId,
-                                                                        mQuery.value(3).toString(),
-                                                                        mQuery.value(4).toDateTime(),
-                                                                        mQuery.value(5).toBool(),
-                                                                        mQuery.value(6).toString(),
-                                                                        messageType,
-                                                                        (History::MessageFlags) mQuery.value(8).toInt(),
-                                                                        mQuery.value(9).toDateTime(),
-                                                                        mQuery.value(10).toString(),
-                                                                        attachments);
-            break;
-        case History::EventTypeVoice:
-            events << History::ItemFactory::instance()->createVoiceEvent(accountId,
-                                                                         threadId,
-                                                                         eventId,
-                                                                         mQuery.value(3).toString(),
-                                                                         mQuery.value(4).toDateTime(),
-                                                                         mQuery.value(5).toBool(),
-                                                                         mQuery.value(7).toBool(),
-                                                                         QTime(0,0).addSecs(mQuery.value(6).toInt()));
-            break;
-        }
-    }
-
+    events = mPlugin->parseEventResults(mType, mQuery);
     mOffset += mPageSize;
     mQuery.clear();
 
     return events;
 }
 
-bool SQLiteHistoryEventView::isValid() const
+bool SQLiteHistoryEventView::IsValid() const
 {
     return mQuery.isActive();
 }

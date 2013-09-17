@@ -20,16 +20,11 @@
  */
 
 #include "sqlitehistoryplugin.h"
-#include "intersectionfilter.h"
-#include "itemfactory.h"
 #include "phoneutils_p.h"
 #include "sqlitedatabase.h"
 #include "sqlitehistoryeventview.h"
 #include "sqlitehistorythreadview.h"
-#include "textevent.h"
-#include "texteventattachment.h"
-#include "thread.h"
-#include "voiceevent.h"
+#include <QDateTime>
 #include <QDebug>
 #include <QStringList>
 #include <QSqlError>
@@ -37,30 +32,32 @@
 SQLiteHistoryPlugin::SQLiteHistoryPlugin(QObject *parent) :
     QObject(parent)
 {
+    // just trigger the database creation or update
+    SQLiteDatabase::instance();
 }
 
 // Reader
-History::ThreadViewPtr SQLiteHistoryPlugin::queryThreads(History::EventType type,
-                                                         const History::SortPtr &sort,
-                                                         const History::FilterPtr &filter)
+History::PluginThreadView *SQLiteHistoryPlugin::queryThreads(History::EventType type,
+                                                             const History::SortPtr &sort,
+                                                             const QString &filter)
 {
-    return History::ThreadViewPtr(new SQLiteHistoryThreadView(this, type, sort, filter));
+    return new SQLiteHistoryThreadView(this, type, sort, filter);
 }
 
-History::EventViewPtr SQLiteHistoryPlugin::queryEvents(History::EventType type,
-                                                       const History::SortPtr &sort,
-                                                       const History::FilterPtr &filter)
+History::PluginEventView *SQLiteHistoryPlugin::queryEvents(History::EventType type,
+                                                           const History::SortPtr &sort,
+                                                           const QString &filter)
 {
-    return History::EventViewPtr(new SQLiteHistoryEventView(this, type, sort, filter));
+    return new SQLiteHistoryEventView(this, type, sort, filter);
 }
 
-History::ThreadPtr SQLiteHistoryPlugin::threadForParticipants(const QString &accountId,
-                                                              History::EventType type,
-                                                              const QStringList &participants,
-                                                              History::MatchFlags matchFlags)
+QVariantMap SQLiteHistoryPlugin::threadForParticipants(const QString &accountId,
+                                                       History::EventType type,
+                                                       const QStringList &participants,
+                                                       History::MatchFlags matchFlags)
 {
     if (participants.isEmpty()) {
-        return History::ThreadPtr(0);
+        return QVariantMap();
     }
 
     QSqlQuery query(SQLiteDatabase::instance()->database());
@@ -82,7 +79,7 @@ History::ThreadPtr SQLiteHistoryPlugin::threadForParticipants(const QString &acc
     query.bindValue(":accountId", accountId);
     if (!query.exec()) {
         qCritical() << "Error:" << query.lastError() << query.lastQuery();
-        return History::ThreadPtr(0);
+        return QVariantMap();
     }
 
     QStringList threadIds;
@@ -100,7 +97,7 @@ History::ThreadPtr SQLiteHistoryPlugin::threadForParticipants(const QString &acc
         query.bindValue(":accountId", accountId);
         if (!query.exec()) {
             qCritical() << "Error:" << query.lastError() << query.lastQuery();
-            return History::ThreadPtr(0);
+            return QVariantMap();
         }
 
         QStringList threadParticipants;
@@ -137,50 +134,88 @@ History::ThreadPtr SQLiteHistoryPlugin::threadForParticipants(const QString &acc
         }
     }
 
+    QVariantMap thread;
     if (!existingThread.isNull()) {
-        return History::ItemFactory::instance()->createThread(accountId, existingThread, type, participants);
-    }
-
-    return History::ThreadPtr();
-}
-
-History::ThreadPtr SQLiteHistoryPlugin::getSingleThread(History::EventType type, const QString &accountId, const QString &threadId)
-{
-    History::IntersectionFilterPtr intersectionFilter(new History::IntersectionFilter());
-    intersectionFilter->append(History::FilterPtr(new History::Filter("accountId", accountId)));
-    intersectionFilter->append(History::FilterPtr(new History::Filter("threadId", threadId)));
-    History::ThreadViewPtr view = queryThreads(type, History::SortPtr(), intersectionFilter);
-
-    History::Threads threads= view->nextPage();
-    History::ThreadPtr thread;
-    if (!threads.isEmpty()) {
-        thread = threads.first();
+        thread[History::FieldAccountId] = accountId;
+        thread[History::FieldThreadId] = existingThread;
+        thread[History::FieldType] = (int) type;
+        thread[History::FieldParticipants] = participants;
     }
 
     return thread;
 }
 
-History::EventPtr SQLiteHistoryPlugin::getSingleEvent(History::EventType type, const QString &accountId, const QString &threadId, const QString &eventId)
+QList<QVariantMap> SQLiteHistoryPlugin::eventsForThread(const QVariantMap &thread)
 {
-    History::IntersectionFilterPtr intersectionFilter(new History::IntersectionFilter());
-    intersectionFilter->append(History::FilterPtr(new History::Filter("accountId", accountId)));
-    intersectionFilter->append(History::FilterPtr(new History::Filter("threadId", threadId)));
-    intersectionFilter->append(History::FilterPtr(new History::Filter("eventId", eventId)));
+    QList<QVariantMap> results;
+    QString accountId = thread[History::FieldAccountId].toString();
+    QString threadId = thread[History::FieldThreadId].toString();
+    History::EventType type = (History::EventType) thread[History::FieldType].toInt();
+    QString condition = QString("accountId=\"%1\" AND threadId=\"%2\"").arg(accountId, threadId);
+    QString queryText = sqlQueryForEvents(type, condition, "");
 
-    History::EventViewPtr view = queryEvents(type, History::SortPtr(), intersectionFilter);
-    History::Events events = view->nextPage();
-    History::EventPtr event;
-    if (!events.isEmpty()) {
-        event = events.first();
+    QSqlQuery query(SQLiteDatabase::instance()->database());
+    if (!query.exec(queryText)) {
+        qCritical() << "Error:" << query.lastError() << query.lastQuery();
+        return results;
     }
 
-    return event;
+    results = parseEventResults(type, query);
+    return results;
+}
+
+QVariantMap SQLiteHistoryPlugin::getSingleThread(History::EventType type, const QString &accountId, const QString &threadId)
+{
+    QVariantMap result;
+
+    QString condition = QString("accountId=\"%1\" AND threadId=\"%2\"").arg(accountId, threadId);
+    QString queryText = sqlQueryForThreads(type, condition, QString::null);
+    queryText += " LIMIT 1";
+
+    QSqlQuery query(SQLiteDatabase::instance()->database());
+    if (!query.exec(queryText)) {
+        qCritical() << "Error:" << query.lastError() << query.lastQuery();
+        return result;
+    }
+
+    QList<QVariantMap> results = parseThreadResults(type, query);
+    query.clear();
+    if (!results.isEmpty()) {
+        result = results.first();
+    }
+
+    return result;
+}
+
+QVariantMap SQLiteHistoryPlugin::getSingleEvent(History::EventType type, const QString &accountId, const QString &threadId, const QString &eventId)
+{
+    QVariantMap result;
+
+    QString condition = QString("accountId=\"%1\" AND threadId=\"%2\" AND eventId=\"%3\"").arg(accountId, threadId, eventId);
+    QString queryText = sqlQueryForEvents(type, condition, QString::null);
+    queryText += " LIMIT 1";
+
+    QSqlQuery query(SQLiteDatabase::instance()->database());
+    if (!query.exec(queryText)) {
+        qCritical() << "Error:" << query.lastError() << query.lastQuery();
+        return result;
+    }
+
+    QList<QVariantMap> results = parseEventResults(type, query);
+    query.clear();
+    if (!results.isEmpty()) {
+        result = results.first();
+    }
+
+    return result;
 }
 
 // Writer
-History::ThreadPtr SQLiteHistoryPlugin::createThreadForParticipants(const QString &accountId, History::EventType type, const QStringList &participants)
+QVariantMap SQLiteHistoryPlugin::createThreadForParticipants(const QString &accountId, History::EventType type, const QStringList &participants)
 {
     // WARNING: this function does NOT test to check if the thread is already created, you should check using HistoryReader::threadForParticipants()
+
+    QVariantMap thread;
 
     // Create a new thread
     // FIXME: define what the threadId will be
@@ -196,7 +231,7 @@ History::ThreadPtr SQLiteHistoryPlugin::createThreadForParticipants(const QStrin
     query.bindValue(":unreadCount", 0);
     if (!query.exec()) {
         qCritical() << "Error:" << query.lastError() << query.lastQuery();
-        return History::ThreadPtr(0);
+        return QVariantMap();
     }
 
     // and insert the participants
@@ -209,23 +244,27 @@ History::ThreadPtr SQLiteHistoryPlugin::createThreadForParticipants(const QStrin
         query.bindValue(":participantId", participant);
         if (!query.exec()) {
             qCritical() << "Error:" << query.lastError() << query.lastQuery();
-            return History::ThreadPtr(0);
+            return QVariantMap();
         }
     }
 
     // and finally create the thread
-    History::ThreadPtr thread = History::ItemFactory::instance()->createThread(accountId, threadId, type, participants);
+    thread[History::FieldAccountId] = accountId;
+    thread[History::FieldThreadId] = threadId;
+    thread[History::FieldType] = (int) type;
+    thread[History::FieldParticipants] = participants;
+
     return thread;
 }
 
-bool SQLiteHistoryPlugin::removeThread(const History::ThreadPtr &thread)
+bool SQLiteHistoryPlugin::removeThread(const QVariantMap &thread)
 {
     QSqlQuery query(SQLiteDatabase::instance()->database());
 
     query.prepare("DELETE FROM threads WHERE accountId=:accountId AND threadId=:threadId AND type=:type");
-    query.bindValue(":accountId", thread->accountId());
-    query.bindValue(":threadId", thread->threadId());
-    query.bindValue(":type", thread->type());
+    query.bindValue(":accountId", thread[History::FieldAccountId]);
+    query.bindValue(":threadId", thread[History::FieldThreadId]);
+    query.bindValue(":type", thread[History::FieldType]);
 
     if (!query.exec()) {
         qCritical() << "Failed to remove the thread: Error:" << query.lastError() << query.lastQuery();
@@ -235,7 +274,7 @@ bool SQLiteHistoryPlugin::removeThread(const History::ThreadPtr &thread)
     return true;
 }
 
-bool SQLiteHistoryPlugin::writeTextEvent(const History::TextEventPtr &event)
+bool SQLiteHistoryPlugin::writeTextEvent(const QVariantMap &event)
 {
     QSqlQuery query(SQLiteDatabase::instance()->database());
 
@@ -243,35 +282,38 @@ bool SQLiteHistoryPlugin::writeTextEvent(const History::TextEventPtr &event)
 
     query.prepare("INSERT INTO text_events (accountId, threadId, eventId, senderId, timestamp, newEvent, message, messageType, messageFlags, readTimestamp) "
                   "VALUES (:accountId, :threadId, :eventId, :senderId, :timestamp, :newEvent, :message, :messageType, :messageFlags, :readTimestamp)");
-    query.bindValue(":accountId", event->accountId());
-    query.bindValue(":threadId", event->threadId());
-    query.bindValue(":eventId", event->eventId());
-    query.bindValue(":senderId", event->senderId());
-    query.bindValue(":timestamp", event->timestamp());
-    query.bindValue(":newEvent", event->newEvent());
-    query.bindValue(":message", event->message());
-    query.bindValue(":messageType", event->messageType());
-    query.bindValue(":messageFlags", (int) event->messageFlags());
-    query.bindValue(":readTimestamp", event->readTimestamp());
+    query.bindValue(":accountId", event[History::FieldAccountId]);
+    query.bindValue(":threadId", event[History::FieldThreadId]);
+    query.bindValue(":eventId", event[History::FieldEventId]);
+    query.bindValue(":senderId", event[History::FieldSenderId]);
+    query.bindValue(":timestamp", QDateTime::fromString(event[History::FieldTimestamp].toString(), Qt::ISODate));
+    query.bindValue(":newEvent", event[History::FieldNewEvent]);
+    query.bindValue(":message", event[History::FieldMessage]);
+    query.bindValue(":messageType", event[History::FieldMessageType]);
+    query.bindValue(":messageFlags", event[History::FieldMessageFlags]);
+    query.bindValue(":readTimestamp", QDateTime::fromString(event[History::FieldReadTimestamp].toString(), Qt::ISODate));
 
     if (!query.exec()) {
         qCritical() << "Failed to save the text event: Error:" << query.lastError() << query.lastQuery();
         return false;
     }
 
-    if (event->messageType() == History::MessageTypeMultiParty) {
+    History::MessageType messageType = (History::MessageType) event[History::FieldMessageType].toInt();
+
+    if (messageType == History::MessageTypeMultiParty) {
         // save the attachments
-        Q_FOREACH(const History::TextEventAttachmentPtr &attachment, event->attachments()) {
+        QList<QVariantMap> attachments = event[History::FieldAttachments].value<QList<QVariantMap> >();
+        Q_FOREACH(const QVariantMap &attachment, attachments) {
             query.prepare("INSERT INTO text_event_attachments VALUES (:accountId, :threadId, :eventId, :attachmentId, :contentType, :filePath, :status)");
-            query.bindValue(":accountId", attachment->accountId());
-            query.bindValue(":threadId", attachment->threadId());
-            query.bindValue(":eventId", attachment->eventId());
-            query.bindValue(":attachmentId", attachment->attachmentId());
-            query.bindValue(":contentType", attachment->contentType());
-            query.bindValue(":filePath", attachment->filePath());
-            query.bindValue(":status", attachment->status());
+            query.bindValue(":accountId", attachment[History::FieldAccountId]);
+            query.bindValue(":threadId", attachment[History::FieldThreadId]);
+            query.bindValue(":eventId", attachment[History::FieldEventId]);
+            query.bindValue(":attachmentId", attachment[History::FieldAttachmentId]);
+            query.bindValue(":contentType", attachment[History::FieldContentType]);
+            query.bindValue(":filePath", attachment[History::FieldFilePath]);
+            query.bindValue(":status", attachment[History::FieldStatus]);
             if (!query.exec()) {
-                qCritical() << "Failed to save attachment to database" << query.lastError() << attachment->attachmentId() << attachment->contentType();
+                qCritical() << "Failed to save attachment to database" << query.lastError() << attachment;
                 return false;
             }
         }
@@ -280,14 +322,14 @@ bool SQLiteHistoryPlugin::writeTextEvent(const History::TextEventPtr &event)
     return true;
 }
 
-bool SQLiteHistoryPlugin::removeTextEvent(const History::TextEventPtr &event)
+bool SQLiteHistoryPlugin::removeTextEvent(const QVariantMap &event)
 {
     QSqlQuery query(SQLiteDatabase::instance()->database());
 
     query.prepare("DELETE FROM text_events WHERE accountId=:accountId AND threadId=:threadId AND eventId=:eventId");
-    query.bindValue(":accountId", event->accountId());
-    query.bindValue(":threadId", event->threadId());
-    query.bindValue(":eventId", event->eventId());
+    query.bindValue(":accountId", event[History::FieldAccountId]);
+    query.bindValue(":threadId", event[History::FieldThreadId]);
+    query.bindValue(":eventId", event[History::FieldEventId]);
 
     if (!query.exec()) {
         qCritical() << "Failed to save the voice event: Error:" << query.lastError() << query.lastQuery();
@@ -297,7 +339,7 @@ bool SQLiteHistoryPlugin::removeTextEvent(const History::TextEventPtr &event)
     return true;
 }
 
-bool SQLiteHistoryPlugin::writeVoiceEvent(const History::VoiceEventPtr &event)
+bool SQLiteHistoryPlugin::writeVoiceEvent(const QVariantMap &event)
 {
     QSqlQuery query(SQLiteDatabase::instance()->database());
 
@@ -305,14 +347,14 @@ bool SQLiteHistoryPlugin::writeVoiceEvent(const History::VoiceEventPtr &event)
 
     query.prepare("INSERT INTO voice_events (accountId, threadId, eventId, senderId, timestamp, newEvent, duration, missed) "
                   "VALUES (:accountId, :threadId, :eventId, :senderId, :timestamp, :newEvent, :duration, :missed)");
-    query.bindValue(":accountId", event->accountId());
-    query.bindValue(":threadId", event->threadId());
-    query.bindValue(":eventId", event->eventId());
-    query.bindValue(":senderId", event->senderId());
-    query.bindValue(":timestamp", event->timestamp());
-    query.bindValue(":newEvent", event->newEvent());
-    query.bindValue(":duration", QTime(0,0,0,0).secsTo(event->duration()));
-    query.bindValue(":missed", event->missed());
+    query.bindValue(":accountId", event[History::FieldAccountId]);
+    query.bindValue(":threadId", event[History::FieldThreadId]);
+    query.bindValue(":eventId", event[History::FieldEventId]);
+    query.bindValue(":senderId", event[History::FieldSenderId]);
+    query.bindValue(":timestamp", event[History::FieldTimestamp]);
+    query.bindValue(":newEvent", event[History::FieldNewEvent]);
+    query.bindValue(":duration", QTime(0,0,0,0).secsTo(event[History::FieldDuration].toTime()));
+    query.bindValue(":missed", event[History::FieldMissed]);
 
     if (!query.exec()) {
         qCritical() << "Failed to save the voice event: Error:" << query.lastError() << query.lastQuery();
@@ -322,14 +364,14 @@ bool SQLiteHistoryPlugin::writeVoiceEvent(const History::VoiceEventPtr &event)
     return true;
 }
 
-bool SQLiteHistoryPlugin::removeVoiceEvent(const History::VoiceEventPtr &event)
+bool SQLiteHistoryPlugin::removeVoiceEvent(const QVariantMap &event)
 {
     QSqlQuery query(SQLiteDatabase::instance()->database());
 
     query.prepare("DELETE FROM voice_events WHERE accountId=:accountId AND threadId=:threadId AND eventId=:eventId");
-    query.bindValue(":accountId", event->accountId());
-    query.bindValue(":threadId", event->threadId());
-    query.bindValue(":eventId", event->eventId());
+    query.bindValue(":accountId", event[History::FieldAccountId]);
+    query.bindValue(":threadId", event[History::FieldThreadId]);
+    query.bindValue(":eventId", event[History::FieldEventId]);
 
     if (!query.exec()) {
         qCritical() << "Failed to remove the voice event: Error:" << query.lastError() << query.lastQuery();
@@ -354,3 +396,174 @@ bool SQLiteHistoryPlugin::rollbackBatchOperation()
     return SQLiteDatabase::instance()->rollbackTransaction();
 }
 
+QString SQLiteHistoryPlugin::sqlQueryForThreads(History::EventType type, const QString &condition, const QString &order)
+{
+    QString modifiedCondition = condition;
+    if (!modifiedCondition.isEmpty()) {
+        modifiedCondition.prepend(" AND ");
+        // FIXME: the filters should be implemented in a better way
+        modifiedCondition.replace("accountId=", "threads.accountId=");
+        modifiedCondition.replace("threadId=", "threads.threadId=");
+        modifiedCondition.replace("count=", "threads.count=");
+        modifiedCondition.replace("unreadCount=", "threads.unreadCount=");
+    }
+
+    QStringList fields;
+    fields << "threads.accountId"
+           << "threads.threadId"
+           << "threads.lastEventId"
+           << "threads.count"
+           << "threads.unreadCount";
+
+    // get the participants in the query already
+    fields << "(SELECT group_concat(thread_participants.participantId,  \"|,|\") "
+              "FROM thread_participants WHERE thread_participants.accountId=threads.accountId "
+              "AND thread_participants.threadId=threads.threadId "
+              "AND thread_participants.type=threads.type GROUP BY accountId,threadId,type) as participants";
+
+    QStringList extraFields;
+    QString table;
+
+    switch (type) {
+    case History::EventTypeText:
+        table = "text_events";
+        extraFields << "text_events.message" << "text_events.messageType" << "text_events.messageFlags" << "text_events.readTimestamp";
+        break;
+    case History::EventTypeVoice:
+        table = "voice_events";
+        extraFields << "voice_events.duration" << "voice_events.missed";
+        break;
+    }
+
+    fields << QString("%1.senderId").arg(table)
+           << QString("%1.timestamp").arg(table)
+           << QString("%1.newEvent").arg(table);
+    fields << extraFields;
+
+    QString queryText = QString("SELECT %1 FROM threads LEFT JOIN %2 ON threads.threadId=%2.threadId AND "
+                         "threads.accountId=%2.accountId AND threads.lastEventId=%2.eventId WHERE threads.type=%3 %4 %5")
+                         .arg(fields.join(", "), table, QString::number((int)type), modifiedCondition, order);
+    return queryText;
+}
+
+QList<QVariantMap> SQLiteHistoryPlugin::parseThreadResults(History::EventType type, QSqlQuery &query)
+{
+    QList<QVariantMap> threads;
+    while (query.next()) {
+        QVariantMap thread;
+        thread[History::FieldType] = (int) type;
+        thread[History::FieldAccountId] = query.value(0);
+        thread[History::FieldThreadId] = query.value(1);
+
+        thread[History::FieldEventId] = query.value(2);
+        thread[History::FieldCount] = query.value(3);
+        thread[History::FieldUnreadCount] = query.value(4);
+        thread[History::FieldParticipants] = query.value(5).toString().split("|,|");
+
+        // the generic event fields
+        thread[History::FieldSenderId] = query.value(6);
+        thread[History::FieldTimestamp] = query.value(7);
+        thread[History::FieldNewEvent] = query.value(8);
+
+        // the next step is to get the last event
+        switch (type) {
+        case History::EventTypeText:
+            thread[History::FieldMessage] = query.value(9);
+            thread[History::FieldMessageType] = query.value(10);
+            thread[History::FieldMessageFlags] = query.value(11);
+            thread[History::FieldReadTimestamp] = query.value(12);
+            break;
+        case History::EventTypeVoice:
+            thread[History::FieldMissed] = query.value(10);
+            thread[History::FieldDuration] = QTime(0,0).addSecs(query.value(9).toInt());
+            break;
+        }
+        threads << thread;
+    }
+    return threads;
+}
+
+QString SQLiteHistoryPlugin::sqlQueryForEvents(History::EventType type, const QString &condition, const QString &order)
+{
+    QString modifiedCondition = condition;
+    if (!modifiedCondition.isEmpty()) {
+        modifiedCondition.prepend(" WHERE ");
+    }
+
+    QString queryText;
+    switch (type) {
+    case History::EventTypeText:
+        queryText = QString("SELECT accountId, threadId, eventId, senderId, timestamp, newEvent,"
+                            "message, messageType, messageFlags, readTimestamp, subject FROM text_events %1 %2").arg(modifiedCondition, order);
+        break;
+    case History::EventTypeVoice:
+        queryText = QString("SELECT accountId, threadId, eventId, senderId, timestamp, newEvent,"
+                            "duration, missed FROM voice_events %1 %2").arg(modifiedCondition, order);
+        break;
+    }
+
+    return queryText;
+}
+
+QList<QVariantMap> SQLiteHistoryPlugin::parseEventResults(History::EventType type, QSqlQuery &query)
+{
+    QList<QVariantMap> events;
+    while (query.next()) {
+        QVariantMap event;
+        History::MessageType messageType;
+        QString accountId = query.value(0).toString();
+        QString threadId = query.value(1).toString();
+        QString eventId = query.value(2).toString();
+        event[History::FieldType] = (int) type;
+        event[History::FieldAccountId] = accountId;
+        event[History::FieldThreadId] = threadId;
+        event[History::FieldEventId] = eventId;
+        event[History::FieldSenderId] = query.value(3);
+        event[History::FieldTimestamp] = query.value(4);
+        event[History::FieldNewEvent] = query.value(5);
+
+        switch (type) {
+        case History::EventTypeText:
+            messageType = (History::MessageType) query.value(7).toInt();
+            if (messageType == History::MessageTypeMultiParty)  {
+                QSqlQuery attachmentsQuery(SQLiteDatabase::instance()->database());
+                attachmentsQuery.prepare("SELECT attachmentId, contentType, filePath, status FROM text_event_attachments "
+                                    "WHERE accountId=:accountId and threadId=:threadId and eventId=:eventId");
+                attachmentsQuery.bindValue(":accountId", accountId);
+                attachmentsQuery.bindValue(":threadId", threadId);
+                attachmentsQuery.bindValue(":eventId", eventId);
+                if (!attachmentsQuery.exec()) {
+                    qCritical() << "Error:" << attachmentsQuery.lastError() << attachmentsQuery.lastQuery();
+                }
+
+                QList<QVariantMap> attachments;
+                while (attachmentsQuery.next()) {
+                    QVariantMap attachment;
+                    attachment[History::FieldAccountId] = accountId;
+                    attachment[History::FieldThreadId] = threadId;
+                    attachment[History::FieldEventId] = eventId;
+                    attachment[History::FieldAttachmentId] = attachmentsQuery.value(0);
+                    attachment[History::FieldContentType] = attachmentsQuery.value(1);
+                    attachment[History::FieldFilePath] = attachmentsQuery.value(2);
+                    attachment[History::FieldStatus] = attachmentsQuery.value(3);
+                    attachments << attachment;
+
+                }
+                attachmentsQuery.clear();
+                event[History::FieldAttachments] = QVariant::fromValue(attachments);
+            }
+            event[History::FieldMessage] = query.value(6);
+            event[History::FieldMessageType] = query.value(7);
+            event[History::FieldMessageFlags] = query.value(8);
+            event[History::FieldReadTimestamp] = query.value(9);
+            break;
+        case History::EventTypeVoice:
+            event[History::FieldDuration] = QTime(0,0).addSecs(query.value(6).toInt());
+            event[History::FieldMissed] = query.value(7);
+            break;
+        }
+
+        events << event;
+    }
+    return events;
+}

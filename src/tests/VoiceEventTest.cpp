@@ -91,14 +91,14 @@ void VoiceEventTest::testCreateNewEvent()
     QCOMPARE(event.duration(), duration);
 
     QVariantMap properties = event.properties();
-    QCOMPARE(properties["accountId"].toString(), accountId);
-    QCOMPARE(properties["threadId"].toString(), threadId);
-    QCOMPARE(properties["eventId"].toString(), eventId);
-    QCOMPARE(properties["senderId"].toString(), senderId);
-    QCOMPARE(properties["timestamp"].toDateTime(), timestamp);
-    QCOMPARE(properties["newEvent"].toBool(), newEvent);
-    QCOMPARE(properties["missed"].toBool(), missed);
-    QCOMPARE(properties["duration"].toTime(), duration);
+    QCOMPARE(properties[History::FieldAccountId].toString(), accountId);
+    QCOMPARE(properties[History::FieldThreadId].toString(), threadId);
+    QCOMPARE(properties[History::FieldEventId].toString(), eventId);
+    QCOMPARE(properties[History::FieldSenderId].toString(), senderId);
+    QCOMPARE(properties[History::FieldTimestamp].toString(), timestamp.toString(Qt::ISODate));
+    QCOMPARE(properties[History::FieldNewEvent].toBool(), newEvent);
+    QCOMPARE(properties[History::FieldMissed].toBool(), missed);
+    QCOMPARE(properties[History::FieldDuration].toTime(), duration);
 }
 
 QTEST_MAIN(VoiceEventTest)

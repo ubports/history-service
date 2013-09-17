@@ -39,10 +39,10 @@ public:
     ThreadView(History::EventType type,
                const History::SortPtr &sort,
                const History::FilterPtr &filter);
-    virtual ~ThreadView();
+    ~ThreadView();
 
-    virtual Threads nextPage() = 0;
-    virtual bool isValid() const = 0;
+    Threads nextPage();
+    bool isValid() const;
 
 Q_SIGNALS:
     void threadsAdded(const History::Threads &threads);

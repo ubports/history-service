@@ -26,7 +26,9 @@
 #include "voiceevent.h"
 #include "thread_p.h"
 #include "textevent_p.h"
+#include "texteventattachment.h"
 #include "voiceevent_p.h"
+#include <QDBusArgument>
 
 namespace History
 {
@@ -114,6 +116,32 @@ ThreadPtr ItemFactory::createThread(const QString &accountId,
     return thread;
 }
 
+ThreadPtr ItemFactory::createThread(const QVariantMap &properties)
+{
+    if (properties.isEmpty()) {
+        return ThreadPtr();
+    }
+
+    // FIXME: save the rest of the data
+    QString accountId = properties[FieldAccountId].toString();
+    QString threadId = properties[FieldThreadId].toString();
+    EventType type = (EventType) properties[FieldType].toInt();
+    QStringList participants = properties[FieldParticipants].toStringList();
+    int count = properties[FieldCount].toInt();
+    int unreadCount = properties[FieldUnreadCount].toInt();
+
+    EventPtr event;
+    switch (type) {
+        case EventTypeText:
+            event = createTextEvent(properties);
+            break;
+        case EventTypeVoice:
+            event = createVoiceEvent(properties);
+            break;
+    }
+    return createThread(accountId, threadId, type, participants, event, count, unreadCount);
+}
+
 TextEventPtr ItemFactory::createTextEvent(const QString &accountId,
                                           const QString &threadId,
                                           const QString &eventId,
@@ -165,6 +193,40 @@ TextEventPtr ItemFactory::createTextEvent(const QString &accountId,
     return event.staticCast<TextEvent>();
 }
 
+TextEventPtr ItemFactory::createTextEvent(const QVariantMap &properties)
+{
+    TextEventPtr event;
+
+    QString accountId = properties[FieldAccountId].toString();
+    QString threadId = properties[FieldThreadId].toString();
+    QString eventId = properties[FieldEventId].toString();
+    QString senderId = properties[FieldSenderId].toString();
+    QDateTime timestamp = QDateTime::fromString(properties[FieldTimestamp].toString(), Qt::ISODate);
+    bool newEvent = properties[FieldNewEvent].toBool();
+    QString message = properties[FieldMessage].toString();
+    QString subject = properties[FieldSubject].toString();
+    MessageType messageType = (MessageType) properties[FieldMessageType].toInt();
+    MessageFlags messageFlags = (MessageFlags) properties[FieldMessageFlags].toInt();
+    QDateTime readTimestamp = QDateTime::fromString(properties[FieldReadTimestamp].toString(), Qt::ISODate);
+
+    // read the attachments
+    QList<QVariantMap> attachmentProperties = properties[FieldAttachments].value<QList<QVariantMap> >();
+    TextEventAttachments attachments;
+    Q_FOREACH(const QVariantMap &map, attachmentProperties) {
+        TextEventAttachmentPtr attachment = TextEventAttachment::fromProperties(map);
+        if (!attachment.isNull()) {
+            attachments << attachment;
+        }
+    }
+
+    // and finally create the event
+    event = createTextEvent(accountId, threadId, eventId, senderId, timestamp, newEvent,
+                            message, messageType, messageFlags, readTimestamp, subject, attachments);
+
+
+    return event;
+}
+
 VoiceEventPtr ItemFactory::createVoiceEvent(const QString &accountId,
                                             const QString &threadId,
                                             const QString &eventId,
@@ -204,6 +266,23 @@ VoiceEventPtr ItemFactory::createVoiceEvent(const QString &accountId,
     eventD->newEvent = newEvent;
 
     return event.staticCast<VoiceEvent>();
+}
+
+VoiceEventPtr ItemFactory::createVoiceEvent(const QVariantMap &properties)
+{
+    VoiceEventPtr event;
+
+    QString accountId = properties[FieldAccountId].toString();
+    QString threadId = properties[FieldThreadId].toString();
+    QString eventId = properties[FieldEventId].toString();
+    QString senderId = properties[FieldSenderId].toString();
+    QDateTime timestamp = QDateTime::fromString(properties[FieldTimestamp].toString(), Qt::ISODate);
+    bool newEvent = properties[FieldNewEvent].toBool();
+    bool missed = properties[FieldMissed].toBool();
+    QTime duration = QTime(0,0,0).addSecs(properties[FieldDuration].toInt());
+    event = createVoiceEvent(accountId, threadId, eventId, senderId, timestamp, newEvent,
+                             missed, duration);
+    return event;
 }
 
 ThreadPtr ItemFactory::cachedThread(const QString &accountId, const QString &threadId, EventType type)

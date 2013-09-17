@@ -24,6 +24,7 @@
 
 #include "plugin.h"
 #include <QObject>
+#include <QSqlQuery>
 
 class SQLiteHistoryReader;
 class SQLiteHistoryWriter;
@@ -40,34 +41,42 @@ public:
     explicit SQLiteHistoryPlugin(QObject *parent = 0);
 
     // Reader part of the plugin
-    History::ThreadViewPtr queryThreads(History::EventType type,
-                                        const History::SortPtr &sort = History::SortPtr(),
-                                        const History::FilterPtr &filter = History::FilterPtr());
-    History::EventViewPtr queryEvents(History::EventType type,
-                                      const History::SortPtr &sort = History::SortPtr(),
-                                      const History::FilterPtr &filter = History::FilterPtr());
-    History::ThreadPtr threadForParticipants(const QString &accountId,
-                                             History::EventType type,
-                                             const QStringList &participants,
-                                             History::MatchFlags matchFlags = History::MatchCaseSensitive);
+    History::PluginThreadView* queryThreads(History::EventType type,
+                                            const History::SortPtr &sort = History::SortPtr(),
+                                            const QString &filter = QString::null);
+    History::PluginEventView* queryEvents(History::EventType type,
+                                          const History::SortPtr &sort = History::SortPtr(),
+                                          const QString &filter = QString::null);
+    QVariantMap threadForParticipants(const QString &accountId,
+                                      History::EventType type,
+                                      const QStringList &participants,
+                                      History::MatchFlags matchFlags = History::MatchCaseSensitive);
 
-    History::ThreadPtr getSingleThread(History::EventType type, const QString &accountId, const QString &threadId);
-    History::EventPtr getSingleEvent(History::EventType type, const QString &accountId, const QString &threadId, const QString &eventId);
+    QList<QVariantMap> eventsForThread(const QVariantMap &thread);
+
+    QVariantMap getSingleThread(History::EventType type, const QString &accountId, const QString &threadId);
+    QVariantMap getSingleEvent(History::EventType type, const QString &accountId, const QString &threadId, const QString &eventId);
 
     // Writer part of the plugin
-    History::ThreadPtr createThreadForParticipants(const QString &accountId, History::EventType type, const QStringList &participants);
-    bool removeThread(const History::ThreadPtr &thread);
+    QVariantMap createThreadForParticipants(const QString &accountId, History::EventType type, const QStringList &participants);
+    bool removeThread(const QVariantMap &thread);
 
-    bool writeTextEvent(const History::TextEventPtr &event);
-    bool removeTextEvent(const History::TextEventPtr &event);
+    bool writeTextEvent(const QVariantMap &event);
+    bool removeTextEvent(const QVariantMap &event);
 
-    bool writeVoiceEvent(const History::VoiceEventPtr &event);
-    bool removeVoiceEvent(const History::VoiceEventPtr &event);
+    bool writeVoiceEvent(const QVariantMap &event);
+    bool removeVoiceEvent(const QVariantMap &event);
 
     bool beginBatchOperation();
     bool endBatchOperation();
     bool rollbackBatchOperation();
 
+    // functions to be used internally
+    QString sqlQueryForThreads(History::EventType type, const QString &condition, const QString &order);
+    QList<QVariantMap> parseThreadResults(History::EventType type, QSqlQuery &query);
+
+    QString sqlQueryForEvents(History::EventType type, const QString &condition, const QString &order);
+    QList<QVariantMap> parseEventResults(History::EventType type, QSqlQuery &query);
 };
 
 #endif // SQLITEHISTORYPLUGIN_H

@@ -108,16 +108,16 @@ void TextEventTest::testCreateNewEvent()
     QCOMPARE(event.readTimestamp(), readTimestamp);
 
     QVariantMap properties = event.properties();
-    QCOMPARE(properties["accountId"].toString(), accountId);
-    QCOMPARE(properties["threadId"].toString(), threadId);
-    QCOMPARE(properties["eventId"].toString(), eventId);
-    QCOMPARE(properties["senderId"].toString(), senderId);
-    QCOMPARE(properties["timestamp"].toDateTime(), timestamp);
-    QCOMPARE(properties["newEvent"].toBool(), newEvent);
-    QCOMPARE(properties["message"].toString(), message);
-    QCOMPARE(properties["messageType"].toInt(), messageType);
-    QCOMPARE(properties["messageFlags"].toInt(), messageFlags);
-    QCOMPARE(properties["readTimestamp"].toDateTime(), readTimestamp);
+    QCOMPARE(properties[History::FieldAccountId].toString(), accountId);
+    QCOMPARE(properties[History::FieldThreadId].toString(), threadId);
+    QCOMPARE(properties[History::FieldEventId].toString(), eventId);
+    QCOMPARE(properties[History::FieldSenderId].toString(), senderId);
+    QCOMPARE(properties[History::FieldTimestamp].toString(), timestamp.toString(Qt::ISODate));
+    QCOMPARE(properties[History::FieldNewEvent].toBool(), newEvent);
+    QCOMPARE(properties[History::FieldMessage].toString(), message);
+    QCOMPARE(properties[History::FieldMessageType].toInt(), messageType);
+    QCOMPARE(properties[History::FieldMessageFlags].toInt(), messageFlags);
+    QCOMPARE(properties[History::FieldReadTimestamp].toString(), readTimestamp.toString(Qt::ISODate));
 }
 
 QTEST_MAIN(TextEventTest)

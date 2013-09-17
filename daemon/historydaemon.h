@@ -27,15 +27,29 @@
 #include "types.h"
 #include "textchannelobserver.h"
 #include "callchannelobserver.h"
-
-class HistoryWriter;
+#include "historyservicedbus.h"
 
 class HistoryDaemon : public QObject
 {
     Q_OBJECT
 public:
-    HistoryDaemon(QObject *parent = 0);
     ~HistoryDaemon();
+
+    static HistoryDaemon *instance();
+
+    QVariantMap threadForParticipants(const QString &accountId,
+                                      History::EventType type,
+                                      const QStringList &participants,
+                                      History::MatchFlags matchFlags = History::MatchCaseSensitive,
+                                      bool create = true);
+    QString queryThreads(int type, const QVariantMap &sort, const QString &filter);
+    QString queryEvents(int type, const QVariantMap &sort, const QString &filter);
+    QVariantMap getSingleThread(int type, const QString &accountId, const QString &threadId);
+    QVariantMap getSingleEvent(int type, const QString &accountId, const QString &threadId, const QString &eventId);
+
+    bool writeEvents(const QList<QVariantMap> &events);
+    bool removeEvents(const QList<QVariantMap> &events);
+    bool removeThreads(const QList<QVariantMap> &threads);
 
 private Q_SLOTS:
     void onObserverCreated();
@@ -48,9 +62,13 @@ protected:
     History::MatchFlags matchFlagsForChannel(const Tp::ChannelPtr &channel);
 
 private:
+    HistoryDaemon(QObject *parent = 0);
+
     CallChannelObserver mCallObserver;
     TextChannelObserver mTextObserver;
     QMap<QString, History::MatchFlags> mProtocolFlags;
+    History::PluginPtr mBackend;
+    HistoryServiceDBus mDBus;
 };
 
 #endif

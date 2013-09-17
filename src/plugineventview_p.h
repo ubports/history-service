@@ -19,28 +19,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef HISTORY_MANAGER_P_H
-#define HISTORY_MANAGER_P_H
+#ifndef PLUGINEVENTVIEW_P_H
+#define PLUGINEVENTVIEW_P_H
 
-#include <QDBusInterface>
-#include <QString>
-#include "types.h"
+#include <QScopedPointer>
 
-namespace History
-{
+class EventViewAdaptor;
 
-class Manager;
-class ManagerDBus;
+namespace History {
 
-class ManagerPrivate
+class PluginEventViewPrivate
 {
 public:
-    ManagerPrivate();
-    ~ManagerPrivate();
+    PluginEventViewPrivate();
 
-    QScopedPointer<ManagerDBus> dbus;
+    EventViewAdaptor *adaptor;
+    QString objectPath;
 };
 
 }
 
-#endif // HISTORY_MANAGER_P_H
+#endif // PLUGINEVENTVIEW_P_H

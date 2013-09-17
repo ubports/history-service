@@ -38,6 +38,8 @@ public:
     bool finishTransaction();
     bool rollbackTransaction();
 
+
+
 protected:
     bool createOrUpdateDatabase();
     QStringList parseSchemaFile(const QString &fileName);
