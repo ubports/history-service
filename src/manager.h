@@ -26,6 +26,7 @@
 #include <QString>
 #include "types.h"
 #include "filter.h"
+#include "sort.h"
 
 namespace History
 {
@@ -43,11 +44,11 @@ public:
     static Manager *instance();
 
     ThreadViewPtr queryThreads(EventType type,
-                               const SortPtr &sort = SortPtr(),
+                               const Sort &sort = Sort(),
                                const Filter &filter = Filter());
 
     EventViewPtr queryEvents(EventType type,
-                             const SortPtr &sort = SortPtr(),
+                             const Sort &sort = Sort(),
                              const Filter &filter = Filter());
 
     EventPtr getSingleEvent(EventType type, const QString &accountId, const QString &threadId, const QString &eventId, bool useCache = true);

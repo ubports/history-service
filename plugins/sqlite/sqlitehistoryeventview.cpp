@@ -29,7 +29,7 @@
 
 SQLiteHistoryEventView::SQLiteHistoryEventView(SQLiteHistoryPlugin *plugin,
                                              History::EventType type,
-                                             const History::SortPtr &sort,
+                                             const History::Sort &sort,
                                              const QString &filter)
     : History::PluginEventView(), mType(type), mSort(sort), mFilter(filter),
       mQuery(SQLiteDatabase::instance()->database()), mPageSize(15), mPlugin(plugin), mOffset(0), mValid(true)
@@ -40,8 +40,8 @@ SQLiteHistoryEventView::SQLiteHistoryEventView(SQLiteHistoryPlugin *plugin,
     // FIXME: validate the filter
     QString condition = filter;
     QString order;
-    if (!sort.isNull() && !sort->sortField().isNull()) {
-        order = QString("ORDER BY %1 %2").arg(sort->sortField(), sort->sortOrder() == Qt::AscendingOrder ? "ASC" : "DESC");
+    if (!sort.sortField().isNull()) {
+        order = QString("ORDER BY %1 %2").arg(sort.sortField(), sort.sortOrder() == Qt::AscendingOrder ? "ASC" : "DESC");
         // FIXME: check case sensitiviy
     }
 

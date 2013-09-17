@@ -24,6 +24,7 @@
 
 #include "plugineventview.h"
 #include "types.h"
+#include "sort.h"
 #include <QSqlQuery>
 
 class SQLiteHistoryPlugin;
@@ -35,7 +36,7 @@ class SQLiteHistoryEventView : public History::PluginEventView
 public:
     SQLiteHistoryEventView(SQLiteHistoryPlugin *plugin,
                           History::EventType type,
-                          const History::SortPtr &sort,
+                          const History::Sort &sort,
                           const QString &filter);
     ~SQLiteHistoryEventView();
 
@@ -47,7 +48,7 @@ protected:
 
 private:
     History::EventType mType;
-    History::SortPtr mSort;
+    History::Sort mSort;
     QString mFilter;
     QSqlQuery mQuery;
     int mPageSize;

@@ -24,6 +24,7 @@
 
 #include "types.h"
 #include "filter.h"
+#include "sort.h"
 #include <QObject>
 
 namespace History
@@ -37,7 +38,7 @@ class EventView : public QObject
     Q_DECLARE_PRIVATE(EventView)
 public:
     EventView(History::EventType type,
-              const History::SortPtr &sort,
+              const History::Sort &sort,
               const History::Filter &filter);
     virtual ~EventView();
 

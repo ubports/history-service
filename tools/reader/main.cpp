@@ -99,7 +99,7 @@ int main(int argc, char **argv)
                 History::IntersectionFilter filter;
                 filter.append(History::Filter(History::FieldThreadId, thread->threadId()));
                 filter.append(History::Filter(History::FieldAccountId, thread->accountId()));
-                History::EventViewPtr eventView = manager->queryEvents(type, History::SortPtr(), filter);
+                History::EventViewPtr eventView = manager->queryEvents(type, History::Sort(), filter);
                 History::Events events = eventView->nextPage();
                 while (!events.isEmpty()) {
                     Q_FOREACH(const History::EventPtr &event, events) {

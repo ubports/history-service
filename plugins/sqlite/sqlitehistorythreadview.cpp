@@ -29,7 +29,7 @@
 
 SQLiteHistoryThreadView::SQLiteHistoryThreadView(SQLiteHistoryPlugin *plugin,
                                                  History::EventType type,
-                                                 const History::SortPtr &sort,
+                                                 const History::Sort &sort,
                                                  const QString &filter)
     : History::PluginThreadView(), mPlugin(plugin), mType(type), mSort(sort),
       mFilter(filter), mPageSize(15), mQuery(SQLiteDatabase::instance()->database()), mOffset(0), mValid(true)
@@ -41,8 +41,8 @@ SQLiteHistoryThreadView::SQLiteHistoryThreadView(SQLiteHistoryPlugin *plugin,
     // FIXME: validate the filter
     QString condition = filter;
     QString order;
-    if (!sort.isNull() && !sort->sortField().isNull()) {
-        order = QString("ORDER BY threads.%1 %2").arg(sort->sortField(), sort->sortOrder() == Qt::AscendingOrder ? "ASC" : "DESC");
+    if (!sort.sortField().isNull()) {
+        order = QString("ORDER BY threads.%1 %2").arg(sort.sortField(), sort.sortOrder() == Qt::AscendingOrder ? "ASC" : "DESC");
         // FIXME: check case sensitiviy
     }
 

@@ -24,6 +24,7 @@
 
 #include "types.h"
 #include "filter.h"
+#include "sort.h"
 #include <QObject>
 
 namespace History
@@ -38,7 +39,7 @@ class ThreadView : public QObject
 
 public:
     ThreadView(History::EventType type,
-               const History::SortPtr &sort,
+               const History::Sort &sort,
                const History::Filter &filter);
     ~ThreadView();
 

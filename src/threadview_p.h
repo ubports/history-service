@@ -35,10 +35,10 @@ namespace History
 
     public:
         ThreadViewPrivate(History::EventType theType,
-                          const History::SortPtr &theSort,
+                          const History::Sort &theSort,
                           const History::Filter &theFilter);
         EventType type;
-        SortPtr sort;
+        Sort sort;
         Filter filter;
         QString objectPath;
         bool valid;

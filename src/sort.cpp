@@ -48,6 +48,11 @@ Sort::Sort(const QString &sortField,
 {
 }
 
+Sort::Sort(const Sort &other)
+    : d_ptr(new SortPrivate(*other.d_ptr))
+{
+}
+
 Sort::~Sort()
 {
 }
@@ -100,16 +105,16 @@ QVariantMap Sort::properties() const
     return map;
 }
 
-SortPtr Sort::fromProperties(const QVariantMap &properties)
+Sort Sort::fromProperties(const QVariantMap &properties)
 {
-    SortPtr sort;
+    Sort sort;
     if (properties.isEmpty()) {
         return sort;
     }
 
-    sort = SortPtr(new Sort(properties[SortField].toString(),
-                            (Qt::SortOrder) properties[SortOrder].toInt(),
-                            (Qt::CaseSensitivity) properties[CaseSensitivity].toInt()));
+    sort = Sort(properties[SortField].toString(),
+                (Qt::SortOrder) properties[SortOrder].toInt(),
+                (Qt::CaseSensitivity) properties[CaseSensitivity].toInt());
     return sort;
 }
 

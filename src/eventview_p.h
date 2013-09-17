@@ -24,6 +24,7 @@
 
 #include "types.h"
 #include "filter.h"
+#include "sort.h"
 #include <QDBusInterface>
 
 namespace History
@@ -36,10 +37,10 @@ namespace History
 
     public:
         EventViewPrivate(History::EventType theType,
-                          const History::SortPtr &theSort,
+                          const History::Sort &theSort,
                           const History::Filter &theFilter);
         EventType type;
-        SortPtr sort;
+        Sort sort;
         Filter filter;
         QString objectPath;
         bool valid;

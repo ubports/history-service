@@ -317,7 +317,7 @@ void HistoryThreadModel::updateQuery()
     mCanFetchMore = true;
 
     History::Filter queryFilter;
-    History::SortPtr querySort;
+    History::Sort querySort;
 
     if (!mThreadView.isNull()) {
         mThreadView->disconnect(this);

@@ -299,7 +299,7 @@ void HistoryEventModel::updateQuery()
 
     // and create the view again
     History::Filter queryFilter;
-    History::SortPtr querySort;
+    History::Sort querySort;
 
     if (!mView.isNull()) {
         mView->disconnect(this);

@@ -24,6 +24,7 @@
 
 #include <QObject>
 #include "types.h"
+#include "sort.h"
 
 class HistoryQmlSort : public QObject
 {
@@ -56,7 +57,7 @@ public:
     CaseSensitivity caseSensitivity() const;
     void setCaseSensitivity(CaseSensitivity value);
 
-    History::SortPtr sort() const;
+    History::Sort sort() const;
 
 Q_SIGNALS:
     void sortChanged();
@@ -65,7 +66,7 @@ Q_SIGNALS:
     void caseSensitivityChanged();
 
 private:
-    History::SortPtr mSort;
+    History::Sort mSort;
 };
 
 #endif // HISTORYQMLSORT_H

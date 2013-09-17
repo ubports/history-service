@@ -102,8 +102,8 @@ QString HistoryDaemon::queryThreads(int type, const QVariantMap &sort, const QSt
         return QString::null;
     }
 
-    History::SortPtr sortPtr = History::Sort::fromProperties(sort);
-    History::PluginThreadView *view = mBackend->queryThreads((History::EventType)type, sortPtr, filter);
+    History::Sort theSort = History::Sort::fromProperties(sort);
+    History::PluginThreadView *view = mBackend->queryThreads((History::EventType)type, theSort, filter);
 
     if (!view) {
         return QString::null;
@@ -120,8 +120,8 @@ QString HistoryDaemon::queryEvents(int type, const QVariantMap &sort, const QStr
         return QString::null;
     }
 
-    History::SortPtr sortPtr = History::Sort::fromProperties(sort);
-    History::PluginEventView *view = mBackend->queryEvents((History::EventType)type, sortPtr, filter);
+    History::Sort theSort = History::Sort::fromProperties(sort);
+    History::PluginEventView *view = mBackend->queryEvents((History::EventType)type, theSort, filter);
 
     if (!view) {
         return QString::null;

@@ -103,7 +103,6 @@ Filter::~Filter()
 
 Filter &Filter::operator=(const Filter &other)
 {
-    qDebug() << "BLABLA assign2: " << other.type() << type();
     if (&other == this) {
         return *this;
     }

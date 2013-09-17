@@ -36,7 +36,7 @@ namespace History
 // ------------- ThreadViewPrivate ------------------------------------------------
 
 ThreadViewPrivate::ThreadViewPrivate(History::EventType theType,
-                                     const History::SortPtr &theSort,
+                                     const History::Sort &theSort,
                                      const History::Filter &theFilter)
     : type(theType), sort(theSort), filter(theFilter), valid(true), dbus(0)
 {
@@ -92,7 +92,7 @@ void ThreadViewPrivate::_d_threadsRemoved(const Threads &threads)
 // ------------- ThreadView -------------------------------------------------------
 
 ThreadView::ThreadView(History::EventType type,
-                       const History::SortPtr &sort,
+                       const History::Sort &sort,
                        const Filter &filter)
     : d_ptr(new ThreadViewPrivate(type, sort, filter))
 {
@@ -102,7 +102,7 @@ ThreadView::ThreadView(History::EventType type,
 
     QDBusReply<QString> reply = interface.call("QueryThreads",
                                                (int) type,
-                                               sort ? sort->properties() : QVariantMap(),
+                                               sort.properties(),
                                                filter.toString());
     if (!reply.isValid()) {
         Q_EMIT invalidated();
