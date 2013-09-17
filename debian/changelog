@@ -1,3 +1,19 @@
+history-service (0.1+13.10.20130917-0ubuntu1) saucy; urgency=low
+
+  [ Gustavo Pichorim Boiko ]
+  * Add a missing build dependency on sqlite3 (required to generate the
+    schema file).
+  * Remove the Reader and Writer classes. All methods are implemented in
+    the Plugin class directly to make it simpler.
+
+  [ Tiago Salem Herrmann ]
+  * Remove data from thread_participants when deleting threads.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 92
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 17 Sep 2013 12:57:10 +0000
+
 history-service (0.1+13.10.20130827-0ubuntu1) saucy; urgency=low
 
   * Automatic snapshot from revision 87
