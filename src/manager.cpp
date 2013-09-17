@@ -104,7 +104,7 @@ Event Manager::getSingleEvent(EventType type, const QString &accountId, const QS
     return event;
 }
 
-ThreadPtr Manager::threadForParticipants(const QString &accountId,
+Thread Manager::threadForParticipants(const QString &accountId,
                                          EventType type,
                                          const QStringList &participants,
                                          MatchFlags matchFlags,
@@ -115,12 +115,11 @@ ThreadPtr Manager::threadForParticipants(const QString &accountId,
     return d->dbus->threadForParticipants(accountId, type, participants, matchFlags, create);
 }
 
-ThreadPtr Manager::getSingleThread(EventType type, const QString &accountId, const QString &threadId)
+Thread Manager::getSingleThread(EventType type, const QString &accountId, const QString &threadId)
 {
     Q_D(Manager);
 
-    ThreadPtr thread;
-    thread = d->dbus->getSingleThread(type, accountId, threadId);
+    Thread thread = d->dbus->getSingleThread(type, accountId, threadId);
     return thread;
 }
 

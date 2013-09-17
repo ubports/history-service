@@ -78,7 +78,7 @@ QVariant HistoryEventModel::data(const QModelIndex &index, int role) const
     History::Event event = mEvents[index.row()];
     History::TextEvent textEvent;
     History::VoiceEvent voiceEvent;
-    History::ThreadPtr thread;
+    History::Thread thread;
 
     switch (event.type()) {
     case History::EventTypeText:
@@ -101,7 +101,7 @@ QVariant HistoryEventModel::data(const QModelIndex &index, int role) const
     case ParticipantsRole:
         thread = History::Manager::instance()->getSingleThread(event.type(), event.accountId(), event.threadId());
         if (!thread.isNull()) {
-            result = thread->participants();
+            result = thread.participants();
         }
         break;
     case TypeRole:
@@ -271,13 +271,13 @@ QString HistoryEventModel::threadIdForParticipants(const QString &accountId, int
         return QString::null;
     }
 
-    History::ThreadPtr thread = History::Manager::instance()->threadForParticipants(accountId,
-                                                                                    (History::EventType)eventType,
-                                                                                    participants,
-                                                                                    (History::MatchFlags)matchFlags,
-                                                                                    create);
+    History::Thread thread = History::Manager::instance()->threadForParticipants(accountId,
+                                                                                 (History::EventType)eventType,
+                                                                                 participants,
+                                                                                 (History::MatchFlags)matchFlags,
+                                                                                 create);
     if (!thread.isNull()) {
-        return thread->threadId();
+        return thread.threadId();
     }
 
     return QString::null;

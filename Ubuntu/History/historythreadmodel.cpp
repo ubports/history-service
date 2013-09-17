@@ -78,8 +78,8 @@ QVariant HistoryThreadModel::data(const QModelIndex &index, int role) const
         return QVariant();
     }
 
-    History::ThreadPtr thread = mThreads[index.row()];
-    History::Event event = thread->lastEvent();
+    History::Thread thread = mThreads[index.row()];
+    History::Event event = thread.lastEvent();
     History::TextEvent textEvent;
     History::VoiceEvent voiceEvent;
 
@@ -97,22 +97,22 @@ QVariant HistoryThreadModel::data(const QModelIndex &index, int role) const
     QVariant result;
     switch (role) {
     case AccountIdRole:
-        result = thread->accountId();
+        result = thread.accountId();
         break;
     case ThreadIdRole:
-        result = thread->threadId();
+        result = thread.threadId();
         break;
     case TypeRole:
-        result = (int) thread->type();
+        result = (int) thread.type();
         break;
     case ParticipantsRole:
-        result = thread->participants();
+        result = thread.participants();
         break;
     case CountRole:
-        result = thread->count();
+        result = thread.count();
         break;
     case UnreadCountRole:
-        result = thread->unreadCount();
+        result = thread.unreadCount();
         break;
     case LastEventIdRole:
         if (!event.isNull()) {
@@ -287,13 +287,13 @@ QString HistoryThreadModel::threadIdForParticipants(const QString &accountId, in
         return QString::null;
     }
 
-    History::ThreadPtr thread = History::Manager::instance()->threadForParticipants(accountId,
-                                                                                    (History::EventType)eventType,
-                                                                                    participants,
-                                                                                    (History::MatchFlags)matchFlags,
-                                                                                    create);
+    History::Thread thread = History::Manager::instance()->threadForParticipants(accountId,
+                                                                                 (History::EventType)eventType,
+                                                                                 participants,
+                                                                                 (History::MatchFlags)matchFlags,
+                                                                                 create);
     if (!thread.isNull()) {
-        return thread->threadId();
+        return thread.threadId();
     }
 
     return QString::null;
@@ -301,7 +301,7 @@ QString HistoryThreadModel::threadIdForParticipants(const QString &accountId, in
 
 bool HistoryThreadModel::removeThread(const QString &accountId, const QString &threadId, int eventType)
 {
-    History::ThreadPtr thread = History::Manager::instance()->getSingleThread((History::EventType)eventType, accountId, threadId);
+    History::Thread thread = History::Manager::instance()->getSingleThread((History::EventType)eventType, accountId, threadId);
     return History::Manager::instance()->removeThreads(History::Threads() << thread);
 }
 
@@ -369,7 +369,7 @@ void HistoryThreadModel::onThreadsAdded(const History::Threads &threads)
 
 void HistoryThreadModel::onThreadsModified(const History::Threads &threads)
 {
-    Q_FOREACH(const History::ThreadPtr &thread, threads) {
+    Q_FOREACH(const History::Thread &thread, threads) {
         int pos = mThreads.indexOf(thread);
         if (pos >= 0) {
             mThreads[pos] = thread;
@@ -384,7 +384,7 @@ void HistoryThreadModel::onThreadsModified(const History::Threads &threads)
 
 void HistoryThreadModel::onThreadsRemoved(const History::Threads &threads)
 {
-    Q_FOREACH(const History::ThreadPtr &thread, threads) {
+    Q_FOREACH(const History::Thread &thread, threads) {
         int pos = mThreads.indexOf(thread);
         if (pos >= 0) {
             beginRemoveRows(QModelIndex(), pos, pos);

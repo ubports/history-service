@@ -49,8 +49,8 @@ Threads ThreadViewPrivate::filteredThreads(const Threads &threads)
     }
 
     Threads filtered;
-    Q_FOREACH(const ThreadPtr &thread, threads) {
-        if (thread->type() == type && filter.match(thread->properties())) {
+    Q_FOREACH(const Thread &thread, threads) {
+        if (thread.type() == type && filter.match(thread.properties())) {
             filtered << thread;
         }
     }
@@ -152,7 +152,7 @@ Threads ThreadView::nextPage()
 
     QList<QVariantMap> threadsProperties = reply.value();
     Q_FOREACH(const QVariantMap &properties, threadsProperties) {
-        ThreadPtr thread = Thread::fromProperties(properties);
+        Thread thread = Thread::fromProperties(properties);
         if (!thread.isNull()) {
             threads << thread;
         }

@@ -25,6 +25,7 @@
 #include <QAbstractListModel>
 #include "types.h"
 #include "textevent.h"
+#include "thread.h"
 
 class HistoryQmlFilter;
 class HistoryQmlSort;

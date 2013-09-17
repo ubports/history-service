@@ -41,6 +41,7 @@ class Thread
     friend class ItemFactory;
 
 public:
+    explicit Thread();
     Thread(const QString &accountId,
            const QString &threadId,
            EventType type,
@@ -48,7 +49,9 @@ public:
            const Event &lastEvent = Event(),
            int count = 0,
            int unreadCount = 0);
+    Thread(const Thread &other);
     virtual ~Thread();
+    Thread& operator=(const Thread &other);
 
     QString accountId() const;
     QString threadId() const;
@@ -58,13 +61,18 @@ public:
     int count() const;
     int unreadCount() const;
 
+    bool isNull() const;
+    bool operator==(const Thread &other) const;
+
     virtual QVariantMap properties() const;
 
-    static ThreadPtr fromProperties(const QVariantMap &properties);
+    static Thread fromProperties(const QVariantMap &properties);
 
 protected:
-    QScopedPointer<ThreadPrivate> d_ptr;
+    QSharedPointer<ThreadPrivate> d_ptr;
 };
+
+typedef QList<Thread> Threads;
 
 }
 

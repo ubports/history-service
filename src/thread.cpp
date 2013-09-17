@@ -29,6 +29,10 @@ namespace History
 
 // ------------- ThreadPrivate ------------------------------------------------
 
+ThreadPrivate::ThreadPrivate()
+{
+}
+
 ThreadPrivate::ThreadPrivate(const QString &theAccountId,
                                            const QString &theThreadId, EventType theType,
                                            const QStringList &theParticipants,
@@ -46,6 +50,11 @@ ThreadPrivate::~ThreadPrivate()
 
 // ------------- Thread ------------------------------------------------------
 
+Thread::Thread()
+    : d_ptr(new ThreadPrivate())
+{
+}
+
 Thread::Thread(const QString &accountId,
                const QString &threadId, EventType type,
                const QStringList &participants,
@@ -56,8 +65,22 @@ Thread::Thread(const QString &accountId,
 {
 }
 
+Thread::Thread(const Thread &other)
+    : d_ptr(new ThreadPrivate(*other.d_ptr))
+{
+}
+
 Thread::~Thread()
 {
+}
+
+Thread &Thread::operator=(const Thread &other)
+{
+    if (&other == this) {
+        return *this;
+    }
+    d_ptr = QSharedPointer<ThreadPrivate>(new ThreadPrivate(*other.d_ptr));
+    return *this;
 }
 
 QString Thread::accountId() const
@@ -102,6 +125,27 @@ int Thread::unreadCount() const
     return d->unreadCount;
 }
 
+bool Thread::isNull() const
+{
+    Q_D(const Thread);
+    return d->accountId.isNull() && d->threadId.isNull() && d->participants.isEmpty();
+}
+
+bool Thread::operator ==(const Thread &other) const
+{
+    Q_D(const Thread);
+    if (d->type != other.d_ptr->type) {
+        return false;
+    }
+    if (d->accountId != other.d_ptr->accountId) {
+        return false;
+    }
+    if (d->threadId != other.d_ptr->threadId) {
+        return false;
+    }
+    return true;
+}
+
 QVariantMap Thread::properties() const
 {
     Q_D(const Thread);
@@ -117,30 +161,31 @@ QVariantMap Thread::properties() const
     return map;
 }
 
-ThreadPtr Thread::fromProperties(const QVariantMap &properties)
+Thread Thread::fromProperties(const QVariantMap &properties)
 {
+    Thread thread;
     if (properties.isEmpty()) {
-            return ThreadPtr();
-        }
+        return thread;
+    }
 
-        // FIXME: save the rest of the data
-        QString accountId = properties[FieldAccountId].toString();
-        QString threadId = properties[FieldThreadId].toString();
-        EventType type = (EventType) properties[FieldType].toInt();
-        QStringList participants = properties[FieldParticipants].toStringList();
-        int count = properties[FieldCount].toInt();
-        int unreadCount = properties[FieldUnreadCount].toInt();
+    // FIXME: save the rest of the data
+    QString accountId = properties[FieldAccountId].toString();
+    QString threadId = properties[FieldThreadId].toString();
+    EventType type = (EventType) properties[FieldType].toInt();
+    QStringList participants = properties[FieldParticipants].toStringList();
+    int count = properties[FieldCount].toInt();
+    int unreadCount = properties[FieldUnreadCount].toInt();
 
-        Event event;
-        switch (type) {
-            case EventTypeText:
-                event = TextEvent::fromProperties(properties);
-                break;
-            case EventTypeVoice:
-                event = VoiceEvent::fromProperties(properties);
-                break;
-        }
-        return ThreadPtr(new Thread(accountId, threadId, type, participants, event, count, unreadCount));
+    Event event;
+    switch (type) {
+        case EventTypeText:
+            event = TextEvent::fromProperties(properties);
+            break;
+        case EventTypeVoice:
+            event = VoiceEvent::fromProperties(properties);
+            break;
+    }
+    return Thread(accountId, threadId, type, participants, event, count, unreadCount);
 }
 
 }

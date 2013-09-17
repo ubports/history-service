@@ -49,14 +49,14 @@ void TelepathyLogImporter::onCallEventLoaded(const Tpl::CallEventPtr &event)
     // FIXME: add support for conf call
     bool incoming = event->receiver()->entityType() == Tpl::EntityTypeSelf;
     Tpl::EntityPtr remote = incoming ? event->sender() : event->receiver();
-    History::ThreadPtr thread = History::Manager::instance()->threadForParticipants(event->account()->uniqueIdentifier(),
-                                                                                    History::EventTypeVoice,
-                                                                                    QStringList() << remote->identifier(),
-                                                                                    History::MatchCaseSensitive,
-                                                                                    true);
-    QString eventId = QString("%1:%2").arg(thread->threadId()).arg(event->timestamp().toString());
-    History::VoiceEvent historyEvent = History::VoiceEvent(thread->accountId(),
-                                                           thread->threadId(),
+    History::Thread thread = History::Manager::instance()->threadForParticipants(event->account()->uniqueIdentifier(),
+                                                                                 History::EventTypeVoice,
+                                                                                 QStringList() << remote->identifier(),
+                                                                                 History::MatchCaseSensitive,
+                                                                                 true);
+    QString eventId = QString("%1:%2").arg(thread.threadId()).arg(event->timestamp().toString());
+    History::VoiceEvent historyEvent = History::VoiceEvent(thread.accountId(),
+                                                           thread.threadId(),
                                                            eventId,
                                                            incoming ? remote->identifier() : "self",
                                                            event->timestamp(),
@@ -77,13 +77,13 @@ void TelepathyLogImporter::onMessageEventLoaded(const Tpl::TextEventPtr &event)
     // FIXME: add support for conf call
     bool incoming = event->receiver()->entityType() == Tpl::EntityTypeSelf;
     Tpl::EntityPtr remote = incoming ? event->sender() : event->receiver();
-    History::ThreadPtr thread = History::Manager::instance()->threadForParticipants(event->account()->uniqueIdentifier(),
-                                                                                    History::EventTypeText,
-                                                                                    QStringList() << remote->identifier(),
-                                                                                    History::MatchCaseSensitive,
-                                                                                    true);
-    History::TextEvent historyEvent = History::TextEvent(thread->accountId(),
-                                                         thread->threadId(),
+    History::Thread thread = History::Manager::instance()->threadForParticipants(event->account()->uniqueIdentifier(),
+                                                                                 History::EventTypeText,
+                                                                                 QStringList() << remote->identifier(),
+                                                                                 History::MatchCaseSensitive,
+                                                                                 true);
+    History::TextEvent historyEvent = History::TextEvent(thread.accountId(),
+                                                         thread.threadId(),
                                                          event->messageToken(),
                                                          incoming ? remote->identifier() : "self",
                                                          event->timestamp(),

@@ -25,6 +25,7 @@
 #include "types.h"
 #include "filter.h"
 #include "sort.h"
+#include "thread.h"
 #include <QObject>
 
 namespace History

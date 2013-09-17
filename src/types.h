@@ -31,12 +31,8 @@ namespace History
 
 DefineSharedPointer(EventView)
 DefineSharedPointer(Plugin)
-DefineSharedPointer(Reader)
 DefineSharedPointer(TextEventAttachment)
-DefineSharedPointer(Thread)
 DefineSharedPointer(ThreadView)
-DefineSharedPointer(Writer)
-
 
 // enums
 enum EventType {

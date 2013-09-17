@@ -21,21 +21,6 @@
 
 #include "voiceevent.h"
 
-class VoiceEventWrapper : public History::VoiceEvent
-{
-public:
-    VoiceEventWrapper(const QString &accountId,
-                      const QString &threadId,
-                      const QString &eventId,
-                      const QString &senderId,
-                      const QDateTime &timestamp,
-                      bool newEvent,
-                      bool missed,
-                      const QTime &duration)
-    : VoiceEvent(accountId, threadId, eventId, senderId, timestamp, newEvent,
-                 missed, duration) { }
-};
-
 class VoiceEventTest : public QObject
 {
     Q_OBJECT
@@ -43,6 +28,9 @@ class VoiceEventTest : public QObject
 private Q_SLOTS:
     void testCreateNewEvent_data();
     void testCreateNewEvent();
+    void testCastToEventAndBack();
+    void testFromProperties();
+    void testProperties();
 };
 
 void VoiceEventTest::testCreateNewEvent_data()
@@ -77,8 +65,8 @@ void VoiceEventTest::testCreateNewEvent()
     QFETCH(bool, newEvent);
     QFETCH(bool, missed);
     QFETCH(QTime, duration);
-    VoiceEventWrapper event(accountId, threadId, eventId, senderId, timestamp, newEvent,
-                            missed, duration);
+    History::VoiceEvent event(accountId, threadId, eventId, senderId, timestamp, newEvent,
+                              missed, duration);
 
     // check that the values are properly set
     QCOMPARE(event.accountId(), accountId);
@@ -99,6 +87,21 @@ void VoiceEventTest::testCreateNewEvent()
     QCOMPARE(properties[History::FieldNewEvent].toBool(), newEvent);
     QCOMPARE(properties[History::FieldMissed].toBool(), missed);
     QCOMPARE(properties[History::FieldDuration].toTime(), duration);
+}
+
+void VoiceEventTest::testCastToEventAndBack()
+{
+    // FIXME: implement
+}
+
+void VoiceEventTest::testFromProperties()
+{
+    // FIXME: implement
+}
+
+void VoiceEventTest::testProperties()
+{
+    // FIXME: implement
 }
 
 QTEST_MAIN(VoiceEventTest)

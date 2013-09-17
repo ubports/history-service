@@ -28,6 +28,7 @@
 #include "event.h"
 #include "filter.h"
 #include "sort.h"
+#include "thread.h"
 
 namespace History
 {
@@ -54,12 +55,12 @@ public:
 
     Event getSingleEvent(EventType type, const QString &accountId, const QString &threadId, const QString &eventId);
 
-    ThreadPtr threadForParticipants(const QString &accountId,
-                                    EventType type,
-                                    const QStringList &participants,
-                                    History::MatchFlags matchFlags = History::MatchCaseSensitive,
-                                    bool create = false);
-    ThreadPtr getSingleThread(EventType type, const QString &accountId, const QString &threadId);
+    Thread threadForParticipants(const QString &accountId,
+                                 EventType type,
+                                 const QStringList &participants,
+                                 History::MatchFlags matchFlags = History::MatchCaseSensitive,
+                                 bool create = false);
+    Thread getSingleThread(EventType type, const QString &accountId, const QString &threadId);
 
     bool writeEvents(const History::Events &events);
     bool removeThreads(const Threads &threads);

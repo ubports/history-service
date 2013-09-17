@@ -33,6 +33,8 @@ private Q_SLOTS:
     void initTestCase();
     void testCreateNewThread_data();
     void testCreateNewThread();
+    void testFromProperties();
+    void testProperties();
 };
 
 void ThreadTest::initTestCase()
@@ -102,6 +104,16 @@ void ThreadTest::testCreateNewThread()
     QCOMPARE(properties[History::FieldParticipants].toStringList(), participants);
     QCOMPARE(properties[History::FieldCount].toInt(), count);
     QCOMPARE(properties[History::FieldUnreadCount].toInt(), unreadCount);
+}
+
+void ThreadTest::testFromProperties()
+{
+    // FIXME: implement
+}
+
+void ThreadTest::testProperties()
+{
+    // FIXME: implement
 }
 
 QTEST_MAIN(ThreadTest)
