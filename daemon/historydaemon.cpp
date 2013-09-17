@@ -418,7 +418,7 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
     event[History::FieldMessage] = message.text();
     event[History::FieldMessageType] = (int)type;
     event[History::FieldMessageFlags] = (int)History::MessageFlags();
-    event[History::FieldReadTimestamp] = QDateTime();
+    event[History::FieldReadTimestamp] = QDateTime().toString(Qt::ISODate);
     event[History::FieldSubject] = subject;
     event[History::FieldAttachments] = QVariant::fromValue(attachments);
 
@@ -455,7 +455,7 @@ void HistoryDaemon::onMessageSent(const Tp::TextChannelPtr textChannel, const Tp
     event[History::FieldMessage] = message.text();
     event[History::FieldMessageType] = (int)History::MessageTypeText; // FIXME: add support for MMS
     event[History::FieldMessageFlags] = (int)History::MessageFlags();
-    event[History::FieldReadTimestamp] = QDateTime();
+    event[History::FieldReadTimestamp] = QDateTime().toString(Qt::ISODate);
     event[History::FieldSubject] = "";
 
     writeEvents(QList<QVariantMap>() << event);

@@ -83,17 +83,17 @@ QVariantMap TextEvent::properties() const
 
     QVariantMap map = Event::properties();
 
-    map["message"] = d->message;
-    map["messageType"] = (int)d->messageType;
-    map["messageFlags"] = (int)d->messageFlags;
-    map["readTimestamp"] = d->readTimestamp;
-    map["subject"] = d->subject;
+    map[FieldMessage] = d->message;
+    map[FieldMessageType] = (int)d->messageType;
+    map[FieldMessageFlags] = (int)d->messageFlags;
+    map[FieldReadTimestamp] = d->readTimestamp.toString(Qt::ISODate);
+    map[FieldSubject] = d->subject;
 
     QList<QVariantMap> attachments;
     Q_FOREACH(const TextEventAttachmentPtr &attachment, d->attachments) {
         attachments << attachment->properties();
     }
-    map["attachments"] = QVariant::fromValue(attachments);
+    map[FieldAttachments] = QVariant::fromValue(attachments);
 
     return map;
 }
