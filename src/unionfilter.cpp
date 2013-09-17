@@ -90,7 +90,7 @@ UnionFilter::~UnionFilter()
 {
 }
 
-void UnionFilter::setFilters(const QList<Filter> &filters)
+void UnionFilter::setFilters(const Filters &filters)
 {
     Q_D(UnionFilter);
     d->filters = filters;
@@ -114,7 +114,7 @@ void UnionFilter::clear()
     d->filters.clear();
 }
 
-QList<Filter> UnionFilter::filters() const
+Filters UnionFilter::filters() const
 {
     Q_D(const UnionFilter);
     return d->filters;

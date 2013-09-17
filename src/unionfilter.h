@@ -42,11 +42,11 @@ public:
     UnionFilter(const Filter &other);
     UnionFilter& operator=(const Filter &other);
 
-    void setFilters(const QList<Filter> &filters);
+    void setFilters(const Filters &filters);
     void prepend(const Filter &filter);
     void append(const Filter &filter);
     void clear();
-    QList<Filter> filters() const;
+    Filters filters() const;
 };
 
 }

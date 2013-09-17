@@ -40,7 +40,7 @@ public:
     bool match(const QVariantMap properties) const;
     bool isValid() const;
 
-    QList<Filter> filters;
+    Filters filters;
 
     HISTORY_FILTER_DECLARE_CLONE(IntersectionFilter)
 };

@@ -36,7 +36,7 @@ public:
     UnionFilterPrivate();
     ~UnionFilterPrivate();
 
-    QList<Filter> filters;
+    Filters filters;
     virtual FilterType type() const { return FilterTypeUnion; }
     QString toString(const QString &propertyPrefix = QString::null) const;
     bool match(const QVariantMap properties) const;

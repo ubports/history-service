@@ -68,6 +68,8 @@ protected:
     QSharedPointer<FilterPrivate> d_ptr;
 };
 
+typedef QList<Filter> Filters;
+
 }
 
 #endif
