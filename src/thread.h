@@ -27,6 +27,7 @@
 #include <QStringList>
 #include <QVariantMap>
 #include "types.h"
+#include "event.h"
 
 namespace History
 {
@@ -40,26 +41,28 @@ class Thread
     friend class ItemFactory;
 
 public:
+    Thread(const QString &accountId,
+           const QString &threadId,
+           EventType type,
+           const QStringList &participants,
+           const Event &lastEvent = Event(),
+           int count = 0,
+           int unreadCount = 0);
     virtual ~Thread();
 
     QString accountId() const;
     QString threadId() const;
     EventType type() const;
     QStringList participants() const;
-    EventPtr lastEvent() const;
+    Event lastEvent() const;
     int count() const;
     int unreadCount() const;
 
     virtual QVariantMap properties() const;
 
+    static ThreadPtr fromProperties(const QVariantMap &properties);
+
 protected:
-    Thread(const QString &accountId,
-           const QString &threadId,
-           EventType type,
-           const QStringList &participants,
-           const EventPtr &lastEvent = EventPtr(),
-           int count = 0,
-           int unreadCount = 0);
     QScopedPointer<ThreadPrivate> d_ptr;
 };
 

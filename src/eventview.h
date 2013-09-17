@@ -23,6 +23,7 @@
 #define HISTORY_EVENTVIEW_H
 
 #include "types.h"
+#include "event.h"
 #include "filter.h"
 #include "sort.h"
 #include <QObject>
@@ -42,7 +43,7 @@ public:
               const History::Filter &filter);
     virtual ~EventView();
 
-    History::Events nextPage();
+    QList<Event> nextPage();
     bool isValid() const;
 
 Q_SIGNALS:

@@ -30,26 +30,26 @@
 #include <QCoreApplication>
 #include <QDebug>
 
-void printEvent(const History::EventPtr &event)
+void printEvent(const History::Event &event)
 {
     QString extraInfo;
-    History::TextEventPtr textEvent;
-    History::VoiceEventPtr voiceEvent;
+    History::TextEvent textEvent;
+    History::VoiceEvent voiceEvent;
 
-    switch (event->type()) {
+    switch (event.type()) {
     case History::EventTypeText:
-        textEvent = event.staticCast<History::TextEvent>();
-        extraInfo = QString("message: %1").arg(textEvent->message());
+        textEvent = event;
+        extraInfo = QString("message: %1").arg(textEvent.message());
         break;
     case History::EventTypeVoice:
-        voiceEvent = event.staticCast<History::VoiceEvent>();
-        extraInfo = QString("missed: %1\n      duration: %2").arg(voiceEvent->missed() ? "yes" : "no", voiceEvent->duration().toString());
+        voiceEvent = event;
+        extraInfo = QString("missed: %1\n      duration: %2").arg(voiceEvent.missed() ? "yes" : "no", voiceEvent.duration().toString());
         break;
     }
 
     qDebug() << qPrintable(QString("    * Event: accountId: %1\n      threadId: %2\n      eventId: %3\n      senderId: %4\n      timestamp: %5\n      newEvent: %6")
-                .arg(event->accountId(), event->threadId(), event->eventId(), event->senderId(), event->timestamp().toString(),
-                     event->newEvent() ? "yes" : "no"));
+                .arg(event.accountId(), event.threadId(), event.eventId(), event.senderId(), event.timestamp().toString(),
+                     event.newEvent() ? "yes" : "no"));
     qDebug() << qPrintable(QString("      %1").arg(extraInfo));
 }
 
@@ -102,7 +102,7 @@ int main(int argc, char **argv)
                 History::EventViewPtr eventView = manager->queryEvents(type, History::Sort(), filter);
                 History::Events events = eventView->nextPage();
                 while (!events.isEmpty()) {
-                    Q_FOREACH(const History::EventPtr &event, events) {
+                    Q_FOREACH(const History::Event &event, events) {
                         printEvent(event);
                     }
                     events = eventView->nextPage();

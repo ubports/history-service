@@ -26,12 +26,26 @@
 #include <QString>
 #include "types.h"
 
+#define HISTORY_EVENT_DECLARE_CLONE(Class) \
+    virtual EventPrivate *clone() { return new Class##Private(*this); }
+
+#define HISTORY_EVENT_DEFINE_COPY(Class, Type) \
+    Class::Class(const Event &other) { \
+        if (other.type() == Type) { d_ptr = QSharedPointer<Class##Private>(reinterpret_cast<Class##Private*>(EventPrivate::getD(other)->clone())); } \
+        else { d_ptr = QSharedPointer<Class##Private>(new Class##Private()); } \
+    } \
+    Class& Class::operator=(const Event &other) { \
+        if (other.type() == Type) { d_ptr = QSharedPointer<Class##Private>(reinterpret_cast<Class##Private*>(EventPrivate::getD(other)->clone())); } \
+        return  *this; \
+    }
+
 namespace History
 {
 
 class EventPrivate
 {
 public:
+    EventPrivate();
     EventPrivate(const QString &theAccountId,
                        const QString &theThreadId,
                        const QString &theEventId,
@@ -40,6 +54,8 @@ public:
                        bool theNewEvent);
     virtual ~EventPrivate();
 
+    virtual EventType type() const { return EventTypeNull; }
+    virtual QVariantMap properties() const;
 
     QString accountId;
     QString threadId;
@@ -48,6 +64,10 @@ public:
     QString receiver;
     QDateTime timestamp;
     bool newEvent;
+
+    static const QSharedPointer<EventPrivate>& getD(const Event& other) { return other.d_ptr; }
+
+    HISTORY_EVENT_DECLARE_CLONE(Event)
 };
 
 }

@@ -100,7 +100,7 @@ private:
     HistoryQmlSort *mSort;
     HistoryThreadModel::EventType mType;
     QHash<int, QByteArray> mRoles;
-    mutable QMap<History::TextEventPtr, QList<QVariant> > mAttachmentCache;
+    mutable QMap<History::TextEvent, QList<QVariant> > mAttachmentCache;
 };
 
 #endif // HISTORYEVENTMODEL_H

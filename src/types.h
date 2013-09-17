@@ -29,22 +29,20 @@
 namespace History
 {
 
-DefineSharedPointer(Event)
 DefineSharedPointer(EventView)
 DefineSharedPointer(Plugin)
 DefineSharedPointer(Reader)
-DefineSharedPointer(TextEvent)
 DefineSharedPointer(TextEventAttachment)
 DefineSharedPointer(Thread)
 DefineSharedPointer(ThreadView)
-DefineSharedPointer(VoiceEvent)
 DefineSharedPointer(Writer)
 
 
 // enums
 enum EventType {
     EventTypeText,
-    EventTypeVoice
+    EventTypeVoice,
+    EventTypeNull
 };
 
 enum FilterType {

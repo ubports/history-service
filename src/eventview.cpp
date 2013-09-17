@@ -23,7 +23,6 @@
 #include "eventview_p.h"
 #include "event.h"
 #include "filter.h"
-#include "itemfactory.h"
 #include "manager.h"
 #include "sort.h"
 #include "textevent.h"
@@ -51,8 +50,8 @@ Events EventViewPrivate::filteredEvents(const Events &events)
     }
 
     Events filtered;
-    Q_FOREACH(const EventPtr &event, events) {
-        if (event->type() == type && filter.match(event->properties())) {
+    Q_FOREACH(const Event &event, events) {
+        if (event.type() == type && filter.match(event.properties())) {
             filtered << events;
         }
     }
@@ -132,10 +131,10 @@ EventView::~EventView()
     }
 }
 
-Events EventView::nextPage()
+QList<Event> EventView::nextPage()
 {
     Q_D(EventView);
-    Events events;
+    QList<Event> events;
 
     if (!d->valid) {
         return events;
@@ -151,13 +150,13 @@ Events EventView::nextPage()
 
     QList<QVariantMap> eventsProperties = reply.value();
     Q_FOREACH(const QVariantMap &properties, eventsProperties) {
-        EventPtr event;
+        Event event;
         switch (d->type) {
         case EventTypeText:
-            event = ItemFactory::instance()->createTextEvent(properties);
+            event = TextEvent::fromProperties(properties);
             break;
         case EventTypeVoice:
-            event = ItemFactory::instance()->createVoiceEvent(properties);
+            event = VoiceEvent::fromProperties(properties);
             break;
         }
 

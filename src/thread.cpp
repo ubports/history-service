@@ -21,6 +21,8 @@
 
 #include "thread.h"
 #include "thread_p.h"
+#include "textevent.h"
+#include "voiceevent.h"
 
 namespace History
 {
@@ -30,7 +32,7 @@ namespace History
 ThreadPrivate::ThreadPrivate(const QString &theAccountId,
                                            const QString &theThreadId, EventType theType,
                                            const QStringList &theParticipants,
-                                           const EventPtr &theLastEvent,
+                                           const Event &theLastEvent,
                                            int theCount,
                                            int theUnreadCount) :
     accountId(theAccountId), threadId(theThreadId), type(theType), participants(theParticipants),
@@ -47,7 +49,7 @@ ThreadPrivate::~ThreadPrivate()
 Thread::Thread(const QString &accountId,
                const QString &threadId, EventType type,
                const QStringList &participants,
-               const EventPtr &lastEvent,
+               const Event &lastEvent,
                int count,
                int unreadCount)
 : d_ptr(new ThreadPrivate(accountId, threadId, type, participants, lastEvent, count, unreadCount))
@@ -82,7 +84,7 @@ QStringList Thread::participants() const
     return d->participants;
 }
 
-EventPtr Thread::lastEvent() const
+Event Thread::lastEvent() const
 {
     Q_D(const Thread);
     return d->lastEvent;
@@ -113,6 +115,32 @@ QVariantMap Thread::properties() const
     map[FieldUnreadCount] = d->unreadCount;
 
     return map;
+}
+
+ThreadPtr Thread::fromProperties(const QVariantMap &properties)
+{
+    if (properties.isEmpty()) {
+            return ThreadPtr();
+        }
+
+        // FIXME: save the rest of the data
+        QString accountId = properties[FieldAccountId].toString();
+        QString threadId = properties[FieldThreadId].toString();
+        EventType type = (EventType) properties[FieldType].toInt();
+        QStringList participants = properties[FieldParticipants].toStringList();
+        int count = properties[FieldCount].toInt();
+        int unreadCount = properties[FieldUnreadCount].toInt();
+
+        Event event;
+        switch (type) {
+            case EventTypeText:
+                event = TextEvent::fromProperties(properties);
+                break;
+            case EventTypeVoice:
+                event = VoiceEvent::fromProperties(properties);
+                break;
+        }
+        return ThreadPtr(new Thread(accountId, threadId, type, participants, event, count, unreadCount));
 }
 
 }

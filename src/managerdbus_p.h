@@ -25,6 +25,7 @@
 #include <QDBusInterface>
 #include <QObject>
 #include "types.h"
+#include "event.h"
 
 class HistoryServiceAdaptor;
 
@@ -47,7 +48,7 @@ public:
     bool removeThreads(const Threads &threads);
     bool removeEvents(const Events &events);
     ThreadPtr getSingleThread(EventType type, const QString &accountId, const QString &threadId);
-    EventPtr getSingleEvent(EventType type, const QString &accountId, const QString &threadId, const QString &eventId);
+    Event getSingleEvent(EventType type, const QString &accountId, const QString &threadId, const QString &eventId);
 
 Q_SIGNALS:
     // signals that will be triggered after processing bus signals
@@ -72,7 +73,7 @@ protected:
     Threads threadsFromProperties(const QList<QVariantMap> &threadsProperties, bool fakeIfNull = false);
     QList<QVariantMap> threadsToProperties(const Threads &threads);
 
-    EventPtr eventFromProperties(const QVariantMap &properties);
+    Event eventFromProperties(const QVariantMap &properties);
     Events eventsFromProperties(const QList<QVariantMap> &eventsProperties);
     QList<QVariantMap> eventsToProperties(const Events &events);
 

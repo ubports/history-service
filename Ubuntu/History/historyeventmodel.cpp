@@ -75,17 +75,17 @@ QVariant HistoryEventModel::data(const QModelIndex &index, int role) const
         return QVariant();
     }
 
-    History::EventPtr event = mEvents[index.row()];
-    History::TextEventPtr textEvent;
-    History::VoiceEventPtr voiceEvent;
+    History::Event event = mEvents[index.row()];
+    History::TextEvent textEvent;
+    History::VoiceEvent voiceEvent;
     History::ThreadPtr thread;
 
-    switch (event->type()) {
+    switch (event.type()) {
     case History::EventTypeText:
-        textEvent = event.staticCast<History::TextEvent>();
+        textEvent = event;
         break;
     case History::EventTypeVoice:
-        voiceEvent = event.staticCast<History::VoiceEvent>();
+        voiceEvent = event;
         break;
     }
 
@@ -93,58 +93,58 @@ QVariant HistoryEventModel::data(const QModelIndex &index, int role) const
 
     switch (role) {
     case AccountIdRole:
-        result = event->accountId();
+        result = event.accountId();
         break;
     case ThreadIdRole:
-        result = event->threadId();
+        result = event.threadId();
         break;
     case ParticipantsRole:
-        thread = History::Manager::instance()->getSingleThread(event->type(), event->accountId(), event->threadId());
+        thread = History::Manager::instance()->getSingleThread(event.type(), event.accountId(), event.threadId());
         if (!thread.isNull()) {
             result = thread->participants();
         }
         break;
     case TypeRole:
-        result = event->type();
+        result = event.type();
         break;
     case EventIdRole:
-        result = event->eventId();
+        result = event.eventId();
         break;
     case SenderIdRole:
-        result = event->senderId();
+        result = event.senderId();
         break;
     case TimestampRole:
-        result = event->timestamp();
+        result = event.timestamp();
         break;
     case DateRole:
-        result = event->timestamp().date();
+        result = event.timestamp().date();
         break;
     case NewEventRole:
-        result = event->newEvent();
+        result = event.newEvent();
         break;
     case TextMessageRole:
         if (!textEvent.isNull()) {
-            result = textEvent->message();
+            result = textEvent.message();
         }
         break;
     case TextMessageTypeRole:
         if (!textEvent.isNull()) {
-            result = (int)textEvent->messageType();
+            result = (int)textEvent.messageType();
         }
         break;
     case TextMessageFlagsRole:
         if (!textEvent.isNull()) {
-            result = (int)textEvent->messageFlags();
+            result = (int)textEvent.messageFlags();
         }
         break;
     case TextReadTimestampRole:
         if (!textEvent.isNull()) {
-            result = textEvent->readTimestamp();
+            result = textEvent.readTimestamp();
         }
         break;
     case TextReadSubjectRole:
         if (!textEvent.isNull()) {
-            result = textEvent->subject();
+            result = textEvent.subject();
         }
         break;
     case TextMessageAttachmentsRole:
@@ -153,7 +153,7 @@ QVariant HistoryEventModel::data(const QModelIndex &index, int role) const
                 result = mAttachmentCache.value(textEvent);
             } else {
                 QList<QVariant> attachments;
-                Q_FOREACH(const History::TextEventAttachmentPtr &attachment, textEvent->attachments()) {
+                Q_FOREACH(const History::TextEventAttachmentPtr &attachment, textEvent.attachments()) {
                     attachments << QVariant::fromValue(new HistoryQmlTextEventAttachment(attachment, const_cast<HistoryEventModel*>(this)));
                 }
                 mAttachmentCache[textEvent] = attachments;
@@ -163,12 +163,12 @@ QVariant HistoryEventModel::data(const QModelIndex &index, int role) const
         break;
     case CallMissedRole:
         if (!voiceEvent.isNull()) {
-            result = voiceEvent->missed();
+            result = voiceEvent.missed();
         }
         break;
     case CallDurationRole:
         if (!voiceEvent.isNull()) {
-            result = voiceEvent->duration();
+            result = voiceEvent.duration();
         }
         break;
     }
@@ -285,7 +285,7 @@ QString HistoryEventModel::threadIdForParticipants(const QString &accountId, int
 
 bool HistoryEventModel::removeEvent(const QString &accountId, const QString &threadId, const QString &eventId, int eventType)
 {
-    History::EventPtr event = History::Manager::instance()->getSingleEvent((History::EventType)eventType, accountId, threadId, eventId);
+    History::Event event = History::Manager::instance()->getSingleEvent((History::EventType)eventType, accountId, threadId, eventId);
     History::Manager::instance()->removeEvents(History::Events() << event);
 }
 
@@ -355,7 +355,7 @@ void HistoryEventModel::onEventsAdded(const History::Events &events)
 
 void HistoryEventModel::onEventsModified(const History::Events &events)
 {
-    Q_FOREACH(const History::EventPtr &event, events) {
+    Q_FOREACH(const History::Event &event, events) {
         int pos = mEvents.indexOf(event);
         if (pos >= 0) {
             mEvents[pos] = event;
@@ -370,7 +370,7 @@ void HistoryEventModel::onEventsModified(const History::Events &events)
 
 void HistoryEventModel::onEventsRemoved(const History::Events &events)
 {
-    Q_FOREACH(const History::EventPtr &event, events) {
+    Q_FOREACH(const History::Event &event, events) {
         int pos = mEvents.indexOf(event);
         if (pos >= 0) {
             beginRemoveRows(QModelIndex(), pos, pos);

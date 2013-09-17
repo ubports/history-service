@@ -27,6 +27,10 @@ namespace History
 
 // ------------- EventPrivate ------------------------------------------------
 
+EventPrivate::EventPrivate()
+{
+}
+
 EventPrivate::EventPrivate(const QString &theAccountId,
                                        const QString &theThreadId,
                                        const QString &theEventId,
@@ -40,6 +44,21 @@ EventPrivate::EventPrivate(const QString &theAccountId,
 
 EventPrivate::~EventPrivate()
 {
+}
+
+QVariantMap EventPrivate::properties() const
+{
+    QVariantMap map;
+
+    map[FieldAccountId] = accountId;
+    map[FieldThreadId] = threadId;
+    map[FieldEventId] = eventId;
+    map[FieldSenderId] = senderId;
+    map[FieldTimestamp] = timestamp.toString(Qt::ISODate);
+    map[FieldNewEvent] = newEvent;
+    map[FieldType] = type();
+
+    return map;
 }
 
 // ------------- Event -------------------------------------------------------
@@ -57,9 +76,22 @@ EventPrivate::~EventPrivate()
  */
 
 /*!
- * \fn Event::EventType Event::type() const
- * \brief Returns the type of this event.
+ * \brief Constructs an empty Event
  */
+Event::Event()
+    : d_ptr(new EventPrivate())
+{
+
+}
+
+/*!
+ * \brief Constructs an Event by copying the data from another one.
+ * \param other The item to be copied;
+ */
+Event::Event(const Event &other)
+    : d_ptr(other.d_ptr->clone())
+{
+}
 
 /*!
   \internal
@@ -73,6 +105,19 @@ Event::Event(EventPrivate &p)
 
 Event::~Event()
 {
+}
+
+/*!
+ * \brief Assign operator for the Event class
+ * \param other The event to be copied;
+ */
+Event& Event::operator=(const Event &other)
+{
+    if (&other == this) {
+        return *this;
+    }
+
+    d_ptr = QSharedPointer<EventPrivate>(other.d_ptr->clone());
 }
 
 /*!
@@ -123,7 +168,6 @@ QDateTime Event::timestamp() const
 
 /*!
  * \brief Returns whether the event is new (not yet seen by the user).
- * \return
  */
 bool Event::newEvent() const
 {
@@ -131,21 +175,60 @@ bool Event::newEvent() const
     return d->newEvent;
 }
 
+/*!
+ * \brief Returns the type of this event.
+ */
+EventType Event::type() const
+{
+    Q_D(const Event);
+    return d->type();
+}
+
+/*!
+ * \brief Returns the event properties
+ */
 QVariantMap Event::properties() const
 {
     Q_D(const Event);
+    return d->properties();
+}
 
-    QVariantMap map;
+/*!
+ * \brief Return whether this event is a null event.
+ */
+bool Event::isNull() const
+{
+    Q_D(const Event);
+    return d->accountId.isNull() && d->threadId.isNull() && d->eventId.isNull();
+}
 
-    map[FieldAccountId] = d->accountId;
-    map[FieldThreadId] = d->threadId;
-    map[FieldEventId] = d->eventId;
-    map[FieldSenderId] = d->senderId;
-    map[FieldTimestamp] = d->timestamp.toString(Qt::ISODate);
-    map[FieldNewEvent] = d->newEvent;
-    map[FieldType] = type();
+/*!
+ * \brief Compare this event with another one.
+ * \param other The other event;
+ */
+bool Event::operator==(const Event &other) const
+{
+    Q_D(const Event);
+    if (type() != other.type()) {
+        return false;
+    }
+    if (d->accountId != other.d_ptr->accountId) {
+        return false;
+    }
+    if (d->threadId != other.d_ptr->threadId) {
+        return false;
+    }
+    if (d->eventId != other.d_ptr->eventId) {
+        return false;
+    }
+    return true;
+}
 
-    return map;
+bool Event::operator<(const Event &other) const
+{
+    QString selfData = accountId() + threadId() + eventId();
+    QString otherData = other.accountId() + other.threadId() + other.eventId();
+    return selfData < otherData;
 }
 
 }

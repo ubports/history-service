@@ -22,7 +22,6 @@
 #include "threadview.h"
 #include "threadview_p.h"
 #include "filter.h"
-#include "itemfactory.h"
 #include "manager.h"
 #include "sort.h"
 #include "thread.h"
@@ -153,7 +152,7 @@ Threads ThreadView::nextPage()
 
     QList<QVariantMap> threadsProperties = reply.value();
     Q_FOREACH(const QVariantMap &properties, threadsProperties) {
-        ThreadPtr thread = ItemFactory::instance()->createThread(properties);
+        ThreadPtr thread = Thread::fromProperties(properties);
         if (!thread.isNull()) {
             threads << thread;
         }

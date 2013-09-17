@@ -38,7 +38,10 @@ class Event
     Q_DECLARE_PRIVATE(Event)
 
 public:
+    explicit Event();
+    Event(const Event &other);
     virtual ~Event();
+    Event& operator=(const Event &other);
 
     QString accountId() const;
     QString threadId() const;
@@ -46,13 +49,18 @@ public:
     QString senderId() const;
     QDateTime timestamp() const;
     bool newEvent() const;
-    virtual EventType type() const = 0;
-    virtual QVariantMap properties() const;
+    EventType type() const;
+    QVariantMap properties() const;
+    bool isNull() const;
+    bool operator==(const Event &other) const;
+    bool operator<(const Event &other) const;
 
 protected:
     Event(EventPrivate &p);
-    QScopedPointer<EventPrivate> d_ptr;
+    QSharedPointer<EventPrivate> d_ptr;
 };
+
+typedef QList<Event> Events;
 
 }
 

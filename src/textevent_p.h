@@ -33,6 +33,7 @@ class TextEvent;
 class TextEventPrivate : public EventPrivate
 {
 public:
+    TextEventPrivate();
     TextEventPrivate(const QString &theAccountId,
                     const QString &theThreadId,
                     const QString &theEventId,
@@ -52,6 +53,11 @@ public:
     QDateTime readTimestamp;
     QString subject;
     TextEventAttachments attachments;
+
+    EventType type() const;
+    QVariantMap properties() const;
+
+    HISTORY_EVENT_DECLARE_CLONE(TextEvent)
 };
 
 }
