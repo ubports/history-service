@@ -35,8 +35,14 @@ class IntersectionFilterPrivate : public FilterPrivate
 public:
     IntersectionFilterPrivate();
     ~IntersectionFilterPrivate();
+    virtual FilterType type() const { return FilterTypeIntersection; }
+    QString toString(const QString &propertyPrefix = QString::null) const;
+    bool match(const QVariantMap properties) const;
+    bool isValid() const;
 
-    Filters filters;
+    QList<Filter> filters;
+
+    HISTORY_FILTER_DECLARE_CLONE(IntersectionFilter)
 };
 
 }

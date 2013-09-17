@@ -23,6 +23,7 @@
 #define HISTORY_THREADVIEW_H
 
 #include "types.h"
+#include "filter.h"
 #include <QObject>
 
 namespace History
@@ -38,7 +39,7 @@ class ThreadView : public QObject
 public:
     ThreadView(History::EventType type,
                const History::SortPtr &sort,
-               const History::FilterPtr &filter);
+               const History::Filter &filter);
     ~ThreadView();
 
     Threads nextPage();

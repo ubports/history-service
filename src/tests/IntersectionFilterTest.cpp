@@ -38,6 +38,7 @@ private Q_SLOTS:
     void testToStringWithNoFilters();
     void testToStringWithOneFilter();
     void testToStringWithManyFilters();
+    void testConvertToFilterAndBack();
 };
 
 void IntersectionFilterTest::initTestCase()
@@ -48,11 +49,11 @@ void IntersectionFilterTest::initTestCase()
 void IntersectionFilterTest::testSetFilters()
 {
     // create two filters and check that they are properly set
-    History::FilterPtr filterOne(new History::Filter("propertyOne", "valueOne"));
-    History::FilterPtr filterTwo(new History::Filter("propertyTwo", "valueTwo"));
+    History::Filter filterOne("propertyOne", "valueOne");
+    History::Filter filterTwo("propertyTwo", "valueTwo");
 
     History::IntersectionFilter intersectionFilter;
-    intersectionFilter.setFilters(History::Filters() << filterOne << filterTwo);
+    intersectionFilter.setFilters(QList<History::Filter>() << filterOne << filterTwo);
 
     QCOMPARE(intersectionFilter.filters().count(), 2);
     QCOMPARE(intersectionFilter.filters()[0], filterOne);
@@ -62,12 +63,12 @@ void IntersectionFilterTest::testSetFilters()
 void IntersectionFilterTest::testAppendFilter()
 {
     // create two filters and check that they are properly set
-    History::FilterPtr filterOne(new History::Filter("propertyOne", "valueOne"));
-    History::FilterPtr filterTwo(new History::Filter("propertyTwo", "valueTwo"));
-    History::FilterPtr filterThree(new History::Filter("propertyThree", "valueThree"));
+    History::Filter filterOne("propertyOne", "valueOne");
+    History::Filter filterTwo("propertyTwo", "valueTwo");
+    History::Filter filterThree("propertyThree", "valueThree");
 
     History::IntersectionFilter intersectionFilter;
-    intersectionFilter.setFilters(History::Filters() << filterOne << filterTwo);
+    intersectionFilter.setFilters(QList<History::Filter>() << filterOne << filterTwo);
     intersectionFilter.append(filterThree);
 
     QCOMPARE(intersectionFilter.filters().count(), 3);
@@ -77,12 +78,12 @@ void IntersectionFilterTest::testAppendFilter()
 void IntersectionFilterTest::testPrependFilter()
 {
     // create two filters and check that they are properly set
-    History::FilterPtr filterOne(new History::Filter("propertyOne", "valueOne"));
-    History::FilterPtr filterTwo(new History::Filter("propertyTwo", "valueTwo"));
-    History::FilterPtr filterThree(new History::Filter("propertyThree", "valueThree"));
+    History::Filter filterOne("propertyOne", "valueOne");
+    History::Filter filterTwo("propertyTwo", "valueTwo");
+    History::Filter filterThree("propertyThree", "valueThree");
 
     History::IntersectionFilter intersectionFilter;
-    intersectionFilter.setFilters(History::Filters() << filterOne << filterTwo);
+    intersectionFilter.setFilters(QList<History::Filter>() << filterOne << filterTwo);
     intersectionFilter.prepend(filterThree);
 
     QCOMPARE(intersectionFilter.filters().count(), 3);
@@ -92,11 +93,11 @@ void IntersectionFilterTest::testPrependFilter()
 void IntersectionFilterTest::testClear()
 {
     // create two filters and check that they are properly set
-    History::FilterPtr filterOne(new History::Filter("propertyOne", "valueOne"));
-    History::FilterPtr filterTwo(new History::Filter("propertyTwo", "valueTwo"));
+    History::Filter filterOne("propertyOne", "valueOne");
+    History::Filter filterTwo("propertyTwo", "valueTwo");
 
     History::IntersectionFilter intersectionFilter;
-    intersectionFilter.setFilters(History::Filters() << filterOne << filterTwo);
+    intersectionFilter.setFilters(QList<History::Filter>() << filterOne << filterTwo);
     intersectionFilter.clear();
 
     QVERIFY(intersectionFilter.filters().isEmpty());
@@ -129,9 +130,9 @@ void IntersectionFilterTest::testMatch()
     QFETCH(QVariantMap, itemProperties);
     QFETCH(bool, result);
 
-    History::Filters filters;
+    QList<History::Filter> filters;
     Q_FOREACH(const QString &key, filterProperties.keys()) {
-        filters << History::FilterPtr(new History::Filter(key, filterProperties[key]));
+        filters << History::Filter(key, filterProperties[key]);
     }
 
     History::IntersectionFilter intersectionFilter;
@@ -151,28 +152,46 @@ void IntersectionFilterTest::testToStringWithOneFilter()
     // test that with a single filter the result of toString() is equal to the output
     // of calling toString() on the filter directly
 
-    History::FilterPtr filter(new History::Filter("aProperty", "aValue"));
+    History::Filter filter("aProperty", "aValue");
     History::IntersectionFilter intersectionFilter;
     intersectionFilter.append(filter);
 
-    QCOMPARE(intersectionFilter.toString(), filter->toString());
+    QCOMPARE(intersectionFilter.toString(), filter.toString());
 }
 
 void IntersectionFilterTest::testToStringWithManyFilters()
 {
-    // create two filters and check that they are properly set
-    History::FilterPtr filterOne(new History::Filter("propertyOne", "valueOne"));
-    History::FilterPtr filterTwo(new History::Filter("propertyTwo", "valueTwo"));
-    History::FilterPtr filterThree(new History::Filter("propertyThree", "valueThree"));
+    // check if each of the individual filters are present in the toString output
+    History::Filter filterOne("propertyOne", "valueOne");
+    History::Filter filterTwo("propertyTwo", "valueTwo");
+    History::Filter filterThree("propertyThree", "valueThree");
 
     History::IntersectionFilter intersectionFilter;
-    intersectionFilter.setFilters(History::Filters() << filterOne << filterTwo << filterThree);
+    intersectionFilter.setFilters(QList<History::Filter>() << filterOne << filterTwo << filterThree);
 
     QString stringResult = intersectionFilter.toString();
 
-    QVERIFY(stringResult.contains(filterOne->toString()));
-    QVERIFY(stringResult.contains(filterTwo->toString()));
-    QVERIFY(stringResult.contains(filterThree->toString()));
+    QVERIFY(stringResult.contains(filterOne.toString()));
+    QVERIFY(stringResult.contains(filterTwo.toString()));
+    QVERIFY(stringResult.contains(filterThree.toString()));
+}
+
+void IntersectionFilterTest::testConvertToFilterAndBack()
+{
+    History::Filter filterOne("propertyOne", "valueOne");
+    History::Filter filterTwo("propertyTwo", "valueTwo");
+    History::Filter filterThree("propertyThree", "valueThree");
+
+    History::IntersectionFilter intersectionFilter;
+    intersectionFilter.setFilters(QList<History::Filter>() << filterOne << filterTwo << filterThree);
+
+    History::Filter castFilter = intersectionFilter;
+    QCOMPARE(castFilter.toString(), intersectionFilter.toString());
+    QCOMPARE(castFilter.type(), History::FilterTypeIntersection);
+
+    History::IntersectionFilter andBack = castFilter;
+    QCOMPARE(andBack, intersectionFilter);
+    QCOMPARE(andBack.toString(), intersectionFilter.toString());
 }
 
 QTEST_MAIN(IntersectionFilterTest)

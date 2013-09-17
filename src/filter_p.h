@@ -22,9 +22,23 @@
 #ifndef HISTORY_FILTER_P_H
 #define HISTORY_FILTER_P_H
 
+#include <QSharedData>
 #include <QString>
 #include <QVariant>
 #include "types.h"
+
+#define HISTORY_FILTER_DECLARE_CLONE(Class) \
+    virtual FilterPrivate *clone() { return new Class##Private(*this); }
+
+#define HISTORY_FILTER_DEFINE_COPY(Class, Type) \
+    Class::Class(const Filter &other) { \
+        if (other.type() == Type) { d_ptr = QSharedPointer<Class##Private>(reinterpret_cast<Class##Private*>(FilterPrivate::getD(other)->clone())); } \
+        else { d_ptr = QSharedPointer<Class##Private>(new Class##Private()); } \
+    } \
+    Class& Class::operator=(const Filter &other) { \
+        if (other.type() == Type) { d_ptr = QSharedPointer<Class##Private>(reinterpret_cast<Class##Private*>(FilterPrivate::getD(other)->clone())); } \
+        return  *this; \
+    }
 
 namespace History
 {
@@ -43,6 +57,15 @@ public:
     QString filterProperty;
     QVariant filterValue;
     MatchFlags matchFlags;
+
+    static const QSharedPointer<FilterPrivate>& getD(const Filter& other) { return other.d_ptr; }
+
+    virtual QString toString(const QString &propertyPrefix = QString::null) const;
+    virtual bool match(const QVariantMap properties) const;
+    virtual FilterType type() const { return History::FilterTypeStandard; }
+    virtual bool isValid() const { return (!filterProperty.isNull()) && (!filterValue.isNull()); }
+
+    HISTORY_FILTER_DECLARE_CLONE(Filter)
 };
 
 }

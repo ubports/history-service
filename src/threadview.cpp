@@ -37,7 +37,7 @@ namespace History
 
 ThreadViewPrivate::ThreadViewPrivate(History::EventType theType,
                                      const History::SortPtr &theSort,
-                                     const History::FilterPtr &theFilter)
+                                     const History::Filter &theFilter)
     : type(theType), sort(theSort), filter(theFilter), valid(true), dbus(0)
 {
 }
@@ -51,7 +51,7 @@ Threads ThreadViewPrivate::filteredThreads(const Threads &threads)
 
     Threads filtered;
     Q_FOREACH(const ThreadPtr &thread, threads) {
-        if (thread->type() == type && filter->match(thread->properties())) {
+        if (thread->type() == type && filter.match(thread->properties())) {
             filtered << thread;
         }
     }
@@ -93,7 +93,7 @@ void ThreadViewPrivate::_d_threadsRemoved(const Threads &threads)
 
 ThreadView::ThreadView(History::EventType type,
                        const History::SortPtr &sort,
-                       const History::FilterPtr &filter)
+                       const Filter &filter)
     : d_ptr(new ThreadViewPrivate(type, sort, filter))
 {
     d_ptr->q_ptr = this;
@@ -103,7 +103,7 @@ ThreadView::ThreadView(History::EventType type,
     QDBusReply<QString> reply = interface.call("QueryThreads",
                                                (int) type,
                                                sort ? sort->properties() : QVariantMap(),
-                                               filter ? filter->toString() : "");
+                                               filter.toString());
     if (!reply.isValid()) {
         Q_EMIT invalidated();
         d_ptr->valid = false;

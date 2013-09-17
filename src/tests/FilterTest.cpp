@@ -36,6 +36,7 @@ private Q_SLOTS:
     void testToStringPrefix();
     void testMatch_data();
     void testMatch();
+    void testEquals();
 };
 
 void FilterTest::initTestCase()
@@ -157,6 +158,20 @@ void FilterTest::testMatch()
     History::Filter filter(filterProperty, filterValue, matchFlags);
     QCOMPARE(filter.match(properties), result);
 
+}
+
+void FilterTest::testEquals()
+{
+    History::Filter filterOne("oneProperty", "oneValue");
+    History::Filter equal("oneProperty", "oneValue");
+    History::Filter differentProperty("anotherProperty", "oneValue");
+    History::Filter differentValue("oneProperty", "anotherValue");
+
+    QVERIFY(filterOne == equal);
+    QVERIFY(!(filterOne == differentProperty));
+    QVERIFY(!(filterOne == differentValue));
+    QVERIFY(filterOne != differentProperty);
+    QVERIFY(filterOne != differentValue);
 }
 
 

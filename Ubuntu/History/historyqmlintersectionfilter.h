@@ -24,6 +24,7 @@
 
 #include "historyqmlfilter.h"
 #include "types.h"
+#include "intersectionfilter.h"
 
 class HistoryQmlIntersectionFilter : public HistoryQmlCompoundFilter
 {
@@ -31,10 +32,7 @@ class HistoryQmlIntersectionFilter : public HistoryQmlCompoundFilter
 public:
     explicit HistoryQmlIntersectionFilter(QObject *parent = 0);
 
-    History::FilterPtr filter() const;
-
-private:
-    History::IntersectionFilterPtr mFilter;
+    History::Filter filter() const;
 };
 
 #endif // HISTORYQMLINTERSECTIONFILTER_H

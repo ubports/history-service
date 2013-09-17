@@ -23,16 +23,16 @@
 #include "unionfilter.h"
 
 HistoryQmlUnionFilter::HistoryQmlUnionFilter(QObject *parent) :
-    HistoryQmlCompoundFilter(parent), mFilter(new History::UnionFilter())
+    HistoryQmlCompoundFilter(parent)
 {
 }
 
-History::FilterPtr HistoryQmlUnionFilter::filter() const
+History::Filter HistoryQmlUnionFilter::filter() const
 {
-    mFilter->clear();
+    History::UnionFilter unionFilter;
     Q_FOREACH(HistoryQmlFilter *filter, mFilters) {
-        mFilter->append(filter->filter());
+        unionFilter.append(filter->filter());
     }
 
-    return mFilter;
+    return unionFilter;
 }

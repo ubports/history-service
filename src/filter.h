@@ -40,7 +40,9 @@ public:
     Filter(const QString &filterProperty = QString::null,
                   const QVariant &filterValue = QVariant(),
                   MatchFlags matchFlags = MatchCaseSensitive);
+    Filter(const Filter &other);
     virtual ~Filter();
+    Filter& operator=(const Filter& other);
 
     QString filterProperty() const;
     void setFilterProperty(const QString &value);
@@ -50,13 +52,20 @@ public:
 
     MatchFlags matchFlags() const;
     void setMatchFlags(const MatchFlags &flags);
-    virtual QString toString(const QString &propertyPrefix = QString::null) const;
+    QString toString(const QString &propertyPrefix = QString::null) const;
 
-    virtual bool match(const QVariantMap properties) const;
+    bool match(const QVariantMap properties) const;
+
+    FilterType type() const;
+
+    bool operator==(const Filter &other) const;
+    bool operator!=(const Filter &other) const { return !operator==(other); }
+    bool isValid() const;
+    bool isNull() const { return !isValid(); }
 
 protected:
     Filter(FilterPrivate &p);
-    QScopedPointer<FilterPrivate> d_ptr;
+    QSharedPointer<FilterPrivate> d_ptr;
 };
 
 }

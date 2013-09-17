@@ -38,6 +38,7 @@ private Q_SLOTS:
     void testToStringWithNoFilters();
     void testToStringWithOneFilter();
     void testToStringWithManyFilters();
+    void testConvertToFilterAndBack();
 };
 
 void UnionFilterTest::initTestCase()
@@ -48,11 +49,11 @@ void UnionFilterTest::initTestCase()
 void UnionFilterTest::testSetFilters()
 {
     // create two filters and check that they are properly set
-    History::FilterPtr filterOne(new History::Filter("propertyOne", "valueOne"));
-    History::FilterPtr filterTwo(new History::Filter("propertyTwo", "valueTwo"));
+    History::Filter filterOne("propertyOne", "valueOne");
+    History::Filter filterTwo("propertyTwo", "valueTwo");
 
     History::UnionFilter unionFilter;
-    unionFilter.setFilters(History::Filters() << filterOne << filterTwo);
+    unionFilter.setFilters(QList<History::Filter>() << filterOne << filterTwo);
 
     QCOMPARE(unionFilter.filters().count(), 2);
     QCOMPARE(unionFilter.filters()[0], filterOne);
@@ -62,12 +63,12 @@ void UnionFilterTest::testSetFilters()
 void UnionFilterTest::testAppendFilter()
 {
     // create two filters and check that they are properly set
-    History::FilterPtr filterOne(new History::Filter("propertyOne", "valueOne"));
-    History::FilterPtr filterTwo(new History::Filter("propertyTwo", "valueTwo"));
-    History::FilterPtr filterThree(new History::Filter("propertyThree", "valueThree"));
+    History::Filter filterOne("propertyOne", "valueOne");
+    History::Filter filterTwo("propertyTwo", "valueTwo");
+    History::Filter filterThree("propertyThree", "valueThree");
 
     History::UnionFilter unionFilter;
-    unionFilter.setFilters(History::Filters() << filterOne << filterTwo);
+    unionFilter.setFilters(QList<History::Filter>() << filterOne << filterTwo);
     unionFilter.append(filterThree);
 
     QCOMPARE(unionFilter.filters().count(), 3);
@@ -77,12 +78,12 @@ void UnionFilterTest::testAppendFilter()
 void UnionFilterTest::testPrependFilter()
 {
     // create two filters and check that they are properly set
-    History::FilterPtr filterOne(new History::Filter("propertyOne", "valueOne"));
-    History::FilterPtr filterTwo(new History::Filter("propertyTwo", "valueTwo"));
-    History::FilterPtr filterThree(new History::Filter("propertyThree", "valueThree"));
+    History::Filter filterOne("propertyOne", "valueOne");
+    History::Filter filterTwo("propertyTwo", "valueTwo");
+    History::Filter filterThree("propertyThree", "valueThree");
 
     History::UnionFilter unionFilter;
-    unionFilter.setFilters(History::Filters() << filterOne << filterTwo);
+    unionFilter.setFilters(QList<History::Filter>() << filterOne << filterTwo);
     unionFilter.prepend(filterThree);
 
     QCOMPARE(unionFilter.filters().count(), 3);
@@ -92,11 +93,11 @@ void UnionFilterTest::testPrependFilter()
 void UnionFilterTest::testClear()
 {
     // create two filters and check that they are properly set
-    History::FilterPtr filterOne(new History::Filter("propertyOne", "valueOne"));
-    History::FilterPtr filterTwo(new History::Filter("propertyTwo", "valueTwo"));
+    History::Filter filterOne("propertyOne", "valueOne");
+    History::Filter filterTwo("propertyTwo", "valueTwo");
 
     History::UnionFilter unionFilter;
-    unionFilter.setFilters(History::Filters() << filterOne << filterTwo);
+    unionFilter.setFilters(QList<History::Filter>() << filterOne << filterTwo);
     unionFilter.clear();
 
     QVERIFY(unionFilter.filters().isEmpty());
@@ -129,9 +130,9 @@ void UnionFilterTest::testMatch()
     QFETCH(QVariantMap, itemProperties);
     QFETCH(bool, result);
 
-    History::Filters filters;
+    QList<History::Filter> filters;
     Q_FOREACH(const QString &key, filterProperties.keys()) {
-        filters << History::FilterPtr(new History::Filter(key, filterProperties[key]));
+        filters << History::Filter(key, filterProperties[key]);
     }
 
     History::UnionFilter unionFilter;
@@ -151,28 +152,48 @@ void UnionFilterTest::testToStringWithOneFilter()
     // test that with a single filter the result of toString() is equal to the output
     // of calling toString() on the filter directly
 
-    History::FilterPtr filter(new History::Filter("aProperty", "aValue"));
+    History::Filter filter("aProperty", "aValue");
     History::UnionFilter unionFilter;
     unionFilter.append(filter);
 
-    QCOMPARE(unionFilter.toString(), filter->toString());
+    QCOMPARE(unionFilter.toString(), filter.toString());
 }
 
 void UnionFilterTest::testToStringWithManyFilters()
 {
-    // create two filters and check that they are properly set
-    History::FilterPtr filterOne(new History::Filter("propertyOne", "valueOne"));
-    History::FilterPtr filterTwo(new History::Filter("propertyTwo", "valueTwo"));
-    History::FilterPtr filterThree(new History::Filter("propertyThree", "valueThree"));
+    // check if all the individual filters are present in the toString() call
+    History::Filter filterOne("propertyOne", "valueOne");
+    History::Filter filterTwo("propertyTwo", "valueTwo");
+    History::Filter filterThree("propertyThree", "valueThree");
 
     History::UnionFilter unionFilter;
-    unionFilter.setFilters(History::Filters() << filterOne << filterTwo << filterThree);
+    unionFilter.setFilters(QList<History::Filter>() << filterOne << filterTwo << filterThree);
 
     QString stringResult = unionFilter.toString();
 
-    QVERIFY(stringResult.contains(filterOne->toString()));
-    QVERIFY(stringResult.contains(filterTwo->toString()));
-    QVERIFY(stringResult.contains(filterThree->toString()));
+    QVERIFY(stringResult.contains(filterOne.toString()));
+    QVERIFY(stringResult.contains(filterTwo.toString()));
+    QVERIFY(stringResult.contains(filterThree.toString()));
+}
+
+void UnionFilterTest::testConvertToFilterAndBack()
+{
+    History::Filter filterOne("propertyOne", "valueOne");
+    History::Filter filterTwo("propertyTwo", "valueTwo");
+    History::Filter filterThree("propertyThree", "valueThree");
+
+    History::UnionFilter unionFilter;
+    unionFilter.setFilters(QList<History::Filter>() << filterOne << filterTwo << filterThree);
+
+    History::Filter castFilter = unionFilter;
+    QCOMPARE(castFilter.toString(), unionFilter.toString());
+    QCOMPARE(castFilter.type(), History::FilterTypeUnion);
+
+    History::UnionFilter andBack = castFilter;
+    qDebug() << "andBack tostring:" << andBack.toString();
+    qDebug() << "original toString:" << unionFilter.toString();
+    QCOMPARE(andBack, unionFilter);
+    QCOMPARE(andBack.toString(), unionFilter.toString());
 }
 
 QTEST_MAIN(UnionFilterTest)

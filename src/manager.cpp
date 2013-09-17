@@ -85,14 +85,14 @@ Manager *Manager::instance()
 
 ThreadViewPtr Manager::queryThreads(EventType type,
                                     const SortPtr &sort,
-                                    const FilterPtr &filter)
+                                    const Filter &filter)
 {
     return ThreadViewPtr(new ThreadView(type, sort, filter));
 }
 
 EventViewPtr Manager::queryEvents(EventType type,
                                   const SortPtr &sort,
-                                  const FilterPtr &filter)
+                                  const Filter &filter)
 {
     return EventViewPtr(new EventView(type, sort, filter));
 }

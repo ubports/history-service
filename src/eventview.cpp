@@ -38,7 +38,7 @@ namespace History
 
 EventViewPrivate::EventViewPrivate(History::EventType theType,
                                    const History::SortPtr &theSort,
-                                   const History::FilterPtr &theFilter)
+                                   const History::Filter &theFilter)
     : type(theType), sort(theSort), filter(theFilter), valid(true), dbus(0)
 {
 }
@@ -52,7 +52,7 @@ Events EventViewPrivate::filteredEvents(const Events &events)
 
     Events filtered;
     Q_FOREACH(const EventPtr &event, events) {
-        if (event->type() == type && filter->match(event->properties())) {
+        if (event->type() == type && filter.match(event->properties())) {
             filtered << events;
         }
     }
@@ -92,7 +92,7 @@ void EventViewPrivate::_d_eventsRemoved(const Events &events)
 
 // ------------- EventView -------------------------------------------------------
 
-EventView::EventView(EventType type, const SortPtr &sort, const FilterPtr &filter)
+EventView::EventView(EventType type, const SortPtr &sort, const History::Filter &filter)
     : d_ptr(new EventViewPrivate(type, sort, filter))
 {
     d_ptr->q_ptr = this;
@@ -102,7 +102,7 @@ EventView::EventView(EventType type, const SortPtr &sort, const FilterPtr &filte
     QDBusReply<QString> reply = interface.call("QueryEvents",
                                                (int) type,
                                                sort ? sort->properties() : QVariantMap(),
-                                               filter ? filter->toString() : "");
+                                               filter.toString());
     if (!reply.isValid()) {
         Q_EMIT invalidated();
         d_ptr->valid = false;

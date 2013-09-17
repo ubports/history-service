@@ -25,6 +25,7 @@
 #include <QObject>
 #include <QString>
 #include "types.h"
+#include "filter.h"
 
 namespace History
 {
@@ -43,11 +44,11 @@ public:
 
     ThreadViewPtr queryThreads(EventType type,
                                const SortPtr &sort = SortPtr(),
-                               const FilterPtr &filter = FilterPtr());
+                               const Filter &filter = Filter());
 
     EventViewPtr queryEvents(EventType type,
                              const SortPtr &sort = SortPtr(),
-                             const FilterPtr &filter = FilterPtr());
+                             const Filter &filter = Filter());
 
     EventPtr getSingleEvent(EventType type, const QString &accountId, const QString &threadId, const QString &eventId, bool useCache = true);
 

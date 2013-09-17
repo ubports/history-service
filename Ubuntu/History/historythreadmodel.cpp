@@ -316,7 +316,7 @@ void HistoryThreadModel::updateQuery()
     // and fetch again
     mCanFetchMore = true;
 
-    History::FilterPtr queryFilter;
+    History::Filter queryFilter;
     History::SortPtr querySort;
 
     if (!mThreadView.isNull()) {

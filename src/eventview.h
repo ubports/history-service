@@ -23,6 +23,7 @@
 #define HISTORY_EVENTVIEW_H
 
 #include "types.h"
+#include "filter.h"
 #include <QObject>
 
 namespace History
@@ -37,7 +38,7 @@ class EventView : public QObject
 public:
     EventView(History::EventType type,
               const History::SortPtr &sort,
-              const History::FilterPtr &filter);
+              const History::Filter &filter);
     virtual ~EventView();
 
     History::Events nextPage();

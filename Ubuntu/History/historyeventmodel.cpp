@@ -298,7 +298,7 @@ void HistoryEventModel::updateQuery()
     endRemoveRows();
 
     // and create the view again
-    History::FilterPtr queryFilter;
+    History::Filter queryFilter;
     History::SortPtr querySort;
 
     if (!mView.isNull()) {
