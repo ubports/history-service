@@ -69,8 +69,8 @@ QVariantMap TextEventPrivate::properties() const
     map[FieldSubject] = subject;
 
     QList<QVariantMap> attachmentsMap;
-    Q_FOREACH(const TextEventAttachmentPtr &attachment, attachments) {
-        attachmentsMap << attachment->properties();
+    Q_FOREACH(const TextEventAttachment &attachment, attachments) {
+        attachmentsMap << attachment.properties();
     }
     map[FieldAttachments] = QVariant::fromValue(attachmentsMap);
 
@@ -166,7 +166,7 @@ Event TextEvent::fromProperties(const QVariantMap &properties)
     QList<QVariantMap> attachmentProperties = properties[FieldAttachments].value<QList<QVariantMap> >();
     TextEventAttachments attachments;
     Q_FOREACH(const QVariantMap &map, attachmentProperties) {
-        TextEventAttachmentPtr attachment = TextEventAttachment::fromProperties(map);
+        TextEventAttachment attachment = TextEventAttachment::fromProperties(map);
         if (!attachment.isNull()) {
             attachments << attachment;
         }

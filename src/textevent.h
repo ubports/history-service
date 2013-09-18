@@ -23,6 +23,7 @@
 #define HISTORY_TEXTEVENT_H
 
 #include "event.h"
+#include "texteventattachment.h"
 
 namespace History
 {

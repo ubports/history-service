@@ -23,43 +23,43 @@
 #include "texteventattachment.h"
 #include "historyqmltexteventattachment.h"
 
-HistoryQmlTextEventAttachment::HistoryQmlTextEventAttachment(const History::TextEventAttachmentPtr &attachment, QObject *parent) :
+HistoryQmlTextEventAttachment::HistoryQmlTextEventAttachment(const History::TextEventAttachment &attachment, QObject *parent) :
     QObject(parent), mAttachment(attachment)
 {
 }
 
 QString HistoryQmlTextEventAttachment::accountId() const
 {
-    return mAttachment->accountId();
+    return mAttachment.accountId();
 }
 
 QString HistoryQmlTextEventAttachment::threadId() const
 {
-    return mAttachment->threadId();
+    return mAttachment.threadId();
 }
 
 QString HistoryQmlTextEventAttachment::eventId() const
 {
-    return mAttachment->eventId();
+    return mAttachment.eventId();
 }
 
 QString HistoryQmlTextEventAttachment::attachmentId() const
 {
-    return mAttachment->attachmentId();
+    return mAttachment.attachmentId();
 }
 
 QString HistoryQmlTextEventAttachment::contentType() const
 {
-    return mAttachment->contentType();
+    return mAttachment.contentType();
 }
 
 QString HistoryQmlTextEventAttachment::filePath() const
 {
-    return mAttachment->filePath();
+    return mAttachment.filePath();
 }
 
 int HistoryQmlTextEventAttachment::status() const
 {
-    return mAttachment->status();
+    return mAttachment.status();
 }
 

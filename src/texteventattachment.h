@@ -39,6 +39,7 @@ class TextEventAttachment
     friend class ItemFactory;
 
 public:
+    explicit TextEventAttachment();
     TextEventAttachment(const QString &accountId,
            const QString &threadId,
            const QString &eventId,
@@ -46,7 +47,9 @@ public:
            const QString &contentType,
            const QString &filePath,
            const History::AttachmentFlags &status = History::AttachmentDownloaded);
+    TextEventAttachment(const TextEventAttachment &other);
     virtual ~TextEventAttachment();
+    TextEventAttachment& operator=(const TextEventAttachment &other);
 
     QString accountId() const;
     QString threadId() const;
@@ -56,12 +59,16 @@ public:
     QString filePath() const;
     History::AttachmentFlags status() const;
     virtual QVariantMap properties() const;
-    static TextEventAttachmentPtr fromProperties(const QVariantMap &properties);
+    static TextEventAttachment fromProperties(const QVariantMap &properties);
+    bool isNull() const;
+    bool operator==(const TextEventAttachment &other);
 
 protected:
-    QScopedPointer<TextEventAttachmentPrivate> d_ptr;
+    QSharedPointer<TextEventAttachmentPrivate> d_ptr;
 
 };
+
+typedef QList<TextEventAttachment> TextEventAttachments;
 
 }
 

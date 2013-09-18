@@ -19,6 +19,7 @@ generate_tests(
     SortTest
     ThreadTest
     TextEventTest
+    TextEventAttachmentTest
     UnionFilterTest
     VoiceEventTest
     )

@@ -27,6 +27,7 @@
 #include <QObject>
 #include "historyqmltexteventattachment.h"
 #include "types.h"
+#include "texteventattachment.h"
 
 class HistoryQmlTextEventAttachment : public QObject
 {
@@ -46,7 +47,7 @@ public:
         AttachmentPending = History::AttachmentPending,
         AttachmentError = History::AttachmentError
     };
-    explicit HistoryQmlTextEventAttachment(const History::TextEventAttachmentPtr &attachment, QObject *parent = 0);
+    explicit HistoryQmlTextEventAttachment(const History::TextEventAttachment &attachment, QObject *parent = 0);
 
     QString accountId() const;
     QString threadId() const;
@@ -57,7 +58,7 @@ public:
     int status() const;
 
 protected:
-    History::TextEventAttachmentPtr mAttachment;
+    History::TextEventAttachment mAttachment;
 };
 
 #endif // HISTORYQMLTEXTEVENTATTACHMENT_H

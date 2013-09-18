@@ -31,7 +31,6 @@ namespace History
 
 DefineSharedPointer(EventView)
 DefineSharedPointer(Plugin)
-DefineSharedPointer(TextEventAttachment)
 DefineSharedPointer(ThreadView)
 
 // enums
