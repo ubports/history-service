@@ -37,6 +37,7 @@ private Q_SLOTS:
     void testFromProperties();
     void testCopyConstructor();
     void testAssignment();
+    void testEquals_data();
     void testEquals();
     void testIsNull();
 };
@@ -117,6 +118,10 @@ void TextEventAttachmentTest::testFromProperties()
     QCOMPARE(attachment.contentType(), properties[History::FieldContentType].toString());
     QCOMPARE(attachment.filePath(), properties[History::FieldFilePath].toString());
     QCOMPARE(attachment.status(), (History::AttachmentFlags) properties[History::FieldStatus].toInt());
+
+    // now load from an empty map
+    History::TextEventAttachment emptyAttachment = History::TextEventAttachment::fromProperties(QVariantMap());
+    QVERIFY(emptyAttachment.isNull());
 }
 
 void TextEventAttachmentTest::testCopyConstructor()
@@ -149,15 +154,53 @@ void TextEventAttachmentTest::testAssignment()
     QCOMPARE(copy.status(), attachment.status());
 }
 
+void TextEventAttachmentTest::testEquals_data()
+{
+    QTest::addColumn<QString>("accountId");
+    QTest::addColumn<QString>("threadId");
+    QTest::addColumn<QString>("eventId");
+    QTest::addColumn<QString>("attachmentId");
+    QTest::addColumn<QString>("secondAccountId");
+    QTest::addColumn<QString>("secondThreadId");
+    QTest::addColumn<QString>("secondEventId");
+    QTest::addColumn<QString>("secondAttachmentId");
+    QTest::addColumn<bool>("result");
+
+    QTest::newRow("equal")
+            << "someaccountid" << "somethreadid" << "someeventid" << "someattachmentid"
+            << "someaccountid" << "somethreadid" << "someeventid" << "someattachmentid" << true;
+    QTest::newRow("different accountId")
+            << "someaccountid" << "somethreadid" << "someeventid" << "someattachmentid"
+            << "otheraccountid" << "somethreadid" << "someeventid" << "someattachmentid" << false;
+    QTest::newRow("different threadId")
+            << "someaccountid" << "somethreadid" << "someeventid" << "someattachmentid"
+            << "someaccountid" << "otherthreadid" << "someeventid" << "someattachmentid" << false;
+    QTest::newRow("different eventId")
+            << "someaccountid" << "somethreadid" << "someeventid" << "someattachmentid"
+            << "someaccountid" << "somethreadid" << "othereventid" << "someattachmentid" << false;
+    QTest::newRow("different attachmentId")
+            << "someaccountid" << "somethreadid" << "someeventid" << "someattachmentid"
+            << "someaccountid" << "somethreadid" << "someeventid" << "otherattachmentid" << false;
+}
+
 void TextEventAttachmentTest::testEquals()
 {
-    History::TextEventAttachment attachment("oneAccountId", "oneThreadId", "oneEventId",
-                                            "oneAttachmentId", "oneContentType", "/one/file/path",
-                                            History::AttachmentPending);
-    History::TextEventAttachment anotherAttachment("oneAccountId", "oneThreadId", "oneEventId",
-                                                   "oneAttachmentId", "anotherContentType", "/different/file/path",
-                                                   History::AttachmentDownloaded);
-    QVERIFY(attachment == anotherAttachment);
+    QFETCH(QString, accountId);
+    QFETCH(QString, threadId);
+    QFETCH(QString, eventId);
+    QFETCH(QString, attachmentId);
+    QFETCH(QString, secondAccountId);
+    QFETCH(QString, secondThreadId);
+    QFETCH(QString, secondEventId);
+    QFETCH(QString, secondAttachmentId);
+    QFETCH(bool, result);
+
+
+    History::TextEventAttachment attachment(accountId, threadId, eventId, attachmentId,
+                                            "oneContentType", "/one/file/path", History::AttachmentPending);
+    History::TextEventAttachment anotherAttachment(secondAccountId, secondThreadId, secondEventId, secondAttachmentId,
+                                                   "anotherContentType", "/different/file/path", History::AttachmentDownloaded);
+    QCOMPARE(attachment == anotherAttachment, result);
 }
 
 void TextEventAttachmentTest::testIsNull()
