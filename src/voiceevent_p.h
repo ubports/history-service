@@ -30,6 +30,7 @@ namespace History
 class VoiceEventPrivate : public EventPrivate
 {
 public:
+    VoiceEventPrivate();
     VoiceEventPrivate(const QString &theAccountId,
                     const QString &theThreadId,
                     const QString &theEventId,
@@ -41,6 +42,11 @@ public:
     ~VoiceEventPrivate();
     bool missed;
     QTime duration;
+
+    EventType type() const;
+    QVariantMap properties() const;
+
+    HISTORY_EVENT_DECLARE_CLONE(VoiceEvent)
 };
 
 }

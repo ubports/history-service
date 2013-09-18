@@ -22,6 +22,7 @@
 #include "unionfilter.h"
 #include "unionfilter_p.h"
 #include <QStringList>
+#include <QDebug>
 
 namespace History
 {
@@ -33,6 +34,52 @@ UnionFilterPrivate::UnionFilterPrivate()
 UnionFilterPrivate::~UnionFilterPrivate()
 {
 }
+
+bool UnionFilterPrivate::match(const QVariantMap properties) const
+{
+    // if the filter list is empty, assume it matches
+    if (filters.isEmpty()) {
+        return true;
+    }
+
+    // return true if any of the filters match
+    Q_FOREACH(const History::Filter &filter, filters) {
+        if (filter.match(properties)) {
+            return true;
+        }
+    }
+
+    // if we reach this point it means none of the filters matched the properties
+    return false;
+}
+
+bool UnionFilterPrivate::isValid() const
+{
+    // FIXME: maybe we should check if at least one of the inner filters are valid?
+    return !filters.isEmpty();
+}
+
+QString UnionFilterPrivate::toString(const QString &propertyPrefix) const
+{
+    if (filters.isEmpty()) {
+        return QString::null;
+    } else if (filters.count() == 1) {
+        return filters.first().toString();
+    }
+
+    QStringList output;
+    // wrap each filter string around parenthesis
+    Q_FOREACH(const Filter &filter, filters) {
+        QString value = filter.toString(propertyPrefix);
+        if (!value.isEmpty()) {
+            output << QString("(%1)").arg(value);
+        }
+    }
+
+    return output.join(" OR ");
+}
+
+HISTORY_FILTER_DEFINE_COPY(UnionFilter, FilterTypeUnion)
 
 UnionFilter::UnionFilter()
     : Filter(*new UnionFilterPrivate())
@@ -49,13 +96,13 @@ void UnionFilter::setFilters(const Filters &filters)
     d->filters = filters;
 }
 
-void UnionFilter::prepend(const FilterPtr &filter)
+void UnionFilter::prepend(const Filter &filter)
 {
     Q_D(UnionFilter);
     d->filters.prepend(filter);
 }
 
-void UnionFilter::append(const FilterPtr &filter)
+void UnionFilter::append(const Filter &filter)
 {
     Q_D(UnionFilter);
     d->filters.append(filter);
@@ -67,52 +114,10 @@ void UnionFilter::clear()
     d->filters.clear();
 }
 
-bool UnionFilter::match(const QVariantMap properties) const
-{
-    Q_D(const UnionFilter);
-
-    // if the filter list is empty, assume it matches
-    if (d->filters.isEmpty()) {
-        return true;
-    }
-
-    // return true if any of the filters match
-    Q_FOREACH(const History::FilterPtr &filter, d->filters) {
-        if (filter->match(properties)) {
-            return true;
-        }
-    }
-
-    // if we reach this point it means none of the filters matched the properties
-    return false;
-}
-
 Filters UnionFilter::filters() const
 {
     Q_D(const UnionFilter);
     return d->filters;
-}
-
-QString UnionFilter::toString(const QString &propertyPrefix) const
-{
-    Q_D(const UnionFilter);
-
-    if (d->filters.isEmpty()) {
-        return QString::null;
-    } else if (d->filters.count() == 1) {
-        return d->filters.first()->toString();
-    }
-
-    QStringList output;
-    // wrap each filter string around parenthesis
-    Q_FOREACH(const FilterPtr &filter, d->filters) {
-        QString value = filter->toString(propertyPrefix);
-        if (!value.isEmpty()) {
-            output << QString("(%1)").arg(value);
-        }
-    }
-
-    return output.join(" OR ");
 }
 
 }

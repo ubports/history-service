@@ -38,15 +38,15 @@ public:
     UnionFilter();
     ~UnionFilter();
 
+    // copy related members
+    UnionFilter(const Filter &other);
+    UnionFilter& operator=(const Filter &other);
+
     void setFilters(const Filters &filters);
-    void prepend(const FilterPtr &filter);
-    void append(const FilterPtr &filter);
+    void prepend(const Filter &filter);
+    void append(const Filter &filter);
     void clear();
-
-    bool match(const QVariantMap properties) const;
-
     Filters filters() const;
-    QString toString(const QString &propertyPrefix = QString::null) const;
 };
 
 }

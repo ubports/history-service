@@ -22,7 +22,6 @@
 #include "threadview.h"
 #include "threadview_p.h"
 #include "filter.h"
-#include "itemfactory.h"
 #include "manager.h"
 #include "sort.h"
 #include "thread.h"
@@ -36,8 +35,8 @@ namespace History
 // ------------- ThreadViewPrivate ------------------------------------------------
 
 ThreadViewPrivate::ThreadViewPrivate(History::EventType theType,
-                                     const History::SortPtr &theSort,
-                                     const History::FilterPtr &theFilter)
+                                     const History::Sort &theSort,
+                                     const History::Filter &theFilter)
     : type(theType), sort(theSort), filter(theFilter), valid(true), dbus(0)
 {
 }
@@ -50,8 +49,8 @@ Threads ThreadViewPrivate::filteredThreads(const Threads &threads)
     }
 
     Threads filtered;
-    Q_FOREACH(const ThreadPtr &thread, threads) {
-        if (thread->type() == type && filter->match(thread->properties())) {
+    Q_FOREACH(const Thread &thread, threads) {
+        if (thread.type() == type && filter.match(thread.properties())) {
             filtered << thread;
         }
     }
@@ -92,8 +91,8 @@ void ThreadViewPrivate::_d_threadsRemoved(const Threads &threads)
 // ------------- ThreadView -------------------------------------------------------
 
 ThreadView::ThreadView(History::EventType type,
-                       const History::SortPtr &sort,
-                       const History::FilterPtr &filter)
+                       const History::Sort &sort,
+                       const Filter &filter)
     : d_ptr(new ThreadViewPrivate(type, sort, filter))
 {
     d_ptr->q_ptr = this;
@@ -102,8 +101,8 @@ ThreadView::ThreadView(History::EventType type,
 
     QDBusReply<QString> reply = interface.call("QueryThreads",
                                                (int) type,
-                                               sort ? sort->properties() : QVariantMap(),
-                                               filter ? filter->toString() : "");
+                                               sort.properties(),
+                                               filter.toString());
     if (!reply.isValid()) {
         Q_EMIT invalidated();
         d_ptr->valid = false;
@@ -153,7 +152,7 @@ Threads ThreadView::nextPage()
 
     QList<QVariantMap> threadsProperties = reply.value();
     Q_FOREACH(const QVariantMap &properties, threadsProperties) {
-        ThreadPtr thread = ItemFactory::instance()->createThread(properties);
+        Thread thread = Thread::fromProperties(properties);
         if (!thread.isNull()) {
             threads << thread;
         }

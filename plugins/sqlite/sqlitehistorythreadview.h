@@ -24,6 +24,7 @@
 
 #include "pluginthreadview.h"
 #include "types.h"
+#include "sort.h"
 #include <QSqlQuery>
 
 class SQLiteHistoryPlugin;
@@ -34,7 +35,7 @@ class SQLiteHistoryThreadView : public History::PluginThreadView
 public:
     SQLiteHistoryThreadView(SQLiteHistoryPlugin *plugin,
                             History::EventType type,
-                            const History::SortPtr &sort,
+                            const History::Sort &sort,
                             const QString &filter);
     ~SQLiteHistoryThreadView();
 
@@ -43,7 +44,7 @@ public:
 
 private:
     History::EventType mType;
-    History::SortPtr mSort;
+    History::Sort mSort;
     QString mFilter;
     QSqlQuery mQuery;
     int mPageSize;

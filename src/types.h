@@ -29,28 +29,22 @@
 namespace History
 {
 
-DefineSharedPointer(Event)
 DefineSharedPointer(EventView)
-DefineSharedPointer(Filter)
-DefineSharedPointer(IntersectionFilter)
 DefineSharedPointer(Plugin)
-DefineSharedPointer(Reader)
-DefineSharedPointer(Sort)
-DefineSharedPointer(TextEvent)
-DefineSharedPointer(TextEventAttachment)
-DefineSharedPointer(Thread)
 DefineSharedPointer(ThreadView)
-DefineSharedPointer(UnionFilter)
-DefineSharedPointer(VoiceEvent)
-DefineSharedPointer(Writer)
-
 
 // enums
 enum EventType {
     EventTypeText,
-    EventTypeVoice
+    EventTypeVoice,
+    EventTypeNull
 };
 
+enum FilterType {
+    FilterTypeStandard,
+    FilterTypeIntersection,
+    FilterTypeUnion
+};
 
 enum MatchFlag {
     MatchCaseSensitive,

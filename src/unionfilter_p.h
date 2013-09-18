@@ -37,6 +37,12 @@ public:
     ~UnionFilterPrivate();
 
     Filters filters;
+    virtual FilterType type() const { return FilterTypeUnion; }
+    QString toString(const QString &propertyPrefix = QString::null) const;
+    bool match(const QVariantMap properties) const;
+    bool isValid() const;
+
+    HISTORY_FILTER_DECLARE_CLONE(UnionFilter)
 };
 
 }

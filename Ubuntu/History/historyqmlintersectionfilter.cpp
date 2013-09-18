@@ -23,16 +23,16 @@
 #include "intersectionfilter.h"
 
 HistoryQmlIntersectionFilter::HistoryQmlIntersectionFilter(QObject *parent) :
-    HistoryQmlCompoundFilter(parent), mFilter(new History::IntersectionFilter())
+    HistoryQmlCompoundFilter(parent)
 {
 }
 
-History::FilterPtr HistoryQmlIntersectionFilter::filter() const
+History::Filter HistoryQmlIntersectionFilter::filter() const
 {
-    mFilter->clear();
+    History::IntersectionFilter intersectionFilter;
     Q_FOREACH(HistoryQmlFilter *filter, mFilters) {
-        mFilter->append(filter->filter());
+        intersectionFilter.append(filter->filter());
     }
 
-    return mFilter;
+    return intersectionFilter;
 }

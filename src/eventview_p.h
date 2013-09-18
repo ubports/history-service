@@ -23,6 +23,8 @@
 #define EVENTVIEW_P_H
 
 #include "types.h"
+#include "filter.h"
+#include "sort.h"
 #include <QDBusInterface>
 
 namespace History
@@ -35,11 +37,11 @@ namespace History
 
     public:
         EventViewPrivate(History::EventType theType,
-                          const History::SortPtr &theSort,
-                          const History::FilterPtr &theFilter);
+                          const History::Sort &theSort,
+                          const History::Filter &theFilter);
         EventType type;
-        SortPtr sort;
-        FilterPtr filter;
+        Sort sort;
+        Filter filter;
         QString objectPath;
         bool valid;
         QDBusInterface *dbus;

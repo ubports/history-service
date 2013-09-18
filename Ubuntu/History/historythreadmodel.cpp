@@ -78,18 +78,18 @@ QVariant HistoryThreadModel::data(const QModelIndex &index, int role) const
         return QVariant();
     }
 
-    History::ThreadPtr thread = mThreads[index.row()];
-    History::EventPtr event = thread->lastEvent();
-    History::TextEventPtr textEvent;
-    History::VoiceEventPtr voiceEvent;
+    History::Thread thread = mThreads[index.row()];
+    History::Event event = thread.lastEvent();
+    History::TextEvent textEvent;
+    History::VoiceEvent voiceEvent;
 
     if (!event.isNull()) {
-        switch (event->type()) {
+        switch (event.type()) {
         case History::EventTypeText:
-            textEvent = event.staticCast<History::TextEvent>();
+            textEvent = event;
             break;
         case History::EventTypeVoice:
-            voiceEvent = event.staticCast<History::VoiceEvent>();
+            voiceEvent = event;
             break;
         }
     }
@@ -97,71 +97,71 @@ QVariant HistoryThreadModel::data(const QModelIndex &index, int role) const
     QVariant result;
     switch (role) {
     case AccountIdRole:
-        result = thread->accountId();
+        result = thread.accountId();
         break;
     case ThreadIdRole:
-        result = thread->threadId();
+        result = thread.threadId();
         break;
     case TypeRole:
-        result = (int) thread->type();
+        result = (int) thread.type();
         break;
     case ParticipantsRole:
-        result = thread->participants();
+        result = thread.participants();
         break;
     case CountRole:
-        result = thread->count();
+        result = thread.count();
         break;
     case UnreadCountRole:
-        result = thread->unreadCount();
+        result = thread.unreadCount();
         break;
     case LastEventIdRole:
         if (!event.isNull()) {
-            result = event->eventId();
+            result = event.eventId();
         }
         break;
     case LastEventSenderIdRole:
         if (!event.isNull()) {
-            result = event->senderId();
+            result = event.senderId();
         }
         break;
     case LastEventTimestampRole:
         if (!event.isNull()) {
-            result = event->timestamp();
+            result = event.timestamp();
         }
         break;
     case LastEventDateRole:
         if (!event.isNull()) {
-            result = event->timestamp().date();
+            result = event.timestamp().date();
         }
         break;
     case LastEventNewRole:
         if (!event.isNull()) {
-            result = event->newEvent();
+            result = event.newEvent();
         }
         break;
     case LastEventTextMessageRole:
         if (!textEvent.isNull()) {
-            result = textEvent->message();
+            result = textEvent.message();
         }
         break;
     case LastEventTextMessageTypeRole:
         if (!textEvent.isNull()) {
-            result = (int) textEvent->messageType();
+            result = (int) textEvent.messageType();
         }
         break;
     case LastEventTextMessageFlagsRole:
         if (!textEvent.isNull()) {
-            result = (int) textEvent->messageFlags();
+            result = (int) textEvent.messageFlags();
         }
         break;
     case LastEventTextReadTimestampRole:
         if (!textEvent.isNull()) {
-            result = textEvent->readTimestamp();
+            result = textEvent.readTimestamp();
         }
         break;
     case LastEventTextSubjectRole:
         if (!textEvent.isNull()) {
-            result = textEvent->subject();
+            result = textEvent.subject();
         }
         break;
     case LastEventTextAttachmentsRole:
@@ -170,7 +170,7 @@ QVariant HistoryThreadModel::data(const QModelIndex &index, int role) const
                 result = mAttachmentCache.value(textEvent);
             } else {
                 QList<QVariant> attachments;
-                Q_FOREACH(const History::TextEventAttachmentPtr &attachment, textEvent->attachments()) {
+                Q_FOREACH(const History::TextEventAttachment &attachment, textEvent.attachments()) {
                     attachments << QVariant::fromValue(new HistoryQmlTextEventAttachment(attachment, const_cast<HistoryThreadModel*>(this)));
                 }
                 mAttachmentCache[textEvent] = attachments;
@@ -180,12 +180,12 @@ QVariant HistoryThreadModel::data(const QModelIndex &index, int role) const
         break;
     case LastEventCallMissedRole:
         if (!voiceEvent.isNull()) {
-            result = voiceEvent->missed();
+            result = voiceEvent.missed();
         }
         break;
     case LastEventCallDurationRole:
         if (!voiceEvent.isNull()) {
-            result = voiceEvent->duration();
+            result = voiceEvent.duration();
         }
         break;
     }
@@ -209,7 +209,6 @@ void HistoryThreadModel::fetchMore(const QModelIndex &parent)
     }
 
     History::Threads threads = mThreadView->nextPage();
-    qDebug() << "Got threads:" << threads.count();
     if (threads.isEmpty()) {
         mCanFetchMore = false;
     }
@@ -288,13 +287,13 @@ QString HistoryThreadModel::threadIdForParticipants(const QString &accountId, in
         return QString::null;
     }
 
-    History::ThreadPtr thread = History::Manager::instance()->threadForParticipants(accountId,
-                                                                                    (History::EventType)eventType,
-                                                                                    participants,
-                                                                                    (History::MatchFlags)matchFlags,
-                                                                                    create);
+    History::Thread thread = History::Manager::instance()->threadForParticipants(accountId,
+                                                                                 (History::EventType)eventType,
+                                                                                 participants,
+                                                                                 (History::MatchFlags)matchFlags,
+                                                                                 create);
     if (!thread.isNull()) {
-        return thread->threadId();
+        return thread.threadId();
     }
 
     return QString::null;
@@ -302,7 +301,7 @@ QString HistoryThreadModel::threadIdForParticipants(const QString &accountId, in
 
 bool HistoryThreadModel::removeThread(const QString &accountId, const QString &threadId, int eventType)
 {
-    History::ThreadPtr thread = History::Manager::instance()->getSingleThread((History::EventType)eventType, accountId, threadId);
+    History::Thread thread = History::Manager::instance()->getSingleThread((History::EventType)eventType, accountId, threadId);
     return History::Manager::instance()->removeThreads(History::Threads() << thread);
 }
 
@@ -316,8 +315,8 @@ void HistoryThreadModel::updateQuery()
     // and fetch again
     mCanFetchMore = true;
 
-    History::FilterPtr queryFilter;
-    History::SortPtr querySort;
+    History::Filter queryFilter;
+    History::Sort querySort;
 
     if (!mThreadView.isNull()) {
         mThreadView->disconnect(this);
@@ -370,7 +369,7 @@ void HistoryThreadModel::onThreadsAdded(const History::Threads &threads)
 
 void HistoryThreadModel::onThreadsModified(const History::Threads &threads)
 {
-    Q_FOREACH(const History::ThreadPtr &thread, threads) {
+    Q_FOREACH(const History::Thread &thread, threads) {
         int pos = mThreads.indexOf(thread);
         if (pos >= 0) {
             mThreads[pos] = thread;
@@ -385,7 +384,7 @@ void HistoryThreadModel::onThreadsModified(const History::Threads &threads)
 
 void HistoryThreadModel::onThreadsRemoved(const History::Threads &threads)
 {
-    Q_FOREACH(const History::ThreadPtr &thread, threads) {
+    Q_FOREACH(const History::Thread &thread, threads) {
         int pos = mThreads.indexOf(thread);
         if (pos >= 0) {
             beginRemoveRows(QModelIndex(), pos, pos);

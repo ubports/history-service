@@ -33,11 +33,12 @@ class Thread;
 class ThreadPrivate
 {
 public:
+    explicit ThreadPrivate();
     ThreadPrivate(const QString &theAccountId,
                          const QString &theThreadId,
                          EventType theType,
                          const QStringList &theParticipants,
-                         const EventPtr &theLastEvent,
+                         const Event &theLastEvent,
                          int theCount,
                          int theUnreadCount);
     virtual ~ThreadPrivate();
@@ -46,7 +47,7 @@ public:
     QString threadId;
     QStringList participants;
     EventType type;
-    EventPtr lastEvent;
+    Event lastEvent;
     int count;
     int unreadCount;
 };

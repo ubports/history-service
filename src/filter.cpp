@@ -21,6 +21,8 @@
 
 #include "filter.h"
 #include "filter_p.h"
+#include <typeinfo>
+#include <QDebug>
 
 namespace History
 {
@@ -42,6 +44,40 @@ FilterPrivate::~FilterPrivate()
 {
 }
 
+QString FilterPrivate::toString(const QString &propertyPrefix) const
+{
+    if (filterProperty.isEmpty() || filterValue.isNull()) {
+        return QString::null;
+    }
+
+    QString value;
+
+    switch (filterValue.type()) {
+    case QVariant::String:
+        // FIXME: need to escape strings
+        // wrap strings
+        value = QString("\"%1\"").arg(filterValue.toString());
+        break;
+    default:
+        value = filterValue.toString();
+    }
+
+    QString propertyName = propertyPrefix.isNull() ? filterProperty : QString("%1.%2").arg(propertyPrefix, filterProperty);
+    // FIXME2: need to check for the match flags
+    return QString("%1=%2").arg(propertyName, value);
+}
+
+bool FilterPrivate::match(const QVariantMap properties) const
+{
+    // assume empty filters match anything
+    if (filterProperty.isEmpty() || !filterValue.isValid() || !properties.contains(filterProperty)) {
+        return true;
+    }
+
+    // FIXME: use the MatchFlags
+    return properties[filterProperty] == filterValue;
+}
+
 // ------------- Filter -------------------------------------------------------
 
 Filter::Filter(FilterPrivate &p)
@@ -56,8 +92,22 @@ Filter::Filter(const QString &filterProperty,
 {
 }
 
+Filter::Filter(const Filter &other)
+    : d_ptr(other.d_ptr->clone())
+{
+}
+
 Filter::~Filter()
 {
+}
+
+Filter &Filter::operator=(const Filter &other)
+{
+    if (&other == this) {
+        return *this;
+    }
+
+    d_ptr = QSharedPointer<FilterPrivate>(other.d_ptr->clone());
 }
 
 QString Filter::filterProperty() const
@@ -99,39 +149,31 @@ void Filter::setMatchFlags(const MatchFlags &flags)
 QString Filter::toString(const QString &propertyPrefix) const
 {
     Q_D(const Filter);
-
-    if (d->filterProperty.isEmpty() || d->filterValue.isNull()) {
-        return QString::null;
-    }
-
-    QString value;
-
-    switch (d->filterValue.type()) {
-    case QVariant::String:
-        // FIXME: need to escape strings
-        // wrap strings
-        value = QString("\"%1\"").arg(d->filterValue.toString());
-        break;
-    default:
-        value = d->filterValue.toString();
-    }
-
-    QString propertyName = propertyPrefix.isNull() ? filterProperty() : QString("%1.%2").arg(propertyPrefix, filterProperty());
-    // FIXME2: need to check for the match flags
-    return QString("%1=%2").arg(propertyName, value);
+    return d->toString(propertyPrefix);
 }
 
 bool Filter::match(const QVariantMap properties) const
 {
     Q_D(const Filter);
+    return d->match(properties);
+}
 
-    // assume empty filters match anything
-    if (d->filterProperty.isEmpty() || !d->filterValue.isValid() || !properties.contains(d->filterProperty)) {
-        return true;
-    }
+FilterType Filter::type() const
+{
+    Q_D(const Filter);
+    return d->type();
+}
 
-    // FIXME: use the MatchFlags
-    return properties[d->filterProperty] == d->filterValue;
+bool Filter::operator==(const Filter &other) const
+{
+    // FIXME: implement in a more performant way
+    return toString() == other.toString();
+}
+
+bool Filter::isValid() const
+{
+    Q_D(const Filter);
+    return d->isValid();
 }
 
 }

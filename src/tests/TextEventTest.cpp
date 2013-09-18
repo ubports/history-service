@@ -21,23 +21,6 @@
 
 #include "textevent.h"
 
-class TextEventWrapper : public History::TextEvent
-{
-public:
-    TextEventWrapper(const QString &accountId,
-                     const QString &threadId,
-                     const QString &eventId,
-                     const QString &senderId,
-                     const QDateTime &timestamp,
-                     bool newEvent,
-                     const QString &message,
-                     History::MessageType messageType,
-                     History::MessageFlags messageFlags,
-                     const QDateTime &readTimestamp)
-    : TextEvent(accountId, threadId, eventId, senderId, timestamp, newEvent,
-                message, messageType, messageFlags, readTimestamp) { }
-};
-
 class TextEventTest : public QObject
 {
     Q_OBJECT
@@ -45,6 +28,9 @@ class TextEventTest : public QObject
 private Q_SLOTS:
     void testCreateNewEvent_data();
     void testCreateNewEvent();
+    void testCastToEventAndBack();
+    void testFromProperties();
+    void testProperties();
 };
 
 void TextEventTest::testCreateNewEvent_data()
@@ -91,9 +77,9 @@ void TextEventTest::testCreateNewEvent()
     QFETCH(int, messageType);
     QFETCH(int, messageFlags);
     QFETCH(QDateTime, readTimestamp);
-    TextEventWrapper event(accountId, threadId, eventId, senderId, timestamp, newEvent,
-                           message, (History::MessageType)messageType, (History::MessageFlags)messageFlags,
-                           readTimestamp);
+    History::TextEvent event(accountId, threadId, eventId, senderId, timestamp, newEvent,
+                             message, (History::MessageType)messageType, (History::MessageFlags)messageFlags,
+                             readTimestamp);
 
     // check that the values are properly set
     QCOMPARE(event.accountId(), accountId);
@@ -118,6 +104,21 @@ void TextEventTest::testCreateNewEvent()
     QCOMPARE(properties[History::FieldMessageType].toInt(), messageType);
     QCOMPARE(properties[History::FieldMessageFlags].toInt(), messageFlags);
     QCOMPARE(properties[History::FieldReadTimestamp].toString(), readTimestamp.toString(Qt::ISODate));
+}
+
+void TextEventTest::testCastToEventAndBack()
+{
+    //FIXME: implement
+}
+
+void TextEventTest::testFromProperties()
+{
+    //FIXME: implement
+}
+
+void TextEventTest::testProperties()
+{
+    // FIXME: implement
 }
 
 QTEST_MAIN(TextEventTest)

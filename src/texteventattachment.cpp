@@ -28,6 +28,10 @@ namespace History
 
 // ------------- TextEventAttachmentPrivate ------------------------------------------------
 
+TextEventAttachmentPrivate::TextEventAttachmentPrivate()
+{
+}
+
 TextEventAttachmentPrivate::TextEventAttachmentPrivate(const QString &theAccountId,
                                            const QString &theThreadId,
                                            const QString &theEventId,
@@ -51,8 +55,12 @@ TextEventAttachmentPrivate::~TextEventAttachmentPrivate()
  *
  * \brief The TextEventAttachment class provides a way to store a single attachment
  *  belonging to a text event.
- *
  */
+TextEventAttachment::TextEventAttachment()
+    : d_ptr(new TextEventAttachmentPrivate())
+{
+}
+
 TextEventAttachment::TextEventAttachment(const QString &accountId,
                const QString &threadId, const QString &eventId,
                const QString &attachmentId,
@@ -63,8 +71,18 @@ TextEventAttachment::TextEventAttachment(const QString &accountId,
 {
 }
 
+TextEventAttachment::TextEventAttachment(const TextEventAttachment &other)
+    : d_ptr(new TextEventAttachmentPrivate(*other.d_ptr))
+{
+}
+
 TextEventAttachment::~TextEventAttachment()
 {
+}
+
+TextEventAttachment& TextEventAttachment::operator=(const TextEventAttachment &other)
+{
+    d_ptr = QSharedPointer<TextEventAttachmentPrivate>(new TextEventAttachmentPrivate(*other.d_ptr));
 }
 
 
@@ -147,21 +165,45 @@ QVariantMap TextEventAttachment::properties() const
     return map;
 }
 
-TextEventAttachmentPtr TextEventAttachment::fromProperties(const QVariantMap &properties)
+TextEventAttachment TextEventAttachment::fromProperties(const QVariantMap &properties)
 {
-    TextEventAttachmentPtr attachment;
+    TextEventAttachment attachment;
     if (properties.isEmpty()) {
         return attachment;
     }
 
-    attachment = TextEventAttachmentPtr(new TextEventAttachment(properties[FieldAccountId].toString(),
-                                                                properties[FieldThreadId].toString(),
-                                                                properties[FieldEventId].toString(),
-                                                                properties[FieldAttachmentId].toString(),
-                                                                properties[FieldContentType].toString(),
-                                                                properties[FieldFilePath].toString(),
-                                                                (History::AttachmentFlags)properties[FieldStatus].toInt()));
+    attachment = TextEventAttachment(properties[FieldAccountId].toString(),
+                                     properties[FieldThreadId].toString(),
+                                     properties[FieldEventId].toString(),
+                                     properties[FieldAttachmentId].toString(),
+                                     properties[FieldContentType].toString(),
+                                     properties[FieldFilePath].toString(),
+                                     (History::AttachmentFlags)properties[FieldStatus].toInt());
     return attachment;
+}
+
+bool TextEventAttachment::isNull() const
+{
+    Q_D(const TextEventAttachment);
+    return d->accountId.isNull() && d->threadId.isNull() && d->eventId.isNull() && d->attachmentId.isNull();
+}
+
+bool TextEventAttachment::operator==(const TextEventAttachment &other)
+{
+    Q_D(TextEventAttachment);
+    if (d->accountId != other.d_ptr->accountId) {
+        return false;
+    }
+    if (d->threadId != other.d_ptr->threadId) {
+        return false;
+    }
+    if (d->eventId != other.d_ptr->eventId) {
+        return false;
+    }
+    if (d->attachmentId != other.d_ptr->attachmentId) {
+        return false;
+    }
+    return true;
 }
 
 }

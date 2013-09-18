@@ -25,6 +25,10 @@
 #include <QObject>
 #include <QString>
 #include "types.h"
+#include "event.h"
+#include "filter.h"
+#include "sort.h"
+#include "thread.h"
 
 namespace History
 {
@@ -42,21 +46,21 @@ public:
     static Manager *instance();
 
     ThreadViewPtr queryThreads(EventType type,
-                               const SortPtr &sort = SortPtr(),
-                               const FilterPtr &filter = FilterPtr());
+                               const Sort &sort = Sort(),
+                               const Filter &filter = Filter());
 
     EventViewPtr queryEvents(EventType type,
-                             const SortPtr &sort = SortPtr(),
-                             const FilterPtr &filter = FilterPtr());
+                             const Sort &sort = Sort(),
+                             const Filter &filter = Filter());
 
-    EventPtr getSingleEvent(EventType type, const QString &accountId, const QString &threadId, const QString &eventId, bool useCache = true);
+    Event getSingleEvent(EventType type, const QString &accountId, const QString &threadId, const QString &eventId);
 
-    ThreadPtr threadForParticipants(const QString &accountId,
-                                    EventType type,
-                                    const QStringList &participants,
-                                    History::MatchFlags matchFlags = History::MatchCaseSensitive,
-                                    bool create = false);
-    ThreadPtr getSingleThread(EventType type, const QString &accountId, const QString &threadId, bool useCache = true);
+    Thread threadForParticipants(const QString &accountId,
+                                 EventType type,
+                                 const QStringList &participants,
+                                 History::MatchFlags matchFlags = History::MatchCaseSensitive,
+                                 bool create = false);
+    Thread getSingleThread(EventType type, const QString &accountId, const QString &threadId);
 
     bool writeEvents(const History::Events &events);
     bool removeThreads(const Threads &threads);

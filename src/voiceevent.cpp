@@ -27,6 +27,10 @@ namespace History
 
 // ------------- VoiceEventPrivate ------------------------------------------------
 
+VoiceEventPrivate::VoiceEventPrivate()
+{
+}
+
 VoiceEventPrivate::VoiceEventPrivate(const QString &theAccountId,
                                    const QString &theThreadId,
                                    const QString &theEventId,
@@ -44,7 +48,31 @@ VoiceEventPrivate::~VoiceEventPrivate()
 {
 }
 
+EventType VoiceEventPrivate::type() const
+{
+    return EventTypeVoice;
+}
+
+QVariantMap VoiceEventPrivate::properties() const
+{
+    QVariantMap map = EventPrivate::properties();
+
+    map[FieldMissed] = missed;
+    map[FieldDuration] = duration;
+
+    return map;
+}
+
+
+
 // ------------- VoiceEvent -------------------------------------------------------
+
+HISTORY_EVENT_DEFINE_COPY(VoiceEvent, EventTypeVoice)
+
+VoiceEvent::VoiceEvent()
+    : Event(*new VoiceEventPrivate())
+{
+}
 
 VoiceEvent::VoiceEvent(const QString &accountId,
                      const QString &threadId,
@@ -62,23 +90,6 @@ VoiceEvent::~VoiceEvent()
 {
 }
 
-EventType VoiceEvent::type() const
-{
-    return EventTypeVoice;
-}
-
-QVariantMap VoiceEvent::properties() const
-{
-    Q_D(const VoiceEvent);
-
-    QVariantMap map = Event::properties();
-
-    map[FieldMissed] = d->missed;
-    map[FieldDuration] = d->duration;
-
-    return map;
-}
-
 bool VoiceEvent::missed() const
 {
     Q_D(const VoiceEvent);
@@ -89,6 +100,25 @@ QTime VoiceEvent::duration() const
 {
     Q_D(const VoiceEvent);
     return d->duration;
+}
+
+Event VoiceEvent::fromProperties(const QVariantMap &properties)
+{
+    Event event;
+    if (properties.isEmpty()) {
+        return event;
+    }
+    QString accountId = properties[FieldAccountId].toString();
+    QString threadId = properties[FieldThreadId].toString();
+    QString eventId = properties[FieldEventId].toString();
+    QString senderId = properties[FieldSenderId].toString();
+    QDateTime timestamp = QDateTime::fromString(properties[FieldTimestamp].toString(), Qt::ISODate);
+    bool newEvent = properties[FieldNewEvent].toBool();
+    bool missed = properties[FieldMissed].toBool();
+    QTime duration = QTime(0,0,0).addSecs(properties[FieldDuration].toInt());
+    event = VoiceEvent(accountId, threadId, eventId, senderId, timestamp, newEvent,
+                             missed, duration);
+    return event;
 }
 
 }

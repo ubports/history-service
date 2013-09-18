@@ -34,6 +34,7 @@ class TextEventAttachment;
 class TextEventAttachmentPrivate
 {
 public:
+    explicit TextEventAttachmentPrivate();
     TextEventAttachmentPrivate(const QString &theAccountId,
                          const QString &theThreadId,
                          const QString &theEventId,

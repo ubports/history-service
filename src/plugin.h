@@ -24,6 +24,7 @@
 
 #include <QtPlugin>
 #include "types.h"
+#include "sort.h"
 #include <QVariantMap>
 
 namespace History
@@ -39,10 +40,10 @@ public:
 
     // Reader part of the plugin
     virtual PluginThreadView* queryThreads(EventType type,
-                                       const SortPtr &sort = SortPtr(),
+                                       const Sort &sort = Sort(),
                                        const QString &filter = QString::null) = 0;
     virtual PluginEventView* queryEvents(EventType type,
-                                         const SortPtr &sort = SortPtr(),
+                                         const Sort &sort = Sort(),
                                          const QString &filter = QString::null) = 0;
     virtual QVariantMap getSingleThread(EventType type,
                                         const QString &accountId,

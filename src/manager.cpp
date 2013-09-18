@@ -24,7 +24,6 @@
 #include "managerdbus_p.h"
 #include "eventview.h"
 #include "intersectionfilter.h"
-#include "itemfactory.h"
 #include "textevent.h"
 #include "thread.h"
 #include "threadview.h"
@@ -84,36 +83,28 @@ Manager *Manager::instance()
 }
 
 ThreadViewPtr Manager::queryThreads(EventType type,
-                                    const SortPtr &sort,
-                                    const FilterPtr &filter)
+                                    const Sort &sort,
+                                    const Filter &filter)
 {
     return ThreadViewPtr(new ThreadView(type, sort, filter));
 }
 
 EventViewPtr Manager::queryEvents(EventType type,
-                                  const SortPtr &sort,
-                                  const FilterPtr &filter)
+                                  const Sort &sort,
+                                  const Filter &filter)
 {
     return EventViewPtr(new EventView(type, sort, filter));
 }
 
-EventPtr Manager::getSingleEvent(EventType type, const QString &accountId, const QString &threadId, const QString &eventId, bool useCache)
+Event Manager::getSingleEvent(EventType type, const QString &accountId, const QString &threadId, const QString &eventId)
 {
     Q_D(Manager);
 
-    EventPtr event;
-    if (useCache) {
-        event = ItemFactory::instance()->cachedEvent(accountId, threadId, eventId, type);
-    }
-
-    if (event.isNull()) {
-        event = d->dbus->getSingleEvent(type, accountId, threadId, eventId);
-    }
-
+    Event event = d->dbus->getSingleEvent(type, accountId, threadId, eventId);
     return event;
 }
 
-ThreadPtr Manager::threadForParticipants(const QString &accountId,
+Thread Manager::threadForParticipants(const QString &accountId,
                                          EventType type,
                                          const QStringList &participants,
                                          MatchFlags matchFlags,
@@ -124,19 +115,11 @@ ThreadPtr Manager::threadForParticipants(const QString &accountId,
     return d->dbus->threadForParticipants(accountId, type, participants, matchFlags, create);
 }
 
-ThreadPtr Manager::getSingleThread(EventType type, const QString &accountId, const QString &threadId, bool useCache)
+Thread Manager::getSingleThread(EventType type, const QString &accountId, const QString &threadId)
 {
     Q_D(Manager);
 
-    ThreadPtr thread;
-    if (useCache) {
-        thread = ItemFactory::instance()->cachedThread(accountId, threadId, type);
-    }
-
-    if (thread.isNull()) {
-        thread = d->dbus->getSingleThread(type, accountId, threadId);
-    }
-
+    Thread thread = d->dbus->getSingleThread(type, accountId, threadId);
     return thread;
 }
 

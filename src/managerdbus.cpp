@@ -21,7 +21,6 @@
 
 #include "managerdbus_p.h"
 #include "event.h"
-#include "itemfactory.h"
 #include "manager.h"
 #include "thread.h"
 #include "textevent.h"
@@ -59,20 +58,21 @@ ManagerDBus::ManagerDBus(QObject *parent) :
                        this, SLOT(onEventsRemoved(QList<QVariantMap>)));
 }
 
-ThreadPtr ManagerDBus::threadForParticipants(const QString &accountId,
-                                             EventType type,
-                                             const QStringList &participants,
-                                             MatchFlags matchFlags,
-                                             bool create)
+Thread ManagerDBus::threadForParticipants(const QString &accountId,
+                                          EventType type,
+                                          const QStringList &participants,
+                                          MatchFlags matchFlags,
+                                          bool create)
 {
+    Thread thread;
     // FIXME: move to async call if possible
     QDBusReply<QVariantMap> reply = mInterface.call("ThreadForParticipants", accountId, (int) type, participants, (int)matchFlags, create);
     if (reply.isValid()) {
         QVariantMap properties = reply.value();
-        return ItemFactory::instance()->createThread(properties);
+        thread = Thread::fromProperties(properties);
     }
 
-    return ThreadPtr();
+    return thread;
 }
 
 bool ManagerDBus::writeEvents(const Events &events)
@@ -117,21 +117,21 @@ bool ManagerDBus::removeEvents(const Events &events)
     return reply.value();
 }
 
-ThreadPtr ManagerDBus::getSingleThread(EventType type, const QString &accountId, const QString &threadId)
+Thread ManagerDBus::getSingleThread(EventType type, const QString &accountId, const QString &threadId)
 {
-    ThreadPtr thread;
+    Thread thread;
     QDBusReply<QVariantMap> reply = mInterface.call("GetSingleThread", (int)type, accountId, threadId);
     if (!reply.isValid()) {
         return thread;
     }
 
-    thread = ItemFactory::instance()->createThread(reply.value());
+    thread = Thread::fromProperties(reply.value());
     return thread;
 }
 
-EventPtr ManagerDBus::getSingleEvent(EventType type, const QString &accountId, const QString &threadId, const QString &eventId)
+Event ManagerDBus::getSingleEvent(EventType type, const QString &accountId, const QString &threadId, const QString &eventId)
 {
-    EventPtr event;
+    Event event;
     QDBusReply<QVariantMap> reply = mInterface.call("GetSingleEvent", (int)type, accountId, threadId, eventId);
     if (!reply.isValid()) {
         return event;
@@ -153,7 +153,7 @@ void ManagerDBus::onThreadsModified(const QList<QVariantMap> &threads)
 
 void ManagerDBus::onThreadsRemoved(const QList<QVariantMap> &threads)
 {
-    Q_EMIT threadsRemoved(threadsFromProperties(threads, true));
+    Q_EMIT threadsRemoved(threadsFromProperties(threads));
 }
 
 void ManagerDBus::onEventsAdded(const QList<QVariantMap> &events)
@@ -171,18 +171,13 @@ void ManagerDBus::onEventsRemoved(const QList<QVariantMap> &events)
     Q_EMIT eventsRemoved(eventsFromProperties(events));
 }
 
-Threads ManagerDBus::threadsFromProperties(const QList<QVariantMap> &threadsProperties, bool fakeIfNull)
+Threads ManagerDBus::threadsFromProperties(const QList<QVariantMap> &threadsProperties)
 {
     Threads threads;
     Q_FOREACH(const QVariantMap &map, threadsProperties) {
-        ThreadPtr thread = ItemFactory::instance()->createThread(map);
+        Thread thread = Thread::fromProperties(map);
         if (!thread.isNull()) {
             threads << thread;
-        } else if (fakeIfNull) {
-            threads << History::ItemFactory::instance()->createThread(map[FieldAccountId].toString(),
-                                                                      map[FieldThreadId].toString(),
-                                                                      (EventType)map[FieldType].toInt(),
-                                                                      map[FieldParticipants].toStringList());
         }
     }
 
@@ -193,21 +188,21 @@ QList<QVariantMap> ManagerDBus::threadsToProperties(const Threads &threads)
 {
     QList<QVariantMap> threadsPropertyMap;
 
-    Q_FOREACH(const ThreadPtr &thread, threads) {
-        threadsPropertyMap << thread->properties();
+    Q_FOREACH(const Thread &thread, threads) {
+        threadsPropertyMap << thread.properties();
     }
 
     return threadsPropertyMap;
 }
 
-EventPtr ManagerDBus::eventFromProperties(const QVariantMap &properties)
+Event ManagerDBus::eventFromProperties(const QVariantMap &properties)
 {
     EventType type = (EventType)properties[FieldType].toInt();
     switch (type) {
     case EventTypeText:
-        return ItemFactory::instance()->createTextEvent(properties);
+        return TextEvent::fromProperties(properties);
     case EventTypeVoice:
-        return ItemFactory::instance()->createVoiceEvent(properties);
+        return VoiceEvent::fromProperties(properties);
     }
 }
 
@@ -226,8 +221,8 @@ QList<QVariantMap> ManagerDBus::eventsToProperties(const Events &events)
 {
     QList<QVariantMap> eventsPropertyMap;
 
-    Q_FOREACH(const EventPtr &event, events) {
-        eventsPropertyMap << event->properties();
+    Q_FOREACH(const Event &event, events) {
+        eventsPropertyMap << event.properties();
     }
 
     return eventsPropertyMap;

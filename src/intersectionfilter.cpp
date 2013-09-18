@@ -22,6 +22,7 @@
 #include "intersectionfilter.h"
 #include "intersectionfilter_p.h"
 #include <QStringList>
+#include <QDebug>
 
 namespace History
 {
@@ -33,6 +34,47 @@ IntersectionFilterPrivate::IntersectionFilterPrivate()
 IntersectionFilterPrivate::~IntersectionFilterPrivate()
 {
 }
+
+bool IntersectionFilterPrivate::match(const QVariantMap properties) const
+{
+    // return true only if all filters match
+    Q_FOREACH(const Filter &filter, filters) {
+        if (!filter.match(properties)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool IntersectionFilterPrivate::isValid() const
+{
+    // FIXME: maybe we should check if at least one of the inner filters are valid?
+    return !filters.isEmpty();
+}
+
+QString IntersectionFilterPrivate::toString(const QString &propertyPrefix) const
+{
+    if (filters.isEmpty()) {
+        return QString::null;
+    } else if (filters.count() == 1) {
+        return filters.first().toString();
+    }
+
+    QStringList output;
+    // wrap each filter string around parenthesis
+    Q_FOREACH(const Filter &filter, filters) {
+        QString value = filter.toString(propertyPrefix);
+        if (!value.isEmpty()) {
+            output << QString("(%1)").arg(value);
+        }
+    }
+
+    return output.join(" AND ");
+}
+
+
+HISTORY_FILTER_DEFINE_COPY(IntersectionFilter, FilterTypeIntersection)
 
 IntersectionFilter::IntersectionFilter()
     : Filter(*new IntersectionFilterPrivate())
@@ -49,13 +91,13 @@ void IntersectionFilter::setFilters(const Filters &filters)
     d->filters = filters;
 }
 
-void IntersectionFilter::prepend(const FilterPtr &filter)
+void IntersectionFilter::prepend(const Filter &filter)
 {
     Q_D(IntersectionFilter);
     d->filters.prepend(filter);
 }
 
-void IntersectionFilter::append(const FilterPtr &filter)
+void IntersectionFilter::append(const Filter &filter)
 {
     Q_D(IntersectionFilter);
     d->filters.append(filter);
@@ -67,46 +109,10 @@ void IntersectionFilter::clear()
     d->filters.clear();
 }
 
-bool IntersectionFilter::match(const QVariantMap properties) const
-{
-    Q_D(const IntersectionFilter);
-
-    // return true only if all filters match
-    Q_FOREACH(const History::FilterPtr &filter, d->filters) {
-        if (!filter->match(properties)) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
 Filters IntersectionFilter::filters() const
 {
     Q_D(const IntersectionFilter);
     return d->filters;
-}
-
-QString IntersectionFilter::toString(const QString &propertyPrefix) const
-{
-    Q_D(const IntersectionFilter);
-
-    if (d->filters.isEmpty()) {
-        return QString::null;
-    } else if (d->filters.count() == 1) {
-        return d->filters.first()->toString();
-    }
-
-    QStringList output;
-    // wrap each filter string around parenthesis
-    Q_FOREACH(const FilterPtr &filter, d->filters) {
-        QString value = filter->toString(propertyPrefix);
-        if (!value.isEmpty()) {
-            output << QString("(%1)").arg(value);
-        }
-    }
-
-    return output.join(" AND ");
 }
 
 }

@@ -25,6 +25,8 @@
 #include <QDBusInterface>
 #include <QObject>
 #include "types.h"
+#include "event.h"
+#include "thread.h"
 
 class HistoryServiceAdaptor;
 
@@ -37,17 +39,17 @@ class ManagerDBus : public QObject
 public:
     explicit ManagerDBus(QObject *parent = 0);
 
-    ThreadPtr threadForParticipants(const QString &accountId,
-                                    EventType type,
-                                    const QStringList &participants,
-                                    History::MatchFlags matchFlags,
-                                    bool create);
+    Thread threadForParticipants(const QString &accountId,
+                                 EventType type,
+                                 const QStringList &participants,
+                                 History::MatchFlags matchFlags,
+                                 bool create);
 
     bool writeEvents(const History::Events &events);
     bool removeThreads(const Threads &threads);
     bool removeEvents(const Events &events);
-    ThreadPtr getSingleThread(EventType type, const QString &accountId, const QString &threadId);
-    EventPtr getSingleEvent(EventType type, const QString &accountId, const QString &threadId, const QString &eventId);
+    Thread getSingleThread(EventType type, const QString &accountId, const QString &threadId);
+    Event getSingleEvent(EventType type, const QString &accountId, const QString &threadId, const QString &eventId);
 
 Q_SIGNALS:
     // signals that will be triggered after processing bus signals
@@ -69,10 +71,10 @@ protected Q_SLOTS:
     void onEventsRemoved(const QList<QVariantMap> &events);
 
 protected:
-    Threads threadsFromProperties(const QList<QVariantMap> &threadsProperties, bool fakeIfNull = false);
+    Threads threadsFromProperties(const QList<QVariantMap> &threadsProperties);
     QList<QVariantMap> threadsToProperties(const Threads &threads);
 
-    EventPtr eventFromProperties(const QVariantMap &properties);
+    Event eventFromProperties(const QVariantMap &properties);
     Events eventsFromProperties(const QList<QVariantMap> &eventsProperties);
     QList<QVariantMap> eventsToProperties(const Events &events);
 

@@ -23,7 +23,7 @@
 #include "sort.h"
 
 HistoryQmlSort::HistoryQmlSort(QObject *parent) :
-    QObject(parent), mSort(new History::Sort())
+    QObject(parent)
 {
     connect(this,
             SIGNAL(sortFieldChanged()),
@@ -38,38 +38,38 @@ HistoryQmlSort::HistoryQmlSort(QObject *parent) :
 
 QString HistoryQmlSort::sortField() const
 {
-    return mSort->sortField();
+    return mSort.sortField();
 }
 
 void HistoryQmlSort::setSortField(const QString &value)
 {
-    mSort->setSortField(value);
+    mSort.setSortField(value);
     Q_EMIT sortFieldChanged();
 }
 
 HistoryQmlSort::SortOrder HistoryQmlSort::sortOrder() const
 {
-    return (SortOrder) mSort->sortOrder();
+    return (SortOrder) mSort.sortOrder();
 }
 
 void HistoryQmlSort::setSortOrder(HistoryQmlSort::SortOrder order)
 {
-    mSort->setSortOrder((Qt::SortOrder) order);
+    mSort.setSortOrder((Qt::SortOrder) order);
     Q_EMIT sortOrderChanged();
 }
 
 HistoryQmlSort::CaseSensitivity HistoryQmlSort::caseSensitivity() const
 {
-    return (CaseSensitivity) mSort->caseSensitivity();
+    return (CaseSensitivity) mSort.caseSensitivity();
 }
 
 void HistoryQmlSort::setCaseSensitivity(HistoryQmlSort::CaseSensitivity value)
 {
-    mSort->setCaseSensitivity((Qt::CaseSensitivity) value);
+    mSort.setCaseSensitivity((Qt::CaseSensitivity) value);
     Q_EMIT caseSensitivityChanged();
 }
 
-History::SortPtr HistoryQmlSort::sort() const
+History::Sort HistoryQmlSort::sort() const
 {
     return mSort;
 }

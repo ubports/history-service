@@ -36,15 +36,7 @@ class VoiceEvent : public Event
     friend class ItemFactory;
 
 public:
-    ~VoiceEvent();
-
-    EventType type() const;
-    QVariantMap properties() const;
-
-    bool missed() const;
-    QTime duration() const;
-
-protected:
+    explicit VoiceEvent();
     VoiceEvent(const QString &accountId,
                const QString &threadId,
                const QString &eventId,
@@ -53,6 +45,16 @@ protected:
                bool newEvent,
                bool missed,
                const QTime &duration = QTime());
+    ~VoiceEvent();
+
+    // copy related members
+    VoiceEvent(const Event &other);
+    VoiceEvent& operator=(const Event &other);
+
+    bool missed() const;
+    QTime duration() const;
+
+    static Event fromProperties(const QVariantMap &properties);
 };
 
 }

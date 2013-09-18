@@ -30,33 +30,33 @@
 #include <QCoreApplication>
 #include <QDebug>
 
-void printEvent(const History::EventPtr &event)
+void printEvent(const History::Event &event)
 {
     QString extraInfo;
-    History::TextEventPtr textEvent;
-    History::VoiceEventPtr voiceEvent;
+    History::TextEvent textEvent;
+    History::VoiceEvent voiceEvent;
 
-    switch (event->type()) {
+    switch (event.type()) {
     case History::EventTypeText:
-        textEvent = event.staticCast<History::TextEvent>();
-        extraInfo = QString("message: %1").arg(textEvent->message());
+        textEvent = event;
+        extraInfo = QString("message: %1").arg(textEvent.message());
         break;
     case History::EventTypeVoice:
-        voiceEvent = event.staticCast<History::VoiceEvent>();
-        extraInfo = QString("missed: %1\n      duration: %2").arg(voiceEvent->missed() ? "yes" : "no", voiceEvent->duration().toString());
+        voiceEvent = event;
+        extraInfo = QString("missed: %1\n      duration: %2").arg(voiceEvent.missed() ? "yes" : "no", voiceEvent.duration().toString());
         break;
     }
 
     qDebug() << qPrintable(QString("    * Event: accountId: %1\n      threadId: %2\n      eventId: %3\n      senderId: %4\n      timestamp: %5\n      newEvent: %6")
-                .arg(event->accountId(), event->threadId(), event->eventId(), event->senderId(), event->timestamp().toString(),
-                     event->newEvent() ? "yes" : "no"));
+                .arg(event.accountId(), event.threadId(), event.eventId(), event.senderId(), event.timestamp().toString(),
+                     event.newEvent() ? "yes" : "no"));
     qDebug() << qPrintable(QString("      %1").arg(extraInfo));
 }
 
-void printThread(const History::ThreadPtr &thread)
+void printThread(const History::Thread &thread)
 {
     QString type = "Unknown";
-    switch (thread->type()) {
+    switch (thread.type()) {
     case History::EventTypeText:
         type = "Text";
         break;
@@ -66,15 +66,15 @@ void printThread(const History::ThreadPtr &thread)
     }
 
     qDebug() << qPrintable(QString("- %1 thread - accountId: %2 threadId: %3 count: %4 unreadCount: %5").arg(type,
-                                                                                                thread->accountId(),
-                                                                                                thread->threadId(),
-                                                                                                QString::number(thread->count()),
-                                                                                                QString::number(thread->unreadCount())));
-    qDebug() << qPrintable(QString("    Participants: %1").arg(thread->participants().join(", ")));
+                                                                                                thread.accountId(),
+                                                                                                thread.threadId(),
+                                                                                                QString::number(thread.count()),
+                                                                                                QString::number(thread.unreadCount())));
+    qDebug() << qPrintable(QString("    Participants: %1").arg(thread.participants().join(", ")));
 
-    if (!thread->lastEvent().isNull()) {
+    if (!thread.lastEvent().isNull()) {
         qDebug() << "    Last event:";
-        printEvent(thread->lastEvent());
+        printEvent(thread.lastEvent());
     }
     qDebug() << "    All events:";
 }
@@ -92,17 +92,17 @@ int main(int argc, char **argv)
         History::Threads threads = view->nextPage();
 
         while (!threads.isEmpty()) {
-            Q_FOREACH(const History::ThreadPtr &thread, threads) {
+            Q_FOREACH(const History::Thread &thread, threads) {
                 printThread(thread);
 
                 // now print the events for this thread
-                History::IntersectionFilterPtr filter(new History::IntersectionFilter());
-                filter->append(History::FilterPtr(new History::Filter(History::FieldThreadId, thread->threadId())));
-                filter->append(History::FilterPtr(new History::Filter(History::FieldAccountId, thread->accountId())));
-                History::EventViewPtr eventView = manager->queryEvents(type, History::SortPtr(), filter);
+                History::IntersectionFilter filter;
+                filter.append(History::Filter(History::FieldThreadId, thread.threadId()));
+                filter.append(History::Filter(History::FieldAccountId, thread.accountId()));
+                History::EventViewPtr eventView = manager->queryEvents(type, History::Sort(), filter);
                 History::Events events = eventView->nextPage();
                 while (!events.isEmpty()) {
-                    Q_FOREACH(const History::EventPtr &event, events) {
+                    Q_FOREACH(const History::Event &event, events) {
                         printEvent(event);
                     }
                     events = eventView->nextPage();

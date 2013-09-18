@@ -23,16 +23,15 @@
 #define HISTORYQMLUNIONFILTER_H
 
 #include "historyqmlfilter.h"
-#include <Types>
+#include <Filter>
+#include <UnionFilter>
 
 class HistoryQmlUnionFilter : public HistoryQmlCompoundFilter
 {
     Q_OBJECT
 public:
     explicit HistoryQmlUnionFilter(QObject *parent = 0);
-    History::FilterPtr filter() const;
-private:
-    History::UnionFilterPtr mFilter;
+    History::Filter filter() const;
 };
 
 #endif // HISTORYQMLUNIONFILTER_H

@@ -38,15 +38,16 @@ public:
     IntersectionFilter();
     ~IntersectionFilter();
 
+    // copy related members
+    IntersectionFilter(const Filter &other);
+    IntersectionFilter& operator=(const Filter &other);
+
     void setFilters(const Filters &filters);
-    void prepend(const FilterPtr &filter);
-    void append(const FilterPtr &filter);
-    void clear();
-
-    bool match(const QVariantMap properties) const;
-
+    void prepend(const Filter &filter);
+    void append(const Filter &filter);
+    void clear();    
     Filters filters() const;
-    QString toString(const QString &propertyPrefix = QString::null) const;
+
 };
 
 }

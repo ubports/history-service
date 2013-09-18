@@ -42,10 +42,10 @@ public:
 
     // Reader part of the plugin
     History::PluginThreadView* queryThreads(History::EventType type,
-                                            const History::SortPtr &sort = History::SortPtr(),
+                                            const History::Sort &sort = History::Sort(),
                                             const QString &filter = QString::null);
     History::PluginEventView* queryEvents(History::EventType type,
-                                          const History::SortPtr &sort = History::SortPtr(),
+                                          const History::Sort &sort = History::Sort(),
                                           const QString &filter = QString::null);
     QVariantMap threadForParticipants(const QString &accountId,
                                       History::EventType type,

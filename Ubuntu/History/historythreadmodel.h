@@ -24,6 +24,8 @@
 
 #include <QAbstractListModel>
 #include "types.h"
+#include "textevent.h"
+#include "thread.h"
 
 class HistoryQmlFilter;
 class HistoryQmlSort;
@@ -117,7 +119,7 @@ private:
     HistoryQmlSort *mSort;
     EventType mType;
     QHash<int, QByteArray> mRoles;
-    mutable QMap<History::TextEventPtr, QList<QVariant> > mAttachmentCache;
+    mutable QMap<History::TextEvent, QList<QVariant> > mAttachmentCache;
 };
 
 #endif // HISTORYTHREADMODEL_H

@@ -23,6 +23,7 @@
 #define HISTORY_TEXTEVENT_H
 
 #include "event.h"
+#include "texteventattachment.h"
 
 namespace History
 {
@@ -36,19 +37,7 @@ class TextEvent : public Event
     friend class ItemFactory;
 
 public:
-    ~TextEvent();
-
-    EventType type() const;
-    QVariantMap properties() const;
-
-    QString message() const;
-    MessageType messageType() const;
-    MessageFlags messageFlags() const;
-    QDateTime readTimestamp() const;
-    QString subject() const;
-    TextEventAttachments attachments() const;
-
-protected:
+    explicit TextEvent();
     TextEvent(const QString &accountId,
               const QString &threadId,
               const QString &eventId,
@@ -61,6 +50,21 @@ protected:
               const QDateTime &readTimestamp,
               const QString &subject = QString(),
               const TextEventAttachments &attachments = TextEventAttachments());
+
+    ~TextEvent();
+
+    // copy related members
+    TextEvent(const Event &other);
+    TextEvent& operator=(const Event &other);
+
+    QString message() const;
+    MessageType messageType() const;
+    MessageFlags messageFlags() const;
+    QDateTime readTimestamp() const;
+    QString subject() const;
+    TextEventAttachments attachments() const;
+
+    static Event fromProperties(const QVariantMap &properties);
 };
 
 }

@@ -37,9 +37,10 @@ class Sort
 {
     Q_DECLARE_PRIVATE(Sort)
 public:
-    Sort(const QString &sortField = "timestamp",
+    Sort(const QString &sortField = FieldTimestamp,
                 Qt::SortOrder sortOrder = Qt::AscendingOrder,
                 Qt::CaseSensitivity caseSensitivity = Qt::CaseInsensitive);
+    Sort(const Sort &other);
     ~Sort();
 
     QString sortField() const;
@@ -52,10 +53,10 @@ public:
     void setCaseSensitivity(Qt::CaseSensitivity value);
 
     QVariantMap properties() const;
-    static SortPtr fromProperties(const QVariantMap &properties);
+    static Sort fromProperties(const QVariantMap &properties);
 
 protected:
-    QScopedPointer<SortPrivate> d_ptr;
+    QSharedPointer<SortPrivate> d_ptr;
 };
 
 }

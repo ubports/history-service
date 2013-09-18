@@ -26,6 +26,7 @@
 #include <TelepathyLoggerQt/Types>
 #include <TelepathyLoggerQt/CallEvent>
 #include <TelepathyLoggerQt/TextEvent>
+#include <Event>
 #include <Types>
 
 class TelepathyLogImporter : public QObject

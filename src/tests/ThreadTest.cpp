@@ -19,25 +19,11 @@
 #include <QtCore/QObject>
 #include <QtTest/QtTest>
 
-#include "itemfactory.h"
 #include "thread.h"
 #include "textevent.h"
 #include "voiceevent.h"
 
 Q_DECLARE_METATYPE(History::EventType)
-
-class ThreadWrapper : public History::Thread
-{
-public:
-    ThreadWrapper(const QString &accountId,
-                  const QString &threadId,
-                  History::EventType type,
-                  const QStringList &participants,
-                  const History::EventPtr &lastEvent,
-                  int count,
-                  int unreadCount)
-        : History::Thread(accountId, threadId, type, participants, lastEvent, count, unreadCount) { }
-};
 
 class ThreadTest : public QObject
 {
@@ -47,6 +33,8 @@ private Q_SLOTS:
     void initTestCase();
     void testCreateNewThread_data();
     void testCreateNewThread();
+    void testFromProperties();
+    void testProperties();
 };
 
 void ThreadTest::initTestCase()
@@ -86,21 +74,21 @@ void ThreadTest::testCreateNewThread()
     QFETCH(int, count);
     QFETCH(int, unreadCount);
 
-    History::EventPtr event;
+    History::Event event;
     switch (type) {
     case History::EventTypeText:
         // the eventId doesn´t really matter here, just faking a random one to not use always the same
-        event = History::ItemFactory::instance()->createTextEvent(accountId, threadId, QString("eventId%1").arg(QString::number(qrand() % 1024)),
-                                                                  participants[0], QDateTime::currentDateTime(), false, "Random Message",
-                                                                  History::MessageTypeText, History::MessageFlags(), QDateTime::currentDateTime());
+        event = History::TextEvent(accountId, threadId, QString("eventId%1").arg(QString::number(qrand() % 1024)),
+                                   participants[0], QDateTime::currentDateTime(), false, "Random Message",
+                                   History::MessageTypeText, History::MessageFlags(), QDateTime::currentDateTime());
         break;
     case History::EventTypeVoice:
-        event = History::ItemFactory::instance()->createVoiceEvent(accountId, threadId, QString("eventId%1").arg(QString::number(qrand() % 1024)),
-                                                                   participants[0], QDateTime::currentDateTime(), false, false, QTime(1,2,3));
+        event = History::VoiceEvent(accountId, threadId, QString("eventId%1").arg(QString::number(qrand() % 1024)),
+                                    participants[0], QDateTime::currentDateTime(), false, false, QTime(1,2,3));
         break;
     }
 
-    ThreadWrapper threadItem(accountId, threadId, type, participants, event, count, unreadCount);
+    History::Thread threadItem(accountId, threadId, type, participants, event, count, unreadCount);
     QCOMPARE(threadItem.accountId(), accountId);
     QCOMPARE(threadItem.threadId(), threadId);
     QCOMPARE(threadItem.type(), type);
@@ -116,6 +104,16 @@ void ThreadTest::testCreateNewThread()
     QCOMPARE(properties[History::FieldParticipants].toStringList(), participants);
     QCOMPARE(properties[History::FieldCount].toInt(), count);
     QCOMPARE(properties[History::FieldUnreadCount].toInt(), unreadCount);
+}
+
+void ThreadTest::testFromProperties()
+{
+    // FIXME: implement
+}
+
+void ThreadTest::testProperties()
+{
+    // FIXME: implement
 }
 
 QTEST_MAIN(ThreadTest)
