@@ -80,6 +80,7 @@ public:
                                                 bool create = false);
 
     Q_INVOKABLE bool removeEvent(const QString &accountId, const QString &threadId, const QString &eventId, int eventType);
+    Q_INVOKABLE bool markEventAsRead(const QString &accountId, const QString &threadId, const QString &eventId, int eventType);
 
 Q_SIGNALS:
     void filterChanged();

@@ -63,10 +63,10 @@ public:
     virtual QVariantMap createThreadForParticipants(const QString &accountId, EventType type, const QStringList &participants) { return QVariantMap(); }
     virtual bool removeThread(const QVariantMap &thread) { return false; }
 
-    virtual bool writeTextEvent(const QVariantMap &event) { return false; }
+    virtual EventWriteResult writeTextEvent(const QVariantMap &event) { return EventWriteError; }
     virtual bool removeTextEvent(const QVariantMap &event) { return false; }
 
-    virtual bool writeVoiceEvent(const QVariantMap &event) { return false; }
+    virtual EventWriteResult writeVoiceEvent(const QVariantMap &event) { return EventWriteError; }
     virtual bool removeVoiceEvent(const QVariantMap &event) { return false; }
 
     virtual bool beginBatchOperation() {}

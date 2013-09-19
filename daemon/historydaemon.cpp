@@ -156,21 +156,31 @@ bool HistoryDaemon::writeEvents(const QList<QVariantMap> &events)
         return false;
     }
 
+    QList<QVariantMap> newEvents;
+    QList<QVariantMap> modifiedEvents;
+
     mBackend->beginBatchOperation();
 
     Q_FOREACH(const QVariantMap &event, events) {
         History::EventType type = (History::EventType) event[History::FieldType].toInt();
-        bool success = true;
+        History::EventWriteResult result;
         switch (type) {
         case History::EventTypeText:
-            success = mBackend->writeTextEvent(event);
+            result = mBackend->writeTextEvent(event);
             break;
         case History::EventTypeVoice:
-            success = mBackend->writeVoiceEvent(event);
+            result = mBackend->writeVoiceEvent(event);
             break;
         }
 
-        if (!success) {
+        switch (result) {
+        case History::EventWriteCreated:
+            newEvents << event;
+            break;
+        case History::EventWriteModified:
+            modifiedEvents << event;
+            break;
+        case History::EventWriteError:
             mBackend->rollbackBatchOperation();
             return false;
         }
@@ -191,8 +201,13 @@ bool HistoryDaemon::writeEvents(const QList<QVariantMap> &events)
     }
 
     mBackend->endBatchOperation();
-    //FIXME: we need to handle modifications
-    mDBus.notifyEventsAdded(events);
+
+    if (!newEvents.isEmpty()) {
+        mDBus.notifyEventsAdded(newEvents);
+    }
+    if (!modifiedEvents.isEmpty()) {
+        mDBus.notifyEventsModified(modifiedEvents);
+    }
     if (!threads.isEmpty()) {
         mDBus.notifyThreadsModified(threads);
     }

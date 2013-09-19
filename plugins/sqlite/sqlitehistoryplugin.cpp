@@ -274,14 +274,29 @@ bool SQLiteHistoryPlugin::removeThread(const QVariantMap &thread)
     return true;
 }
 
-bool SQLiteHistoryPlugin::writeTextEvent(const QVariantMap &event)
+History::EventWriteResult SQLiteHistoryPlugin::writeTextEvent(const QVariantMap &event)
 {
     QSqlQuery query(SQLiteDatabase::instance()->database());
 
-    // FIXME: add support for checking if an event already exists
+    // check if the event exists
+    QVariantMap existingEvent = getSingleEvent((History::EventType) event[History::FieldType].toInt(),
+                                               event[History::FieldAccountId].toString(),
+                                               event[History::FieldThreadId].toString(),
+                                               event[History::FieldEventId].toString());
 
-    query.prepare("INSERT INTO text_events (accountId, threadId, eventId, senderId, timestamp, newEvent, message, messageType, messageFlags, readTimestamp) "
-                  "VALUES (:accountId, :threadId, :eventId, :senderId, :timestamp, :newEvent, :message, :messageType, :messageFlags, :readTimestamp)");
+    History::EventWriteResult result;
+    if (existingEvent.isEmpty()) {
+        // create new
+        query.prepare("INSERT INTO text_events (accountId, threadId, eventId, senderId, timestamp, newEvent, message, messageType, messageFlags, readTimestamp) "
+                      "VALUES (:accountId, :threadId, :eventId, :senderId, :timestamp, :newEvent, :message, :messageType, :messageFlags, :readTimestamp)");
+        result = History::EventWriteCreated;
+    } else {
+        // update existing event
+        query.prepare("UPDATE text_events SET senderId=:senderId, timestamp=:timestamp, newEvent=:newEvent, message=:message, messageType=:messageType,"
+                      "messageFlags=:messageFlags, readTimestamp=:readTimestamp WHERE accountId=:accountId AND threadId=:threadId AND eventId=:eventId");
+        result = History::EventWriteModified;
+    }
+
     query.bindValue(":accountId", event[History::FieldAccountId]);
     query.bindValue(":threadId", event[History::FieldThreadId]);
     query.bindValue(":eventId", event[History::FieldEventId]);
@@ -295,12 +310,24 @@ bool SQLiteHistoryPlugin::writeTextEvent(const QVariantMap &event)
 
     if (!query.exec()) {
         qCritical() << "Failed to save the text event: Error:" << query.lastError() << query.lastQuery();
-        return false;
+        return History::EventWriteError;
     }
 
     History::MessageType messageType = (History::MessageType) event[History::FieldMessageType].toInt();
 
     if (messageType == History::MessageTypeMultiParty) {
+        // if the writing is an update, we need to remove the previous attachments
+        if (result == History::EventWriteModified) {
+            query.prepare("DELETE FROM text_event_attachments WHERE accountId=:accountId AND threadId=:threadId "
+                          "AND eventId=:eventId");
+            query.bindValue(":accountId", event[History::FieldAccountId]);
+            query.bindValue(":threadId", event[History::FieldThreadId]);
+            query.bindValue(":eventId", event[History::FieldEventId]);
+            if (!query.exec()) {
+                qCritical() << "Could not erase previous attachments. Error:" << query.lastError() << query.lastQuery();
+                return History::EventWriteError;
+            }
+        }
         // save the attachments
         QList<QVariantMap> attachments = event[History::FieldAttachments].value<QList<QVariantMap> >();
         Q_FOREACH(const QVariantMap &attachment, attachments) {
@@ -314,12 +341,12 @@ bool SQLiteHistoryPlugin::writeTextEvent(const QVariantMap &event)
             query.bindValue(":status", attachment[History::FieldStatus]);
             if (!query.exec()) {
                 qCritical() << "Failed to save attachment to database" << query.lastError() << attachment;
-                return false;
+                return History::EventWriteError;
             }
         }
     }
 
-    return true;
+    return History::EventWriteCreated;
 }
 
 bool SQLiteHistoryPlugin::removeTextEvent(const QVariantMap &event)
@@ -339,14 +366,30 @@ bool SQLiteHistoryPlugin::removeTextEvent(const QVariantMap &event)
     return true;
 }
 
-bool SQLiteHistoryPlugin::writeVoiceEvent(const QVariantMap &event)
+History::EventWriteResult SQLiteHistoryPlugin::writeVoiceEvent(const QVariantMap &event)
 {
     QSqlQuery query(SQLiteDatabase::instance()->database());
 
-    // FIXME: add support for checking if an event already exists
+    // check if the event exists
+    QVariantMap existingEvent = getSingleEvent((History::EventType) event[History::FieldType].toInt(),
+                                               event[History::FieldAccountId].toString(),
+                                               event[History::FieldThreadId].toString(),
+                                               event[History::FieldEventId].toString());
 
-    query.prepare("INSERT INTO voice_events (accountId, threadId, eventId, senderId, timestamp, newEvent, duration, missed) "
-                  "VALUES (:accountId, :threadId, :eventId, :senderId, :timestamp, :newEvent, :duration, :missed)");
+    History::EventWriteResult result;
+    if (existingEvent.isEmpty()) {
+        // create new
+        query.prepare("INSERT INTO voice_events (accountId, threadId, eventId, senderId, timestamp, newEvent, duration, missed) "
+                      "VALUES (:accountId, :threadId, :eventId, :senderId, :timestamp, :newEvent, :duration, :missed)");
+        result = History::EventWriteCreated;
+    } else {
+        // update existing event
+        query.prepare("UPDATE voice_events SET senderId=:senderId, timestamp=:timestamp, newEvent=:newEvent, duration=:duration, "
+                      "missed=:missed WHERE accountId=:accountId AND threadId=:threadId AND eventId=:eventId");
+
+        result = History::EventWriteModified;
+    }
+
     query.bindValue(":accountId", event[History::FieldAccountId]);
     query.bindValue(":threadId", event[History::FieldThreadId]);
     query.bindValue(":eventId", event[History::FieldEventId]);
@@ -358,10 +401,10 @@ bool SQLiteHistoryPlugin::writeVoiceEvent(const QVariantMap &event)
 
     if (!query.exec()) {
         qCritical() << "Failed to save the voice event: Error:" << query.lastError() << query.lastQuery();
-        return false;
+        result = History::EventWriteError;
     }
 
-    return true;
+    return result;
 }
 
 bool SQLiteHistoryPlugin::removeVoiceEvent(const QVariantMap &event)

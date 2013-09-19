@@ -60,7 +60,9 @@ public:
     QString message() const;
     MessageType messageType() const;
     MessageFlags messageFlags() const;
+    void setMessageFlags(const MessageFlags &value);
     QDateTime readTimestamp() const;
+    void setReadTimestamp(const QDateTime &value);
     QString subject() const;
     TextEventAttachments attachments() const;
 

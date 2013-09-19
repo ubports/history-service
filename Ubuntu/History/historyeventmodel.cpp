@@ -286,9 +286,20 @@ QString HistoryEventModel::threadIdForParticipants(const QString &accountId, int
 bool HistoryEventModel::removeEvent(const QString &accountId, const QString &threadId, const QString &eventId, int eventType)
 {
     History::Event event = History::Manager::instance()->getSingleEvent((History::EventType)eventType, accountId, threadId, eventId);
-    History::Manager::instance()->removeEvents(History::Events() << event);
+    return History::Manager::instance()->removeEvents(History::Events() << event);
 }
 
+bool HistoryEventModel::markEventAsRead(const QString &accountId, const QString &threadId, const QString &eventId, int eventType)
+{
+    History::Event event = History::Manager::instance()->getSingleEvent((History::EventType)eventType, accountId, threadId, eventId);
+    event.setNewEvent(false);
+    if (event.type() == History::EventTypeText) {
+        History::TextEvent textEvent = event;
+        textEvent.setReadTimestamp(QDateTime::currentDateTime());
+        event = textEvent;
+    }
+    return History::Manager::instance()->writeEvents(History::Events() << event);
+}
 
 void HistoryEventModel::updateQuery()
 {

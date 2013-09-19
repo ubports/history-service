@@ -61,10 +61,10 @@ public:
     QVariantMap createThreadForParticipants(const QString &accountId, History::EventType type, const QStringList &participants);
     bool removeThread(const QVariantMap &thread);
 
-    bool writeTextEvent(const QVariantMap &event);
+    History::EventWriteResult writeTextEvent(const QVariantMap &event);
     bool removeTextEvent(const QVariantMap &event);
 
-    bool writeVoiceEvent(const QVariantMap &event);
+    History::EventWriteResult writeVoiceEvent(const QVariantMap &event);
     bool removeVoiceEvent(const QVariantMap &event);
 
     bool beginBatchOperation();
