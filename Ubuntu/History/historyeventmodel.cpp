@@ -300,10 +300,10 @@ bool HistoryEventModel::markEventAsRead(const QString &accountId, const QString 
         event = textEvent;
     }
     mEventWritingQueue << event;
-    if (mEventWritingTimer == 0) {
-        // wait half a second before writing the event. It is very likely that other events will appear
-        mEventWritingTimer  = startTimer(500);
+    if (mEventWritingTimer != 0) {
+        killTimer(mEventWritingTimer);
     }
+    mEventWritingTimer  = startTimer(500);
     return true;
 }
 
