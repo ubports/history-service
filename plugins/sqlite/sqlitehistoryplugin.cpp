@@ -346,7 +346,7 @@ History::EventWriteResult SQLiteHistoryPlugin::writeTextEvent(const QVariantMap 
         }
     }
 
-    return History::EventWriteCreated;
+    return result;
 }
 
 bool SQLiteHistoryPlugin::removeTextEvent(const QVariantMap &event)
