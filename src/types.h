@@ -79,6 +79,13 @@ enum AttachmentFlag
 
 Q_DECLARE_FLAGS(AttachmentFlags, AttachmentFlag)
 
+// Event writing results
+enum EventWriteResult {
+    EventWriteCreated,
+    EventWriteModified,
+    EventWriteError
+};
+
 // dbus service, object path and interface
 static const char* DBusService = "com.canonical.HistoryService";
 static const char* DBusObjectPath = "/com/canonical/HistoryService";

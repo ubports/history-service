@@ -31,6 +31,7 @@ private Q_SLOTS:
     void testCastToEventAndBack();
     void testFromProperties();
     void testProperties();
+    void testSetProperties();
 };
 
 void TextEventTest::testCreateNewEvent_data()
@@ -119,6 +120,21 @@ void TextEventTest::testFromProperties()
 void TextEventTest::testProperties()
 {
     // FIXME: implement
+}
+
+void TextEventTest::testSetProperties()
+{
+    History::TextEvent textEvent("oneAccountId", "oneThreadId", "oneEventId", "oneSender", QDateTime::currentDateTime(),
+                                 true, "Hello", History::MessageTypeText, 0, QDateTime());
+    QDateTime readTimestamp = QDateTime::currentDateTime();
+    History::MessageFlags flags = History::MessageFlagDelivered;
+    bool newEvent = false;
+    textEvent.setReadTimestamp(readTimestamp);
+    textEvent.setMessageFlags(flags);
+    textEvent.setNewEvent(newEvent);
+    QCOMPARE(textEvent.readTimestamp(), readTimestamp);
+    QCOMPARE(textEvent.messageFlags(), flags);
+    QCOMPARE(textEvent.newEvent(), newEvent);
 }
 
 QTEST_MAIN(TextEventTest)

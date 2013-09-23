@@ -49,6 +49,7 @@ public:
     QString senderId() const;
     QDateTime timestamp() const;
     bool newEvent() const;
+    void setNewEvent(bool value);
     EventType type() const;
     QVariantMap properties() const;
     bool isNull() const;

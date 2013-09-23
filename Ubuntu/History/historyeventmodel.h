@@ -80,6 +80,7 @@ public:
                                                 bool create = false);
 
     Q_INVOKABLE bool removeEvent(const QString &accountId, const QString &threadId, const QString &eventId, int eventType);
+    Q_INVOKABLE bool markEventAsRead(const QString &accountId, const QString &threadId, const QString &eventId, int eventType);
 
 Q_SIGNALS:
     void filterChanged();
@@ -92,6 +93,9 @@ protected Q_SLOTS:
     void onEventsModified(const History::Events &events);
     void onEventsRemoved(const History::Events &events);
 
+protected:
+    void timerEvent(QTimerEvent *event);
+
 private:
     History::EventViewPtr mView;
     History::Events mEvents;
@@ -101,6 +105,8 @@ private:
     HistoryThreadModel::EventType mType;
     QHash<int, QByteArray> mRoles;
     mutable QMap<History::TextEvent, QList<QVariant> > mAttachmentCache;
+    History::Events mEventWritingQueue;
+    int mEventWritingTimer;
 };
 
 #endif // HISTORYEVENTMODEL_H

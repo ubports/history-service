@@ -32,10 +32,11 @@
 #include "thread.h"
 #include "voiceevent.h"
 #include <QDebug>
+#include <QTimerEvent>
 
 HistoryEventModel::HistoryEventModel(QObject *parent) :
     QAbstractListModel(parent), mCanFetchMore(true), mFilter(0),
-    mSort(0), mType(HistoryThreadModel::EventTypeText)
+    mSort(0), mType(HistoryThreadModel::EventTypeText), mEventWritingTimer(0)
 {
     // configure the roles
     mRoles[AccountIdRole] = "accountId";
@@ -286,9 +287,25 @@ QString HistoryEventModel::threadIdForParticipants(const QString &accountId, int
 bool HistoryEventModel::removeEvent(const QString &accountId, const QString &threadId, const QString &eventId, int eventType)
 {
     History::Event event = History::Manager::instance()->getSingleEvent((History::EventType)eventType, accountId, threadId, eventId);
-    History::Manager::instance()->removeEvents(History::Events() << event);
+    return History::Manager::instance()->removeEvents(History::Events() << event);
 }
 
+bool HistoryEventModel::markEventAsRead(const QString &accountId, const QString &threadId, const QString &eventId, int eventType)
+{
+    History::Event event = History::Manager::instance()->getSingleEvent((History::EventType)eventType, accountId, threadId, eventId);
+    event.setNewEvent(false);
+    if (event.type() == History::EventTypeText) {
+        History::TextEvent textEvent = event;
+        textEvent.setReadTimestamp(QDateTime::currentDateTime());
+        event = textEvent;
+    }
+    mEventWritingQueue << event;
+    if (mEventWritingTimer != 0) {
+        killTimer(mEventWritingTimer);
+    }
+    mEventWritingTimer  = startTimer(500);
+    return true;
+}
 
 void HistoryEventModel::updateQuery()
 {
@@ -347,25 +364,38 @@ void HistoryEventModel::onEventsAdded(const History::Events &events)
         return;
     }
 
+    // filter the list for items already in the model
+    History::Events filteredEvents;
+    Q_FOREACH(const History::Event &event, events) {
+        if (!mEvents.contains(event)) {
+            filteredEvents << event;
+        }
+    }
+
     //FIXME: handle sorting
-    beginInsertRows(QModelIndex(), mEvents.count(), mEvents.count() + events.count() - 1);
-    mEvents << events;
+    beginInsertRows(QModelIndex(), mEvents.count(), mEvents.count() + filteredEvents.count() - 1);
+    mEvents << filteredEvents;
     endInsertRows();
 }
 
 void HistoryEventModel::onEventsModified(const History::Events &events)
 {
+    History::Events newEvents;
     Q_FOREACH(const History::Event &event, events) {
         int pos = mEvents.indexOf(event);
         if (pos >= 0) {
             mEvents[pos] = event;
             QModelIndex idx = index(pos);
             Q_EMIT dataChanged(idx, idx);
+        } else {
+            newEvents << event;
         }
     }
 
-    // FIXME: append modified events that are not loaded yet and make sure they don´t
-    // get added twice to the model when new pages are requested
+    // append the events that were not yet on the model
+    if (!newEvents.isEmpty()) {
+        onEventsAdded(newEvents);
+    }
 }
 
 void HistoryEventModel::onEventsRemoved(const History::Events &events)
@@ -382,4 +412,24 @@ void HistoryEventModel::onEventsRemoved(const History::Events &events)
     // FIXME: there is a corner case here: if an event was not loaded yet, but was already
     // removed by another client, it will still show up when a new page is requested. Maybe it
     // should be handle internally in History::EventView?
+}
+
+void HistoryEventModel::timerEvent(QTimerEvent *event)
+{
+    if (event->timerId() != mEventWritingTimer) {
+        return;
+    }
+
+    killTimer(mEventWritingTimer);
+    mEventWritingTimer = 0;
+
+    if (mEventWritingQueue.isEmpty()) {
+        return;
+    }
+
+    qDebug() << "Goint to update" << mEventWritingQueue.count() << "events.";
+    if (History::Manager::instance()->writeEvents(mEventWritingQueue)) {
+        qDebug() << "... succeeded!";
+        mEventWritingQueue.clear();
+    }
 }

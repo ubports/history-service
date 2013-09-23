@@ -125,10 +125,22 @@ MessageFlags TextEvent::messageFlags() const
     return d->messageFlags;
 }
 
+void TextEvent::setMessageFlags(const MessageFlags &value)
+{
+    Q_D(TextEvent);
+    d->messageFlags = value;
+}
+
 QDateTime TextEvent::readTimestamp() const
 {
     Q_D(const TextEvent);
     return d->readTimestamp;
+}
+
+void TextEvent::setReadTimestamp(const QDateTime &value)
+{
+    Q_D(TextEvent);
+    d->readTimestamp = value;
 }
 
 QString TextEvent::subject() const

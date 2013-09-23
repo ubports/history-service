@@ -168,11 +168,23 @@ QDateTime Event::timestamp() const
 
 /*!
  * \brief Returns whether the event is new (not yet seen by the user).
+ * \sa Event::setNewEvent()
  */
 bool Event::newEvent() const
 {
     Q_D(const Event);
     return d->newEvent;
+}
+
+/*!
+ * \brief Set whether this event is new (not yet seen by the user).
+ * \param value True if the event is new. False otherwise.
+ * \sa Event::newEvent()
+ */
+void Event::setNewEvent(bool value)
+{
+    Q_D(Event);
+    d->newEvent = value;
 }
 
 /*!

@@ -42,7 +42,7 @@ SQLiteHistoryThreadView::SQLiteHistoryThreadView(SQLiteHistoryPlugin *plugin,
     QString condition = filter;
     QString order;
     if (!sort.sortField().isNull()) {
-        order = QString("ORDER BY threads.%1 %2").arg(sort.sortField(), sort.sortOrder() == Qt::AscendingOrder ? "ASC" : "DESC");
+        order = QString("ORDER BY %1 %2").arg(sort.sortField(), sort.sortOrder() == Qt::AscendingOrder ? "ASC" : "DESC");
         // FIXME: check case sensitiviy
     }
 
