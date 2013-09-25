@@ -95,6 +95,7 @@ protected Q_SLOTS:
 
 protected:
     void timerEvent(QTimerEvent *event);
+    History::Thread getThread(History::EventType type, const QString &accountId, const QString &threadId) const;
 
 private:
     History::EventViewPtr mView;
@@ -107,6 +108,7 @@ private:
     mutable QMap<History::TextEvent, QList<QVariant> > mAttachmentCache;
     History::Events mEventWritingQueue;
     int mEventWritingTimer;
+    mutable QMap<QString, History::Thread> mCachedThreads;
 };
 
 #endif // HISTORYEVENTMODEL_H
