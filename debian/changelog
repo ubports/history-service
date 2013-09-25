@@ -1,3 +1,19 @@
+history-service (0.1+13.10.20130925-0ubuntu1) saucy; urgency=low
+
+  [ Gustavo Pichorim Boiko ]
+  * Make it possible to modify events.
+  * Set the Recover property on the telepathy client file to make sure
+    that if the history daemon crashes it will get restarted by
+    telepathy mission control. (LP: #1228446)
+  * Clear the inconsistencies between thread_participants and threads on
+    existing databases to make sure the service continues to work
+    properly. (LP: #1228446)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 100
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 25 Sep 2013 06:35:24 +0000
+
 history-service (0.1+13.10.20130919.3-0ubuntu1) saucy; urgency=low
 
   [ Gustavo Pichorim Boiko ]
