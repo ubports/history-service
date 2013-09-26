@@ -533,15 +533,21 @@ QString SQLiteHistoryPlugin::sqlQueryForEvents(History::EventType type, const QS
         modifiedCondition.prepend(" WHERE ");
     }
 
+    QString participantsField = "(SELECT group_concat(thread_participants.participantId,  \"|,|\") "
+                                "FROM thread_participants WHERE thread_participants.accountId=%1.accountId "
+                                "AND thread_participants.threadId=%1.threadId "
+                                "AND thread_participants.type=%2 GROUP BY accountId,threadId,type) as participants";
     QString queryText;
     switch (type) {
     case History::EventTypeText:
-        queryText = QString("SELECT accountId, threadId, eventId, senderId, timestamp, newEvent,"
-                            "message, messageType, messageFlags, readTimestamp, subject FROM text_events %1 %2").arg(modifiedCondition, order);
+        participantsField = participantsField.arg("text_events", QString::number(type));
+        queryText = QString("SELECT accountId, threadId, eventId, senderId, timestamp, newEvent, %1, "
+                            "message, messageType, messageFlags, readTimestamp, subject FROM text_events %2 %3").arg(participantsField, modifiedCondition, order);
         break;
     case History::EventTypeVoice:
-        queryText = QString("SELECT accountId, threadId, eventId, senderId, timestamp, newEvent,"
-                            "duration, missed FROM voice_events %1 %2").arg(modifiedCondition, order);
+        participantsField = participantsField.arg("voice_events", QString::number(type));
+        queryText = QString("SELECT accountId, threadId, eventId, senderId, timestamp, newEvent, %1, "
+                            "duration, missed FROM voice_events %2 %3").arg(participantsField, modifiedCondition, order);
         break;
     }
 
@@ -564,6 +570,8 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseEventResults(History::EventType typ
         event[History::FieldSenderId] = query.value(3);
         event[History::FieldTimestamp] = query.value(4);
         event[History::FieldNewEvent] = query.value(5);
+        event[History::FieldParticipants] = query.value(6);
+
 
         switch (type) {
         case History::EventTypeText:
@@ -595,14 +603,14 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseEventResults(History::EventType typ
                 attachmentsQuery.clear();
                 event[History::FieldAttachments] = QVariant::fromValue(attachments);
             }
-            event[History::FieldMessage] = query.value(6);
-            event[History::FieldMessageType] = query.value(7);
-            event[History::FieldMessageFlags] = query.value(8);
-            event[History::FieldReadTimestamp] = query.value(9);
+            event[History::FieldMessage] = query.value(7);
+            event[History::FieldMessageType] = query.value(8);
+            event[History::FieldMessageFlags] = query.value(9);
+            event[History::FieldReadTimestamp] = query.value(10);
             break;
         case History::EventTypeVoice:
-            event[History::FieldDuration] = QTime(0,0).addSecs(query.value(6).toInt());
-            event[History::FieldMissed] = query.value(7);
+            event[History::FieldDuration] = QTime(0,0).addSecs(query.value(7).toInt());
+            event[History::FieldMissed] = query.value(8);
             break;
         }
 

@@ -38,7 +38,8 @@ public:
                     const QDateTime &theTimestamp,
                     bool theNewEvent,
                     bool theMissed,
-                    const QTime &theDuration = QTime());
+                    const QTime &theDuration,
+                    const QStringList &theParticipants);
     ~VoiceEventPrivate();
     bool missed;
     QTime duration;

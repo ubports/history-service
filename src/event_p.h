@@ -24,6 +24,7 @@
 
 #include <QDateTime>
 #include <QString>
+#include <QStringList>
 #include "types.h"
 
 #define HISTORY_EVENT_DECLARE_CLONE(Class) \
@@ -51,7 +52,8 @@ public:
                        const QString &theEventId,
                        const QString &theSenderId,
                        const QDateTime &theTimestamp,
-                       bool theNewEvent);
+                       bool theNewEvent,
+                       const QStringList &theParticipants);
     virtual ~EventPrivate();
 
     virtual EventType type() const { return EventTypeNull; }
@@ -64,6 +66,7 @@ public:
     QString receiver;
     QDateTime timestamp;
     bool newEvent;
+    QStringList participants;
 
     static const QSharedPointer<EventPrivate>& getD(const Event& other) { return other.d_ptr; }
 
