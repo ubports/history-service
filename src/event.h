@@ -25,6 +25,7 @@
 #include <QDateTime>
 #include <QScopedPointer>
 #include <QString>
+#include <QStringList>
 #include <QVariantMap>
 #include "types.h"
 
@@ -51,6 +52,7 @@ public:
     bool newEvent() const;
     void setNewEvent(bool value);
     EventType type() const;
+    QStringList participants() const;
     QVariantMap properties() const;
     bool isNull() const;
     bool operator==(const Event &other) const;

@@ -38,8 +38,8 @@ VoiceEventPrivate::VoiceEventPrivate(const QString &theAccountId,
                                    const QDateTime &theTimestamp,
                                    bool theNewEvent,
                                    bool theMissed,
-                                   const QTime &theDuration)
-    : EventPrivate(theAccountId, theThreadId, theEventId, theSender, theTimestamp, theNewEvent),
+                                   const QTime &theDuration, const QStringList &theParticipants)
+    : EventPrivate(theAccountId, theThreadId, theEventId, theSender, theTimestamp, theNewEvent, theParticipants),
       missed(theMissed), duration(theDuration)
 {
 }
@@ -81,8 +81,8 @@ VoiceEvent::VoiceEvent(const QString &accountId,
                      const QDateTime &timestamp,
                      bool newEvent,
                      bool missed,
-                     const QTime &duration)
-    : Event(*new VoiceEventPrivate(accountId, threadId, eventId, sender, timestamp, newEvent, missed, duration))
+                     const QTime &duration, const QStringList &participants)
+    : Event(*new VoiceEventPrivate(accountId, threadId, eventId, sender, timestamp, newEvent, missed, duration, participants))
 {
 }
 
@@ -114,10 +114,11 @@ Event VoiceEvent::fromProperties(const QVariantMap &properties)
     QString senderId = properties[FieldSenderId].toString();
     QDateTime timestamp = QDateTime::fromString(properties[FieldTimestamp].toString(), Qt::ISODate);
     bool newEvent = properties[FieldNewEvent].toBool();
+    QStringList participants = properties[FieldParticipants].toStringList();
     bool missed = properties[FieldMissed].toBool();
     QTime duration = QTime(0,0,0).addSecs(properties[FieldDuration].toInt());
     event = VoiceEvent(accountId, threadId, eventId, senderId, timestamp, newEvent,
-                             missed, duration);
+                             missed, duration, participants);
     return event;
 }
 

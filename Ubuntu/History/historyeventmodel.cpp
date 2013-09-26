@@ -100,10 +100,7 @@ QVariant HistoryEventModel::data(const QModelIndex &index, int role) const
         result = event.threadId();
         break;
     case ParticipantsRole:
-        thread = getThread(event.type(), event.accountId(), event.threadId());
-        if (!thread.isNull()) {
-            result = thread.participants();
-        }
+        result = event.participants();
         break;
     case TypeRole:
         result = event.type();
@@ -314,9 +311,6 @@ void HistoryEventModel::updateQuery()
     mEvents.clear();
     endRemoveRows();
 
-    // clear the cached threads
-    mCachedThreads.clear();
-
     // and create the view again
     History::Filter queryFilter;
     History::Sort querySort;
@@ -435,16 +429,4 @@ void HistoryEventModel::timerEvent(QTimerEvent *event)
         qDebug() << "... succeeded!";
         mEventWritingQueue.clear();
     }
-}
-
-History::Thread HistoryEventModel::getThread(History::EventType type, const QString &accountId, const QString &threadId) const
-{
-    QString hash = QString("%1::%2::%3").arg(QString::number(type), accountId, threadId);
-    if (mCachedThreads.contains(hash)) {
-        return mCachedThreads[hash];
-    }
-
-    History::Thread thread = History::Manager::instance()->getSingleThread(type, accountId, threadId);
-    mCachedThreads[hash] = thread;
-    return thread;
 }

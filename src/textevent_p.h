@@ -45,7 +45,8 @@ public:
                     MessageFlags theMessageFlags,
                     const QDateTime &theReadTimestamp,
                     const QString &theSubject,
-                    const TextEventAttachments &theAttachments);
+                    const TextEventAttachments &theAttachments,
+                    const QStringList &theParticipants);
     ~TextEventPrivate();
     QString message;
     MessageType messageType;

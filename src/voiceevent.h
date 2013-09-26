@@ -44,7 +44,8 @@ public:
                const QDateTime &timestamp,
                bool newEvent,
                bool missed,
-               const QTime &duration = QTime());
+               const QTime &duration = QTime(),
+               const QStringList &participants = QStringList());
     ~VoiceEvent();
 
     // copy related members

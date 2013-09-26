@@ -42,8 +42,8 @@ TextEventPrivate::TextEventPrivate(const QString &theAccountId,
                                  MessageFlags theMessageFlags,
                                  const QDateTime &theReadTimestamp,
                                  const QString &theSubject,
-                                 const TextEventAttachments &theAttachments) :
-    EventPrivate(theAccountId, theThreadId, theEventId, theSender, theTimestamp, theNewEvent),
+                                 const TextEventAttachments &theAttachments, const QStringList &theParticipants) :
+    EventPrivate(theAccountId, theThreadId, theEventId, theSender, theTimestamp, theNewEvent, theParticipants),
     message(theMessage), messageType(theMessageType), messageFlags(theMessageFlags),
     readTimestamp(theReadTimestamp), subject(theSubject), attachments(theAttachments)
 {
@@ -97,9 +97,9 @@ TextEvent::TextEvent(const QString &accountId,
                    MessageFlags messageFlags,
                    const QDateTime &readTimestamp,
                    const QString &subject,
-                   const TextEventAttachments &attachments)
+                   const TextEventAttachments &attachments, const QStringList &participants)
     : Event(*new TextEventPrivate(accountId, threadId, eventId, sender, timestamp, newEvent,
-                                  message, messageType, messageFlags, readTimestamp, subject, attachments))
+                                  message, messageType, messageFlags, readTimestamp, subject, attachments, participants))
 {
 }
 
@@ -168,6 +168,7 @@ Event TextEvent::fromProperties(const QVariantMap &properties)
     QString senderId = properties[FieldSenderId].toString();
     QDateTime timestamp = QDateTime::fromString(properties[FieldTimestamp].toString(), Qt::ISODate);
     bool newEvent = properties[FieldNewEvent].toBool();
+    QStringList participants = properties[FieldParticipants].toStringList();
     QString message = properties[FieldMessage].toString();
     QString subject = properties[FieldSubject].toString();
     MessageType messageType = (MessageType) properties[FieldMessageType].toInt();
@@ -186,7 +187,7 @@ Event TextEvent::fromProperties(const QVariantMap &properties)
 
     // and finally create the event
     event = TextEvent(accountId, threadId, eventId, senderId, timestamp, newEvent,
-                      message, messageType, messageFlags, readTimestamp, subject, attachments);
+                      message, messageType, messageFlags, readTimestamp, subject, attachments, participants);
     return event;
 }
 
