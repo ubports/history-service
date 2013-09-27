@@ -1,3 +1,16 @@
+history-service (0.1+13.10.20130927-0ubuntu1) saucy; urgency=low
+
+  [ Gustavo Pichorim Boiko ]
+  * Cache the threads to optimize the performance a bit when displaying
+    events.
+  * Add a participants field on event to avoid having to query threads
+    for each and every event just to discover the participants.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 103
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 27 Sep 2013 05:41:17 +0000
+
 history-service (0.1+13.10.20130925-0ubuntu1) saucy; urgency=low
 
   [ Gustavo Pichorim Boiko ]
