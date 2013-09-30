@@ -158,27 +158,43 @@ bool HistoryDaemon::writeEvents(const QList<QVariantMap> &events)
 
     QList<QVariantMap> newEvents;
     QList<QVariantMap> modifiedEvents;
+    QList<QVariantMap> threads;
 
     mBackend->beginBatchOperation();
 
     Q_FOREACH(const QVariantMap &event, events) {
         History::EventType type = (History::EventType) event[History::FieldType].toInt();
         History::EventWriteResult result;
+
+        // get the threads for the events to notify their modifications
+        QString accountId = event[History::FieldAccountId].toString();
+        QString threadId = event[History::FieldThreadId].toString();
+        QVariantMap thread = getSingleThread(type, accountId, threadId);
+        if (!thread.isEmpty() && !threads.contains(thread)) {
+            threads << thread;
+        }
+
+        // set the participants field in the event
+        QVariantMap savedEvent = event;
+        savedEvent[History::FieldParticipants] = thread[History::FieldParticipants];
+
+        // and finally write the event
         switch (type) {
         case History::EventTypeText:
-            result = mBackend->writeTextEvent(event);
+            result = mBackend->writeTextEvent(savedEvent);
             break;
         case History::EventTypeVoice:
-            result = mBackend->writeVoiceEvent(event);
+            result = mBackend->writeVoiceEvent(savedEvent);
             break;
         }
 
+        // check if the event was a new one or a modification to an existing one
         switch (result) {
         case History::EventWriteCreated:
-            newEvents << event;
+            newEvents << savedEvent;
             break;
         case History::EventWriteModified:
-            modifiedEvents << event;
+            modifiedEvents << savedEvent;
             break;
         case History::EventWriteError:
             mBackend->rollbackBatchOperation();
@@ -186,22 +202,9 @@ bool HistoryDaemon::writeEvents(const QList<QVariantMap> &events)
         }
     }
 
-    // now get the threads for the events to notify their modifications
-    QList<QVariantMap> threads;
-    Q_FOREACH(const QVariantMap &event, events) {
-        History::EventType type = (History::EventType) event[History::FieldType].toInt();
-        QString accountId = event[History::FieldAccountId].toString();
-        QString threadId = event[History::FieldThreadId].toString();
-
-        QVariantMap thread = getSingleThread(type, accountId, threadId);
-        if (!thread.isEmpty() && !threads.contains(thread)) {
-            threads << thread;
-        }
-
-    }
-
     mBackend->endBatchOperation();
 
+    // and last but not least, notify the results
     if (!newEvents.isEmpty()) {
         mDBus.notifyEventsAdded(newEvents);
     }
