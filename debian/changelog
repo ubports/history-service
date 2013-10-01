@@ -1,3 +1,14 @@
+history-service (0.1+13.10.20131001.4-0ubuntu1) saucy; urgency=low
+
+  [ Gustavo Pichorim Boiko ]
+  * Make sure the events emitted on signals contain the participants
+    field.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 105
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 01 Oct 2013 21:20:42 +0000
+
 history-service (0.1+13.10.20130927-0ubuntu1) saucy; urgency=low
 
   [ Gustavo Pichorim Boiko ]
