@@ -169,14 +169,7 @@ bool HistoryDaemon::writeEvents(const QList<QVariantMap> &events)
         // get the threads for the events to notify their modifications
         QString accountId = event[History::FieldAccountId].toString();
         QString threadId = event[History::FieldThreadId].toString();
-        QVariantMap thread = getSingleThread(type, accountId, threadId);
-        if (!thread.isEmpty() && !threads.contains(thread)) {
-            threads << thread;
-        }
-
-        // set the participants field in the event
         QVariantMap savedEvent = event;
-        savedEvent[History::FieldParticipants] = thread[History::FieldParticipants];
 
         // and finally write the event
         switch (type) {
@@ -187,6 +180,15 @@ bool HistoryDaemon::writeEvents(const QList<QVariantMap> &events)
             result = mBackend->writeVoiceEvent(savedEvent);
             break;
         }
+
+        // only get the thread AFTER the event is written to make sure it is up-to-date
+        QVariantMap thread = getSingleThread(type, accountId, threadId);
+        threads.removeAll(thread);
+        threads << thread;
+
+        // set the participants field in the event
+        savedEvent[History::FieldParticipants] = thread[History::FieldParticipants];
+
 
         // check if the event was a new one or a modification to an existing one
         switch (result) {
