@@ -86,7 +86,7 @@ void VoiceEventTest::testCreateNewEvent()
     QCOMPARE(properties[History::FieldTimestamp].toString(), timestamp.toString(Qt::ISODate));
     QCOMPARE(properties[History::FieldNewEvent].toBool(), newEvent);
     QCOMPARE(properties[History::FieldMissed].toBool(), missed);
-    QCOMPARE(properties[History::FieldDuration].toTime(), duration);
+    QCOMPARE(QTime(0,0).addSecs(properties[History::FieldDuration].toInt()), duration);
 }
 
 void VoiceEventTest::testCastToEventAndBack()

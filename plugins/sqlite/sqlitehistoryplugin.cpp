@@ -396,7 +396,7 @@ History::EventWriteResult SQLiteHistoryPlugin::writeVoiceEvent(const QVariantMap
     query.bindValue(":senderId", event[History::FieldSenderId]);
     query.bindValue(":timestamp", event[History::FieldTimestamp]);
     query.bindValue(":newEvent", event[History::FieldNewEvent]);
-    query.bindValue(":duration", QTime(0,0,0,0).secsTo(event[History::FieldDuration].toTime()));
+    query.bindValue(":duration", event[History::FieldDuration]);
     query.bindValue(":missed", event[History::FieldMissed]);
 
     if (!query.exec()) {
@@ -609,7 +609,7 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseEventResults(History::EventType typ
             event[History::FieldReadTimestamp] = query.value(10);
             break;
         case History::EventTypeVoice:
-            event[History::FieldDuration] = QTime(0,0).addSecs(query.value(7).toInt());
+            event[History::FieldDuration] = query.value(7).toInt();
             event[History::FieldMissed] = query.value(8);
             break;
         }
