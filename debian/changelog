@@ -1,3 +1,14 @@
+history-service (0.1+13.10.20131008.1-0ubuntu1) saucy; urgency=low
+
+  [ Gustavo Pichorim Boiko ]
+  * Make sure the ThreadsModified signal is emitted with the threads up-
+    to-date. (LP: #1234611)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 107
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 08 Oct 2013 04:18:37 +0000
+
 history-service (0.1+13.10.20131001.4-0ubuntu1) saucy; urgency=low
 
   [ Gustavo Pichorim Boiko ]
