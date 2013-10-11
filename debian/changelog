@@ -1,3 +1,13 @@
+history-service (0.1+13.10.20131011-0ubuntu1) saucy; urgency=low
+
+  [ Gustavo Pichorim Boiko ]
+  * Fix passing the call duration via dbus.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 109
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 11 Oct 2013 08:47:23 +0000
+
 history-service (0.1+13.10.20131008.1-0ubuntu1) saucy; urgency=low
 
   [ Gustavo Pichorim Boiko ]
