@@ -335,12 +335,12 @@ void HistoryDaemon::onCallEnded(const Tp::CallChannelPtr &channel)
 
     // FIXME: check if checking for isRequested() is enough
     bool incoming = !channel->isRequested();
-    QTime duration(0, 0, 0);
+    int duration;
     bool missed = incoming && channel->callStateReason().reason == Tp::CallStateChangeReasonNoAnswer;
 
     if (!missed) {
         QDateTime activeTime = channel->property("activeTimestamp").toDateTime();
-        duration = duration.addSecs(activeTime.secsTo(QDateTime::currentDateTime()));
+        duration = activeTime.secsTo(QDateTime::currentDateTime());
     }
 
     QString eventId = QString("%1:%2").arg(thread[History::FieldThreadId].toString()).arg(timestamp.toString());
