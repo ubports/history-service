@@ -1,3 +1,15 @@
+history-service (0.1+13.10.20131016-0ubuntu1) saucy; urgency=low
+
+  [ Gustavo Pichorim Boiko ]
+  * Fix the duration saving on new call entries. They were being saved
+    as QTime, but they should be actually saved as just the duration in
+    seconds.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 111
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 16 Oct 2013 04:15:07 +0000
+
 history-service (0.1+13.10.20131011-0ubuntu1) saucy; urgency=low
 
   [ Gustavo Pichorim Boiko ]
