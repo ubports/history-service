@@ -22,6 +22,7 @@
 #include "filter.h"
 
 Q_DECLARE_METATYPE(History::MatchFlags)
+Q_DECLARE_METATYPE(History::Filter)
 
 class FilterTest : public QObject
 {
@@ -34,14 +35,20 @@ private Q_SLOTS:
     void testSetProperties_data();
     void testSetProperties();
     void testToStringPrefix();
+    void testNullToString();
     void testMatch_data();
     void testMatch();
-    void testEquals();
+    void testEqualsOperator();
+    void testAssignmentOperator();
+    void testIsValid_data();
+    void testIsValid();
+    void testType();
 };
 
 void FilterTest::initTestCase()
 {
     qRegisterMetaType<History::MatchFlags>();
+    qRegisterMetaType<History::Filter>();
 }
 
 void FilterTest::testCreateNewFilter_data()
@@ -113,6 +120,12 @@ void FilterTest::testToStringPrefix()
     QVERIFY(filter.toString().startsWith(filterProperty));
 }
 
+void FilterTest::testNullToString()
+{
+    History::Filter filter;
+    QVERIFY(filter.toString().isNull());
+}
+
 void FilterTest::testMatch_data()
 {
     QTest::addColumn<QVariantMap>("properties");
@@ -160,7 +173,7 @@ void FilterTest::testMatch()
 
 }
 
-void FilterTest::testEquals()
+void FilterTest::testEqualsOperator()
 {
     History::Filter filterOne("oneProperty", "oneValue");
     History::Filter equal("oneProperty", "oneValue");
@@ -172,6 +185,39 @@ void FilterTest::testEquals()
     QVERIFY(!(filterOne == differentValue));
     QVERIFY(filterOne != differentProperty);
     QVERIFY(filterOne != differentValue);
+}
+
+void FilterTest::testAssignmentOperator()
+{
+    History::Filter filter(History::FieldAccountId, "OneAccountId", History::MatchFlags(History::MatchContains | History::MatchCaseSensitive));
+    History::Filter other;
+    other = filter;
+    QVERIFY(other == filter);
+}
+
+void FilterTest::testIsValid_data()
+{
+    QTest::addColumn<History::Filter>("filter");
+    QTest::addColumn<bool>("isValid");
+
+    QTest::newRow("null filter") << History::Filter() << false;
+    QTest::newRow("null property") << History::Filter(QString::null, "Foobar") << false;
+    QTest::newRow("null value") << History::Filter("oneProperty") << false;
+    QTest::newRow("valid filter") << History::Filter("oneProperty", "oneValue") << true;
+}
+
+void FilterTest::testIsValid()
+{
+    QFETCH(History::Filter, filter);
+    QFETCH(bool, isValid);
+    QCOMPARE(filter.isValid(), isValid);
+    QCOMPARE(filter.isNull(), !isValid);
+}
+
+void FilterTest::testType()
+{
+    History::Filter filter;
+    QCOMPARE(filter.type(), History::FilterTypeStandard);
 }
 
 
