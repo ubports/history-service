@@ -98,9 +98,9 @@ QVariantMap Sort::properties() const
     Q_D(const Sort);
     QVariantMap map;
 
-    map[SortField] = d->sortField;
-    map[SortOrder] = (int)d->sortOrder;
-    map[CaseSensitivity] = (int)d->caseSensitivity;
+    map[FieldSortField] = d->sortField;
+    map[FieldSortOrder] = (int)d->sortOrder;
+    map[FieldCaseSensitivity] = (int)d->caseSensitivity;
 
     return map;
 }
@@ -112,9 +112,9 @@ Sort Sort::fromProperties(const QVariantMap &properties)
         return sort;
     }
 
-    sort = Sort(properties[SortField].toString(),
-                (Qt::SortOrder) properties[SortOrder].toInt(),
-                (Qt::CaseSensitivity) properties[CaseSensitivity].toInt());
+    sort = Sort(properties[FieldSortField].toString(),
+                (Qt::SortOrder) properties[FieldSortOrder].toInt(),
+                (Qt::CaseSensitivity) properties[FieldCaseSensitivity].toInt());
     return sort;
 }
 
