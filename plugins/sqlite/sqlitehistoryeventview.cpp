@@ -30,7 +30,7 @@
 SQLiteHistoryEventView::SQLiteHistoryEventView(SQLiteHistoryPlugin *plugin,
                                              History::EventType type,
                                              const History::Sort &sort,
-                                             const QString &filter)
+                                             const History::Filter &filter)
     : History::PluginEventView(), mType(type), mSort(sort), mFilter(filter),
       mQuery(SQLiteDatabase::instance()->database()), mPageSize(15), mPlugin(plugin), mOffset(0), mValid(true)
 {
@@ -38,7 +38,7 @@ SQLiteHistoryEventView::SQLiteHistoryEventView(SQLiteHistoryPlugin *plugin,
     mQuery.setForwardOnly(true);
 
     // FIXME: validate the filter
-    QString condition = filter;
+    QString condition = filter.toString();
     QString order;
     if (!sort.sortField().isNull()) {
         order = QString("ORDER BY %1 %2").arg(sort.sortField(), sort.sortOrder() == Qt::AscendingOrder ? "ASC" : "DESC");

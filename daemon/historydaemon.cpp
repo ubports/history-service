@@ -21,6 +21,7 @@
 
 #include "historydaemon.h"
 #include "telepathyhelper.h"
+#include "filter.h"
 #include "sort.h"
 
 #include "pluginmanager.h"
@@ -96,14 +97,15 @@ QVariantMap HistoryDaemon::threadForParticipants(const QString &accountId,
     return thread;
 }
 
-QString HistoryDaemon::queryThreads(int type, const QVariantMap &sort, const QString &filter)
+QString HistoryDaemon::queryThreads(int type, const QVariantMap &sort, const QVariantMap &filter)
 {
     if (!mBackend) {
         return QString::null;
     }
 
     History::Sort theSort = History::Sort::fromProperties(sort);
-    History::PluginThreadView *view = mBackend->queryThreads((History::EventType)type, theSort, filter);
+    History::Filter theFilter = History::Filter::fromProperties(filter);
+    History::PluginThreadView *view = mBackend->queryThreads((History::EventType)type, theSort, theFilter);
 
     if (!view) {
         return QString::null;
@@ -114,14 +116,15 @@ QString HistoryDaemon::queryThreads(int type, const QVariantMap &sort, const QSt
     return view->objectPath();
 }
 
-QString HistoryDaemon::queryEvents(int type, const QVariantMap &sort, const QString &filter)
+QString HistoryDaemon::queryEvents(int type, const QVariantMap &sort, const QVariantMap &filter)
 {
     if (!mBackend) {
         return QString::null;
     }
 
     History::Sort theSort = History::Sort::fromProperties(sort);
-    History::PluginEventView *view = mBackend->queryEvents((History::EventType)type, theSort, filter);
+    History::Filter theFilter = History::Filter::fromProperties(filter);
+    History::PluginEventView *view = mBackend->queryEvents((History::EventType)type, theSort, theFilter);
 
     if (!view) {
         return QString::null;

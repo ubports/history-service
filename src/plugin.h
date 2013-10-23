@@ -23,6 +23,7 @@
 #define HISTORY_PLUGIN_H
 
 #include <QtPlugin>
+#include "filter.h"
 #include "types.h"
 #include "sort.h"
 #include <QVariantMap>
@@ -41,10 +42,10 @@ public:
     // Reader part of the plugin
     virtual PluginThreadView* queryThreads(EventType type,
                                        const Sort &sort = Sort(),
-                                       const QString &filter = QString::null) = 0;
+                                       const Filter &filter = Filter()) = 0;
     virtual PluginEventView* queryEvents(EventType type,
                                          const Sort &sort = Sort(),
-                                         const QString &filter = QString::null) = 0;
+                                         const Filter &filter = Filter()) = 0;
     virtual QVariantMap getSingleThread(EventType type,
                                         const QString &accountId,
                                         const QString &threadId) = 0;
