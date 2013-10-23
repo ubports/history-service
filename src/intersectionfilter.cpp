@@ -53,6 +53,22 @@ bool IntersectionFilterPrivate::isValid() const
     return !filters.isEmpty();
 }
 
+QVariantMap IntersectionFilterPrivate::properties() const
+{
+    QVariantMap map;
+    if (!isValid()) {
+        return map;
+    }
+
+    QVariantList filterList;
+    Q_FOREACH(const Filter &filter, filters) {
+        filterList << filter.properties();
+    }
+    map[FieldFilters] = filterList;
+    map[FieldFilterType] = (int) History::FilterTypeIntersection;
+    return map;
+}
+
 QString IntersectionFilterPrivate::toString(const QString &propertyPrefix) const
 {
     if (filters.isEmpty()) {
@@ -113,6 +129,24 @@ Filters IntersectionFilter::filters() const
 {
     Q_D(const IntersectionFilter);
     return d->filters;
+}
+
+Filter IntersectionFilter::fromProperties(const QVariantMap &properties)
+{
+    IntersectionFilter filter;
+    if (properties.isEmpty()) {
+        return filter;
+    }
+
+    QVariantList filters = properties[FieldFilters].toList();
+    Q_FOREACH(const QVariant &props, filters) {
+        Filter innerFilter = History::Filter::fromProperties(props.toMap());
+        if (innerFilter.isValid()) {
+            filter.append(innerFilter);
+        }
+    }
+
+    return filter;
 }
 
 }

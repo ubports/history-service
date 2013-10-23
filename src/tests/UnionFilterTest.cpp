@@ -39,6 +39,8 @@ private Q_SLOTS:
     void testToStringWithOneFilter();
     void testToStringWithManyFilters();
     void testConvertToFilterAndBack();
+    void testProperties();
+    void testFromProperties();
 };
 
 void UnionFilterTest::initTestCase()
@@ -194,6 +196,60 @@ void UnionFilterTest::testConvertToFilterAndBack()
     qDebug() << "original toString:" << unionFilter.toString();
     QCOMPARE(andBack, unionFilter);
     QCOMPARE(andBack.toString(), unionFilter.toString());
+}
+
+void UnionFilterTest::testProperties()
+{
+    History::Filter filterOne("propertyOne", "valueOne");
+    History::Filter filterTwo("propertyTwo", "valueTwo");
+    History::Filter filterThree("propertyThree", "valueThree");
+
+    History::UnionFilter unionFilter;
+    unionFilter.setFilters(QList<History::Filter>() << filterOne << filterTwo << filterThree);
+
+    QVariantMap properties = unionFilter.properties();
+    QVERIFY(!properties.isEmpty());
+    QVERIFY(properties.contains(History::FieldFilters));
+    QCOMPARE(properties[History::FieldFilterType].toInt(), (int) History::FilterTypeUnion);
+
+    QVariantList filters = properties[History::FieldFilters].toList();
+    QCOMPARE(filters.count(), unionFilter.filters().count());
+    QVariantMap propsOne = filters[0].toMap();
+    QCOMPARE(propsOne, filterOne.properties());
+    QVariantMap propsTwo = filters[1].toMap();
+    QCOMPARE(propsTwo, filterTwo.properties());
+    QVariantMap propsThree = filters[2].toMap();
+    QCOMPARE(propsThree, filterThree.properties());
+
+    // check that a null filter returns an empty QVariantMap
+    History::UnionFilter nullFilter;
+    QVERIFY(nullFilter.properties().isEmpty());
+}
+
+void UnionFilterTest::testFromProperties()
+{
+    QVariantMap properties;
+
+    // check that a null filter is returned
+    History::Filter nullFilter = History::UnionFilter::fromProperties(properties);
+    QVERIFY(nullFilter.isNull());
+
+    properties[History::FieldFilterType] = (int)History::FilterTypeUnion;
+
+    QVariantList filters;
+    for (int i = 0; i < 3; ++i) {
+        History::Filter filter(QString("filter%1").arg(QString::number(i)), QString("value%1").arg(QString::number(i)), History::MatchCaseInsensitive);
+        filters.append(filter.properties());
+    }
+    properties[History::FieldFilters] = filters;
+
+    History::Filter filter = History::UnionFilter::fromProperties(properties);
+    QCOMPARE(filter.type(), History::FilterTypeUnion);
+    History::UnionFilter unionFilter = filter;
+    QCOMPARE(unionFilter.filters().count(), filters.count());
+    for (int i = 0; i < filters.count(); ++i) {
+        QCOMPARE(unionFilter.filters()[i].properties(), filters[i].toMap());
+    }
 }
 
 QTEST_MAIN(UnionFilterTest)

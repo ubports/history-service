@@ -20,6 +20,8 @@
 #include <QtTest/QtTest>
 
 #include "filter.h"
+#include "intersectionfilter.h"
+#include "unionfilter.h"
 
 Q_DECLARE_METATYPE(History::MatchFlags)
 
@@ -210,6 +212,22 @@ void FilterTest::testFromProperties()
     QCOMPARE(filter.filterProperty(), properties[History::FieldFilterProperty].toString());
     QCOMPARE(filter.filterValue(), properties[History::FieldFilterValue]);
     QCOMPARE(filter.matchFlags(), History::MatchFlags(properties[History::FieldMatchFlags].toInt()));
+
+    // test that calling fromProperties() on intersection filters works as expected
+    History::IntersectionFilter intersectionFilter;
+    intersectionFilter.append(History::Filter("oneProperty", "oneValue"));
+    properties = intersectionFilter.properties();
+    filter = History::Filter::fromProperties(properties);
+    QCOMPARE(filter.type(), History::FilterTypeIntersection);
+    QCOMPARE(filter.properties(), properties);
+
+    // and also on union filters
+    History::UnionFilter unionFilter;
+    unionFilter.append(History::Filter("oneProperty", "oneValue"));
+    properties = unionFilter.properties();
+    filter = History::Filter::fromProperties(properties);
+    QCOMPARE(filter.type(), History::FilterTypeUnion);
+    QCOMPARE(filter.properties(), properties);
 }
 
 

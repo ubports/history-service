@@ -63,7 +63,7 @@ public:
     bool isValid() const;
     bool isNull() const { return !isValid(); }
 
-    virtual QVariantMap properties() const;
+    QVariantMap properties() const;
     static Filter fromProperties(const QVariantMap &properties);
 
 protected:

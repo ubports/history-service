@@ -59,6 +59,22 @@ bool UnionFilterPrivate::isValid() const
     return !filters.isEmpty();
 }
 
+QVariantMap UnionFilterPrivate::properties() const
+{
+    QVariantMap map;
+    if (!isValid()) {
+        return map;
+    }
+
+    QVariantList filterList;
+    Q_FOREACH(const Filter &filter, filters) {
+        filterList << filter.properties();
+    }
+    map[FieldFilters] = filterList;
+    map[FieldFilterType] = (int) History::FilterTypeUnion;
+    return map;
+}
+
 QString UnionFilterPrivate::toString(const QString &propertyPrefix) const
 {
     if (filters.isEmpty()) {
@@ -118,6 +134,24 @@ Filters UnionFilter::filters() const
 {
     Q_D(const UnionFilter);
     return d->filters;
+}
+
+Filter UnionFilter::fromProperties(const QVariantMap &properties)
+{
+    UnionFilter filter;
+    if (properties.isEmpty()) {
+        return filter;
+    }
+
+    QVariantList filters = properties[FieldFilters].toList();
+    Q_FOREACH(const QVariant &props, filters) {
+        Filter innerFilter = History::Filter::fromProperties(props.toMap());
+        if (innerFilter.isValid()) {
+            filter.append(innerFilter);
+        }
+    }
+
+    return filter;
 }
 
 }

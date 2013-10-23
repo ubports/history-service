@@ -42,6 +42,8 @@ public:
 
     Filters filters;
 
+    virtual QVariantMap properties() const;
+
     HISTORY_FILTER_DECLARE_CLONE(IntersectionFilter)
 };
 
