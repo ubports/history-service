@@ -176,4 +176,37 @@ bool Filter::isValid() const
     return d->isValid();
 }
 
+QVariantMap Filter::properties() const
+{
+    Q_D(const Filter);
+    QVariantMap map;
+    if (isNull()) {
+        return map;
+    }
+    map[FieldFilterType] = (int)FilterTypeStandard;
+    map[FieldFilterProperty] = d->filterProperty;
+    map[FieldFilterValue] = d->filterValue;
+    map[FieldMatchFlags] = (int)d->matchFlags;
+    return map;
+}
+
+Filter Filter::fromProperties(const QVariantMap &properties)
+{
+    Filter filter;
+    if (properties.isEmpty()) {
+        return filter;
+    }
+
+    switch ((FilterType)properties[FieldFilterType].toInt()) {
+    case FilterTypeStandard:
+        filter = Filter(properties[FieldFilterProperty].toString(), properties[FieldFilterValue], (MatchFlags)properties[FieldMatchFlags].toInt());
+        break;
+    case FilterTypeIntersection:
+        break;
+    case FilterTypeUnion:
+        break;
+    }
+    return filter;
+}
+
 }

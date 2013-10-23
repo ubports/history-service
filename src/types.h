@@ -129,6 +129,13 @@ static const char* SortField = "sortField";
 static const char* SortOrder = "sortOrder";
 static const char* CaseSensitivity = "caseSensitivity";
 
+// filter stuff
+static const char* FieldFilterType = "filterType";
+static const char* FieldFilterProperty = "filterProperty";
+static const char* FieldFilterValue = "filterValue";
+static const char* FieldMatchFlags = "matchFlags";
+static const char* FieldFilters = "filters";
+
 }
 
 #endif // TYPES_H

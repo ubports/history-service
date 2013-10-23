@@ -37,6 +37,8 @@ private Q_SLOTS:
     void testMatch_data();
     void testMatch();
     void testEquals();
+    void testProperties();
+    void testFromProperties();
 };
 
 void FilterTest::initTestCase()
@@ -172,6 +174,42 @@ void FilterTest::testEquals()
     QVERIFY(!(filterOne == differentValue));
     QVERIFY(filterOne != differentProperty);
     QVERIFY(filterOne != differentValue);
+}
+
+void FilterTest::testProperties()
+{
+    // test an empty filter
+    History::Filter emptyFilter;
+    QVERIFY(emptyFilter.properties().isEmpty());
+
+    // and now a regular filter
+    History::Filter filter("foobarProperty", "foobarValue", History::MatchCaseInsensitive);
+    QVariantMap properties = filter.properties();
+    QCOMPARE(properties[History::FieldFilterType].toInt(), (int)filter.type());
+    QCOMPARE(properties[History::FieldFilterProperty].toString(), filter.filterProperty());
+    QCOMPARE(properties[History::FieldFilterValue], filter.filterValue());
+    QCOMPARE(properties[History::FieldMatchFlags].toInt(), (int)filter.matchFlags());
+}
+
+void FilterTest::testFromProperties()
+{
+    QVariantMap properties;
+
+    // test an empty filter
+    History::Filter filter = History::Filter::fromProperties(properties);
+    QVERIFY(filter.isNull());
+
+    // and now a regular filter
+    properties[History::FieldFilterType] = (int) History::FilterTypeStandard;
+    properties[History::FieldFilterProperty] = "oneProperty";
+    properties[History::FieldFilterValue] = "oneValue";
+    properties[History::FieldMatchFlags] = (int) History::MatchContains;
+
+    filter = History::Filter::fromProperties(properties);
+    QCOMPARE(filter.type(), (History::FilterType)properties[History::FieldFilterType].toInt());
+    QCOMPARE(filter.filterProperty(), properties[History::FieldFilterProperty].toString());
+    QCOMPARE(filter.filterValue(), properties[History::FieldFilterValue]);
+    QCOMPARE(filter.matchFlags(), History::MatchFlags(properties[History::FieldMatchFlags].toInt()));
 }
 
 
