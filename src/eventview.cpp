@@ -101,7 +101,7 @@ EventView::EventView(EventType type, const History::Sort &sort, const History::F
     QDBusReply<QString> reply = interface.call("QueryEvents",
                                                (int) type,
                                                sort.properties(),
-                                               filter.toString());
+                                               filter.properties());
     if (!reply.isValid()) {
         Q_EMIT invalidated();
         d_ptr->valid = false;
