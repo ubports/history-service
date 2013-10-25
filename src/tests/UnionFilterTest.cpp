@@ -22,6 +22,7 @@
 #include "unionfilter.h"
 
 Q_DECLARE_METATYPE(History::MatchFlags)
+Q_DECLARE_METATYPE(History::UnionFilter)
 
 class UnionFilterTest : public QObject
 {
@@ -39,6 +40,8 @@ private Q_SLOTS:
     void testToStringWithOneFilter();
     void testToStringWithManyFilters();
     void testConvertToFilterAndBack();
+    void testIsValid_data();
+    void testIsValid();
     void testProperties();
     void testFromProperties();
 };
@@ -46,6 +49,7 @@ private Q_SLOTS:
 void UnionFilterTest::initTestCase()
 {
     qRegisterMetaType<History::MatchFlags>();
+    qRegisterMetaType<History::UnionFilter>();
 }
 
 void UnionFilterTest::testSetFilters()
@@ -124,6 +128,7 @@ void UnionFilterTest::testMatch_data()
     QTest::newRow("one of the values match") << filterProperties << itemProperties << true;
     itemProperties["stringProperty"] = QString("noMatch");
     QTest::newRow("no match") << filterProperties << itemProperties << false;
+    QTest::newRow("empty match") << QVariantMap() << itemProperties << true;
 }
 
 void UnionFilterTest::testMatch()
@@ -192,10 +197,28 @@ void UnionFilterTest::testConvertToFilterAndBack()
     QCOMPARE(castFilter.type(), History::FilterTypeUnion);
 
     History::UnionFilter andBack = castFilter;
-    qDebug() << "andBack tostring:" << andBack.toString();
-    qDebug() << "original toString:" << unionFilter.toString();
     QCOMPARE(andBack, unionFilter);
     QCOMPARE(andBack.toString(), unionFilter.toString());
+}
+
+void UnionFilterTest::testIsValid_data()
+{
+    QTest::addColumn<History::UnionFilter>("filter");
+    QTest::addColumn<bool>("isValid");
+
+    History::UnionFilter filter;
+    QTest::newRow("invalid filter") << filter << false;
+
+    filter.append(History::Filter());
+    QTest::newRow("valid filter") << filter << true;
+}
+
+void UnionFilterTest::testIsValid()
+{
+    QFETCH(History::UnionFilter, filter);
+    QFETCH(bool, isValid);
+
+    QCOMPARE(filter.isValid(), isValid);
 }
 
 void UnionFilterTest::testProperties()

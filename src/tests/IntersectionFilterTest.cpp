@@ -22,6 +22,7 @@
 #include "intersectionfilter.h"
 
 Q_DECLARE_METATYPE(History::MatchFlags)
+Q_DECLARE_METATYPE(History::IntersectionFilter)
 
 class IntersectionFilterTest : public QObject
 {
@@ -39,6 +40,8 @@ private Q_SLOTS:
     void testToStringWithOneFilter();
     void testToStringWithManyFilters();
     void testConvertToFilterAndBack();
+    void testIsValid_data();
+    void testIsValid();
     void testProperties();
     void testFromProperties();
 };
@@ -46,6 +49,7 @@ private Q_SLOTS:
 void IntersectionFilterTest::initTestCase()
 {
     qRegisterMetaType<History::MatchFlags>();
+    qRegisterMetaType<History::IntersectionFilter>();
 }
 
 void IntersectionFilterTest::testSetFilters()
@@ -124,6 +128,7 @@ void IntersectionFilterTest::testMatch_data()
     QTest::newRow("one of the values is different") << filterProperties << itemProperties << false;
     itemProperties["stringProperty"] = QString("noMatch");
     QTest::newRow("no match at all") << filterProperties << itemProperties << false;
+    QTest::newRow("empty match") << QVariantMap() << itemProperties << true;
 }
 
 void IntersectionFilterTest::testMatch()
@@ -194,6 +199,26 @@ void IntersectionFilterTest::testConvertToFilterAndBack()
     History::IntersectionFilter andBack = castFilter;
     QCOMPARE(andBack, intersectionFilter);
     QCOMPARE(andBack.toString(), intersectionFilter.toString());
+}
+
+void IntersectionFilterTest::testIsValid_data()
+{
+    QTest::addColumn<History::IntersectionFilter>("filter");
+    QTest::addColumn<bool>("isValid");
+
+    History::IntersectionFilter filter;
+    QTest::newRow("invalid filter") << filter << false;
+
+    filter.append(History::Filter());
+    QTest::newRow("valid filter") << filter << true;
+}
+
+void IntersectionFilterTest::testIsValid()
+{
+    QFETCH(History::IntersectionFilter, filter);
+    QFETCH(bool, isValid);
+
+    QCOMPARE(filter.isValid(), isValid);
 }
 
 void IntersectionFilterTest::testProperties()

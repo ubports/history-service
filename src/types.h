@@ -125,9 +125,9 @@ static const char* FieldMissed = "missed";
 static const char* FieldDuration = "duration";
 
 // sort stuff
-static const char* SortField = "sortField";
-static const char* SortOrder = "sortOrder";
-static const char* CaseSensitivity = "caseSensitivity";
+static const char* FieldSortField = "sortField";
+static const char* FieldSortOrder = "sortOrder";
+static const char* FieldCaseSensitivity = "caseSensitivity";
 
 // filter stuff
 static const char* FieldFilterType = "filterType";
