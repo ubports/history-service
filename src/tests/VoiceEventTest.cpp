@@ -29,7 +29,10 @@ private Q_SLOTS:
     void testCreateNewEvent_data();
     void testCreateNewEvent();
     void testCastToEventAndBack();
+    void testFromProperties_data();
     void testFromProperties();
+    void testFromNullProperties();
+    void testProperties_data();
     void testProperties();
 };
 
@@ -77,7 +80,126 @@ void VoiceEventTest::testCreateNewEvent()
     QCOMPARE(event.newEvent(), newEvent);
     QCOMPARE(event.missed(), missed);
     QCOMPARE(event.duration(), duration);
+}
 
+void VoiceEventTest::testCastToEventAndBack()
+{
+    History::VoiceEvent voiceEvent("oneAccountId", "oneThreadId", "oneEventId", "oneSender", QDateTime::currentDateTime(),
+                                   true, true, QTime(1,2,3));
+
+    // test the copy constructor
+    History::Event historyEvent(voiceEvent);
+    QVERIFY(historyEvent == voiceEvent);
+    History::VoiceEvent castBack(historyEvent);
+    QVERIFY(castBack == voiceEvent);
+
+    // and now the assignment operator
+    History::Event anotherEvent;
+    anotherEvent = voiceEvent;
+    QVERIFY(anotherEvent == voiceEvent);
+    History::VoiceEvent backAgain;
+    backAgain = anotherEvent;
+    QVERIFY(backAgain == voiceEvent);
+}
+
+void VoiceEventTest::testFromProperties_data()
+{
+    QTest::addColumn<QString>("accountId");
+    QTest::addColumn<QString>("threadId");
+    QTest::addColumn<QString>("eventId");
+    QTest::addColumn<QString>("senderId");
+    QTest::addColumn<QDateTime>("timestamp");
+    QTest::addColumn<bool>("newEvent");
+    QTest::addColumn<bool>("missed");
+    QTest::addColumn<QTime>("duration");
+
+    QTest::newRow("unread missed call") << "testAccountId" << "testThreadId" << "testEventId"
+                                 << "testSenderId" << QDateTime::currentDateTime().addDays(-10)
+                                 << true << true << QTime(0, 0, 0);
+    QTest::newRow("missed call") << "testAccountId2" << "testThreadId2" << "testEventId2"
+                                 << "testSenderId2" << QDateTime::currentDateTime().addDays(-5)
+                                 << false << true << QTime(0, 0, 0);
+    QTest::newRow("not missed call") << "testAccountId" << "testThreadId" << "testEventId"
+                                 << "testSenderId" << QDateTime::currentDateTime().addDays(-10)
+                                 << false << false << QTime(1, 2, 3);
+}
+
+void VoiceEventTest::testFromProperties()
+{
+    QFETCH(QString, accountId);
+    QFETCH(QString, threadId);
+    QFETCH(QString, eventId);
+    QFETCH(QString, senderId);
+    QFETCH(QDateTime, timestamp);
+    QFETCH(bool, newEvent);
+    QFETCH(bool, missed);
+    QFETCH(QTime, duration);
+
+    QVariantMap properties;
+    properties[History::FieldAccountId] = accountId;
+    properties[History::FieldThreadId] = threadId;
+    properties[History::FieldEventId] = eventId;
+    properties[History::FieldSenderId] = senderId;
+    properties[History::FieldTimestamp] = timestamp.toString(Qt::ISODate);
+    properties[History::FieldNewEvent] = newEvent;
+    properties[History::FieldMissed] = missed;
+    properties[History::FieldDuration] = QTime(0,0,0,0).secsTo(duration);
+
+    History::VoiceEvent voiceEvent = History::VoiceEvent::fromProperties(properties);
+    QCOMPARE(voiceEvent.accountId(), accountId);
+    QCOMPARE(voiceEvent.threadId(), threadId);
+    QCOMPARE(voiceEvent.eventId(), eventId);
+    QCOMPARE(voiceEvent.senderId(), senderId);
+    QCOMPARE(voiceEvent.timestamp().toString(Qt::ISODate), timestamp.toString(Qt::ISODate));
+    QCOMPARE(voiceEvent.newEvent(), newEvent);
+    QCOMPARE(voiceEvent.missed(), missed);
+    QCOMPARE(voiceEvent.duration(), duration);
+}
+
+void VoiceEventTest::testFromNullProperties()
+{
+    // just to make sure, test that calling ::fromProperties() on an empty map returns a null event
+    History::Event nullEvent = History::VoiceEvent::fromProperties(QVariantMap());
+    QVERIFY(nullEvent.isNull());
+    QCOMPARE(nullEvent.type(), History::EventTypeNull);
+}
+
+void VoiceEventTest::testProperties_data()
+{
+    QTest::addColumn<QString>("accountId");
+    QTest::addColumn<QString>("threadId");
+    QTest::addColumn<QString>("eventId");
+    QTest::addColumn<QString>("senderId");
+    QTest::addColumn<QDateTime>("timestamp");
+    QTest::addColumn<bool>("newEvent");
+    QTest::addColumn<bool>("missed");
+    QTest::addColumn<QTime>("duration");
+
+    QTest::newRow("unread missed call") << "testAccountId" << "testThreadId" << "testEventId"
+                                 << "testSenderId" << QDateTime::currentDateTime().addDays(-10)
+                                 << true << true << QTime(0, 0, 0);
+    QTest::newRow("missed call") << "testAccountId2" << "testThreadId2" << "testEventId2"
+                                 << "testSenderId2" << QDateTime::currentDateTime().addDays(-5)
+                                 << false << true << QTime(0, 0, 0);
+    QTest::newRow("not missed call") << "testAccountId" << "testThreadId" << "testEventId"
+                                 << "testSenderId" << QDateTime::currentDateTime().addDays(-10)
+                                 << false << false << QTime(1, 2, 3);
+}
+
+void VoiceEventTest::testProperties()
+{
+    QFETCH(QString, accountId);
+    QFETCH(QString, threadId);
+    QFETCH(QString, eventId);
+    QFETCH(QString, senderId);
+    QFETCH(QDateTime, timestamp);
+    QFETCH(bool, newEvent);
+    QFETCH(bool, missed);
+    QFETCH(QTime, duration);
+    History::VoiceEvent event(accountId, threadId, eventId, senderId, timestamp, newEvent,
+                              missed, duration);
+
+    // check that the values are properly set
     QVariantMap properties = event.properties();
     QCOMPARE(properties[History::FieldAccountId].toString(), accountId);
     QCOMPARE(properties[History::FieldThreadId].toString(), threadId);
@@ -87,21 +209,6 @@ void VoiceEventTest::testCreateNewEvent()
     QCOMPARE(properties[History::FieldNewEvent].toBool(), newEvent);
     QCOMPARE(properties[History::FieldMissed].toBool(), missed);
     QCOMPARE(QTime(0,0).addSecs(properties[History::FieldDuration].toInt()), duration);
-}
-
-void VoiceEventTest::testCastToEventAndBack()
-{
-    // FIXME: implement
-}
-
-void VoiceEventTest::testFromProperties()
-{
-    // FIXME: implement
-}
-
-void VoiceEventTest::testProperties()
-{
-    // FIXME: implement
 }
 
 QTEST_MAIN(VoiceEventTest)
