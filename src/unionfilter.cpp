@@ -23,6 +23,7 @@
 #include "unionfilter_p.h"
 #include <QStringList>
 #include <QDebug>
+#include <QDBusArgument>
 
 namespace History
 {
@@ -143,8 +144,28 @@ Filter UnionFilter::fromProperties(const QVariantMap &properties)
         return filter;
     }
 
-    QVariantList filters = properties[FieldFilters].toList();
-    Q_FOREACH(const QVariant &props, filters) {
+    QVariant filters = properties[FieldFilters];
+    QVariantList filterList;
+
+    // when the filter travels through DBus, it arrives marshalled into QDBusArguments.
+    // cover that case too.
+    if (filters.canConvert<QDBusArgument>()) {
+        QDBusArgument argument = filters.value<QDBusArgument>();
+        QVariantList list;
+        argument >> list;
+
+        // and cast also the inner filters
+        Q_FOREACH(const QVariant &var, list) {
+            QDBusArgument arg = var.value<QDBusArgument>();
+            QVariantMap map;
+            arg >> map;
+            filterList.append(map);
+        }
+    } else {
+        filterList = filters.toList();
+    }
+
+    Q_FOREACH(const QVariant &props, filterList) {
         Filter innerFilter = History::Filter::fromProperties(props.toMap());
         if (innerFilter.isValid()) {
             filter.append(innerFilter);
