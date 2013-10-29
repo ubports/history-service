@@ -88,6 +88,11 @@ set_target_properties(historyservice PROPERTIES
 qt5_use_modules(historyservice Core DBus)
 
 install(TARGETS historyservice DESTINATION ${CMAKE_INSTALL_LIBDIR})
-install(FILES ${library_HDRS} DESTINATION include/history-service/History)
+
+set(INCLUDE_INSTALL_DIR include/history-service)
+install(FILES ${library_HDRS} DESTINATION ${INCLUDE_INSTALL_DIR}/History)
+
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/history-service.pc.in ${CMAKE_CURRENT_BINARY_DIR}/history-service.pc)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/history-service.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig COMPONENT pkgconfig)
 
 add_subdirectory(tests)
