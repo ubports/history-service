@@ -7,5 +7,5 @@ Name: history-service
 Description: History service to store messages and calls
 Version: ${PACKAGE_VERSION}
 Requires.private: Qt5Core, Qt5DBus
-Libs: -L${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR} -lhistory-service
+Libs: -L${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR} -lhistoryservice
 Cflags: -I${CMAKE_INSTALL_PREFIX}/${INCLUDE_INSTALL_DIR}
