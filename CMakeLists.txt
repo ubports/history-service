@@ -63,7 +63,7 @@ enable_testing()
 set(HISTORY_VERSION_MAJOR 0)
 set(HISTORY_VERSION_MINOR 0)
 set(HISTORY_VERSION_PATCH 0)
-
+set(PACKAGE_VERSION ${HISTORY_VERSION_MAJOR}.${HISTORY_VERSION_MINOR}.${HISTORY_VERSION_PATCH})
 
 add_subdirectory(src)
 add_subdirectory(daemon)

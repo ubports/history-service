@@ -22,6 +22,7 @@ plugins/sqlite/qrc_*
 plugins/sqlite/schema/schema.sql
 */*.service
 daemon/historyserviceadaptor.*
+src/*.pc
 src/libhistoryservice.so*
 src/pluginthreadviewadaptor.*
 src/plugineventviewadaptor.*
