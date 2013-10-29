@@ -23,6 +23,7 @@
 #define SQLITEHISTORYEVENTVIEW_H
 
 #include "plugineventview.h"
+#include "filter.h"
 #include "types.h"
 #include "sort.h"
 #include <QSqlQuery>
@@ -37,7 +38,7 @@ public:
     SQLiteHistoryEventView(SQLiteHistoryPlugin *plugin,
                           History::EventType type,
                           const History::Sort &sort,
-                          const QString &filter);
+                          const History::Filter &filter);
     ~SQLiteHistoryEventView();
 
     QList<QVariantMap> NextPage();
@@ -49,7 +50,7 @@ protected:
 private:
     History::EventType mType;
     History::Sort mSort;
-    QString mFilter;
+    History::Filter mFilter;
     QSqlQuery mQuery;
     int mPageSize;
     SQLiteHistoryPlugin *mPlugin;

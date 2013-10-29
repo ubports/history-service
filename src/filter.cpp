@@ -21,6 +21,8 @@
 
 #include "filter.h"
 #include "filter_p.h"
+#include "intersectionfilter.h"
+#include "unionfilter.h"
 #include <typeinfo>
 #include <QDebug>
 
@@ -76,6 +78,19 @@ bool FilterPrivate::match(const QVariantMap properties) const
 
     // FIXME: use the MatchFlags
     return properties[filterProperty] == filterValue;
+}
+
+QVariantMap FilterPrivate::properties() const
+{
+    QVariantMap map;
+    if (!isValid()) {
+        return map;
+    }
+    map[FieldFilterType] = (int)FilterTypeStandard;
+    map[FieldFilterProperty] = filterProperty;
+    map[FieldFilterValue] = filterValue;
+    map[FieldMatchFlags] = (int)matchFlags;
+    return map;
 }
 
 // ------------- Filter -------------------------------------------------------
@@ -174,6 +189,33 @@ bool Filter::isValid() const
 {
     Q_D(const Filter);
     return d->isValid();
+}
+
+QVariantMap Filter::properties() const
+{
+    Q_D(const Filter);
+    return d->properties();
+}
+
+Filter Filter::fromProperties(const QVariantMap &properties)
+{
+    Filter filter;
+    if (properties.isEmpty()) {
+        return filter;
+    }
+
+    switch ((FilterType)properties[FieldFilterType].toInt()) {
+    case FilterTypeStandard:
+        filter = Filter(properties[FieldFilterProperty].toString(), properties[FieldFilterValue], (MatchFlags)properties[FieldMatchFlags].toInt());
+        break;
+    case FilterTypeIntersection:
+        filter = IntersectionFilter::fromProperties(properties);
+        break;
+    case FilterTypeUnion:
+        filter = UnionFilter::fromProperties(properties);
+        break;
+    }
+    return filter;
 }
 
 }

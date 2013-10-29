@@ -42,6 +42,8 @@ private Q_SLOTS:
     void testConvertToFilterAndBack();
     void testIsValid_data();
     void testIsValid();
+    void testProperties();
+    void testFromProperties();
 };
 
 void IntersectionFilterTest::initTestCase()
@@ -217,6 +219,60 @@ void IntersectionFilterTest::testIsValid()
     QFETCH(bool, isValid);
 
     QCOMPARE(filter.isValid(), isValid);
+}
+
+void IntersectionFilterTest::testProperties()
+{
+    History::Filter filterOne("propertyOne", "valueOne");
+    History::Filter filterTwo("propertyTwo", "valueTwo");
+    History::Filter filterThree("propertyThree", "valueThree");
+
+    History::IntersectionFilter intersectionFilter;
+    intersectionFilter.setFilters(QList<History::Filter>() << filterOne << filterTwo << filterThree);
+
+    QVariantMap properties = intersectionFilter.properties();
+    QVERIFY(!properties.isEmpty());
+    QVERIFY(properties.contains(History::FieldFilters));
+    QCOMPARE(properties[History::FieldFilterType].toInt(), (int) History::FilterTypeIntersection);
+
+    QVariantList filters = properties[History::FieldFilters].toList();
+    QCOMPARE(filters.count(), intersectionFilter.filters().count());
+    QVariantMap propsOne = filters[0].toMap();
+    QCOMPARE(propsOne, filterOne.properties());
+    QVariantMap propsTwo = filters[1].toMap();
+    QCOMPARE(propsTwo, filterTwo.properties());
+    QVariantMap propsThree = filters[2].toMap();
+    QCOMPARE(propsThree, filterThree.properties());
+
+    // check that a null filter returns an empty QVariantMap
+    History::IntersectionFilter nullFilter;
+    QVERIFY(nullFilter.properties().isEmpty());
+}
+
+void IntersectionFilterTest::testFromProperties()
+{
+    QVariantMap properties;
+
+    // check that a null filter is returned
+    History::Filter nullFilter = History::IntersectionFilter::fromProperties(properties);
+    QVERIFY(nullFilter.isNull());
+
+    properties[History::FieldFilterType] = (int)History::FilterTypeIntersection;
+
+    QVariantList filters;
+    for (int i = 0; i < 3; ++i) {
+        History::Filter filter(QString("filter%1").arg(QString::number(i)), QString("value%1").arg(QString::number(i)), History::MatchCaseInsensitive);
+        filters.append(filter.properties());
+    }
+    properties[History::FieldFilters] = filters;
+
+    History::Filter filter = History::IntersectionFilter::fromProperties(properties);
+    QCOMPARE(filter.type(), History::FilterTypeIntersection);
+    History::IntersectionFilter intersectionFilter = filter;
+    QCOMPARE(intersectionFilter.filters().count(), filters.count());
+    for (int i = 0; i < filters.count(); ++i) {
+        QCOMPARE(intersectionFilter.filters()[i].properties(), filters[i].toMap());
+    }
 }
 
 QTEST_MAIN(IntersectionFilterTest)

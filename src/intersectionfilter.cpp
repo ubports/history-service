@@ -23,6 +23,7 @@
 #include "intersectionfilter_p.h"
 #include <QStringList>
 #include <QDebug>
+#include <QDBusArgument>
 
 namespace History
 {
@@ -51,6 +52,22 @@ bool IntersectionFilterPrivate::isValid() const
 {
     // FIXME: maybe we should check if at least one of the inner filters are valid?
     return !filters.isEmpty();
+}
+
+QVariantMap IntersectionFilterPrivate::properties() const
+{
+    QVariantMap map;
+    if (!isValid()) {
+        return map;
+    }
+
+    QVariantList filterList;
+    Q_FOREACH(const Filter &filter, filters) {
+        filterList << filter.properties();
+    }
+    map[FieldFilters] = filterList;
+    map[FieldFilterType] = (int) History::FilterTypeIntersection;
+    return map;
 }
 
 QString IntersectionFilterPrivate::toString(const QString &propertyPrefix) const
@@ -113,6 +130,44 @@ Filters IntersectionFilter::filters() const
 {
     Q_D(const IntersectionFilter);
     return d->filters;
+}
+
+Filter IntersectionFilter::fromProperties(const QVariantMap &properties)
+{
+    IntersectionFilter filter;
+    if (properties.isEmpty()) {
+        return filter;
+    }
+
+    QVariant filters = properties[FieldFilters];
+    QVariantList filterList;
+
+    // when the filter travels through DBus, it arrives marshalled into QDBusArguments.
+    // cover that case too.
+    if (filters.canConvert<QDBusArgument>()) {
+        QDBusArgument argument = filters.value<QDBusArgument>();
+        QVariantList list;
+        argument >> list;
+
+        // and cast also the inner filters
+        Q_FOREACH(const QVariant &var, list) {
+            QDBusArgument arg = var.value<QDBusArgument>();
+            QVariantMap map;
+            arg >> map;
+            filterList.append(map);
+        }
+    } else {
+        filterList = filters.toList();
+    }
+
+    Q_FOREACH(const QVariant &props, filterList) {
+        Filter innerFilter = History::Filter::fromProperties(props.toMap());
+        if (innerFilter.isValid()) {
+            filter.append(innerFilter);
+        }
+    }
+
+    return filter;
 }
 
 }

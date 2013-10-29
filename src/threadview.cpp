@@ -102,7 +102,7 @@ ThreadView::ThreadView(History::EventType type,
     QDBusReply<QString> reply = interface.call("QueryThreads",
                                                (int) type,
                                                sort.properties(),
-                                               filter.toString());
+                                               filter.properties());
     if (!reply.isValid()) {
         Q_EMIT invalidated();
         d_ptr->valid = false;

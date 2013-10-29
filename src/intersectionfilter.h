@@ -48,6 +48,7 @@ public:
     void clear();    
     Filters filters() const;
 
+    static Filter fromProperties(const QVariantMap &properties);
 };
 
 }

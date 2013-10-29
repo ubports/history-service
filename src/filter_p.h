@@ -64,6 +64,7 @@ public:
     virtual bool match(const QVariantMap properties) const;
     virtual FilterType type() const { return History::FilterTypeStandard; }
     virtual bool isValid() const { return (!filterProperty.isNull()) && (!filterValue.isNull()); }
+    virtual QVariantMap properties() const;
 
     HISTORY_FILTER_DECLARE_CLONE(Filter)
 };
