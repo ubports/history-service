@@ -122,8 +122,8 @@ void FilterTest::testToString_data()
     QTest::addColumn<QString>("result");
 
     QTest::newRow("string value") << "stringProperty" << QVariant("stringValue") << "stringProperty=\"stringValue\"";
-    QTest::newRow("bool property with false value") << "boolProperty" << QVariant(false) << "boolProperty=false";
-    QTest::newRow("bool property with true value") << "boolProperty" << QVariant(true) << "boolProperty=true";
+    QTest::newRow("bool property with false value") << "boolProperty" << QVariant(false) << "boolProperty=0";
+    QTest::newRow("bool property with true value") << "boolProperty" << QVariant(true) << "boolProperty=1";
     QTest::newRow("int property") << "intProperty" << QVariant(15) << "intProperty=15";
     QTest::newRow("double property") << "doubleProperty" << QVariant(1.5) << "doubleProperty=1.5";
 }
