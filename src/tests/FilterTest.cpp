@@ -36,6 +36,8 @@ private Q_SLOTS:
     void testCreateNewFilter();
     void testSetProperties_data();
     void testSetProperties();
+    void testToString_data();
+    void testToString();
     void testToStringPrefix();
     void testNullToString();
     void testMatch_data();
@@ -111,6 +113,29 @@ void FilterTest::testSetProperties()
 
     filter.setMatchFlags(matchFlags);
     QCOMPARE(filter.matchFlags(), matchFlags);
+}
+
+void FilterTest::testToString_data()
+{
+    QTest::addColumn<QString>("filterProperty");
+    QTest::addColumn<QVariant>("filterValue");
+    QTest::addColumn<QString>("result");
+
+    QTest::newRow("string value") << "stringProperty" << QVariant("stringValue") << "stringProperty=\"stringValue\"";
+    QTest::newRow("bool property with false value") << "boolProperty" << QVariant(false) << "boolProperty=0";
+    QTest::newRow("bool property with true value") << "boolProperty" << QVariant(true) << "boolProperty=1";
+    QTest::newRow("int property") << "intProperty" << QVariant(15) << "intProperty=15";
+    QTest::newRow("double property") << "doubleProperty" << QVariant(1.5) << "doubleProperty=1.5";
+}
+
+void FilterTest::testToString()
+{
+    QFETCH(QString, filterProperty);
+    QFETCH(QVariant, filterValue);
+    QFETCH(QString, result);
+
+    History::Filter filter(filterProperty, filterValue);
+    QCOMPARE(filter.toString(), result);
 }
 
 void FilterTest::testToStringPrefix()

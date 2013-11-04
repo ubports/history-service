@@ -60,6 +60,15 @@ QString FilterPrivate::toString(const QString &propertyPrefix) const
         // wrap strings
         value = QString("\"%1\"").arg(filterValue.toString());
         break;
+    case QVariant::Bool:
+        value = filterValue.toBool() ? "1" : "0";
+        break;
+    case QVariant::Int:
+        value = QString::number(filterValue.toInt());
+        break;
+    case QVariant::Double:
+        value = QString::number(filterValue.toDouble());
+        break;
     default:
         value = filterValue.toString();
     }
