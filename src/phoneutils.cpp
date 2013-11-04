@@ -29,5 +29,8 @@ PhoneUtils::PhoneUtils(QObject *parent) :
 
 bool PhoneUtils::comparePhoneNumbers(const QString &number1, const QString &number2)
 {
-    return PhoneNumberUtils::compareLoosely(number1, number2);
+    if (PhoneNumberUtils::isPhoneNumber(number1) && PhoneNumberUtils::isPhoneNumber(number2)) {
+        return PhoneNumberUtils::compareLoosely(number1, number2);
+    }
+    return number1 == number2;
 }

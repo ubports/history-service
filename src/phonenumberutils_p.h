@@ -20,6 +20,7 @@
 #define PHONENUMBERUTILS_H
 
 #include <QString>
+#include <QRegExp>
 
 namespace PhoneNumberUtils
 {
@@ -296,6 +297,18 @@ bool compareLoosely(const QString &a, const QString &b)
      }
 
      return false;
+}
+
+bool isPhoneNumber(const QString &identifier) {
+    // remove all non diable digits
+    QString finalNumber = QString(identifier).replace(QRegExp("[p+*#()-]"),"");
+    finalNumber = finalNumber.replace(QRegExp("(\\s+)"), "");
+    // if empty, the number is invalid
+    if (finalNumber.isEmpty())
+        return false;
+
+    finalNumber = finalNumber.replace(QRegExp("(\\d+)"), "");
+    return finalNumber.isEmpty();
 }
 
 }
