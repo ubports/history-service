@@ -16,6 +16,7 @@ endmacro(generate_tests)
 generate_tests(
     FilterTest
     IntersectionFilterTest
+    PhoneUtilsTest
     SortTest
     ThreadTest
     TextEventTest
