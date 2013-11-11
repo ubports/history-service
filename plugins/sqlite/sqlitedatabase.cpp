@@ -47,7 +47,6 @@ SQLiteDatabase::SQLiteDatabase(QObject *parent) :
     initializeDatabase();
 }
 
-
 SQLiteDatabase *SQLiteDatabase::instance()
 {
     static SQLiteDatabase *self = new SQLiteDatabase();
@@ -56,17 +55,22 @@ SQLiteDatabase *SQLiteDatabase::instance()
 
 bool SQLiteDatabase::initializeDatabase()
 {
-    mDatabasePath = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation);
+    mDatabasePath = qgetenv("HISTORY_SQLITE_DBPATH");
 
-    QDir dir(mDatabasePath);
-    qDebug() << "DatabasePath:" << dir.absolutePath();
-    if (!dir.exists("history-service") && !dir.mkpath("history-service")) {
-        qDebug() << "Failed to create dir";
-        return false;
+    if (mDatabasePath.isEmpty()) {
+        mDatabasePath = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation);
+
+        QDir dir(mDatabasePath);
+        qDebug() << "DatabasePath:" << dir.absolutePath();
+        if (!dir.exists("history-service") && !dir.mkpath("history-service")) {
+            qDebug() << "Failed to create dir";
+            return false;
+        }
+        dir.cd("history-service");
+
+        mDatabasePath = dir.absoluteFilePath("history.sqlite");
     }
-    dir.cd("history-service");
 
-    mDatabasePath = dir.absoluteFilePath("history.sqlite");
     qDebug() << "History database:" << mDatabasePath;
 
     mDatabase = QSqlDatabase::addDatabase("QSQLITE");
@@ -99,6 +103,18 @@ bool SQLiteDatabase::finishTransaction()
 bool SQLiteDatabase::rollbackTransaction()
 {
     return mDatabase.rollback();
+}
+
+/// this method is to be used mainly by unit tests in order to clean up the database between
+/// tests.
+bool SQLiteDatabase::reopen()
+{
+    mDatabase.close();
+    mDatabase.open();
+
+    // make sure the database is up-to-date after reopening.
+    // this is mainly required for the memory backend used for testing
+    createOrUpdateDatabase();
 }
 
 bool SQLiteDatabase::createOrUpdateDatabase()

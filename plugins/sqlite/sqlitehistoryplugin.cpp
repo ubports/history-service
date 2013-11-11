@@ -226,7 +226,7 @@ QVariantMap SQLiteHistoryPlugin::createThreadForParticipants(const QString &acco
                   "VALUES (:accountId, :threadId, :type, :count, :unreadCount)");
     query.bindValue(":accountId", accountId);
     query.bindValue(":threadId", threadId);
-    query.bindValue(":type", type);
+    query.bindValue(":type", (int) type);
     query.bindValue(":count", 0);
     query.bindValue(":unreadCount", 0);
     if (!query.exec()) {

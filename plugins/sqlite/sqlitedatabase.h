@@ -38,7 +38,7 @@ public:
     bool finishTransaction();
     bool rollbackTransaction();
 
-
+    bool reopen();
 
 protected:
     bool createOrUpdateDatabase();
