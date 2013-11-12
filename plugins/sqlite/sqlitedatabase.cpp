@@ -61,17 +61,14 @@ bool SQLiteDatabase::initializeDatabase()
         mDatabasePath = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation);
 
         QDir dir(mDatabasePath);
-        qDebug() << "DatabasePath:" << dir.absolutePath();
         if (!dir.exists("history-service") && !dir.mkpath("history-service")) {
-            qDebug() << "Failed to create dir";
+            qCritical() << "Failed to create dir";
             return false;
         }
         dir.cd("history-service");
 
         mDatabasePath = dir.absoluteFilePath("history.sqlite");
     }
-
-    qDebug() << "History database:" << mDatabasePath;
 
     mDatabase = QSqlDatabase::addDatabase("QSQLITE");
     mDatabase.setDatabaseName(mDatabasePath);
@@ -157,7 +154,6 @@ bool SQLiteDatabase::createOrUpdateDatabase()
         return true;
     }
 
-    qDebug() << "Database update required...";
     beginTransation();
 
     Q_FOREACH(const QString &statement, statements) {
@@ -182,7 +178,6 @@ bool SQLiteDatabase::createOrUpdateDatabase()
     }
 
     finishTransaction();
-    qDebug() << "... done.";
 
     return true;
 }

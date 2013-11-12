@@ -134,15 +134,7 @@ QVariantMap SQLiteHistoryPlugin::threadForParticipants(const QString &accountId,
         }
     }
 
-    QVariantMap thread;
-    if (!existingThread.isNull()) {
-        thread[History::FieldAccountId] = accountId;
-        thread[History::FieldThreadId] = existingThread;
-        thread[History::FieldType] = (int) type;
-        thread[History::FieldParticipants] = participants;
-    }
-
-    return thread;
+    return getSingleThread(type, accountId, existingThread);
 }
 
 QList<QVariantMap> SQLiteHistoryPlugin::eventsForThread(const QVariantMap &thread)
@@ -253,6 +245,8 @@ QVariantMap SQLiteHistoryPlugin::createThreadForParticipants(const QString &acco
     thread[History::FieldThreadId] = threadId;
     thread[History::FieldType] = (int) type;
     thread[History::FieldParticipants] = participants;
+    thread[History::FieldCount] = 0;
+    thread[History::FieldUnreadCount] = 0;
 
     return thread;
 }

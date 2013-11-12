@@ -33,3 +33,5 @@ tools/reader/history-reader
 tools/tplogger-import/history-tplogger-import
 *.user
 install_manifest.txt
+plugins/*/tests/*Test
+plugins/*/tests/*moc*
