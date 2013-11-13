@@ -281,13 +281,13 @@ History::EventWriteResult SQLiteHistoryPlugin::writeTextEvent(const QVariantMap 
     History::EventWriteResult result;
     if (existingEvent.isEmpty()) {
         // create new
-        query.prepare("INSERT INTO text_events (accountId, threadId, eventId, senderId, timestamp, newEvent, message, messageType, messageFlags, readTimestamp) "
-                      "VALUES (:accountId, :threadId, :eventId, :senderId, :timestamp, :newEvent, :message, :messageType, :messageFlags, :readTimestamp)");
+        query.prepare("INSERT INTO text_events (accountId, threadId, eventId, senderId, timestamp, newEvent, message, messageType, messageFlags, readTimestamp, subject) "
+                      "VALUES (:accountId, :threadId, :eventId, :senderId, :timestamp, :newEvent, :message, :messageType, :messageFlags, :readTimestamp, :subject)");
         result = History::EventWriteCreated;
     } else {
         // update existing event
         query.prepare("UPDATE text_events SET senderId=:senderId, timestamp=:timestamp, newEvent=:newEvent, message=:message, messageType=:messageType,"
-                      "messageFlags=:messageFlags, readTimestamp=:readTimestamp WHERE accountId=:accountId AND threadId=:threadId AND eventId=:eventId");
+                      "messageFlags=:messageFlags, readTimestamp=:readTimestamp subject=:subject WHERE accountId=:accountId AND threadId=:threadId AND eventId=:eventId");
         result = History::EventWriteModified;
     }
 
@@ -301,6 +301,7 @@ History::EventWriteResult SQLiteHistoryPlugin::writeTextEvent(const QVariantMap 
     query.bindValue(":messageType", event[History::FieldMessageType]);
     query.bindValue(":messageFlags", event[History::FieldMessageFlags]);
     query.bindValue(":readTimestamp", QDateTime::fromString(event[History::FieldReadTimestamp].toString(), Qt::ISODate));
+    query.bindValue(":subject", event[History::FieldSubject].toString());
 
     if (!query.exec()) {
         qCritical() << "Failed to save the text event: Error:" << query.lastError() << query.lastQuery();

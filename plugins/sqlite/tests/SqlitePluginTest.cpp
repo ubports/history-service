@@ -22,6 +22,8 @@
 #include "sqlitedatabase.h"
 #include "sqlitehistorythreadview.h"
 #include "sqlitehistoryeventview.h"
+#include "textevent.h"
+#include "texteventattachment.h"
 
 Q_DECLARE_METATYPE(History::EventType)
 Q_DECLARE_METATYPE(History::MatchFlags)
@@ -43,6 +45,8 @@ private Q_SLOTS:
     void testRollback();
     void testQueryThreads();
     void testQueryEvents();
+    void testWriteTextEvent_data();
+    void testWriteTextEvent();
 
 private:
     SQLiteHistoryPlugin *mPlugin;
@@ -277,6 +281,103 @@ void SqlitePluginTest::testQueryEvents()
     QVERIFY(view);
     QVERIFY(dynamic_cast<SQLiteHistoryEventView*>(view));
     view->deleteLater();
+}
+
+void SqlitePluginTest::testWriteTextEvent_data()
+{
+    QTest::addColumn<QVariantMap>("event");
+
+    // for test purposes, the threadId == senderId to make it easier
+    QTest::newRow("new text event with pending flag") << History::TextEvent("oneAccountId", "theSender", "oneEventId",
+                                                                            "theSender", QDateTime::currentDateTime(), true,
+                                                                            "Hello World!", History::MessageTypeText,
+                                                                            History::MessageFlagPending).properties();
+    QTest::newRow("text event with valid read timestamp") << History::TextEvent("otherAccountId", "otherSender", "otherEventId",
+                                                                                "otherSender", QDateTime::currentDateTime(), false,
+                                                                                "Hi Again!", History::MessageTypeText,
+                                                                                History::MessageFlagDelivered,
+                                                                                QDateTime::currentDateTime()).properties();
+    History::TextEventAttachments attachments;
+    attachments << History::TextEventAttachment("mmsAccountId", "mmsSender", "mmsEventId", "mmsAttachment1",
+                                                "text/plain", "/the/file/path", History::AttachmentDownloaded);
+    QTest::newRow("text event with attachments") << History::TextEvent("mmsAccountId", "mmsSender", "mmsEventId", "mmsSender",
+                                                                       QDateTime::currentDateTime(), false, "Hello with attachments",
+                                                                       History::MessageTypeMultiParty, History::MessageFlagDelivered,
+                                                                       QDateTime::currentDateTime(), "The Subject", attachments).properties();
+}
+
+void SqlitePluginTest::testWriteTextEvent()
+{
+    QFETCH(QVariantMap, event);
+    // clear the database
+    SQLiteDatabase::instance()->reopen();
+
+    // create the thread
+    QVariantMap thread = mPlugin->createThreadForParticipants(event[History::FieldAccountId].toString(),
+                                                              History::EventTypeText,
+                                                              QStringList() << event[History::FieldSenderId].toString());
+    QVERIFY(!thread.isEmpty());
+
+
+    // replace the threadId on the event map with the real one from the thread
+    event[History::FieldThreadId] = thread[History::FieldThreadId];
+
+    // write the text event
+    History::EventWriteResult result = mPlugin->writeTextEvent(event);
+    QCOMPARE(result, History::EventWriteCreated);
+
+    // check that the event is properly written to the database
+    QSqlQuery query(SQLiteDatabase::instance()->database());
+    QVERIFY(query.exec("SELECT * FROM text_events"));
+    int count = 0;
+    while(query.next()) {
+        count++;
+        QCOMPARE(query.value("accountId"), event[History::FieldAccountId]);
+        QCOMPARE(query.value("threadId"), event[History::FieldThreadId]);
+        QCOMPARE(query.value("eventId"), event[History::FieldEventId]);
+        QCOMPARE(query.value("senderId"), event[History::FieldSenderId]);
+        QCOMPARE(query.value("timestamp"), event[History::FieldTimestamp]);
+        QCOMPARE(query.value("newEvent"), event[History::FieldNewEvent]);
+        QCOMPARE(query.value("message"), event[History::FieldMessage]);
+        QCOMPARE(query.value("messageType"), event[History::FieldMessageType]);
+        QCOMPARE(query.value("messageFlags"), event[History::FieldMessageFlags]);
+        QCOMPARE(query.value("readTimestamp"), event[History::FieldReadTimestamp]);
+        QCOMPARE(query.value("subject"), event[History::FieldSubject]);
+    }
+
+    // check that only one event got written
+    QCOMPARE(count, 1);
+
+    // check that the attachments got saved, if any
+    if (event[History::FieldMessageType].toInt() == History::MessageTypeMultiParty) {
+        QVariantMap attachment = event[History::FieldAttachments].value<QList<QVariantMap> >()[0];
+        QVERIFY(query.exec("SELECT * FROM text_event_attachments"));
+        int count = 0;
+        while(query.next()) {
+            count++;
+            QCOMPARE(query.value("accountId"), attachment[History::FieldAccountId]);
+            QCOMPARE(query.value("threadId"), attachment[History::FieldThreadId]);
+            QCOMPARE(query.value("eventId"), attachment[History::FieldEventId]);
+            QCOMPARE(query.value("attachmentId"), attachment[History::FieldAttachmentId]);
+            QCOMPARE(query.value("contentType"), attachment[History::FieldContentType]);
+            QCOMPARE(query.value("filePath"), attachment[History::FieldFilePath]);
+            QCOMPARE(query.value("status"), attachment[History::FieldStatus]);
+        }
+        QCOMPARE(count, 1);
+    }
+
+    // and check that the thread's last item got updated
+    thread = mPlugin->getSingleThread(History::EventTypeText, thread[History::FieldAccountId].toString(), thread[History::FieldThreadId].toString());
+    QCOMPARE(thread[History::FieldAccountId], event[History::FieldAccountId]);
+    QCOMPARE(thread[History::FieldThreadId], event[History::FieldThreadId]);
+    QCOMPARE(thread[History::FieldEventId], event[History::FieldEventId]);
+    QCOMPARE(thread[History::FieldSenderId], event[History::FieldSenderId]);
+    QCOMPARE(thread[History::FieldTimestamp], event[History::FieldTimestamp]);
+    QCOMPARE(thread[History::FieldNewEvent], event[History::FieldNewEvent]);
+    QCOMPARE(thread[History::FieldMessage], event[History::FieldMessage]);
+    QCOMPARE(thread[History::FieldMessageType], event[History::FieldMessageType]);
+    QCOMPARE(thread[History::FieldMessageFlags], event[History::FieldMessageFlags]);
+    QCOMPARE(thread[History::FieldReadTimestamp], event[History::FieldReadTimestamp]);
 }
 
 QTEST_MAIN(SqlitePluginTest)
