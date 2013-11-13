@@ -20,6 +20,8 @@
 #include <QtTest/QtTest>
 #include "sqlitehistoryplugin.h"
 #include "sqlitedatabase.h"
+#include "sqlitehistorythreadview.h"
+#include "sqlitehistoryeventview.h"
 
 Q_DECLARE_METATYPE(History::EventType)
 Q_DECLARE_METATYPE(History::MatchFlags)
@@ -39,6 +41,8 @@ private Q_SLOTS:
     void testRemoveThread();
     void testBatchOperation();
     void testRollback();
+    void testQueryThreads();
+    void testQueryEvents();
 
 private:
     SQLiteHistoryPlugin *mPlugin;
@@ -255,6 +259,24 @@ void SqlitePluginTest::testRollback()
     QVERIFY(query.exec("SELECT count(*) FROM threads"));
     QVERIFY(query.next());
     QCOMPARE(query.value(0).toInt(), 0);
+}
+
+void SqlitePluginTest::testQueryThreads()
+{
+    // just make sure the returned view is of the correct type. The views are going to be tested in their own tests
+    History::PluginThreadView *view = mPlugin->queryThreads(History::EventTypeVoice);
+    QVERIFY(view);
+    QVERIFY(dynamic_cast<SQLiteHistoryThreadView*>(view));
+    view->deleteLater();
+}
+
+void SqlitePluginTest::testQueryEvents()
+{
+    // just make sure the returned view is of the correct type. The views are going to be tested in their own tests
+    History::PluginEventView *view = mPlugin->queryEvents(History::EventTypeText);
+    QVERIFY(view);
+    QVERIFY(dynamic_cast<SQLiteHistoryEventView*>(view));
+    view->deleteLater();
 }
 
 QTEST_MAIN(SqlitePluginTest)
