@@ -513,7 +513,7 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseThreadResults(History::EventType ty
             break;
         case History::EventTypeVoice:
             thread[History::FieldMissed] = query.value(10);
-            thread[History::FieldDuration] = QTime(0,0).addSecs(query.value(9).toInt());
+            thread[History::FieldDuration] = query.value(9);
             break;
         }
         threads << thread;

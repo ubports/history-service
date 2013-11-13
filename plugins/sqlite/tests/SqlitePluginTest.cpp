@@ -24,6 +24,7 @@
 #include "sqlitehistoryeventview.h"
 #include "textevent.h"
 #include "texteventattachment.h"
+#include "voiceevent.h"
 
 Q_DECLARE_METATYPE(History::EventType)
 Q_DECLARE_METATYPE(History::MatchFlags)
@@ -47,6 +48,8 @@ private Q_SLOTS:
     void testQueryEvents();
     void testWriteTextEvent_data();
     void testWriteTextEvent();
+    void testWriteVoiceEvent_data();
+    void testWriteVoiceEvent();
 
 private:
     SQLiteHistoryPlugin *mPlugin;
@@ -319,9 +322,6 @@ void SqlitePluginTest::testWriteTextEvent()
     QVERIFY(!thread.isEmpty());
 
 
-    // replace the threadId on the event map with the real one from the thread
-    event[History::FieldThreadId] = thread[History::FieldThreadId];
-
     // write the text event
     History::EventWriteResult result = mPlugin->writeTextEvent(event);
     QCOMPARE(result, History::EventWriteCreated);
@@ -378,6 +378,65 @@ void SqlitePluginTest::testWriteTextEvent()
     QCOMPARE(thread[History::FieldMessageType], event[History::FieldMessageType]);
     QCOMPARE(thread[History::FieldMessageFlags], event[History::FieldMessageFlags]);
     QCOMPARE(thread[History::FieldReadTimestamp], event[History::FieldReadTimestamp]);
+}
+
+void SqlitePluginTest::testWriteVoiceEvent_data()
+{
+    QTest::addColumn<QVariantMap>("event");
+
+    // for test purposes, the threadId == senderId to make it easier
+    QTest::newRow("missed call") << History::VoiceEvent("theAccountId", "theSenderId", "theEventId", "theSenderId",
+                                                        QDateTime::currentDateTime(), true, true).properties();
+    QTest::newRow("incoming call") << History::VoiceEvent("otherAccountId", "otherSenderId", "otherEventId", "otherSenderId",
+                                                          QDateTime::currentDateTime(), false, false, QTime(0,10,30)).properties();
+}
+
+void SqlitePluginTest::testWriteVoiceEvent()
+{
+    QFETCH(QVariantMap, event);
+    // clear the database
+    SQLiteDatabase::instance()->reopen();
+
+    // create the thread
+    QVariantMap thread = mPlugin->createThreadForParticipants(event[History::FieldAccountId].toString(),
+                                                              History::EventTypeVoice,
+                                                              QStringList() << event[History::FieldSenderId].toString());
+    QVERIFY(!thread.isEmpty());
+
+
+    // write the voice event
+    History::EventWriteResult result = mPlugin->writeVoiceEvent(event);
+    QCOMPARE(result, History::EventWriteCreated);
+
+    // check that the event is properly written to the database
+    QSqlQuery query(SQLiteDatabase::instance()->database());
+    QVERIFY(query.exec("SELECT * FROM voice_events"));
+    int count = 0;
+    while(query.next()) {
+        count++;
+        QCOMPARE(query.value("accountId"), event[History::FieldAccountId]);
+        QCOMPARE(query.value("threadId"), event[History::FieldThreadId]);
+        QCOMPARE(query.value("eventId"), event[History::FieldEventId]);
+        QCOMPARE(query.value("senderId"), event[History::FieldSenderId]);
+        QCOMPARE(query.value("timestamp"), event[History::FieldTimestamp]);
+        QCOMPARE(query.value("newEvent"), event[History::FieldNewEvent]);
+        QCOMPARE(query.value("missed"), event[History::FieldMissed]);
+        QCOMPARE(query.value("duration"), event[History::FieldDuration]);
+    }
+
+    // check that only one event got written
+    QCOMPARE(count, 1);
+
+    // and check that the thread's last item got updated
+    thread = mPlugin->getSingleThread(History::EventTypeVoice, thread[History::FieldAccountId].toString(), thread[History::FieldThreadId].toString());
+    QCOMPARE(thread[History::FieldAccountId], event[History::FieldAccountId]);
+    QCOMPARE(thread[History::FieldThreadId], event[History::FieldThreadId]);
+    QCOMPARE(thread[History::FieldEventId], event[History::FieldEventId]);
+    QCOMPARE(thread[History::FieldSenderId], event[History::FieldSenderId]);
+    QCOMPARE(thread[History::FieldTimestamp], event[History::FieldTimestamp]);
+    QCOMPARE(thread[History::FieldNewEvent], event[History::FieldNewEvent]);
+    QCOMPARE(thread[History::FieldMissed], event[History::FieldMissed]);
+    QCOMPARE(thread[History::FieldDuration], event[History::FieldDuration]);
 }
 
 QTEST_MAIN(SqlitePluginTest)
