@@ -48,8 +48,10 @@ private Q_SLOTS:
     void testQueryEvents();
     void testWriteTextEvent_data();
     void testWriteTextEvent();
+    void testRemoveTextEvent();
     void testWriteVoiceEvent_data();
     void testWriteVoiceEvent();
+    void testRemoveVoiceEvent();
 
 private:
     SQLiteHistoryPlugin *mPlugin;
@@ -380,6 +382,31 @@ void SqlitePluginTest::testWriteTextEvent()
     QCOMPARE(thread[History::FieldReadTimestamp], event[History::FieldReadTimestamp]);
 }
 
+void SqlitePluginTest::testRemoveTextEvent()
+{
+    // clear the database
+    SQLiteDatabase::instance()->reopen();
+
+    QVariantMap thread = mPlugin->createThreadForParticipants("theAccountId", History::EventTypeText, QStringList() << "theParticipant");
+    QVERIFY(!thread.isEmpty());
+
+    History::TextEvent textEvent(thread[History::FieldAccountId].toString(),
+                                 thread[History::FieldThreadId].toString(), "theSenderId",
+                                 "theEventId", QDateTime::currentDateTime(), true,
+                                 "Hello World!", History::MessageTypeText,
+                                 History::MessageFlagPending);
+    QCOMPARE(mPlugin->writeTextEvent(textEvent.properties()), History::EventWriteCreated);
+
+    // now remove the item and check that it is really removed from the database
+    QVERIFY(mPlugin->removeTextEvent(textEvent.properties()));
+
+    // check that the event was removed from the database
+    QSqlQuery query(SQLiteDatabase::instance()->database());
+    QVERIFY(query.exec("SELECT count(*) FROM text_events"));
+    QVERIFY(query.next());
+    QCOMPARE(query.value(0).toInt(), 0);
+}
+
 void SqlitePluginTest::testWriteVoiceEvent_data()
 {
     QTest::addColumn<QVariantMap>("event");
@@ -437,6 +464,30 @@ void SqlitePluginTest::testWriteVoiceEvent()
     QCOMPARE(thread[History::FieldNewEvent], event[History::FieldNewEvent]);
     QCOMPARE(thread[History::FieldMissed], event[History::FieldMissed]);
     QCOMPARE(thread[History::FieldDuration], event[History::FieldDuration]);
+}
+
+void SqlitePluginTest::testRemoveVoiceEvent()
+{
+    // clear the database
+    SQLiteDatabase::instance()->reopen();
+
+    QVariantMap thread = mPlugin->createThreadForParticipants("theAccountId", History::EventTypeVoice, QStringList() << "theParticipant");
+    QVERIFY(!thread.isEmpty());
+
+    History::VoiceEvent voiceEvent(thread[History::FieldAccountId].toString(),
+                                   thread[History::FieldThreadId].toString(), "theSenderId",
+                                   "theEventId", QDateTime::currentDateTime(), true,
+                                   true, QTime(0, 5, 10));
+    QCOMPARE(mPlugin->writeVoiceEvent(voiceEvent.properties()), History::EventWriteCreated);
+
+    // now remove the item and check that it is really removed from the database
+    QVERIFY(mPlugin->removeVoiceEvent(voiceEvent.properties()));
+
+    // check that the event was removed from the database
+    QSqlQuery query(SQLiteDatabase::instance()->database());
+    QVERIFY(query.exec("SELECT count(*) FROM voice_events"));
+    QVERIFY(query.next());
+    QCOMPARE(query.value(0).toInt(), 0);
 }
 
 QTEST_MAIN(SqlitePluginTest)
