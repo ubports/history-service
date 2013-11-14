@@ -287,7 +287,7 @@ History::EventWriteResult SQLiteHistoryPlugin::writeTextEvent(const QVariantMap 
     } else {
         // update existing event
         query.prepare("UPDATE text_events SET senderId=:senderId, timestamp=:timestamp, newEvent=:newEvent, message=:message, messageType=:messageType,"
-                      "messageFlags=:messageFlags, readTimestamp=:readTimestamp subject=:subject WHERE accountId=:accountId AND threadId=:threadId AND eventId=:eventId");
+                      "messageFlags=:messageFlags, readTimestamp=:readTimestamp, subject=:subject WHERE accountId=:accountId AND threadId=:threadId AND eventId=:eventId");
         result = History::EventWriteModified;
     }
 
@@ -565,12 +565,12 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseEventResults(History::EventType typ
         event[History::FieldSenderId] = query.value(3);
         event[History::FieldTimestamp] = query.value(4);
         event[History::FieldNewEvent] = query.value(5);
-        event[History::FieldParticipants] = query.value(6);
+        event[History::FieldParticipants] = query.value(6).toString().split("|,|");
 
 
         switch (type) {
         case History::EventTypeText:
-            messageType = (History::MessageType) query.value(7).toInt();
+            messageType = (History::MessageType) query.value(8).toInt();
             if (messageType == History::MessageTypeMultiParty)  {
                 QSqlQuery attachmentsQuery(SQLiteDatabase::instance()->database());
                 attachmentsQuery.prepare("SELECT attachmentId, contentType, filePath, status FROM text_event_attachments "

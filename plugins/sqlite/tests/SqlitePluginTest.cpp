@@ -48,10 +48,15 @@ private Q_SLOTS:
     void testQueryEvents();
     void testWriteTextEvent_data();
     void testWriteTextEvent();
+    void testModifyTextEvent();
     void testRemoveTextEvent();
     void testWriteVoiceEvent_data();
     void testWriteVoiceEvent();
+    void testModifyVoiceEvent();
     void testRemoveVoiceEvent();
+    void testEventsForThread();
+    void testGetSingleEvent_data();
+    void testGetSingleEvent();
 
 private:
     SQLiteHistoryPlugin *mPlugin;
@@ -382,6 +387,51 @@ void SqlitePluginTest::testWriteTextEvent()
     QCOMPARE(thread[History::FieldReadTimestamp], event[History::FieldReadTimestamp]);
 }
 
+void SqlitePluginTest::testModifyTextEvent()
+{
+    // clear the database
+    SQLiteDatabase::instance()->reopen();
+
+    QVariantMap thread = mPlugin->createThreadForParticipants("theAccountId", History::EventTypeText, QStringList() << "theParticipant");
+    QVERIFY(!thread.isEmpty());
+    History::TextEventAttachment attachment(thread[History::FieldAccountId].toString(), thread[History::FieldThreadId].toString(),
+                                            thread[History::FieldEventId].toString(), "theAttachmentId", "text/plain", "/file/path");
+    History::TextEvent textEvent(thread[History::FieldAccountId].toString(), thread[History::FieldThreadId].toString(), "theEventId",
+                                 "theParticipant", QDateTime::currentDateTime(), true, "Hi there!", History::MessageTypeMultiParty,
+                                 History::MessageFlagPending, QDateTime::currentDateTime(), "theSubject",
+                                 History::TextEventAttachments() << attachment);
+    QCOMPARE(mPlugin->writeTextEvent(textEvent.properties()), History::EventWriteCreated);
+
+    // now modify the fields that can be modified in the class
+    textEvent.setNewEvent(false);
+    textEvent.setMessageFlags(History::MessageFlagDelivered);
+    textEvent.setReadTimestamp(QDateTime::currentDateTime());
+    QCOMPARE(mPlugin->writeTextEvent(textEvent.properties()), History::EventWriteModified);
+
+    // and check that the data is actually up-to-date in the database
+    QVariantMap event = textEvent.properties();
+    QSqlQuery query(SQLiteDatabase::instance()->database());
+    QVERIFY(query.exec("SELECT * FROM text_events"));
+    int count = 0;
+    while(query.next()) {
+        count++;
+        QCOMPARE(query.value("accountId"), event[History::FieldAccountId]);
+        QCOMPARE(query.value("threadId"), event[History::FieldThreadId]);
+        QCOMPARE(query.value("eventId"), event[History::FieldEventId]);
+        QCOMPARE(query.value("senderId"), event[History::FieldSenderId]);
+        QCOMPARE(query.value("timestamp"), event[History::FieldTimestamp]);
+        QCOMPARE(query.value("newEvent"), event[History::FieldNewEvent]);
+        QCOMPARE(query.value("message"), event[History::FieldMessage]);
+        QCOMPARE(query.value("messageType"), event[History::FieldMessageType]);
+        QCOMPARE(query.value("messageFlags"), event[History::FieldMessageFlags]);
+        QCOMPARE(query.value("readTimestamp"), event[History::FieldReadTimestamp]);
+        QCOMPARE(query.value("subject"), event[History::FieldSubject]);
+    }
+
+    // check that only one event got written
+    QCOMPARE(count, 1);
+}
+
 void SqlitePluginTest::testRemoveTextEvent()
 {
     // clear the database
@@ -466,6 +516,42 @@ void SqlitePluginTest::testWriteVoiceEvent()
     QCOMPARE(thread[History::FieldDuration], event[History::FieldDuration]);
 }
 
+void SqlitePluginTest::testModifyVoiceEvent()
+{
+    // clear the database
+    SQLiteDatabase::instance()->reopen();
+
+    QVariantMap thread = mPlugin->createThreadForParticipants("theAccountId", History::EventTypeVoice, QStringList() << "theParticipant");
+    QVERIFY(!thread.isEmpty());
+    History::VoiceEvent voiceEvent(thread[History::FieldAccountId].toString(), thread[History::FieldThreadId].toString(), "theEventId",
+                                   "theParticipant", QDateTime::currentDateTime(), true, true, QTime(0, 1, 2));
+    QCOMPARE(mPlugin->writeVoiceEvent(voiceEvent.properties()), History::EventWriteCreated);
+
+    // now modify the fields that can be modified in the class
+    voiceEvent.setNewEvent(false);
+    QCOMPARE(mPlugin->writeVoiceEvent(voiceEvent.properties()), History::EventWriteModified);
+
+    // and check that the data is actually up-to-date in the database
+    QVariantMap event = voiceEvent.properties();
+    QSqlQuery query(SQLiteDatabase::instance()->database());
+    QVERIFY(query.exec("SELECT * FROM voice_events"));
+    int count = 0;
+    while(query.next()) {
+        count++;
+        QCOMPARE(query.value("accountId"), event[History::FieldAccountId]);
+        QCOMPARE(query.value("threadId"), event[History::FieldThreadId]);
+        QCOMPARE(query.value("eventId"), event[History::FieldEventId]);
+        QCOMPARE(query.value("senderId"), event[History::FieldSenderId]);
+        QCOMPARE(query.value("timestamp"), event[History::FieldTimestamp]);
+        QCOMPARE(query.value("newEvent"), event[History::FieldNewEvent]);
+        QCOMPARE(query.value("missed"), event[History::FieldMissed]);
+        QCOMPARE(query.value("duration"), event[History::FieldDuration]);
+    }
+
+    // check that only one event got written
+    QCOMPARE(count, 1);
+}
+
 void SqlitePluginTest::testRemoveVoiceEvent()
 {
     // clear the database
@@ -488,6 +574,133 @@ void SqlitePluginTest::testRemoveVoiceEvent()
     QVERIFY(query.exec("SELECT count(*) FROM voice_events"));
     QVERIFY(query.next());
     QCOMPARE(query.value(0).toInt(), 0);
+}
+
+void SqlitePluginTest::testEventsForThread()
+{
+    // clear the database
+    SQLiteDatabase::instance()->reopen();
+
+    // test text events
+    QVariantMap textThread = mPlugin->createThreadForParticipants("textAccountId", History::EventTypeText, QStringList() << "textParticipant");
+    QVERIFY(!textThread.isEmpty());
+
+    // now insert 50 events
+    for (int i = 0; i < 50; ++i) {
+        History::TextEventAttachment attachment(textThread[History::FieldAccountId].toString(), textThread[History::FieldThreadId].toString(),
+                                                QString("textEventId%1").arg(QString::number(i)), QString("attachment%1").arg(i),
+                                                "text/plain", "/some/file/path");
+        History::TextEvent textEvent(textThread[History::FieldAccountId].toString(), textThread[History::FieldThreadId].toString(),
+                                     QString("textEventId%1").arg(QString::number(i)), "textParticipant",
+                                     QDateTime::currentDateTime(), true, "Hello World!", History::MessageTypeMultiParty,
+                                     History::MessageFlagPending, QDateTime::currentDateTime(),
+                                     "theSubject", History::TextEventAttachments() << attachment);
+        QCOMPARE(mPlugin->writeTextEvent(textEvent.properties()), History::EventWriteCreated);
+    }
+
+    QList<QVariantMap> textEvents = mPlugin->eventsForThread(textThread);
+    QCOMPARE(textEvents.count(), 50);
+    Q_FOREACH(const QVariantMap &textEvent, textEvents) {
+        QCOMPARE(textEvent[History::FieldAccountId], textThread[History::FieldAccountId]);
+        QCOMPARE(textEvent[History::FieldThreadId], textThread[History::FieldThreadId]);
+        QCOMPARE(textEvent[History::FieldType], textThread[History::FieldType]);
+    }
+
+    // test voice events
+    QVariantMap voiceThread = mPlugin->createThreadForParticipants("voiceAccountId", History::EventTypeVoice, QStringList() << "voiceParticipant");
+    QVERIFY(!voiceThread.isEmpty());
+
+    // now insert 50 events
+    for (int i = 0; i < 50; ++i) {
+        History::VoiceEvent voiceEvent(voiceThread[History::FieldAccountId].toString(), voiceThread[History::FieldThreadId].toString(),
+                                       QString("voiceEventId%1").arg(QString::number(i)), "voiceParticipant",
+                                       QDateTime::currentDateTime(), true, false, QTime(0, i, i));
+        QCOMPARE(mPlugin->writeVoiceEvent(voiceEvent.properties()), History::EventWriteCreated);
+    }
+
+    QList<QVariantMap> voiceEvents = mPlugin->eventsForThread(voiceThread);
+    QCOMPARE(voiceEvents.count(), 50);
+    Q_FOREACH(const QVariantMap &voiceEvent, voiceEvents) {
+        QCOMPARE(voiceEvent[History::FieldAccountId], voiceThread[History::FieldAccountId]);
+        QCOMPARE(voiceEvent[History::FieldThreadId], voiceThread[History::FieldThreadId]);
+        QCOMPARE(voiceEvent[History::FieldType], voiceThread[History::FieldType]);
+    }
+}
+
+void SqlitePluginTest::testGetSingleEvent_data()
+{
+    QTest::addColumn<QVariantMap>("event");
+
+    // for test purposes, the threadId == senderId to make it easier
+    QTest::newRow("new text event with pending flag") << History::TextEvent("oneAccountId", "theSender", "oneEventId",
+                                                                            "theSender", QDateTime::currentDateTime(), true,
+                                                                            "Hello World!", History::MessageTypeText,
+                                                                            History::MessageFlagPending).properties();
+    QTest::newRow("text event with valid read timestamp") << History::TextEvent("otherAccountId", "otherSender", "otherEventId",
+                                                                                "otherSender", QDateTime::currentDateTime(), false,
+                                                                                "Hi Again!", History::MessageTypeText,
+                                                                                History::MessageFlagDelivered,
+                                                                                QDateTime::currentDateTime()).properties();
+    History::TextEventAttachments attachments;
+    attachments << History::TextEventAttachment("mmsAccountId", "mmsSender", "mmsEventId", "mmsAttachment1",
+                                                "text/plain", "/the/file/path", History::AttachmentDownloaded);
+    QTest::newRow("text event with attachments") << History::TextEvent("mmsAccountId", "mmsSender", "mmsEventId", "mmsSender",
+                                                                       QDateTime::currentDateTime(), false, "Hello with attachments",
+                                                                       History::MessageTypeMultiParty, History::MessageFlagDelivered,
+                                                                       QDateTime::currentDateTime(), "The Subject", attachments).properties();
+    QTest::newRow("missed call") << History::VoiceEvent("theAccountId", "theSenderId", "theEventId", "theSenderId",
+                                                        QDateTime::currentDateTime(), true, true).properties();
+    QTest::newRow("incoming call") << History::VoiceEvent("otherAccountId", "otherSenderId", "otherEventId", "otherSenderId",
+                                                          QDateTime::currentDateTime(), false, false, QTime(0,10,30)).properties();
+}
+
+void SqlitePluginTest::testGetSingleEvent()
+{
+    QFETCH(QVariantMap, event);
+    // clear the database
+    SQLiteDatabase::instance()->reopen();
+
+    History::EventType type = (History::EventType) event[History::FieldType].toInt();
+
+    // create the thread
+    QVariantMap thread = mPlugin->createThreadForParticipants(event[History::FieldAccountId].toString(),
+                                                              type,
+                                                              QStringList() << event[History::FieldSenderId].toString());
+    QVERIFY(!thread.isEmpty());
+
+
+    // write the event
+    switch (type) {
+    case History::EventTypeText:
+        QCOMPARE(mPlugin->writeTextEvent(event), History::EventWriteCreated);
+        break;
+    case History::EventTypeVoice:
+        QCOMPARE(mPlugin->writeVoiceEvent(event), History::EventWriteCreated);
+        break;
+    }
+
+    QVariantMap retrievedEvent = mPlugin->getSingleEvent(type, event[History::FieldAccountId].toString(),
+                                                         event[History::FieldThreadId].toString(),
+                                                         event[History::FieldEventId].toString());
+    QCOMPARE(retrievedEvent[History::FieldAccountId], event[History::FieldAccountId]);
+    QCOMPARE(retrievedEvent[History::FieldThreadId], event[History::FieldThreadId]);
+    QCOMPARE(retrievedEvent[History::FieldEventId], event[History::FieldEventId]);
+    QCOMPARE(retrievedEvent[History::FieldSenderId], event[History::FieldSenderId]);
+    QCOMPARE(retrievedEvent[History::FieldTimestamp], event[History::FieldTimestamp]);
+    QCOMPARE(retrievedEvent[History::FieldNewEvent], event[History::FieldNewEvent]);
+
+    switch (type) {
+    case History::EventTypeText:
+        QCOMPARE(retrievedEvent[History::FieldMessage], event[History::FieldMessage]);
+        QCOMPARE(retrievedEvent[History::FieldMessageType], event[History::FieldMessageType]);
+        QCOMPARE(retrievedEvent[History::FieldMessageFlags], event[History::FieldMessageFlags]);
+        QCOMPARE(retrievedEvent[History::FieldReadTimestamp], event[History::FieldReadTimestamp]);
+        break;
+    case History::EventTypeVoice:
+        QCOMPARE(retrievedEvent[History::FieldMissed], event[History::FieldMissed]);
+        QCOMPARE(retrievedEvent[History::FieldDuration], event[History::FieldDuration]);
+        break;
+    }
 }
 
 QTEST_MAIN(SqlitePluginTest)
