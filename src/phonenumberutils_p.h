@@ -20,6 +20,7 @@
 #define PHONENUMBERUTILS_H
 
 #include <QString>
+#include <QRegExp>
 
 namespace PhoneNumberUtils
 {
