@@ -19,8 +19,8 @@
 #include <QtCore/QObject>
 #include <QtTest/QtTest>
 #include "sqlitehistoryplugin.h"
-#include "sqlitedatabase.h"
 #include "sqlitehistorythreadview.h"
+#include "sqlitedatabase.h"
 #include "textevent.h"
 #include "voiceevent.h"
 #include "unionfilter.h"
@@ -87,10 +87,10 @@ void SqliteThreadViewTest::testFilter()
     QVERIFY(view->IsValid());
     QList<QVariantMap> threads = view->NextPage();
     QCOMPARE(threads.count(), 2);
-    QCOMPARE(threads[0][History::FieldAccountId].toString(), QString("account10"));
-    QCOMPARE(threads[0][History::FieldType].toInt(), (int) History::EventTypeVoice);
-    QCOMPARE(threads[1][History::FieldAccountId].toString(), QString("account35"));
-    QCOMPARE(threads[0][History::FieldType].toInt(), (int) History::EventTypeVoice);
+    QCOMPARE(threads.first()[History::FieldAccountId].toString(), QString("account10"));
+    QCOMPARE(threads.first()[History::FieldType].toInt(), (int) History::EventTypeVoice);
+    QCOMPARE(threads.last()[History::FieldAccountId].toString(), QString("account35"));
+    QCOMPARE(threads.last()[History::FieldType].toInt(), (int) History::EventTypeVoice);
 
     // make sure no more items are returned
     QVERIFY(view->NextPage().isEmpty());
