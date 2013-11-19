@@ -134,7 +134,6 @@ void SqliteThreadViewTest::populateDatabase()
     mPlugin->beginBatchOperation();
     // create voice threads
     for (int i = 0; i < THREAD_COUNT; ++i) {
-        qDebug() << QString("Foo%1").arg(i, 2, 10, QChar('0'));
         mPlugin->createThreadForParticipants(QString("account%1").arg(i, 2, 10, QChar('0')),
                                              History::EventTypeVoice,
                                              QStringList() << QString("participant%1").arg(i, 2, 10, QChar('0')));
