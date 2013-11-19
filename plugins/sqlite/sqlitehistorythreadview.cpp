@@ -56,6 +56,9 @@ SQLiteHistoryThreadView::SQLiteHistoryThreadView(SQLiteHistoryPlugin *plugin,
         Q_EMIT Invalidated();
         return;
     }
+
+    mQuery.exec(QString("SELECT count(*) FROM %1").arg(mTemporaryTable));
+    mQuery.next();
 }
 
 SQLiteHistoryThreadView::~SQLiteHistoryThreadView()

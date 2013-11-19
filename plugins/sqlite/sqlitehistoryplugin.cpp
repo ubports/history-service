@@ -446,6 +446,14 @@ QString SQLiteHistoryPlugin::sqlQueryForThreads(History::EventType type, const Q
         modifiedCondition.replace("unreadCount=", "threads.unreadCount=");
     }
 
+    QString modifiedOrder = order;
+    if (!modifiedOrder.isEmpty()) {
+        modifiedOrder.replace(" accountId", " threads.accountId");
+        modifiedOrder.replace(" threadId", " threads.threadId");
+        modifiedOrder.replace(" count", " threads.count");
+        modifiedOrder.replace(" unreadCount", " threads.unreadCount");
+    }
+
     QStringList fields;
     fields << "threads.accountId"
            << "threads.threadId"
@@ -480,7 +488,7 @@ QString SQLiteHistoryPlugin::sqlQueryForThreads(History::EventType type, const Q
 
     QString queryText = QString("SELECT %1 FROM threads LEFT JOIN %2 ON threads.threadId=%2.threadId AND "
                          "threads.accountId=%2.accountId AND threads.lastEventId=%2.eventId WHERE threads.type=%3 %4 %5")
-                         .arg(fields.join(", "), table, QString::number((int)type), modifiedCondition, order);
+                         .arg(fields.join(", "), table, QString::number((int)type), modifiedCondition, modifiedOrder);
     return queryText;
 }
 

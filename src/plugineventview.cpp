@@ -61,7 +61,7 @@ void PluginEventView::Destroy()
     deleteLater();
 }
 
-bool PluginEventView::IsValid()
+bool PluginEventView::IsValid() const
 {
     return true;
 }

@@ -21,4 +21,5 @@ endmacro(generate_tests)
 
 generate_tests(
     SqlitePluginTest
+    SqliteThreadViewTest
     )
