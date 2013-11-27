@@ -93,7 +93,7 @@ QString UnionFilterPrivate::toString(const QString &propertyPrefix) const
         }
     }
 
-    return output.join(" OR ");
+    return QString("(%1)").arg(output.join(" OR "));
 }
 
 HISTORY_FILTER_DEFINE_COPY(UnionFilter, FilterTypeUnion)

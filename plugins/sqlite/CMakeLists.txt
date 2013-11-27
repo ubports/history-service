@@ -40,3 +40,4 @@ target_link_libraries(sqlitehistoryplugin historyservice ${SQLITE3_LIBRARIES})
 install(TARGETS sqlitehistoryplugin DESTINATION ${HISTORY_PLUGIN_PATH})
 
 add_subdirectory(schema)
+add_subdirectory(tests)

@@ -61,7 +61,7 @@ void PluginThreadView::Destroy()
     deleteLater();
 }
 
-bool PluginThreadView::IsValid()
+bool PluginThreadView::IsValid() const
 {
     return true;
 }

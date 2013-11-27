@@ -47,7 +47,7 @@ public:
               const QString &message,
               MessageType messageType,
               MessageFlags messageFlags,
-              const QDateTime &readTimestamp,
+              const QDateTime &readTimestamp = QDateTime(),
               const QString &subject = QString(),
               const TextEventAttachments &attachments = TextEventAttachments(),
               const QStringList &participants = QStringList());
