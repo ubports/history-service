@@ -42,7 +42,7 @@ public:
     // DBus exposed methods
     Q_NOREPLY void Destroy();
     virtual QList<QVariantMap> NextPage() = 0;
-    virtual bool IsValid();
+    virtual bool IsValid() const;
 
     // other methods
     QString objectPath() const;

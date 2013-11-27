@@ -134,15 +134,7 @@ QVariantMap SQLiteHistoryPlugin::threadForParticipants(const QString &accountId,
         }
     }
 
-    QVariantMap thread;
-    if (!existingThread.isNull()) {
-        thread[History::FieldAccountId] = accountId;
-        thread[History::FieldThreadId] = existingThread;
-        thread[History::FieldType] = (int) type;
-        thread[History::FieldParticipants] = participants;
-    }
-
-    return thread;
+    return getSingleThread(type, accountId, existingThread);
 }
 
 QList<QVariantMap> SQLiteHistoryPlugin::eventsForThread(const QVariantMap &thread)
@@ -226,7 +218,7 @@ QVariantMap SQLiteHistoryPlugin::createThreadForParticipants(const QString &acco
                   "VALUES (:accountId, :threadId, :type, :count, :unreadCount)");
     query.bindValue(":accountId", accountId);
     query.bindValue(":threadId", threadId);
-    query.bindValue(":type", type);
+    query.bindValue(":type", (int) type);
     query.bindValue(":count", 0);
     query.bindValue(":unreadCount", 0);
     if (!query.exec()) {
@@ -253,6 +245,8 @@ QVariantMap SQLiteHistoryPlugin::createThreadForParticipants(const QString &acco
     thread[History::FieldThreadId] = threadId;
     thread[History::FieldType] = (int) type;
     thread[History::FieldParticipants] = participants;
+    thread[History::FieldCount] = 0;
+    thread[History::FieldUnreadCount] = 0;
 
     return thread;
 }
@@ -287,13 +281,13 @@ History::EventWriteResult SQLiteHistoryPlugin::writeTextEvent(const QVariantMap 
     History::EventWriteResult result;
     if (existingEvent.isEmpty()) {
         // create new
-        query.prepare("INSERT INTO text_events (accountId, threadId, eventId, senderId, timestamp, newEvent, message, messageType, messageFlags, readTimestamp) "
-                      "VALUES (:accountId, :threadId, :eventId, :senderId, :timestamp, :newEvent, :message, :messageType, :messageFlags, :readTimestamp)");
+        query.prepare("INSERT INTO text_events (accountId, threadId, eventId, senderId, timestamp, newEvent, message, messageType, messageFlags, readTimestamp, subject) "
+                      "VALUES (:accountId, :threadId, :eventId, :senderId, :timestamp, :newEvent, :message, :messageType, :messageFlags, :readTimestamp, :subject)");
         result = History::EventWriteCreated;
     } else {
         // update existing event
         query.prepare("UPDATE text_events SET senderId=:senderId, timestamp=:timestamp, newEvent=:newEvent, message=:message, messageType=:messageType,"
-                      "messageFlags=:messageFlags, readTimestamp=:readTimestamp WHERE accountId=:accountId AND threadId=:threadId AND eventId=:eventId");
+                      "messageFlags=:messageFlags, readTimestamp=:readTimestamp, subject=:subject WHERE accountId=:accountId AND threadId=:threadId AND eventId=:eventId");
         result = History::EventWriteModified;
     }
 
@@ -307,6 +301,7 @@ History::EventWriteResult SQLiteHistoryPlugin::writeTextEvent(const QVariantMap 
     query.bindValue(":messageType", event[History::FieldMessageType]);
     query.bindValue(":messageFlags", event[History::FieldMessageFlags]);
     query.bindValue(":readTimestamp", QDateTime::fromString(event[History::FieldReadTimestamp].toString(), Qt::ISODate));
+    query.bindValue(":subject", event[History::FieldSubject].toString());
 
     if (!query.exec()) {
         qCritical() << "Failed to save the text event: Error:" << query.lastError() << query.lastQuery();
@@ -451,6 +446,14 @@ QString SQLiteHistoryPlugin::sqlQueryForThreads(History::EventType type, const Q
         modifiedCondition.replace("unreadCount=", "threads.unreadCount=");
     }
 
+    QString modifiedOrder = order;
+    if (!modifiedOrder.isEmpty()) {
+        modifiedOrder.replace(" accountId", " threads.accountId");
+        modifiedOrder.replace(" threadId", " threads.threadId");
+        modifiedOrder.replace(" count", " threads.count");
+        modifiedOrder.replace(" unreadCount", " threads.unreadCount");
+    }
+
     QStringList fields;
     fields << "threads.accountId"
            << "threads.threadId"
@@ -485,7 +488,7 @@ QString SQLiteHistoryPlugin::sqlQueryForThreads(History::EventType type, const Q
 
     QString queryText = QString("SELECT %1 FROM threads LEFT JOIN %2 ON threads.threadId=%2.threadId AND "
                          "threads.accountId=%2.accountId AND threads.lastEventId=%2.eventId WHERE threads.type=%3 %4 %5")
-                         .arg(fields.join(", "), table, QString::number((int)type), modifiedCondition, order);
+                         .arg(fields.join(", "), table, QString::number((int)type), modifiedCondition, modifiedOrder);
     return queryText;
 }
 
@@ -518,7 +521,7 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseThreadResults(History::EventType ty
             break;
         case History::EventTypeVoice:
             thread[History::FieldMissed] = query.value(10);
-            thread[History::FieldDuration] = QTime(0,0).addSecs(query.value(9).toInt());
+            thread[History::FieldDuration] = query.value(9);
             break;
         }
         threads << thread;
@@ -570,12 +573,12 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseEventResults(History::EventType typ
         event[History::FieldSenderId] = query.value(3);
         event[History::FieldTimestamp] = query.value(4);
         event[History::FieldNewEvent] = query.value(5);
-        event[History::FieldParticipants] = query.value(6);
+        event[History::FieldParticipants] = query.value(6).toString().split("|,|");
 
 
         switch (type) {
         case History::EventTypeText:
-            messageType = (History::MessageType) query.value(7).toInt();
+            messageType = (History::MessageType) query.value(8).toInt();
             if (messageType == History::MessageTypeMultiParty)  {
                 QSqlQuery attachmentsQuery(SQLiteDatabase::instance()->database());
                 attachmentsQuery.prepare("SELECT attachmentId, contentType, filePath, status FROM text_event_attachments "

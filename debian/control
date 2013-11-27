@@ -5,6 +5,7 @@ Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
 Build-Depends: cmake,
                debhelper (>= 9),
                dh-translations,
+               libqt5sql5-sqlite,
                libsqlite3-dev,
                libtelepathy-logger-qt5-dev,
                libtelepathy-qt5-dev,
@@ -27,6 +28,7 @@ Multi-Arch: foreign
 Pre-Depends: dpkg (>= 1.15.6~),
 Depends: ${misc:Depends},
          ${shlibs:Depends},
+         libqt5sql5-sqlite,
 Description: History service to store messages and calls
  A service to record the messages that are sent and received and the calls that
  are made in the Ubuntu Touch platform.

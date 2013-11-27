@@ -181,6 +181,11 @@ void UnionFilterTest::testToStringWithManyFilters()
     QVERIFY(stringResult.contains(filterOne.toString()));
     QVERIFY(stringResult.contains(filterTwo.toString()));
     QVERIFY(stringResult.contains(filterThree.toString()));
+
+    // check that the filter starts with two parenthesis (one for the block and one for the first filter
+    // and that it also ends with two parentesis
+    QVERIFY(stringResult.startsWith("(("));
+    QVERIFY(stringResult.endsWith("))"));
 }
 
 void UnionFilterTest::testConvertToFilterAndBack()
