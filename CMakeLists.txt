@@ -47,6 +47,8 @@ pkg_check_modules(SQLITE3 REQUIRED sqlite3)
 pkg_check_modules(TPL_QT5 TelepathyLoggerQt5)
 pkg_check_modules(QTGLIB QtGLib-2.0)
 
+find_program(DBUS_RUNNER dbus-test-runner)
+
 add_definitions(-DQT_NO_KEYWORDS)
 
 include_directories(
