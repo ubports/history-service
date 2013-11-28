@@ -16,7 +16,7 @@ macro(generate_test TESTNAME USE_DBUS)
     else (${USE_DBUS})
         add_test(${TESTNAME} ${CMAKE_CURRENT_BINARY_DIR}/${TESTNAME} -xunitxml -o ${CMAKE_BINARY_DIR}/test_${TESTNAME}.xml)
     endif(${USE_DBUS})
-    set(TEST_ENVIRONMENT "HOME=/tmp/history_test_home\;HISTORY_SQLITE_DBPATH=:memory:\;HISTORY_PLUGIN_PATH=${CMAKE_CURRENT_BINARY_DIR}/plugins/sqlite")
+    set(TEST_ENVIRONMENT "HOME=/tmp/history_test_home\;HISTORY_SQLITE_DBPATH=:memory:\;HISTORY_PLUGIN_PATH=${CMAKE_BINARY_DIR}/plugins/sqlite")
     set_tests_properties(${TESTNAME} PROPERTIES
                           ENVIRONMENT ${TEST_ENVIRONMENT}
                           TIMEOUT 60)

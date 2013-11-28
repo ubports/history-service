@@ -60,7 +60,7 @@ void PluginManager::loadPlugins()
 
     QDir dir(pluginPath);
 
-    Q_FOREACH (QString fileName, dir.entryList(QDir::Files)) {
+    Q_FOREACH (QString fileName, dir.entryList(QStringList() << "*.so", QDir::Files)) {
         QPluginLoader loader(dir.absoluteFilePath(fileName));
         Plugin *plugin = qobject_cast<Plugin*>(loader.instance());
         if (plugin) {
