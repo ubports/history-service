@@ -23,10 +23,13 @@
 #include "manager.h"
 #include "thread.h"
 #include "threadview.h"
+#include "textevent.h"
+#include "voiceevent.h"
 
 Q_DECLARE_METATYPE(History::EventType)
 Q_DECLARE_METATYPE(History::MatchFlags)
 Q_DECLARE_METATYPE(History::Threads)
+Q_DECLARE_METATYPE(History::Events)
 
 class ManagerTest : public QObject
 {
@@ -38,6 +41,9 @@ private Q_SLOTS:
     void testThreadForParticipants();
     void testQueryEvents();
     void testQueryThreads();
+    void testGetSingleThread();
+    void testWriteEvents();
+    void cleanupTestCase();
 
 private:
     History::Manager *mManager;
@@ -48,6 +54,7 @@ void ManagerTest::initTestCase()
     qRegisterMetaType<History::EventType>();
     qRegisterMetaType<History::MatchFlags>();
     qRegisterMetaType<History::Threads>();
+    qRegisterMetaType<History::Events>();
     mManager = History::Manager::instance();
 }
 
@@ -109,6 +116,102 @@ void ManagerTest::testQueryThreads()
     History::ThreadViewPtr threadView = mManager->queryThreads(History::EventTypeVoice);
     QVERIFY(!threadView.isNull());
     QVERIFY(threadView->isValid());
+}
+
+void ManagerTest::testGetSingleThread()
+{
+    History::Thread thread = mManager->threadForParticipants("theAccountId",
+                                                             History::EventTypeText,
+                                                             QStringList() << "theParticipant",
+                                                             History::MatchCaseSensitive, true);
+    QVERIFY(!thread.isNull());
+
+    // try getting the same thread
+    History::Thread sameThread = mManager->getSingleThread(thread.type(), thread.accountId(), thread.threadId());
+    QVERIFY(sameThread == thread);
+}
+
+void ManagerTest::testWriteEvents()
+{
+    // create two threads, one for voice and one for text
+
+    History::Thread textThread = mManager->threadForParticipants("textAccountId",
+                                                                 History::EventTypeText,
+                                                                 QStringList()<< "textParticipant",
+                                                                 History::MatchCaseSensitive, true);
+    History::Thread voiceThread = mManager->threadForParticipants("voiceAccountId",
+                                                                  History::EventTypeVoice,
+                                                                  QStringList()<< "voiceParticipant",
+                                                                  History::MatchCaseSensitive, true);
+    // insert some text and voice events
+    History::Events events;
+    for (int i = 0; i < 50; ++i) {
+        History::TextEvent textEvent(textThread.accountId(),
+                                     textThread.threadId(),
+                                     QString("eventId%1").arg(i),
+                                     textThread.participants().first(),
+                                     QDateTime::currentDateTime(),
+                                     true,
+                                     QString("Hello world %1").arg(i),
+                                     History::MessageTypeText,
+                                     History::MessageFlags());
+        events.append(textEvent);
+
+        History::VoiceEvent voiceEvent(voiceThread.accountId(),
+                                       voiceThread.threadId(),
+                                       QString("eventId%1").arg(i),
+                                       voiceThread.participants().first(),
+                                       QDateTime::currentDateTime(),
+                                       true,
+                                       true);
+        events.append(voiceEvent);
+    }
+
+    QSignalSpy newEventsSpy(mManager, SIGNAL(eventsAdded(History::Events)));
+    QSignalSpy threadsModifiedSpy(mManager, SIGNAL(threadsModified(History::Threads)));
+    QVERIFY(mManager->writeEvents(events));
+    QTRY_COMPARE(newEventsSpy.count(), 1);
+    QTRY_COMPARE(threadsModifiedSpy.count(), 1);
+
+    // check that the signal was emitted with the correct number of events
+    History::Events returnedEvents = newEventsSpy.first().first().value<History::Events>();
+
+    // just in case, sort the lists before comparing
+    qSort(events);
+    qSort(returnedEvents);
+    QCOMPARE(returnedEvents, events);
+
+    History::Threads returnedThreads = threadsModifiedSpy.first().first().value<History::Threads>();
+    QCOMPARE(returnedThreads.count(), 2);
+
+    // now modify two events and write them again to see if they are properly notified
+    History::TextEvent modifiedTextEvent = events[0];
+    History::VoiceEvent modifiedVoiceEvent = events[1];
+
+    modifiedTextEvent.setNewEvent(false);
+    modifiedTextEvent.setMessageFlags(History::MessageFlagDelivered);
+    modifiedVoiceEvent.setNewEvent(false);
+
+    QSignalSpy eventsModifiedSpy(mManager, SIGNAL(eventsModified(History::Events)));
+    threadsModifiedSpy.clear();
+    events.clear();
+    events << modifiedTextEvent;
+    events << modifiedVoiceEvent;
+    QVERIFY(mManager->writeEvents(events));
+    QTRY_COMPARE(eventsModifiedSpy.count(), 1);
+    QTRY_COMPARE(threadsModifiedSpy.count(), 1);
+
+    returnedEvents = eventsModifiedSpy.first().first().value<History::Events>();
+    qDebug() << returnedEvents.first().accountId();
+    QCOMPARE(returnedEvents.count(), 2);
+
+    returnedThreads = threadsModifiedSpy.first().first().value<History::Threads>();
+    QCOMPARE(returnedThreads.count(), 2);
+}
+
+void ManagerTest::cleanupTestCase()
+{
+    delete mManager;
 }
 
 QTEST_MAIN(ManagerTest)

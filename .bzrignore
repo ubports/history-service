@@ -35,3 +35,5 @@ tools/tplogger-import/history-tplogger-import
 install_manifest.txt
 plugins/*/tests/*Test
 plugins/*/tests/*moc*
+plugins/sqlite/*qrc
+plugins/sqlite/version.info
