@@ -161,7 +161,7 @@ bool HistoryDaemon::writeEvents(const QList<QVariantMap> &events)
 
     QList<QVariantMap> newEvents;
     QList<QVariantMap> modifiedEvents;
-    QList<QVariantMap> threads;
+    QMap<QString, QVariantMap> threads;
 
     mBackend->beginBatchOperation();
 
@@ -186,8 +186,8 @@ bool HistoryDaemon::writeEvents(const QList<QVariantMap> &events)
 
         // only get the thread AFTER the event is written to make sure it is up-to-date
         QVariantMap thread = getSingleThread(type, accountId, threadId);
-        threads.removeAll(thread);
-        threads << thread;
+        QString hash = hashThread(thread);
+        threads[hash] = thread;
 
         // set the participants field in the event
         savedEvent[History::FieldParticipants] = thread[History::FieldParticipants];
@@ -217,7 +217,7 @@ bool HistoryDaemon::writeEvents(const QList<QVariantMap> &events)
         mDBus.notifyEventsModified(modifiedEvents);
     }
     if (!threads.isEmpty()) {
-        mDBus.notifyThreadsModified(threads);
+        mDBus.notifyThreadsModified(threads.values());
     }
     return true;
 }
@@ -493,4 +493,12 @@ History::MatchFlags HistoryDaemon::matchFlagsForChannel(const Tp::ChannelPtr &ch
 
     // default to this value
     return History::MatchCaseSensitive;
+}
+
+QString HistoryDaemon::hashThread(const QVariantMap &thread)
+{
+    QString hash = QString::number(thread[History::FieldType].toInt());
+    hash += "#-#" + thread[History::FieldAccountId].toString();
+    hash += "#-#" + thread[History::FieldThreadId].toString();
+    return hash;
 }

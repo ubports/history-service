@@ -60,6 +60,7 @@ private Q_SLOTS:
 
 protected:
     History::MatchFlags matchFlagsForChannel(const Tp::ChannelPtr &channel);
+    QString hashThread(const QVariantMap &thread);
 
 private:
     HistoryDaemon(QObject *parent = 0);
