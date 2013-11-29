@@ -176,6 +176,10 @@ void ManagerTest::testWriteEvents()
     // check that the signal was emitted with the correct number of events
     History::Events returnedEvents = newEventsSpy.first().first().value<History::Events>();
 
+    // get two events to modify before sorting
+    History::TextEvent modifiedTextEvent = events[0];
+    History::VoiceEvent modifiedVoiceEvent = events[1];
+
     // just in case, sort the lists before comparing
     qSort(events);
     qSort(returnedEvents);
@@ -183,10 +187,6 @@ void ManagerTest::testWriteEvents()
 
     History::Threads returnedThreads = threadsModifiedSpy.first().first().value<History::Threads>();
     QCOMPARE(returnedThreads.count(), 2);
-
-    // now modify two events and write them again to see if they are properly notified
-    History::TextEvent modifiedTextEvent = events[0];
-    History::VoiceEvent modifiedVoiceEvent = events[1];
 
     modifiedTextEvent.setNewEvent(false);
     modifiedTextEvent.setMessageFlags(History::MessageFlagDelivered);
