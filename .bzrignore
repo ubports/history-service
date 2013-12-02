@@ -36,4 +36,4 @@ install_manifest.txt
 plugins/*/tests/*Test
 plugins/*/tests/*moc*
 plugins/sqlite/*qrc
-plugins/sqlite/version.info
+plugins/sqlite/schema/version.info
