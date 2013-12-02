@@ -44,6 +44,7 @@ private Q_SLOTS:
     void testGetSingleThread();
     void testWriteEvents();
     void testRemoveEvents();
+    void testGetSingleEvent();
     void cleanupTestCase();
 
 private:
@@ -274,6 +275,59 @@ void ManagerTest::testRemoveEvents()
     qSort(secondRemoval);
     QCOMPARE(removedEvents, secondRemoval);
     QCOMPARE(removedThreads.count(), 2);
+}
+
+void ManagerTest::testGetSingleEvent()
+{
+    // create two threads, one for voice and one for text
+    History::Thread textThread = mManager->threadForParticipants("textSingleAccount",
+                                                                 History::EventTypeText,
+                                                                 QStringList()<< "textSingleParticipant",
+                                                                 History::MatchCaseSensitive, true);
+    History::Thread voiceThread = mManager->threadForParticipants("voiceSingleAccount",
+                                                                  History::EventTypeVoice,
+                                                                  QStringList()<< "voiceSingleParticipant",
+                                                                  History::MatchCaseSensitive, true);
+
+    // now add two events
+    History::TextEvent textEvent(textThread.accountId(),
+                                 textThread.threadId(),
+                                 "singleEventId",
+                                 "self",
+                                 QDateTime::currentDateTime(),
+                                 true,
+                                 "Hello big world!",
+                                 History::MessageTypeText,
+                                 History::MessageFlagPending);
+    History::VoiceEvent voiceEvent(voiceThread.accountId(),
+                                   voiceThread.threadId(),
+                                   "singleEventId",
+                                   "self",
+                                   QDateTime::currentDateTime(),
+                                   false,
+                                   false,
+                                   QTime(1,2,3));
+    QVERIFY(mManager->writeEvents(History::Events() << textEvent << voiceEvent));
+
+    // and now try to get them
+    History::TextEvent retrievedTextEvent = mManager->getSingleEvent(History::EventTypeText,
+                                                                     textEvent.accountId(),
+                                                                     textEvent.threadId(),
+                                                                     textEvent.eventId());
+    QVERIFY(retrievedTextEvent == textEvent);
+    QCOMPARE(retrievedTextEvent.newEvent(), textEvent.newEvent());
+    QCOMPARE(retrievedTextEvent.message(), textEvent.message());
+    QCOMPARE(retrievedTextEvent.messageType(), textEvent.messageType());
+    QCOMPARE(retrievedTextEvent.messageFlags(), textEvent.messageFlags());
+
+    History::VoiceEvent retrievedVoiceEvent = mManager->getSingleEvent(History::EventTypeVoice,
+                                                                       voiceEvent.accountId(),
+                                                                       voiceEvent.threadId(),
+                                                                       voiceEvent.eventId());
+    QVERIFY(retrievedVoiceEvent == voiceEvent);
+    QCOMPARE(retrievedVoiceEvent.newEvent(), voiceEvent.newEvent());
+    QCOMPARE(retrievedVoiceEvent.missed(), voiceEvent.missed());
+    QCOMPARE(retrievedVoiceEvent.duration(), voiceEvent.duration());
 }
 
 void ManagerTest::cleanupTestCase()
