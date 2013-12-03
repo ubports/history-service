@@ -63,6 +63,7 @@ public:
 
     bool isNull() const;
     bool operator==(const Thread &other) const;
+    bool operator<(const Thread &other) const;
 
     virtual QVariantMap properties() const;
 

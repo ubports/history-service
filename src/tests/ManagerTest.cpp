@@ -45,6 +45,7 @@ private Q_SLOTS:
     void testWriteEvents();
     void testRemoveEvents();
     void testGetSingleEvent();
+    void testRemoveThreads();
     void cleanupTestCase();
 
 private:
@@ -328,6 +329,67 @@ void ManagerTest::testGetSingleEvent()
     QCOMPARE(retrievedVoiceEvent.newEvent(), voiceEvent.newEvent());
     QCOMPARE(retrievedVoiceEvent.missed(), voiceEvent.missed());
     QCOMPARE(retrievedVoiceEvent.duration(), voiceEvent.duration());
+}
+
+void ManagerTest::testRemoveThreads()
+{
+    // create two threads, one for voice and one for text
+    History::Thread textThread = mManager->threadForParticipants("textThreadRemovalAccount",
+                                                                 History::EventTypeText,
+                                                                 QStringList()<< "textParticipant",
+                                                                 History::MatchCaseSensitive, true);
+    QVERIFY(!textThread.isNull());
+    History::Thread voiceThread = mManager->threadForParticipants("voiceThreadRemovalAccount",
+                                                                  History::EventTypeVoice,
+                                                                  QStringList()<< "voiceParticipant",
+                                                                  History::MatchCaseSensitive, true);
+    QVERIFY(!voiceThread.isNull());
+
+    History::Threads threads;
+    threads << textThread << voiceThread;
+
+    // insert some text and voice events
+    History::Events events;
+    for (int i = 0; i < 50; ++i) {
+        History::TextEvent textEvent(textThread.accountId(),
+                                     textThread.threadId(),
+                                     QString("eventToBeRemoved%1").arg(i),
+                                     textThread.participants().first(),
+                                     QDateTime::currentDateTime(),
+                                     true,
+                                     QString("Hello world %1").arg(i),
+                                     History::MessageTypeText,
+                                     History::MessageFlags());
+        events.append(textEvent);
+
+        History::VoiceEvent voiceEvent(voiceThread.accountId(),
+                                       voiceThread.threadId(),
+                                       QString("eventToBeRemoved%1").arg(i),
+                                       voiceThread.participants().first(),
+                                       QDateTime::currentDateTime(),
+                                       true,
+                                       true);
+        events.append(voiceEvent);
+    }
+
+    QVERIFY(mManager->writeEvents(events));
+
+    QSignalSpy eventsRemovedSpy(mManager, SIGNAL(eventsRemoved(History::Events)));
+    QSignalSpy threadsRemovedSpy(mManager, SIGNAL(threadsRemoved(History::Threads)));
+
+    QVERIFY(mManager->removeThreads(threads));
+    QTRY_COMPARE(eventsRemovedSpy.count(), 1);
+    QTRY_COMPARE(threadsRemovedSpy.count(), 1);
+
+    History::Events removedEvents = eventsRemovedSpy.first().first().value<History::Events>();
+    qSort(removedEvents);
+    qSort(events);
+    QCOMPARE(removedEvents, events);
+
+    History::Threads removedThreads = threadsRemovedSpy.first().first().value<History::Threads>();
+    qSort(removedThreads);
+    qSort(threads);
+    QCOMPARE(removedThreads, threads);
 }
 
 void ManagerTest::cleanupTestCase()
