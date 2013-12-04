@@ -34,4 +34,6 @@ generate_test(VoiceEventTest False)
 
 if (DBUS_RUNNER)
     generate_test(ManagerTest True)
+    generate_test(ThreadViewTest True)
+    generate_test(EventViewTest True)
 endif (DBUS_RUNNER)
