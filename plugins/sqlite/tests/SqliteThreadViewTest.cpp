@@ -126,7 +126,6 @@ void SqliteThreadViewTest::testSort()
     QCOMPARE(allThreads.first()[History::FieldAccountId].toString(), QString("account%1").arg(THREAD_COUNT-1));
     QCOMPARE(allThreads.last()[History::FieldAccountId].toString(), QString("account00"));
     delete view;
-
 }
 
 void SqliteThreadViewTest::populateDatabase()
