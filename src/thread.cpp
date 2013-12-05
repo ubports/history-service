@@ -146,6 +146,13 @@ bool Thread::operator ==(const Thread &other) const
     return true;
 }
 
+bool Thread::operator<(const Thread &other) const
+{
+    QString selfData = QString::number(type()) + accountId() + threadId();
+    QString otherData = QString::number(other.type()) + other.accountId() + other.threadId();
+    return selfData < otherData;
+}
+
 QVariantMap Thread::properties() const
 {
     Q_D(const Thread);

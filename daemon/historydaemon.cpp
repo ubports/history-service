@@ -161,7 +161,7 @@ bool HistoryDaemon::writeEvents(const QList<QVariantMap> &events)
 
     QList<QVariantMap> newEvents;
     QList<QVariantMap> modifiedEvents;
-    QList<QVariantMap> threads;
+    QMap<QString, QVariantMap> threads;
 
     mBackend->beginBatchOperation();
 
@@ -186,8 +186,8 @@ bool HistoryDaemon::writeEvents(const QList<QVariantMap> &events)
 
         // only get the thread AFTER the event is written to make sure it is up-to-date
         QVariantMap thread = getSingleThread(type, accountId, threadId);
-        threads.removeAll(thread);
-        threads << thread;
+        QString hash = hashThread(thread);
+        threads[hash] = thread;
 
         // set the participants field in the event
         savedEvent[History::FieldParticipants] = thread[History::FieldParticipants];
@@ -217,7 +217,7 @@ bool HistoryDaemon::writeEvents(const QList<QVariantMap> &events)
         mDBus.notifyEventsModified(modifiedEvents);
     }
     if (!threads.isEmpty()) {
-        mDBus.notifyThreadsModified(threads);
+        mDBus.notifyThreadsModified(threads.values());
     }
     return true;
 }
@@ -253,8 +253,8 @@ bool HistoryDaemon::removeEvents(const QList<QVariantMap> &events)
     // this loop needs to be separate from the item removal loop because we rely on the
     // count property of threads to decide if they were just modified or if they need to
     // be removed.
-    QList<QVariantMap> removedThreads;
-    QList<QVariantMap> modifiedThreads;
+    QMap<QString, QVariantMap> removedThreads;
+    QMap<QString, QVariantMap> modifiedThreads;
     Q_FOREACH(const QVariantMap &event, events) {
          History::EventType type = (History::EventType) event[History::FieldType].toInt();
          QString accountId = event[History::FieldAccountId].toString();
@@ -265,27 +265,33 @@ bool HistoryDaemon::removeEvents(const QList<QVariantMap> &events)
              continue;
          }
 
-         if (thread[History::FieldCount].toInt() > 0 && !modifiedThreads.contains(thread)) {
+         QString hash = hashThread(thread);
+         if (thread[History::FieldCount].toInt() > 0) {
              // the thread still has items and we should notify it was modified
-             modifiedThreads << thread;
-         } else if (!removedThreads.contains(thread)) {
-             // the thread is now empty and needs to be removed
-             if (!mBackend->removeThread(thread)) {
-                 mBackend->rollbackBatchOperation();
-                 return false;
-             }
-             removedThreads << thread;
+             modifiedThreads[hash] = thread;
+         } else {
+             removedThreads[hash] = thread;
          }
+    }
+
+    // finally remove the threads that are now empty
+    Q_FOREACH(const QVariantMap &thread, removedThreads.values()) {
+        // the thread is now empty and needs to be removed
+        if (!mBackend->removeThread(thread)) {
+            mBackend->rollbackBatchOperation();
+            return false;
+        }
+
     }
 
     mBackend->endBatchOperation();
 
     mDBus.notifyEventsRemoved(events);
     if (!removedThreads.isEmpty()) {
-        mDBus.notifyThreadsRemoved(removedThreads);
+        mDBus.notifyThreadsRemoved(removedThreads.values());
     }
     if (!modifiedThreads.isEmpty()) {
-        mDBus.notifyThreadsModified(modifiedThreads);
+        mDBus.notifyThreadsModified(modifiedThreads.values());
     }
     return true;
 }
@@ -493,4 +499,12 @@ History::MatchFlags HistoryDaemon::matchFlagsForChannel(const Tp::ChannelPtr &ch
 
     // default to this value
     return History::MatchCaseSensitive;
+}
+
+QString HistoryDaemon::hashThread(const QVariantMap &thread)
+{
+    QString hash = QString::number(thread[History::FieldType].toInt());
+    hash += "#-#" + thread[History::FieldAccountId].toString();
+    hash += "#-#" + thread[History::FieldThreadId].toString();
+    return hash;
 }

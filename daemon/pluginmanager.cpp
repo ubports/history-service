@@ -53,9 +53,14 @@ Plugins PluginManager::plugins()
 
 void PluginManager::loadPlugins()
 {
-    QDir dir(HISTORY_PLUGIN_PATH);
+    QString pluginPath = qgetenv("HISTORY_PLUGIN_PATH");
+    if (pluginPath.isEmpty()) {
+        pluginPath = HISTORY_PLUGIN_PATH;
+    }
 
-    Q_FOREACH (QString fileName, dir.entryList(QDir::Files)) {
+    QDir dir(pluginPath);
+
+    Q_FOREACH (QString fileName, dir.entryList(QStringList() << "*.so", QDir::Files)) {
         QPluginLoader loader(dir.absoluteFilePath(fileName));
         Plugin *plugin = qobject_cast<Plugin*>(loader.instance());
         if (plugin) {
