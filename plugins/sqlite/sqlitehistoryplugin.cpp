@@ -281,13 +281,13 @@ History::EventWriteResult SQLiteHistoryPlugin::writeTextEvent(const QVariantMap 
     History::EventWriteResult result;
     if (existingEvent.isEmpty()) {
         // create new
-        query.prepare("INSERT INTO text_events (accountId, threadId, eventId, senderId, timestamp, newEvent, message, messageType, messageFlags, readTimestamp, subject) "
-                      "VALUES (:accountId, :threadId, :eventId, :senderId, :timestamp, :newEvent, :message, :messageType, :messageFlags, :readTimestamp, :subject)");
+        query.prepare("INSERT INTO text_events (accountId, threadId, eventId, senderId, timestamp, newEvent, message, messageType, messageStatus, readTimestamp, subject) "
+                      "VALUES (:accountId, :threadId, :eventId, :senderId, :timestamp, :newEvent, :message, :messageType, :messageStatus, :readTimestamp, :subject)");
         result = History::EventWriteCreated;
     } else {
         // update existing event
         query.prepare("UPDATE text_events SET senderId=:senderId, timestamp=:timestamp, newEvent=:newEvent, message=:message, messageType=:messageType,"
-                      "messageFlags=:messageFlags, readTimestamp=:readTimestamp, subject=:subject WHERE accountId=:accountId AND threadId=:threadId AND eventId=:eventId");
+                      "messageStatus=:messageStatus, readTimestamp=:readTimestamp, subject=:subject WHERE accountId=:accountId AND threadId=:threadId AND eventId=:eventId");
         result = History::EventWriteModified;
     }
 
@@ -299,7 +299,7 @@ History::EventWriteResult SQLiteHistoryPlugin::writeTextEvent(const QVariantMap 
     query.bindValue(":newEvent", event[History::FieldNewEvent]);
     query.bindValue(":message", event[History::FieldMessage]);
     query.bindValue(":messageType", event[History::FieldMessageType]);
-    query.bindValue(":messageFlags", event[History::FieldMessageFlags]);
+    query.bindValue(":messageStatus", event[History::FieldMessageStatus]);
     query.bindValue(":readTimestamp", QDateTime::fromString(event[History::FieldReadTimestamp].toString(), Qt::ISODate));
     query.bindValue(":subject", event[History::FieldSubject].toString());
 
@@ -473,7 +473,7 @@ QString SQLiteHistoryPlugin::sqlQueryForThreads(History::EventType type, const Q
     switch (type) {
     case History::EventTypeText:
         table = "text_events";
-        extraFields << "text_events.message" << "text_events.messageType" << "text_events.messageFlags" << "text_events.readTimestamp";
+        extraFields << "text_events.message" << "text_events.messageType" << "text_events.messageStatus" << "text_events.readTimestamp";
         break;
     case History::EventTypeVoice:
         table = "voice_events";
@@ -516,7 +516,7 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseThreadResults(History::EventType ty
         case History::EventTypeText:
             thread[History::FieldMessage] = query.value(9);
             thread[History::FieldMessageType] = query.value(10);
-            thread[History::FieldMessageFlags] = query.value(11);
+            thread[History::FieldMessageStatus] = query.value(11);
             thread[History::FieldReadTimestamp] = query.value(12);
             break;
         case History::EventTypeVoice:
@@ -545,7 +545,7 @@ QString SQLiteHistoryPlugin::sqlQueryForEvents(History::EventType type, const QS
     case History::EventTypeText:
         participantsField = participantsField.arg("text_events", QString::number(type));
         queryText = QString("SELECT accountId, threadId, eventId, senderId, timestamp, newEvent, %1, "
-                            "message, messageType, messageFlags, readTimestamp, subject FROM text_events %2 %3").arg(participantsField, modifiedCondition, order);
+                            "message, messageType, messageStatus, readTimestamp, subject FROM text_events %2 %3").arg(participantsField, modifiedCondition, order);
         break;
     case History::EventTypeVoice:
         participantsField = participantsField.arg("voice_events", QString::number(type));
@@ -608,7 +608,7 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseEventResults(History::EventType typ
             }
             event[History::FieldMessage] = query.value(7);
             event[History::FieldMessageType] = query.value(8);
-            event[History::FieldMessageFlags] = query.value(9);
+            event[History::FieldMessageStatus] = query.value(9);
             event[History::FieldReadTimestamp] = query.value(10);
             break;
         case History::EventTypeVoice:

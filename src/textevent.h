@@ -46,7 +46,7 @@ public:
               bool newEvent,
               const QString &message,
               MessageType messageType,
-              MessageFlags messageFlags,
+              MessageStatus messageStatus = MessageStatusUnknown,
               const QDateTime &readTimestamp = QDateTime(),
               const QString &subject = QString(),
               const TextEventAttachments &attachments = TextEventAttachments(),
@@ -60,8 +60,8 @@ public:
 
     QString message() const;
     MessageType messageType() const;
-    MessageFlags messageFlags() const;
-    void setMessageFlags(const MessageFlags &value);
+    MessageStatus messageStatus() const;
+    void setMessageStatus(const MessageStatus &value);
     QDateTime readTimestamp() const;
     void setReadTimestamp(const QDateTime &value);
     QString subject() const;

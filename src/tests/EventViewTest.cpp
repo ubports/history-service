@@ -161,7 +161,7 @@ void EventViewTest::populate()
                                          j % 2,
                                          QString("Hello %1").arg(j),
                                          History::MessageTypeText,
-                                         History::MessageFlagDelivered);
+                                         History::MessageStatusDelivered);
             events << voiceEvent << textEvent;
         }
         QVERIFY(History::Manager::instance()->writeEvents(events));

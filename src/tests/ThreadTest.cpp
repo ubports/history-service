@@ -91,7 +91,7 @@ void ThreadTest::testCreateNewThread()
         // the eventId doesn´t really matter here, just faking a random one to not use always the same
         event = History::TextEvent(accountId, threadId, QString("eventId%1").arg(QString::number(qrand() % 1024)),
                                    participants[0], QDateTime::currentDateTime(), false, "Random Message",
-                                   History::MessageTypeText, History::MessageFlags(), QDateTime::currentDateTime());
+                                   History::MessageTypeText);
         break;
     case History::EventTypeVoice:
         event = History::VoiceEvent(accountId, threadId, QString("eventId%1").arg(QString::number(qrand() % 1024)),
@@ -148,7 +148,7 @@ void ThreadTest::testFromProperties()
         // the eventId doesn´t really matter here, just faking a random one to not use always the same
         event = History::TextEvent(accountId, threadId, QString("eventId%1").arg(QString::number(qrand() % 1024)),
                                    participants[0], QDateTime::currentDateTime(), false, "Random Message",
-                                   History::MessageTypeText, History::MessageFlags(), QDateTime::currentDateTime());
+                                   History::MessageTypeText);
         break;
     case History::EventTypeVoice:
         event = History::VoiceEvent(accountId, threadId, QString("eventId%1").arg(QString::number(qrand() % 1024)),
@@ -218,7 +218,7 @@ void ThreadTest::testProperties()
         // the eventId doesn´t really matter here, just faking a random one to not use always the same
         event = History::TextEvent(accountId, threadId, QString("eventId%1").arg(QString::number(qrand() % 1024)),
                                    participants[0], QDateTime::currentDateTime(), false, "Random Message",
-                                   History::MessageTypeText, History::MessageFlags(), QDateTime::currentDateTime());
+                                   History::MessageTypeText);
         break;
     case History::EventTypeVoice:
         event = History::VoiceEvent(accountId, threadId, QString("eventId%1").arg(QString::number(qrand() % 1024)),

@@ -168,7 +168,7 @@ void SqliteEventViewTest::populateDatabase()
                                          j % 2,
                                          QString("Hello %1").arg(j),
                                          History::MessageTypeText,
-                                         History::MessageFlagDelivered);
+                                         History::MessageStatusDelivered);
             QCOMPARE(mPlugin->writeTextEvent(textEvent.properties()), History::EventWriteCreated);
 
         }

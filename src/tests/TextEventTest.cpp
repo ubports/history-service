@@ -47,7 +47,7 @@ void TextEventTest::testCreateNewEvent_data()
     QTest::addColumn<bool>("newEvent");
     QTest::addColumn<QString>("message");
     QTest::addColumn<int>("messageType");
-    QTest::addColumn<int>("messageFlags");
+    QTest::addColumn<int>("messageStatus");
     QTest::addColumn<QDateTime>("readTimestamp");
     QTest::addColumn<QString>("subject");
 
@@ -59,10 +59,10 @@ void TextEventTest::testCreateNewEvent_data()
                                     << "testSenderId2" << QDateTime::currentDateTime().addDays(-10)
                                     << false << "One Test Message" << (int)History::MessageTypeText
                                     << 0 << QDateTime::currentDateTime().addDays(-5) << "Test Subject 2";
-    QTest::newRow("message flags") << "testAccountId" << "testThreadId" << "testEventId"
+    QTest::newRow("message status") << "testAccountId" << "testThreadId" << "testEventId"
                                     << "testSenderId" << QDateTime::currentDateTime().addDays(-10)
                                     << true << "One Test Message" << (int)History::MessageTypeText
-                                    << (int)(History::MessageFlagDelivered | History::MessageFlagPending)
+                                    << (int)History::MessageStatusAccepted
                                     << QDateTime::currentDateTime().addDays(-5) << "Test Subject 3";
     QTest::newRow("multi party message") << "testAccountId" << "testThreadId" << "testEventId"
                                     << "testSenderId" << QDateTime::currentDateTime().addDays(-10)
@@ -80,11 +80,11 @@ void TextEventTest::testCreateNewEvent()
     QFETCH(bool, newEvent);
     QFETCH(QString, message);
     QFETCH(int, messageType);
-    QFETCH(int, messageFlags);
+    QFETCH(int, messageStatus);
     QFETCH(QDateTime, readTimestamp);
     QFETCH(QString, subject);
     History::TextEvent event(accountId, threadId, eventId, senderId, timestamp, newEvent,
-                             message, (History::MessageType)messageType, (History::MessageFlags)messageFlags,
+                             message, (History::MessageType)messageType, (History::MessageStatus)messageStatus,
                              readTimestamp, subject);
 
     // check that the values are properly set
@@ -96,7 +96,7 @@ void TextEventTest::testCreateNewEvent()
     QCOMPARE(event.newEvent(), newEvent);
     QCOMPARE(event.message(), message);
     QCOMPARE(event.messageType(), (History::MessageType)messageType);
-    QCOMPARE(event.messageFlags(), (History::MessageFlags)messageFlags);
+    QCOMPARE(event.messageStatus(), (History::MessageStatus)messageStatus);
     QCOMPARE(event.readTimestamp(), readTimestamp);
     QCOMPARE(event.subject(), subject);
 }
@@ -104,7 +104,7 @@ void TextEventTest::testCreateNewEvent()
 void TextEventTest::testCastToEventAndBack()
 {
     History::TextEvent textEvent("oneAccountId", "oneThreadId", "oneEventId", "oneSender", QDateTime::currentDateTime(),
-                                 true, "Hello", History::MessageTypeText, 0, QDateTime());
+                                 true, "Hello", History::MessageTypeText);
 
     // test the copy constructor
     History::Event historyEvent(textEvent);
@@ -131,7 +131,7 @@ void TextEventTest::testFromProperties_data()
     QTest::addColumn<bool>("newEvent");
     QTest::addColumn<QString>("message");
     QTest::addColumn<int>("messageType");
-    QTest::addColumn<int>("messageFlags");
+    QTest::addColumn<int>("messageStatus");
     QTest::addColumn<QDateTime>("readTimestamp");
     QTest::addColumn<QString>("subject");
 
@@ -143,10 +143,10 @@ void TextEventTest::testFromProperties_data()
                                     << "testSenderId2" << QDateTime::currentDateTime().addDays(-10)
                                     << false << "One Test Message" << (int)History::MessageTypeText
                                     << 0 << QDateTime::currentDateTime().addDays(-5) << "Test Subject 2";
-    QTest::newRow("message flags") << "testAccountId" << "testThreadId" << "testEventId"
+    QTest::newRow("message status") << "testAccountId" << "testThreadId" << "testEventId"
                                     << "testSenderId" << QDateTime::currentDateTime().addDays(-10)
                                     << true << "One Test Message" << (int)History::MessageTypeText
-                                    << (int)(History::MessageFlagDelivered | History::MessageFlagPending)
+                                    << (int)History::MessageStatusDelivered
                                     << QDateTime::currentDateTime().addDays(-5) << "Test Subject 3";
     QTest::newRow("multi party message") << "testAccountId" << "testThreadId" << "testEventId"
                                     << "testSenderId" << QDateTime::currentDateTime().addDays(-10)
@@ -164,7 +164,7 @@ void TextEventTest::testFromProperties()
     QFETCH(bool, newEvent);
     QFETCH(QString, message);
     QFETCH(int, messageType);
-    QFETCH(int, messageFlags);
+    QFETCH(int, messageStatus);
     QFETCH(QDateTime, readTimestamp);
     QFETCH(QString, subject);
 
@@ -177,7 +177,7 @@ void TextEventTest::testFromProperties()
     properties[History::FieldNewEvent] = newEvent;
     properties[History::FieldMessage] = message;
     properties[History::FieldMessageType] = messageType;
-    properties[History::FieldMessageFlags] = messageFlags;
+    properties[History::FieldMessageStatus] = messageStatus;
     properties[History::FieldReadTimestamp] = readTimestamp.toString(Qt::ISODate);
     properties[History::FieldSubject] = subject;
 
@@ -190,7 +190,7 @@ void TextEventTest::testFromProperties()
     QCOMPARE(textEvent.newEvent(), newEvent);
     QCOMPARE(textEvent.message(), message);
     QCOMPARE(textEvent.messageType(), (History::MessageType) messageType);
-    QCOMPARE(textEvent.messageFlags(), (History::MessageFlags) messageFlags);
+    QCOMPARE(textEvent.messageStatus(), (History::MessageStatus) messageStatus);
     QCOMPARE(textEvent.readTimestamp().toString(Qt::ISODate), readTimestamp.toString(Qt::ISODate));
     QCOMPARE(textEvent.subject(), subject);
 }
@@ -213,7 +213,7 @@ void TextEventTest::testProperties_data()
     QTest::addColumn<bool>("newEvent");
     QTest::addColumn<QString>("message");
     QTest::addColumn<int>("messageType");
-    QTest::addColumn<int>("messageFlags");
+    QTest::addColumn<int>("messageStatus");
     QTest::addColumn<QDateTime>("readTimestamp");
     QTest::addColumn<QString>("subject");
 
@@ -225,10 +225,10 @@ void TextEventTest::testProperties_data()
                                     << "testSenderId2" << QDateTime::currentDateTime().addDays(-10)
                                     << false << "One Test Message" << (int)History::MessageTypeText
                                     << 0 << QDateTime::currentDateTime().addDays(-5) << "Test Subject 2";
-    QTest::newRow("message flags") << "testAccountId" << "testThreadId" << "testEventId"
+    QTest::newRow("message status") << "testAccountId" << "testThreadId" << "testEventId"
                                     << "testSenderId" << QDateTime::currentDateTime().addDays(-10)
                                     << true << "One Test Message" << (int)History::MessageTypeText
-                                    << (int)(History::MessageFlagDelivered | History::MessageFlagPending)
+                                    << (int)History::MessageStatusPending
                                     << QDateTime::currentDateTime().addDays(-5) << "Test Subject 3";
     QTest::newRow("multi party message") << "testAccountId" << "testThreadId" << "testEventId"
                                     << "testSenderId" << QDateTime::currentDateTime().addDays(-10)
@@ -246,11 +246,11 @@ void TextEventTest::testProperties()
     QFETCH(bool, newEvent);
     QFETCH(QString, message);
     QFETCH(int, messageType);
-    QFETCH(int, messageFlags);
+    QFETCH(int, messageStatus);
     QFETCH(QDateTime, readTimestamp);
     QFETCH(QString, subject);
     History::TextEvent event(accountId, threadId, eventId, senderId, timestamp, newEvent,
-                             message, (History::MessageType)messageType, (History::MessageFlags)messageFlags,
+                             message, (History::MessageType)messageType, (History::MessageStatus)messageStatus,
                              readTimestamp, subject);
 
     QVariantMap properties = event.properties();
@@ -262,7 +262,7 @@ void TextEventTest::testProperties()
     QCOMPARE(properties[History::FieldNewEvent].toBool(), newEvent);
     QCOMPARE(properties[History::FieldMessage].toString(), message);
     QCOMPARE(properties[History::FieldMessageType].toInt(), messageType);
-    QCOMPARE(properties[History::FieldMessageFlags].toInt(), messageFlags);
+    QCOMPARE(properties[History::FieldMessageStatus].toInt(), messageStatus);
     QCOMPARE(properties[History::FieldReadTimestamp].toString(), readTimestamp.toString(Qt::ISODate));
     QCOMPARE(properties[History::FieldSubject].toString(), subject);
 }
@@ -270,15 +270,15 @@ void TextEventTest::testProperties()
 void TextEventTest::testSetProperties()
 {
     History::TextEvent textEvent("oneAccountId", "oneThreadId", "oneEventId", "oneSender", QDateTime::currentDateTime(),
-                                 true, "Hello", History::MessageTypeText, 0, QDateTime());
+                                 true, "Hello", History::MessageTypeText);
     QDateTime readTimestamp = QDateTime::currentDateTime();
-    History::MessageFlags flags = History::MessageFlagDelivered;
+    History::MessageStatus status = History::MessageStatusDelivered;
     bool newEvent = false;
     textEvent.setReadTimestamp(readTimestamp);
-    textEvent.setMessageFlags(flags);
+    textEvent.setMessageStatus(status);
     textEvent.setNewEvent(newEvent);
     QCOMPARE(textEvent.readTimestamp(), readTimestamp);
-    QCOMPARE(textEvent.messageFlags(), flags);
+    QCOMPARE(textEvent.messageStatus(), status);
     QCOMPARE(textEvent.newEvent(), newEvent);
 }
 

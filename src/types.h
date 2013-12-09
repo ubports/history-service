@@ -55,14 +55,17 @@ enum MatchFlag {
 
 Q_DECLARE_FLAGS(MatchFlags, MatchFlag)
 
-enum MessageFlag
+enum MessageStatus
 {
-    MessageFlagPending,
-    MessageFlagDelivered
+    MessageStatusUnknown,
+    MessageStatusDelivered,
+    MessageStatusTemporarilyFailed,
+    MessageStatusPermanentlyFailed,
+    MessageStatusAccepted,
+    MessageStatusRead,
+    MessageStatusDeleted,
+    MessageStatusPending // pending attachment download
 };
-
-Q_DECLARE_FLAGS(MessageFlags, MessageFlag)
-Q_DECLARE_OPERATORS_FOR_FLAGS(MessageFlags)
 
 enum MessageType
 {
@@ -108,7 +111,7 @@ static const char* FieldNewEvent = "newEvent";
 // text event fields
 static const char* FieldMessage = "message";
 static const char* FieldMessageType = "messageType";
-static const char* FieldMessageFlags = "messageFlags";
+static const char* FieldMessageStatus = "messageStatus";
 static const char* FieldReadTimestamp = "readTimestamp";
 static const char* FieldSubject = "subject";
 static const char* FieldAttachments = "attachments";

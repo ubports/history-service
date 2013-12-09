@@ -301,18 +301,18 @@ void SqlitePluginTest::testWriteTextEvent_data()
     QTest::newRow("new text event with pending flag") << History::TextEvent("oneAccountId", "theSender", "oneEventId",
                                                                             "theSender", QDateTime::currentDateTime(), true,
                                                                             "Hello World!", History::MessageTypeText,
-                                                                            History::MessageFlagPending).properties();
+                                                                            History::MessageStatusPending).properties();
     QTest::newRow("text event with valid read timestamp") << History::TextEvent("otherAccountId", "otherSender", "otherEventId",
                                                                                 "otherSender", QDateTime::currentDateTime(), false,
                                                                                 "Hi Again!", History::MessageTypeText,
-                                                                                History::MessageFlagDelivered,
+                                                                                History::MessageStatusDelivered,
                                                                                 QDateTime::currentDateTime()).properties();
     History::TextEventAttachments attachments;
     attachments << History::TextEventAttachment("mmsAccountId", "mmsSender", "mmsEventId", "mmsAttachment1",
                                                 "text/plain", "/the/file/path", History::AttachmentDownloaded);
     QTest::newRow("text event with attachments") << History::TextEvent("mmsAccountId", "mmsSender", "mmsEventId", "mmsSender",
                                                                        QDateTime::currentDateTime(), false, "Hello with attachments",
-                                                                       History::MessageTypeMultiParty, History::MessageFlagDelivered,
+                                                                       History::MessageTypeMultiParty, History::MessageStatusDelivered,
                                                                        QDateTime::currentDateTime(), "The Subject", attachments).properties();
 }
 
@@ -347,7 +347,7 @@ void SqlitePluginTest::testWriteTextEvent()
         QCOMPARE(query.value("newEvent"), event[History::FieldNewEvent]);
         QCOMPARE(query.value("message"), event[History::FieldMessage]);
         QCOMPARE(query.value("messageType"), event[History::FieldMessageType]);
-        QCOMPARE(query.value("messageFlags"), event[History::FieldMessageFlags]);
+        QCOMPARE(query.value("messageStatus"), event[History::FieldMessageStatus]);
         QCOMPARE(query.value("readTimestamp"), event[History::FieldReadTimestamp]);
         QCOMPARE(query.value("subject"), event[History::FieldSubject]);
     }
@@ -383,7 +383,7 @@ void SqlitePluginTest::testWriteTextEvent()
     QCOMPARE(thread[History::FieldNewEvent], event[History::FieldNewEvent]);
     QCOMPARE(thread[History::FieldMessage], event[History::FieldMessage]);
     QCOMPARE(thread[History::FieldMessageType], event[History::FieldMessageType]);
-    QCOMPARE(thread[History::FieldMessageFlags], event[History::FieldMessageFlags]);
+    QCOMPARE(thread[History::FieldMessageStatus], event[History::FieldMessageStatus]);
     QCOMPARE(thread[History::FieldReadTimestamp], event[History::FieldReadTimestamp]);
 }
 
@@ -398,13 +398,13 @@ void SqlitePluginTest::testModifyTextEvent()
                                             thread[History::FieldEventId].toString(), "theAttachmentId", "text/plain", "/file/path");
     History::TextEvent textEvent(thread[History::FieldAccountId].toString(), thread[History::FieldThreadId].toString(), "theEventId",
                                  "theParticipant", QDateTime::currentDateTime(), true, "Hi there!", History::MessageTypeMultiParty,
-                                 History::MessageFlagPending, QDateTime::currentDateTime(), "theSubject",
+                                 History::MessageStatusPending, QDateTime::currentDateTime(), "theSubject",
                                  History::TextEventAttachments() << attachment);
     QCOMPARE(mPlugin->writeTextEvent(textEvent.properties()), History::EventWriteCreated);
 
     // now modify the fields that can be modified in the class
     textEvent.setNewEvent(false);
-    textEvent.setMessageFlags(History::MessageFlagDelivered);
+    textEvent.setMessageStatus(History::MessageStatusDelivered);
     textEvent.setReadTimestamp(QDateTime::currentDateTime());
     QCOMPARE(mPlugin->writeTextEvent(textEvent.properties()), History::EventWriteModified);
 
@@ -423,7 +423,7 @@ void SqlitePluginTest::testModifyTextEvent()
         QCOMPARE(query.value("newEvent"), event[History::FieldNewEvent]);
         QCOMPARE(query.value("message"), event[History::FieldMessage]);
         QCOMPARE(query.value("messageType"), event[History::FieldMessageType]);
-        QCOMPARE(query.value("messageFlags"), event[History::FieldMessageFlags]);
+        QCOMPARE(query.value("messageStatus"), event[History::FieldMessageStatus]);
         QCOMPARE(query.value("readTimestamp"), event[History::FieldReadTimestamp]);
         QCOMPARE(query.value("subject"), event[History::FieldSubject]);
     }
@@ -444,7 +444,7 @@ void SqlitePluginTest::testRemoveTextEvent()
                                  thread[History::FieldThreadId].toString(), "theSenderId",
                                  "theEventId", QDateTime::currentDateTime(), true,
                                  "Hello World!", History::MessageTypeText,
-                                 History::MessageFlagPending);
+                                 History::MessageStatusPending);
     QCOMPARE(mPlugin->writeTextEvent(textEvent.properties()), History::EventWriteCreated);
 
     // now remove the item and check that it is really removed from the database
@@ -593,7 +593,7 @@ void SqlitePluginTest::testEventsForThread()
         History::TextEvent textEvent(textThread[History::FieldAccountId].toString(), textThread[History::FieldThreadId].toString(),
                                      QString("textEventId%1").arg(QString::number(i)), "textParticipant",
                                      QDateTime::currentDateTime(), true, "Hello World!", History::MessageTypeMultiParty,
-                                     History::MessageFlagPending, QDateTime::currentDateTime(),
+                                     History::MessageStatusPending, QDateTime::currentDateTime(),
                                      "theSubject", History::TextEventAttachments() << attachment);
         QCOMPARE(mPlugin->writeTextEvent(textEvent.properties()), History::EventWriteCreated);
     }
@@ -635,18 +635,18 @@ void SqlitePluginTest::testGetSingleEvent_data()
     QTest::newRow("new text event with pending flag") << History::TextEvent("oneAccountId", "theSender", "oneEventId",
                                                                             "theSender", QDateTime::currentDateTime(), true,
                                                                             "Hello World!", History::MessageTypeText,
-                                                                            History::MessageFlagPending).properties();
+                                                                            History::MessageStatusPending).properties();
     QTest::newRow("text event with valid read timestamp") << History::TextEvent("otherAccountId", "otherSender", "otherEventId",
                                                                                 "otherSender", QDateTime::currentDateTime(), false,
                                                                                 "Hi Again!", History::MessageTypeText,
-                                                                                History::MessageFlagDelivered,
+                                                                                History::MessageStatusDelivered,
                                                                                 QDateTime::currentDateTime()).properties();
     History::TextEventAttachments attachments;
     attachments << History::TextEventAttachment("mmsAccountId", "mmsSender", "mmsEventId", "mmsAttachment1",
                                                 "text/plain", "/the/file/path", History::AttachmentDownloaded);
     QTest::newRow("text event with attachments") << History::TextEvent("mmsAccountId", "mmsSender", "mmsEventId", "mmsSender",
                                                                        QDateTime::currentDateTime(), false, "Hello with attachments",
-                                                                       History::MessageTypeMultiParty, History::MessageFlagDelivered,
+                                                                       History::MessageTypeMultiParty, History::MessageStatusDelivered,
                                                                        QDateTime::currentDateTime(), "The Subject", attachments).properties();
     QTest::newRow("missed call") << History::VoiceEvent("theAccountId", "theSenderId", "theEventId", "theSenderId",
                                                         QDateTime::currentDateTime(), true, true).properties();
@@ -693,7 +693,7 @@ void SqlitePluginTest::testGetSingleEvent()
     case History::EventTypeText:
         QCOMPARE(retrievedEvent[History::FieldMessage], event[History::FieldMessage]);
         QCOMPARE(retrievedEvent[History::FieldMessageType], event[History::FieldMessageType]);
-        QCOMPARE(retrievedEvent[History::FieldMessageFlags], event[History::FieldMessageFlags]);
+        QCOMPARE(retrievedEvent[History::FieldMessageStatus], event[History::FieldMessageStatus]);
         QCOMPARE(retrievedEvent[History::FieldReadTimestamp], event[History::FieldReadTimestamp]);
         break;
     case History::EventTypeVoice:

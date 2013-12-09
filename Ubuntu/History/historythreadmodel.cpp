@@ -52,7 +52,7 @@ HistoryThreadModel::HistoryThreadModel(QObject *parent) :
     mRoles[LastEventNewRole] = "eventNew";
     mRoles[LastEventTextMessageRole] = "eventTextMessage";
     mRoles[LastEventTextMessageTypeRole] = "eventTextMessageType";
-    mRoles[LastEventTextMessageFlagsRole] = "eventTextMessageFlags";
+    mRoles[LastEventTextMessageStatusRole] = "eventTextMessageStatus";
     mRoles[LastEventTextReadTimestampRole] = "eventTextReadTimestamp";
     mRoles[LastEventTextAttachmentsRole] = "eventTextAttachments";
     mRoles[LastEventTextSubjectRole] = "eventTextSubject";
@@ -149,9 +149,9 @@ QVariant HistoryThreadModel::data(const QModelIndex &index, int role) const
             result = (int) textEvent.messageType();
         }
         break;
-    case LastEventTextMessageFlagsRole:
+    case LastEventTextMessageStatusRole:
         if (!textEvent.isNull()) {
-            result = (int) textEvent.messageFlags();
+            result = (int) textEvent.messageStatus();
         }
         break;
     case LastEventTextReadTimestampRole:
