@@ -156,7 +156,7 @@ void ManagerTest::testWriteEvents()
                                      true,
                                      QString("Hello world %1").arg(i),
                                      History::MessageTypeText,
-                                     History::MessageFlags());
+                                     History::MessageStatusAccepted);
         events.append(textEvent);
 
         History::VoiceEvent voiceEvent(voiceThread.accountId(),
@@ -192,7 +192,7 @@ void ManagerTest::testWriteEvents()
 
     // and now modify the events
     modifiedTextEvent.setNewEvent(false);
-    modifiedTextEvent.setMessageFlags(History::MessageFlagDelivered);
+    modifiedTextEvent.setMessageStatus(History::MessageStatusDelivered);
     modifiedVoiceEvent.setNewEvent(false);
 
     QSignalSpy eventsModifiedSpy(mManager, SIGNAL(eventsModified(History::Events)));
@@ -232,8 +232,7 @@ void ManagerTest::testRemoveEvents()
                                      QDateTime::currentDateTime(),
                                      true,
                                      QString("Hello world %1").arg(i),
-                                     History::MessageTypeText,
-                                     History::MessageFlags());
+                                     History::MessageTypeText);
         events.append(textEvent);
 
         History::VoiceEvent voiceEvent(voiceThread.accountId(),
@@ -299,7 +298,7 @@ void ManagerTest::testGetSingleEvent()
                                  true,
                                  "Hello big world!",
                                  History::MessageTypeText,
-                                 History::MessageFlagPending);
+                                 History::MessageStatusPending);
     History::VoiceEvent voiceEvent(voiceThread.accountId(),
                                    voiceThread.threadId(),
                                    "singleEventId",
@@ -319,7 +318,7 @@ void ManagerTest::testGetSingleEvent()
     QCOMPARE(retrievedTextEvent.newEvent(), textEvent.newEvent());
     QCOMPARE(retrievedTextEvent.message(), textEvent.message());
     QCOMPARE(retrievedTextEvent.messageType(), textEvent.messageType());
-    QCOMPARE(retrievedTextEvent.messageFlags(), textEvent.messageFlags());
+    QCOMPARE(retrievedTextEvent.messageStatus(), textEvent.messageStatus());
 
     History::VoiceEvent retrievedVoiceEvent = mManager->getSingleEvent(History::EventTypeVoice,
                                                                        voiceEvent.accountId(),
@@ -358,8 +357,7 @@ void ManagerTest::testRemoveThreads()
                                      QDateTime::currentDateTime(),
                                      true,
                                      QString("Hello world %1").arg(i),
-                                     History::MessageTypeText,
-                                     History::MessageFlags());
+                                     History::MessageTypeText);
         events.append(textEvent);
 
         History::VoiceEvent voiceEvent(voiceThread.accountId(),

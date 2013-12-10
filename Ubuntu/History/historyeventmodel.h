@@ -46,7 +46,7 @@ public:
         NewEventRole,
         TextMessageRole,
         TextMessageTypeRole,
-        TextMessageFlagsRole,
+        TextMessageStatusRole,
         TextReadTimestampRole,
         TextReadSubjectRole,
         TextMessageAttachmentsRole,

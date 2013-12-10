@@ -42,7 +42,7 @@ public:
                     bool theNewEvent,
                     const QString &theMessage,
                     MessageType theMessageType,
-                    MessageFlags theMessageFlags,
+                    MessageStatus theMessageStatus,
                     const QDateTime &theReadTimestamp,
                     const QString &theSubject,
                     const TextEventAttachments &theAttachments,
@@ -50,7 +50,7 @@ public:
     ~TextEventPrivate();
     QString message;
     MessageType messageType;
-    MessageFlags messageFlags;
+    MessageStatus messageStatus;
     QDateTime readTimestamp;
     QString subject;
     TextEventAttachments attachments;

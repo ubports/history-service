@@ -90,7 +90,7 @@ void TelepathyLogImporter::onMessageEventLoaded(const Tpl::TextEventPtr &event)
                                                          false,
                                                          event->message(),
                                                          History::MessageTypeText,
-                                                         History::MessageFlags(),
+                                                         History::MessageStatusUnknown,
                                                          event->timestamp());
     mEvents << historyEvent;
     if (mEvents.count() >= mBatchSize) {

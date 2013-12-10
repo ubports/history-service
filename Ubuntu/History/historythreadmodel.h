@@ -66,7 +66,7 @@ public:
         LastEventNewRole,
         LastEventTextMessageRole,
         LastEventTextMessageTypeRole,
-        LastEventTextMessageFlagsRole,
+        LastEventTextMessageStatusRole,
         LastEventTextReadTimestampRole,
         LastEventTextSubjectRole,
         LastEventTextAttachmentsRole,
