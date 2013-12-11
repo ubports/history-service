@@ -1,3 +1,23 @@
+history-service (0.1+14.04.20131209-0ubuntu1) trusty; urgency=low
+
+  [ Gustavo Pichorim Boiko ]
+  * Update the existing unit tests to improve the code coverage a bit.
+  * Pass filters in a way that they can be recreated at the service end.
+  * Add a pkgconfig file.
+  * Fix calling History::Filter::toString() when the value is a boolean
+    or a number.
+  * Add tests for the sqlite plugin.
+  * Add tests for the History::Manager class.
+  * Add an initial set of tests for the thread and event views.
+
+  [ Tiago Salem Herrmann ]
+  * Accept non numeric id's.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 120
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 09 Dec 2013 04:18:48 +0000
+
 history-service (0.1+13.10.20131016-0ubuntu1) saucy; urgency=low
 
   [ Gustavo Pichorim Boiko ]
