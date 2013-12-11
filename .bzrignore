@@ -37,3 +37,5 @@ plugins/*/tests/*Test
 plugins/*/tests/*moc*
 plugins/sqlite/*qrc
 plugins/sqlite/schema/version.info
+daemon/tests/mock/moc_*
+daemon/tests/mock/telepathy-mock*
