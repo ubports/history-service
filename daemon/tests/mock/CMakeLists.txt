@@ -3,6 +3,7 @@ include_directories(
     ${Qt5Core_INCLUDE_DIRS}
     ${Qt5DBus_INCLUDE_DIRS}
     ${CMAKE_CURRENT_BINARY_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}
     )
 
 find_library(TELEPATHY_QT5_SERVICE_LIBRARIES telepathy-qt5-service)
