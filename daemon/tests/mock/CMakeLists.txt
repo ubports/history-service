@@ -4,6 +4,9 @@ include_directories(${Qt5DBus_INCLUDE_DIRS})
 
 find_library(TELEPATHY_QT5_SERVICE_LIBRARIES telepathy-qt5-service)
 
-add_executable(telepathy-mock main.cpp protocol.cpp connection.cpp textchannel.cpp callchannel.cpp)
+set(mock_SRCS main.cpp protocol.cpp connection.cpp textchannel.cpp callchannel.cpp mockconnectiondbus.cpp)
+qt5_add_dbus_adaptor(mock_SRCS MockConnection.xml mockconnectiondbus.h MockConnectionDBus)
+
+add_executable(telepathy-mock ${mock_SRCS})
 qt5_use_modules(telepathy-mock Core DBus)
 target_link_libraries(telepathy-mock ${TP_QT5_LIBRARIES} ${TELEPATHY_QT5_SERVICE_LIBRARIES} ${OFONO_QT_LIBRARIES} ${PULSEAUDIO_LIBRARIES})

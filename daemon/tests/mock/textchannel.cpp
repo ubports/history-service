@@ -96,8 +96,17 @@ QString MockTextChannel::sendMessage(const Tp::MessagePartList& message, uint fl
 
     static int serial = 0;
 
-    // FIXME: emit a signal making sure the message was sent
-    return QString("sentmessage%1").arg(serial++);
+    // FIXME: check what other data we need to emit in the signal
+    QString id = QString("sentmessage%1").arg(serial++);
+    QString messageText = body["content"].variant().toString();
+    QVariantMap properties;
+    properties["SentTime"] = QDateTime::currentDateTime().toString(Qt::ISODate);
+    properties["Recipients"] = QStringList() << mPhoneNumber;
+    properties["Id"] = id;
+
+    Q_EMIT messageSent(messageText, properties);
+
+    return id;
 }
 
 void MockTextChannel::placeDeliveryReport(const QString &messageId, const QString &status)

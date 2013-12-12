@@ -28,6 +28,8 @@
 #include "phoneutils_p.h"
 #include "protocol.h"
 
+#include "mockconnectiondbus.h"
+
 MockConnection::MockConnection(const QDBusConnection &dbusConnection,
                             const QString &cmName,
                             const QString &protocolName,
@@ -100,6 +102,8 @@ MockConnection::MockConnection(const QDBusConnection &dbusConnection,
                                                  << TP_QT_IFACE_CONNECTION
                                                  << TP_QT_IFACE_CONNECTION_INTERFACE_SIMPLE_PRESENCE);
     plugInterface(Tp::AbstractConnectionInterfacePtr::dynamicCast(contactsIface));
+
+    mDBus = new MockConnectionDBus(this);
 
     setOnline(true);
 }
@@ -251,6 +255,7 @@ Tp::BaseChannelPtr MockConnection::createTextChannel(uint targetHandleType,
     MockTextChannel *channel = new MockTextChannel(this, requestedId, targetHandle);
     QObject::connect(channel, SIGNAL(messageRead(QString)), SLOT(onMessageRead(QString)));
     QObject::connect(channel, SIGNAL(destroyed()), SLOT(onTextChannelClosed()));
+    QObject::connect(channel, SIGNAL(messageSent(QString,QVariantMap)), SIGNAL(messageSent(QString,QVariantMap)));
     qDebug() << channel;
     mTextChannels[requestedId] = channel;
     return channel->baseChannel();

@@ -47,6 +47,7 @@ public Q_SLOTS:
 
 Q_SIGNALS:
     void messageRead(const QString &id);
+    void messageSent(const QString &message, const QVariantMap &info);
 
 private:
     ~MockTextChannel();

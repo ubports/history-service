@@ -1,0 +1,29 @@
+<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN" "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
+<node xmlns:dox="http://www.ayatana.org/dbus/dox.dtd">
+    <dox:d><![CDATA[
+      @mainpage
+
+      An interface to the history service
+    ]]></dox:d>
+    <interface name="com.canonical.MockConnection" xmlns:dox="http://www.ayatana.org/dbus/dox.dtd">
+        <dox:d>
+          An interface to the fake connection manager
+        </dox:d>
+        <method name="PlaceIncomingMessage">
+            <dox:d><![CDATA[
+                Simulates an incoming message
+            ]]></dox:d>
+            <arg name="message" type="s" direction="in"/>
+            <arg name="properties" type="a{sv}" direction="in"/>
+            <annotation name="org.qtproject.QtDBus.QtTypeName.In1" value="QVariantMap"/>
+        </method>
+        <signal name="MessageSent">
+            <dox:d><![CDATA[
+		A message was sent from the client.
+            ]]></dox:d>
+            <arg name="message" type="s" direction="in"/>
+            <arg name="properties" type="a{sv}" direction="in"/>
+            <annotation name="org.qtproject.QtDBus.QtTypeName.In1" value="QVariantMap"/>
+        </signal>
+    </interface>
+</node>

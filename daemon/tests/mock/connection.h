@@ -37,6 +37,7 @@
 
 class MockTextChannel;
 class MockCallChannel;
+class MockConnectionDBus;
 
 class MockConnection : public Tp::BaseConnection
 {
@@ -70,6 +71,7 @@ public:
 
     ~MockConnection();
 Q_SIGNALS:
+    void messageSent(const QString &message, const QVariantMap &info);
 
 public Q_SLOTS:
     void placeIncomingMessage(const QString &message, const QVariantMap &info);
@@ -89,6 +91,8 @@ private:
     uint mHandleCount;
     Tp::SimplePresence mSelfPresence;
     Tp::SimplePresence mRequestedSelfPresence;
+
+    MockConnectionDBus *mDBus;
 };
 
 #endif
