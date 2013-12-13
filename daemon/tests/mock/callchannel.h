@@ -35,7 +35,7 @@ class MockCallChannel : public QObject
 {
     Q_OBJECT
 public:
-    MockCallChannel(MockConnection *conn, QString phoneNumber, uint targetHandle, QObject *parent = 0);
+    MockCallChannel(MockConnection *conn, QString phoneNumber, QString state, uint targetHandle, QObject *parent = 0);
     ~MockCallChannel();
     Tp::BaseChannelPtr baseChannel();
 
@@ -46,7 +46,7 @@ public:
     void onDTMFStartTone(uchar event, Tp::DBusError *error);
     void onDTMFStopTone(Tp::DBusError *error);
 
-private Q_SLOTS:
+public Q_SLOTS:
     void setCallState(const QString &state);
     void init();
 
@@ -55,7 +55,7 @@ private Q_SLOTS:
 
 private:
     QString mObjPath;
-    QString mPreviousState;
+    QString mState;
     bool mIncoming;
     bool mRequestedHangup;
     Tp::BaseChannelPtr mBaseChannel;

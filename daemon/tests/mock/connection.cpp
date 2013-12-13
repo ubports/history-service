@@ -280,9 +280,12 @@ Tp::BaseChannelPtr MockConnection::createCallChannel(uint targetHandleType,
         }
     }
 
-    // FIXME reimplement correctly
+    QString state = "dialing";
+    if (mInitialCallStatus.contains(requestedId)) {
+        state = mInitialCallStatus.take(requestedId);
+    }
 
-    mCallChannels[requestedId] = new MockCallChannel(this, requestedId, targetHandle);
+    mCallChannels[requestedId] = new MockCallChannel(this, requestedId, state, targetHandle);
     QObject::connect(mCallChannels[requestedId], SIGNAL(destroyed()), SLOT(onCallChannelClosed()));
     qDebug() << mCallChannels[requestedId];
     return mCallChannels[requestedId]->baseChannel();
@@ -364,13 +367,14 @@ uint MockConnection::ensureHandle(const QString &id)
     return newHandle(id);
 }
 
-void MockConnection::placeCall(const QString &call, const QVariantMap &properties)
+void MockConnection::placeCall(const QVariantMap &properties)
 {
-    qDebug() << "new call" << call << properties;
+    qDebug() << "new call" << properties;
 
     bool yours;
     Tp::DBusError error;
     QString callerId = properties["Caller"].toString();
+    QString state = properties["State"].toString();
 
     if (mCallChannels.contains(callerId)) {
         return;
@@ -378,7 +382,7 @@ void MockConnection::placeCall(const QString &call, const QVariantMap &propertie
 
     uint handle = ensureHandle(callerId);
     uint initiatorHandle = 0;
-    if (properties["State"] == "incoming" || properties["State"] == "waiting") {
+    if (state == "incoming" || state == "waiting") {
         initiatorHandle = handle;
     } else {
         initiatorHandle = selfHandle();
@@ -387,9 +391,29 @@ void MockConnection::placeCall(const QString &call, const QVariantMap &propertie
     qDebug() << "initiatorHandle " <<initiatorHandle;
     qDebug() << "handle" << handle;
 
+    mInitialCallStatus[callerId] = state;
+
     Tp::BaseChannelPtr channel  = ensureChannel(TP_QT_IFACE_CHANNEL_TYPE_CALL, Tp::HandleTypeContact, handle, yours, initiatorHandle, false, &error);
     if (error.isValid() || channel.isNull()) {
         qWarning() << "error creating the channel " << error.name() << error.message();
         return;
     }
+}
+
+void MockConnection::hangupCall(const QString &callerId)
+{
+    if (!mCallChannels.contains(callerId)) {
+        return;
+    }
+
+    mCallChannels[callerId]->setCallState("disconnected");
+}
+
+void MockConnection::setCallState(const QString &phoneNumber, const QString &state)
+{
+    if (!mCallChannels.contains(phoneNumber)) {
+        return;
+    }
+
+    mCallChannels[phoneNumber]->setCallState(state);
 }

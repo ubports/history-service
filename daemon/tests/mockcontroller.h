@@ -35,6 +35,9 @@ Q_SIGNALS:
 
 public Q_SLOTS:
     void placeIncomingMessage(const QString &message, const QVariantMap &properties);
+    void placeCall(const QVariantMap &properties);
+    void hangupCall(const QString &callerId);
+    void setCallState(const QString &phoneNumber, const QString &state);
 
 private:
     explicit MockController(QObject *parent = 0);

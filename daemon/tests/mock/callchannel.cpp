@@ -19,13 +19,14 @@
 
 #include "callchannel.h"
 
-MockCallChannel::MockCallChannel(MockConnection *conn, QString phoneNumber, uint targetHandle, QObject *parent):
+MockCallChannel::MockCallChannel(MockConnection *conn, QString phoneNumber, QString state, uint targetHandle, QObject *parent):
     QObject(parent),
     mIncoming(false),
     mRequestedHangup(false),
     mConnection(conn),
     mPhoneNumber(phoneNumber),
-    mTargetHandle(targetHandle)
+    mTargetHandle(targetHandle),
+    mState(state)
 {
     Tp::BaseChannelPtr baseChannel = Tp::BaseChannel::create(mConnection, TP_QT_IFACE_CHANNEL_TYPE_CALL, targetHandle, Tp::HandleTypeContact);
     Tp::BaseChannelCallTypePtr callType = Tp::BaseChannelCallType::create(baseChannel.data(),
@@ -68,16 +69,12 @@ void MockCallChannel::onAccept(Tp::DBusError*)
 
 void MockCallChannel::init()
 {
-#if 0
-    FIXME: reimplement
-    mIncoming = this->state() == "incoming" || this->state() == "waiting";
-    mPreviousState = this->state();
-    mObjPath = mBaseChannel->objectPath();
-#endif
     Tp::CallMemberMap memberFlags;
     Tp::HandleIdentifierMap identifiers;
     QVariantMap stateDetails;
     Tp::CallStateReason reason;
+
+    mIncoming = mState == "incoming" || mState == "waiting";
 
     identifiers[mTargetHandle] = mPhoneNumber;
     reason.actor =  0;
@@ -177,7 +174,7 @@ void MockCallChannel::setCallState(const QString &state)
     reason.DBusReason = "";
     if (state == "disconnected") {
         qDebug() << "disconnected";
-        if (mIncoming && mPreviousState == "incoming" && !mRequestedHangup) {
+        if (mIncoming && mState == "incoming" && !mRequestedHangup) {
             reason.reason = Tp::CallStateChangeReasonNoAnswer;
         }
         mCallChannel->setCallState(Tp::CallStateEnded, 0, reason, stateDetails);
@@ -185,8 +182,8 @@ void MockCallChannel::setCallState(const QString &state)
     } else if (state == "active") {
         qDebug() << "active";
         mHoldIface->setHoldState(Tp::LocalHoldStateUnheld, Tp::LocalHoldStateReasonNone);
-        if (mPreviousState == "dialing" || mPreviousState == "alerting" || 
-                mPreviousState == "incoming") {
+        if (mState == "dialing" || mState == "alerting" ||
+                mState == "incoming") {
             mCallChannel->setCallState(Tp::CallStateAccepted, 0, reason, stateDetails);
         }
         mCallChannel->setCallState(Tp::CallStateActive, 0, reason, stateDetails);
@@ -198,9 +195,12 @@ void MockCallChannel::setCallState(const QString &state)
     } else if (state == "alerting") {
         qDebug() << "alerting";
     } else if (state == "incoming") {
+        mIncoming = true;
         qDebug() << "incoming";
     } else if (state == "waiting") {
+        mIncoming = true;
         qDebug() << "waiting";
     }
-    mPreviousState = state;
+
+    mState = state;
 }

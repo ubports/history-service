@@ -22,6 +22,7 @@
 #include <TelepathyQt/PendingReady>
 #include <TelepathyQt/ChannelClassSpec>
 #include <TelepathyQt/ClientRegistrar>
+#include <TelepathyQt/CallChannel>
 #include <TelepathyQt/TextChannel>
 
 Approver::Approver(QObject* parent)
@@ -36,7 +37,8 @@ Approver::~Approver()
 Tp::ChannelClassSpecList Approver::channelFilters() const
 {
     Tp::ChannelClassSpecList specList;
-    specList << Tp::ChannelClassSpec::textChat();
+    specList << Tp::ChannelClassSpec::textChat()
+             << Tp::ChannelClassSpec::audioCall();
 
     return specList;
 }
@@ -54,6 +56,23 @@ void Approver::addDispatchOperation(const Tp::MethodInvocationContextPtr<> &cont
             // right now we are not using any of the text channel's features in the approver
             // so no need to call becomeReady() on it.
             willHandle = true;
+            continue;
+        }
+
+        // Call Channel
+        Tp::CallChannelPtr callChannel = Tp::CallChannelPtr::dynamicCast(channel);
+        if (!callChannel.isNull()) {
+            Tp::PendingReady *pr = callChannel->becomeReady(Tp::Features()
+                                  << Tp::CallChannel::FeatureCore
+                                  << Tp::CallChannel::FeatureCallState
+                                  << Tp::CallChannel::FeatureLocalHoldState);
+            mChannels[pr] = callChannel;
+
+            connect(pr, SIGNAL(finished(Tp::PendingOperation*)),
+                    SLOT(onChannelReady(Tp::PendingOperation*)));
+            callChannel->setProperty("accountId", QVariant(dispatchOperation->account()->uniqueIdentifier()));
+            willHandle = true;
+            continue;
         }
     }
 
@@ -87,4 +106,74 @@ void Approver::processChannels()
         }
     }
 }
+
+void Approver::acceptCall()
+{
+    Q_FOREACH (Tp::ChannelDispatchOperationPtr dispatchOperation, mDispatchOps) {
+        QList<Tp::ChannelPtr> channels = dispatchOperation->channels();
+        Q_FOREACH (Tp::ChannelPtr channel, channels) {
+            if (dispatchOperation->possibleHandlers().contains(TELEPHONY_SERVICE_HANDLER)) {
+                dispatchOperation->handleWith(TELEPHONY_SERVICE_HANDLER);
+                mDispatchOps.removeAll(dispatchOperation);
+            }
+        }
+    }
+}
+
+void Approver::rejectCall()
+{
+    Q_FOREACH (Tp::ChannelDispatchOperationPtr dispatchOperation, mDispatchOps) {
+        QList<Tp::ChannelPtr> channels = dispatchOperation->channels();
+        Q_FOREACH (Tp::ChannelPtr channel, channels) {
+            if (dispatchOperation->possibleHandlers().contains(TELEPHONY_SERVICE_HANDLER)) {
+                Tp::PendingOperation *claimop = dispatchOperation->claim();
+                mChannels[claimop] = dispatchOperation->channels().first();
+                connect(claimop, SIGNAL(finished(Tp::PendingOperation*)),
+                    this, SLOT(onClaimFinished(Tp::PendingOperation*)));
+            }
+        }
+    }
+}
+
+void Approver::onClaimFinished(Tp::PendingOperation* op)
+{
+    if(!op || op->isError()) {
+        return;
+    }
+
+    Tp::CallChannelPtr callChannel = Tp::CallChannelPtr::dynamicCast(mChannels[op]);
+    if (callChannel) {
+        Tp::PendingOperation *hangupop = callChannel->hangup(Tp::CallStateChangeReasonUserRequested, TP_QT_ERROR_REJECTED, QString());
+        mChannels[hangupop] = callChannel;
+        connect(hangupop, SIGNAL(finished(Tp::PendingOperation*)),
+                this, SLOT(onHangupFinished(Tp::PendingOperation*)));
+    }
+}
+
+void Approver::onHangupFinished(Tp::PendingOperation* op)
+{
+    if(!op || op->isError()) {
+        return;
+    }
+    mDispatchOps.removeAll(dispatchOperation(op));
+    mChannels.remove(op);
+}
+
+Tp::ChannelDispatchOperationPtr Approver::dispatchOperation(Tp::PendingOperation *op)
+{
+    Tp::ChannelPtr channel = mChannels[op];
+    QString accountId = channel->property("accountId").toString();
+    Q_FOREACH (Tp::ChannelDispatchOperationPtr dispatchOperation, mDispatchOps) {
+        if (dispatchOperation->account()->uniqueIdentifier() == accountId) {
+            return dispatchOperation;
+        }
+    }
+    return Tp::ChannelDispatchOperationPtr();
+}
+
+void Approver::onChannelReady(Tp::PendingOperation *op)
+{
+    Q_EMIT newCall();
+}
+
 

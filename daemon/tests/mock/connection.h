@@ -75,7 +75,9 @@ Q_SIGNALS:
 
 public Q_SLOTS:
     void placeIncomingMessage(const QString &message, const QVariantMap &info);
-    void placeCall(const QString &call, const QVariantMap &properties);
+    void placeCall(const QVariantMap &properties);
+    void hangupCall(const QString &callerId);
+    void setCallState(const QString &phoneNumber, const QString &state);
     void onTextChannelClosed();
     void onCallChannelClosed();
     void onMessageRead(const QString &id);
@@ -86,6 +88,7 @@ private:
 
     QMap<QString, MockTextChannel*> mTextChannels;
     QMap<QString, MockCallChannel*> mCallChannels;
+    QMap<QString, QString> mInitialCallStatus;
 
     QStringList mModems;
     uint mHandleCount;

@@ -34,10 +34,14 @@ public:
 
     bool connectToBus();
     void PlaceIncomingMessage(const QString &message, const QVariantMap &properties);
+    void PlaceCall(const QVariantMap &properties);
+    void HangupCall(const QString &callerId);
+    void SetCallState(const QString &phoneNumber, const QString &state);
 
 Q_SIGNALS:
     // signals that will be relayed into the bus
     void MessageSent(const QString &mesasge, const QVariantMap &properties);
+    void CallReceived(const QVariantMap &properties);
 
 private:
     MockConnectionAdaptor *mAdaptor;

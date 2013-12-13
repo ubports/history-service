@@ -42,3 +42,17 @@ void MockController::placeIncomingMessage(const QString &message, const QVariant
     mMockInterface.call("PlaceIncomingMessage", message, properties);
 }
 
+void MockController::placeCall(const QVariantMap &properties)
+{
+    mMockInterface.call("PlaceCall", properties);
+}
+
+void MockController::hangupCall(const QString &callerId)
+{
+    mMockInterface.call("HangupCall", callerId);
+}
+
+void MockController::setCallState(const QString &phoneNumber, const QString &state)
+{
+    mMockInterface.call("SetCallState", phoneNumber, state);
+}

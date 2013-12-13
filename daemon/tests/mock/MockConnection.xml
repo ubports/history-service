@@ -17,13 +17,40 @@
             <arg name="properties" type="a{sv}" direction="in"/>
             <annotation name="org.qtproject.QtDBus.QtTypeName.In1" value="QVariantMap"/>
         </method>
+        <method name="PlaceCall">
+            <dox:d><![CDATA[
+                Simulates an incoming call
+            ]]></dox:d>
+            <arg name="properties" type="a{sv}" direction="in"/>
+            <annotation name="org.qtproject.QtDBus.QtTypeName.In0" value="QVariantMap"/>
+        </method>
+        <method name="HangupCall">
+            <dox:d><![CDATA[
+                Terminates an existing call
+            ]]></dox:d>
+            <arg name="callerId" type="s" direction="in"/>
+        </method>
+        <method name="SetCallState">
+            <dox:d><![CDATA[
+                Change the call state
+            ]]></dox:d>
+            <arg name="phoneNumber" type="s" direction="in"/>
+            <arg name="status" type="s" direction="in"/>
+        </method>
         <signal name="MessageSent">
             <dox:d><![CDATA[
-		A message was sent from the client.
+                A message was sent from the client.
             ]]></dox:d>
             <arg name="message" type="s" direction="in"/>
             <arg name="properties" type="a{sv}" direction="in"/>
             <annotation name="org.qtproject.QtDBus.QtTypeName.In1" value="QVariantMap"/>
+        </signal>
+        <signal name="CallReceived">
+            <dox:d><![CDATA[
+                A call was made from the client
+            ]]></dox:d>
+            <arg name="properties" type="a{sv}" direction="in"/>
+            <annotation name="org.qtproject.QtDBus.QtTypeName.In0" value="QVariantMap"/>
         </signal>
     </interface>
 </node>

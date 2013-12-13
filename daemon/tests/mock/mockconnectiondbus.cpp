@@ -55,3 +55,18 @@ void MockConnectionDBus::PlaceIncomingMessage(const QString &message, const QVar
 {
     mConnection->placeIncomingMessage(message, properties);
 }
+
+void MockConnectionDBus::PlaceCall(const QVariantMap &properties)
+{
+    mConnection->placeCall(properties);
+}
+
+void MockConnectionDBus::HangupCall(const QString &callerId)
+{
+    mConnection->hangupCall(callerId);
+}
+
+void MockConnectionDBus::SetCallState(const QString &phoneNumber, const QString &state)
+{
+    mConnection->setCallState(phoneNumber, state);
+}
