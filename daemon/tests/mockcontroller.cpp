@@ -56,3 +56,9 @@ void MockController::setCallState(const QString &phoneNumber, const QString &sta
 {
     mMockInterface.call("SetCallState", phoneNumber, state);
 }
+
+
+void MockController::sendDeliveryReport(const QString &phoneNumber, const QString &messageId, const QString &status)
+{
+    mMockInterface.call("SendDeliveryReport", phoneNumber, messageId, status);
+}

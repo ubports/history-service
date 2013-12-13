@@ -41,6 +41,7 @@ Q_DECLARE_METATYPE(Tp::TextChannelPtr)
 Q_DECLARE_METATYPE(QList<Tp::ContactPtr>)
 Q_DECLARE_METATYPE(History::Threads)
 Q_DECLARE_METATYPE(History::Events)
+Q_DECLARE_METATYPE(History::MessageStatus)
 
 class DaemonTest : public QObject
 {
@@ -55,6 +56,8 @@ private Q_SLOTS:
     void testMessageSent();
     void testMissedCall();
     void testOutgoingCall();
+    void testDeliveryReport_data();
+    void testDeliveryReport();
 
     // helper slots
     void onPendingContactsFinished(Tp::PendingOperation*);
@@ -73,6 +76,7 @@ void DaemonTest::initTestCase()
     qRegisterMetaType<QList<Tp::ContactPtr> >();
     qRegisterMetaType<History::Threads>();
     qRegisterMetaType<History::Events>();
+    qRegisterMetaType<History::MessageStatus>();
     TelepathyHelper::instance();
 
     QSignalSpy spy(TelepathyHelper::instance(), SIGNAL(accountReady()));
@@ -301,6 +305,74 @@ void DaemonTest::testOutgoingCall()
     QVERIFY(modifiedThread.lastEvent() == event);
     QCOMPARE(event.missed(), false);
     QVERIFY(event.duration().isValid());
+}
+
+void DaemonTest::testDeliveryReport_data()
+{
+    QTest::addColumn<QString>("phoneNumber");
+    QTest::addColumn<QString>("deliveryStatus");
+    QTest::addColumn<History::MessageStatus>("messageStatus");
+
+    QTest::newRow("delivered status") << "11112222" << "delivered" << History::MessageStatusDelivered;
+    QTest::newRow("temporarily failed") << "11113333" << "temporarily_failed" << History::MessageStatusTemporarilyFailed;
+    QTest::newRow("permanently failed") << "11114444" << "permanently_failed" << History::MessageStatusPermanentlyFailed;
+    QTest::newRow("accepted status") << "11115555" << "accepted" << History::MessageStatusAccepted;
+    QTest::newRow("read status") << "11116666" << "read" << History::MessageStatusRead;
+    QTest::newRow("deleted") << "11117777" << "deleted" << History::MessageStatusDeleted;
+    QTest::newRow("unknown") << "11118888" << "unknown" << History::MessageStatusUnknown;
+}
+
+void DaemonTest::testDeliveryReport()
+{
+    QFETCH(QString, phoneNumber);
+    QFETCH(QString, deliveryStatus);
+    QFETCH(History::MessageStatus, messageStatus);
+
+    // Request the contact to start chatting to
+    Tp::AccountPtr account = TelepathyHelper::instance()->account();
+    QSignalSpy spy(this, SIGNAL(contactsReceived(QList<Tp::ContactPtr>)));
+
+    connect(account->connection()->contactManager()->contactsForIdentifiers(QStringList() << phoneNumber),
+            SIGNAL(finished(Tp::PendingOperation*)),
+            SLOT(onPendingContactsFinished(Tp::PendingOperation*)));
+
+    QTRY_COMPARE(spy.count(), 1);
+
+    QList<Tp::ContactPtr> contacts = spy.first().first().value<QList<Tp::ContactPtr> >();
+    QCOMPARE(contacts.count(), 1);
+    QCOMPARE(contacts.first()->id(), phoneNumber);
+
+    QSignalSpy spyTextChannel(mHandler, SIGNAL(textChannelAvailable(Tp::TextChannelPtr)));
+
+    Q_FOREACH(Tp::ContactPtr contact, contacts) {
+        account->ensureTextChat(contact, QDateTime::currentDateTime(), TP_QT_IFACE_CLIENT + ".HistoryTestHandler");
+    }
+    QTRY_COMPARE(spyTextChannel.count(), 1);
+
+    Tp::TextChannelPtr channel = spyTextChannel.first().first().value<Tp::TextChannelPtr>();
+    QVERIFY(channel);
+
+    QSignalSpy eventsAddedSpy(History::Manager::instance(), SIGNAL(eventsAdded(History::Events)));
+
+    QString messageText = "Hello, big world!";
+    Tp::PendingSendMessage *message = channel->send(messageText);
+
+    QTRY_COMPARE(eventsAddedSpy.count(), 1);
+    History::Events events = eventsAddedSpy.first().first().value<History::Events>();
+    QCOMPARE(events.count(), 1);
+    History::TextEvent event = events.first();
+
+    // now send a delivery report for this text and make sure the event gets updated
+    QSignalSpy eventsModifiedSpy(History::Manager::instance(), SIGNAL(eventsModified(History::Events)));
+
+    MockController::instance()->sendDeliveryReport(phoneNumber, event.eventId(), deliveryStatus);
+    QTRY_COMPARE(eventsModifiedSpy.count(), 1);
+    events = eventsModifiedSpy.first().first().value<History::Events>();
+    QCOMPARE(events.count(), 1);
+    event = events.first();
+    QCOMPARE(event.messageStatus(), messageStatus);
+
+    channel->requestClose();
 }
 
 void DaemonTest::onPendingContactsFinished(Tp::PendingOperation *op)
