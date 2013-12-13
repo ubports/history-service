@@ -371,7 +371,66 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
     qDebug() << __PRETTY_FUNCTION__;
     // ignore delivery reports for now.
     // FIXME: maybe we should set the readTimestamp when a delivery report is received
-    if (message.isDeliveryReport() || message.isRescued() || message.isScrollback()) {
+    if (message.isRescued() || message.isScrollback()) {
+        return;
+    }
+
+    if (message.isDeliveryReport() && message.deliveryDetails().hasOriginalToken()) {
+        // at this point we assume the delivery report is for a message that was already
+        // sent and properly saved at our database, so we can safely get it here to update
+        QStringList participants;
+        Q_FOREACH(const Tp::ContactPtr contact, textChannel->groupContacts(false)) {
+            participants << contact->id();
+        }
+
+        QVariantMap thread = threadForParticipants(textChannel->property(History::FieldAccountId).toString(),
+                                                                         History::EventTypeText,
+                                                                         participants,
+                                                                         matchFlagsForChannel(textChannel),
+                                                                         true);
+        if (thread.isEmpty()) {
+            return;
+        }
+
+        QVariantMap textEvent = getSingleEvent((int)History::EventTypeText,
+                                               textChannel->property(History::FieldAccountId).toString(),
+                                               thread[History::FieldThreadId].toString(),
+                                               message.deliveryDetails().originalToken());
+        if (textEvent.isEmpty()) {
+            qWarning() << "Cound not find the original event to update with delivery details.";
+            return;
+        }
+
+        History::MessageStatus status;
+        switch (message.deliveryDetails().status()) {
+        case Tp::DeliveryStatusAccepted:
+            status = History::MessageStatusAccepted;
+            break;
+        case Tp::DeliveryStatusDeleted:
+            status = History::MessageStatusDeleted;
+            break;
+        case Tp::DeliveryStatusDelivered:
+            status = History::MessageStatusDelivered;
+            break;
+        case Tp::DeliveryStatusPermanentlyFailed:
+            status = History::MessageStatusPermanentlyFailed;
+            break;
+        case Tp::DeliveryStatusRead:
+            status = History::MessageStatusRead;
+            break;
+        case Tp::DeliveryStatusTemporarilyFailed:
+            status = History::MessageStatusTemporarilyFailed;
+            break;
+        case Tp::DeliveryStatusUnknown:
+            status = History::MessageStatusUnknown;
+            break;
+        }
+
+        textEvent[History::FieldMessageStatus] = (int) status;
+        if (!writeEvents(QList<QVariantMap>() << textEvent)) {
+            qWarning() << "Failed to save the new message status!";
+        }
+
         return;
     }
 

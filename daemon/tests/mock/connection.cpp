@@ -417,3 +417,13 @@ void MockConnection::setCallState(const QString &phoneNumber, const QString &sta
 
     mCallChannels[phoneNumber]->setCallState(state);
 }
+
+
+void MockConnection::sendDeliveryReport(const QString &phoneNumber, const QString &messageId, const QString &status)
+{
+    if (!mTextChannels.contains(phoneNumber)) {
+        return;
+    }
+
+    mTextChannels[phoneNumber]->placeDeliveryReport(messageId, status);
+}

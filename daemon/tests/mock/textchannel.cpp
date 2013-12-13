@@ -112,12 +112,19 @@ QString MockTextChannel::sendMessage(const Tp::MessagePartList& message, uint fl
 void MockTextChannel::placeDeliveryReport(const QString &messageId, const QString &status)
 {
     Tp::DeliveryStatus delivery_status;
-    if (status == "sent") {
+
+    if (status == "delivered") {
         delivery_status = Tp::DeliveryStatusDelivered;
-    } else if(status == "failed") {
+    } else if (status == "temporarily_failed") {
+        delivery_status = Tp::DeliveryStatusTemporarilyFailed;
+    } else if (status == "permanently_failed") {
         delivery_status = Tp::DeliveryStatusPermanentlyFailed;
-    } else if(status == "pending") {
+    } else if (status == "accepted") {
         delivery_status = Tp::DeliveryStatusAccepted;
+    } else if (status == "read") {
+        delivery_status = Tp::DeliveryStatusRead;
+    } else if (status == "deleted") {
+        delivery_status = Tp::DeliveryStatusDeleted;
     } else {
         delivery_status = Tp::DeliveryStatusUnknown;
     }

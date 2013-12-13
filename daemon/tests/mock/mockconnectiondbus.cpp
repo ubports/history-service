@@ -70,3 +70,9 @@ void MockConnectionDBus::SetCallState(const QString &phoneNumber, const QString 
 {
     mConnection->setCallState(phoneNumber, state);
 }
+
+
+void MockConnectionDBus::SendDeliveryReport(const QString &phoneNumber, const QString &messageId, const QString &status)
+{
+    mConnection->sendDeliveryReport(phoneNumber, messageId, status);
+}
