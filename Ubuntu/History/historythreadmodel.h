@@ -39,6 +39,7 @@ class HistoryThreadModel : public QAbstractListModel
     Q_ENUMS(EventType)
     Q_ENUMS(Role)
     Q_ENUMS(MatchFlag)
+    Q_ENUMS(MessageStatus)
 public:
     enum EventType {
         EventTypeText = History::EventTypeText,
@@ -50,6 +51,18 @@ public:
         MatchCaseInsensitive = History::MatchCaseInsensitive,
         MatchContains = History::MatchContains,
         MatchPhoneNumber = History::MatchPhoneNumber
+    };
+
+    enum MessageStatus
+    {
+        MessageStatusUnknown = History::MessageStatusUnknown,
+        MessageStatusDelivered = History::MessageStatusDelivered,
+        MessageStatusTemporarilyFailed = History::MessageStatusTemporarilyFailed,
+        MessageStatusPermanentlyFailed = History::MessageStatusPermanentlyFailed,
+        MessageStatusAccepted = History::MessageStatusAccepted,
+        MessageStatusRead = History::MessageStatusRead,
+        MessageStatusDeleted = History::MessageStatusDeleted,
+        MessageStatusPending = History::MessageStatusPending // pending attachment download
     };
 
     enum Role {
