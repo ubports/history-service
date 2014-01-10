@@ -1,3 +1,21 @@
+history-service (0.1+14.04.20140110-0ubuntu1) trusty; urgency=low
+
+  [ Gustavo Pichorim Boiko ]
+  * Rename the messageFlags field to messageStatus to reflect its real
+    purpose.
+  * Add tests for the Telepathy related code in history-service.
+  * Handle the delivery reports and use the data to update the message
+    status.
+
+  [ Tiago Salem Herrmann ]
+  * Declare delivery report enums to be used from QML. Update all
+    existing text message status to "accepted".
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 125
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 10 Jan 2014 04:41:34 +0000
+
 history-service (0.1+14.04.20131209-0ubuntu1) trusty; urgency=low
 
   [ Gustavo Pichorim Boiko ]
