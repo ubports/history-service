@@ -387,8 +387,9 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
                                                                          History::EventTypeText,
                                                                          participants,
                                                                          matchFlagsForChannel(textChannel),
-                                                                         true);
+                                                                         false);
         if (thread.isEmpty()) {
+            qWarning() << "Cound not find the thread related to this delivery report.";
             return;
         }
 
