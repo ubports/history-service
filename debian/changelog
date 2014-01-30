@@ -1,3 +1,14 @@
+history-service (0.1+14.04.20140130-0ubuntu1) trusty; urgency=low
+
+  [ CI bot ]
+  * Release history-service trunk in CITrain
+
+  [ Gustavo Pichorim Boiko ]
+  * Do not create threads if they are not already there when a delivery
+    report arrives.
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 30 Jan 2014 17:04:06 +0000
+
 history-service (0.1+14.04.20140110-0ubuntu1) trusty; urgency=low
 
   [ Gustavo Pichorim Boiko ]
