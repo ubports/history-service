@@ -194,11 +194,11 @@ void HistoryEventModel::fetchMore(const QModelIndex &parent)
     qDebug() << "Got events:" << events.count();
     if (events.isEmpty()) {
         mCanFetchMore = false;
+    } else {
+        beginInsertRows(QModelIndex(), mEvents.count(), mEvents.count() + events.count() - 1);
+        mEvents << events;
+        endInsertRows();
     }
-
-    beginInsertRows(QModelIndex(), mEvents.count(), mEvents.count() + events.count() - 1);
-    mEvents << events;
-    endInsertRows();
 }
 
 QHash<int, QByteArray> HistoryEventModel::roleNames() const
@@ -307,9 +307,11 @@ bool HistoryEventModel::markEventAsRead(const QString &accountId, const QString 
 void HistoryEventModel::updateQuery()
 {
     // remove all events from the model
-    beginRemoveRows(QModelIndex(), 0, mEvents.count() - 1);
-    mEvents.clear();
-    endRemoveRows();
+    if (!mEvents.isEmpty()) {
+        beginRemoveRows(QModelIndex(), 0, mEvents.count() - 1);
+        mEvents.clear();
+        endRemoveRows();
+    }
 
     // and create the view again
     History::Filter queryFilter;
