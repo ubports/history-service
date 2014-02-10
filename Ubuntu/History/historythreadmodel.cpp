@@ -211,11 +211,11 @@ void HistoryThreadModel::fetchMore(const QModelIndex &parent)
     History::Threads threads = mThreadView->nextPage();
     if (threads.isEmpty()) {
         mCanFetchMore = false;
+    } else {
+        beginInsertRows(QModelIndex(), mThreads.count(), mThreads.count() + threads.count() - 1);
+        mThreads << threads;
+        endInsertRows();
     }
-
-    beginInsertRows(QModelIndex(), mThreads.count(), mThreads.count() + threads.count() - 1);
-    mThreads << threads;
-    endInsertRows();
 }
 
 QHash<int, QByteArray> HistoryThreadModel::roleNames() const
@@ -308,10 +308,12 @@ bool HistoryThreadModel::removeThread(const QString &accountId, const QString &t
 void HistoryThreadModel::updateQuery()
 {
     // remove all events from the model
-    beginRemoveRows(QModelIndex(), 0, mThreads.count() - 1);
-    mThreads.clear();
-    endRemoveRows();
-
+    if (!mThreads.isEmpty()) {
+        beginRemoveRows(QModelIndex(), 0, mThreads.count() - 1);
+        mThreads.clear();
+        endRemoveRows();
+    }
+ 
     // and fetch again
     mCanFetchMore = true;
 
