@@ -1,3 +1,11 @@
+history-service (0.1+14.04.20140210-0ubuntu1) trusty; urgency=low
+
+  [ Tiago Salem Herrmann ]
+  * Check if the model is already empty before removing items in order
+    to avoid an assert() in qt 5.2. (LP: #1275835)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 10 Feb 2014 16:02:49 +0000
+
 history-service (0.1+14.04.20140130-0ubuntu1) trusty; urgency=low
 
   [ CI bot ]
