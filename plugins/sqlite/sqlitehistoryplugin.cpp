@@ -105,6 +105,10 @@ QVariantMap SQLiteHistoryPlugin::threadForParticipants(const QString &accountId,
             threadParticipants << query.value(0).toString();
         }
 
+        if (threadParticipants.count() != participants.count()) {
+            continue;
+        }
+
         // and now compare the lists
         bool found = true;
         Q_FOREACH(const QString &participant, participants) {
