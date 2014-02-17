@@ -1,3 +1,12 @@
+history-service (0.1+14.04.20140217-0ubuntu1) trusty; urgency=low
+
+  [ Tiago Salem Herrmann ]
+  * History needs to also observe channels with TargetHandleType = 0 for
+    group chat. Don't iterate if the amount of participants is different
+    .
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 17 Feb 2014 13:40:07 +0000
+
 history-service (0.1+14.04.20140210-0ubuntu1) trusty; urgency=low
 
   [ Tiago Salem Herrmann ]
