@@ -1,3 +1,10 @@
+history-service (0.1+14.04.20140228-0ubuntu1) trusty; urgency=low
+
+  [ Tiago Salem Herrmann ]
+  * Fix broken test with qt5.2. (LP: #1285007)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 28 Feb 2014 23:22:36 +0000
+
 history-service (0.1+14.04.20140217-0ubuntu1) trusty; urgency=low
 
   [ Tiago Salem Herrmann ]
