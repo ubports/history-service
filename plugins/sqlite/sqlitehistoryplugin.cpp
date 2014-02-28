@@ -299,12 +299,12 @@ History::EventWriteResult SQLiteHistoryPlugin::writeTextEvent(const QVariantMap 
     query.bindValue(":threadId", event[History::FieldThreadId]);
     query.bindValue(":eventId", event[History::FieldEventId]);
     query.bindValue(":senderId", event[History::FieldSenderId]);
-    query.bindValue(":timestamp", QDateTime::fromString(event[History::FieldTimestamp].toString(), Qt::ISODate));
+    query.bindValue(":timestamp", event[History::FieldTimestamp]);
     query.bindValue(":newEvent", event[History::FieldNewEvent]);
     query.bindValue(":message", event[History::FieldMessage]);
     query.bindValue(":messageType", event[History::FieldMessageType]);
     query.bindValue(":messageStatus", event[History::FieldMessageStatus]);
-    query.bindValue(":readTimestamp", QDateTime::fromString(event[History::FieldReadTimestamp].toString(), Qt::ISODate));
+    query.bindValue(":readTimestamp", event[History::FieldReadTimestamp]);
     query.bindValue(":subject", event[History::FieldSubject].toString());
 
     if (!query.exec()) {
