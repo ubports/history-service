@@ -1,3 +1,9 @@
+history-service (0.1+14.04.20140305-0ubuntu1) trusty; urgency=low
+
+  * New rebuild forced
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 05 Mar 2014 13:13:10 +0000
+
 history-service (0.1+14.04.20140228-0ubuntu1) trusty; urgency=low
 
   [ Tiago Salem Herrmann ]
