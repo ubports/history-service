@@ -44,14 +44,15 @@ EventViewPrivate::EventViewPrivate(History::EventType theType,
 
 Events EventViewPrivate::filteredEvents(const Events &events)
 {
-    // if the filter is null, return all threads
-    if (filter.isNull()) {
-        return events;
-    }
+    bool filterNull = filter.isNull();
 
     Events filtered;
     Q_FOREACH(const Event &event, events) {
-        if (event.type() == type && filter.match(event.properties())) {
+        if (event.type() != type) {
+            continue;
+        }
+
+        if (filterNull || filter.match(event.properties())) {
             filtered << events;
         }
     }

@@ -43,14 +43,15 @@ ThreadViewPrivate::ThreadViewPrivate(History::EventType theType,
 
 Threads ThreadViewPrivate::filteredThreads(const Threads &threads)
 {
-    // if the filter is null, return all threads
-    if (filter.isNull()) {
-        return threads;
-    }
+    bool filterNull = filter.isNull();
 
     Threads filtered;
     Q_FOREACH(const Thread &thread, threads) {
-        if (thread.type() == type && filter.match(thread.properties())) {
+        if (thread.type() != type) {
+            continue;
+        }
+
+        if (filterNull || filter.match(thread.properties())) {
             filtered << thread;
         }
     }
