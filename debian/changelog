@@ -1,3 +1,11 @@
+history-service (0.1+14.04.20140319-0ubuntu1) trusty; urgency=low
+
+  [ Gustavo Pichorim Boiko ]
+  * Make sure to only propagate events and threads of the correct type
+    on views, even when the filter is null.
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 19 Mar 2014 02:39:59 +0000
+
 history-service (0.1+14.04.20140305-0ubuntu1) trusty; urgency=low
 
   * New rebuild forced
