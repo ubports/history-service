@@ -36,7 +36,7 @@
 
 HistoryEventModel::HistoryEventModel(QObject *parent) :
     QAbstractListModel(parent), mCanFetchMore(true), mFilter(0),
-    mSort(0), mType(HistoryThreadModel::EventTypeText), mEventWritingTimer(0)
+    mSort(0), mType(HistoryThreadModel::EventTypeText), mEventWritingTimer(0), mFetchTimer(0)
 {
     // configure the roles
     mRoles[AccountIdRole] = "accountId";
@@ -353,8 +353,12 @@ void HistoryEventModel::updateQuery()
     }
     mAttachmentCache.clear();
 
-    // get an initial set of results
-    fetchMore(QModelIndex());
+    if (mFetchTimer) {
+        killTimer(mFetchTimer);
+    }
+
+    // delay the loading of the model data until the settings settle down
+    mFetchTimer = startTimer(100);
 }
 
 void HistoryEventModel::onEventsAdded(const History::Events &events)
@@ -415,20 +419,22 @@ void HistoryEventModel::onEventsRemoved(const History::Events &events)
 
 void HistoryEventModel::timerEvent(QTimerEvent *event)
 {
-    if (event->timerId() != mEventWritingTimer) {
-        return;
-    }
+    if (event->timerId() == mEventWritingTimer) {
+        killTimer(mEventWritingTimer);
+        mEventWritingTimer = 0;
 
-    killTimer(mEventWritingTimer);
-    mEventWritingTimer = 0;
+        if (mEventWritingQueue.isEmpty()) {
+            return;
+        }
 
-    if (mEventWritingQueue.isEmpty()) {
-        return;
-    }
-
-    qDebug() << "Goint to update" << mEventWritingQueue.count() << "events.";
-    if (History::Manager::instance()->writeEvents(mEventWritingQueue)) {
-        qDebug() << "... succeeded!";
-        mEventWritingQueue.clear();
+        qDebug() << "Goint to update" << mEventWritingQueue.count() << "events.";
+        if (History::Manager::instance()->writeEvents(mEventWritingQueue)) {
+            qDebug() << "... succeeded!";
+            mEventWritingQueue.clear();
+        }
+    } else if (event->timerId() == mFetchTimer) {
+        killTimer(mFetchTimer);
+        mFetchTimer = 0;
+        fetchMore(QModelIndex());
     }
 }
