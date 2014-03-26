@@ -124,6 +124,9 @@ protected Q_SLOTS:
     void onThreadsModified(const History::Threads &threads);
     void onThreadsRemoved(const History::Threads &threads);
 
+protected:
+    void timerEvent(QTimerEvent *event);
+
 private:
     History::ThreadViewPtr mThreadView;
     History::Threads mThreads;
@@ -133,6 +136,7 @@ private:
     EventType mType;
     QHash<int, QByteArray> mRoles;
     mutable QMap<History::TextEvent, QList<QVariant> > mAttachmentCache;
+    int mFetchTimer;
 };
 
 #endif // HISTORYTHREADMODEL_H

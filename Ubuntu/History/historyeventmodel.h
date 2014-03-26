@@ -107,6 +107,7 @@ private:
     mutable QMap<History::TextEvent, QList<QVariant> > mAttachmentCache;
     History::Events mEventWritingQueue;
     int mEventWritingTimer;
+    int mFetchTimer;
 };
 
 #endif // HISTORYEVENTMODEL_H
