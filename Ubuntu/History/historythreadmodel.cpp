@@ -30,11 +30,12 @@
 #include "historyqmltexteventattachment.h"
 #include "voiceevent.h"
 #include <QDebug>
+#include <QTimerEvent>
 
 Q_DECLARE_METATYPE(History::TextEventAttachments)
 
 HistoryThreadModel::HistoryThreadModel(QObject *parent) :
-    QAbstractListModel(parent), mCanFetchMore(true), mFilter(0), mSort(0), mType(EventTypeText)
+    QAbstractListModel(parent), mCanFetchMore(true), mFilter(0), mSort(0), mType(EventTypeText), mFetchTimer(0)
 {
     // configure the roles
     mRoles[AccountIdRole] = "accountId";
@@ -354,7 +355,12 @@ void HistoryThreadModel::updateQuery()
     }
     mAttachmentCache.clear();
 
-    fetchMore(QModelIndex());
+    if (mFetchTimer) {
+        killTimer(mFetchTimer);
+    }
+
+    // delay the loading just to give the settings some time to settle down
+    mFetchTimer = startTimer(100);
 }
 
 void HistoryThreadModel::onThreadsAdded(const History::Threads &threads)
@@ -398,4 +404,14 @@ void HistoryThreadModel::onThreadsRemoved(const History::Threads &threads)
     // FIXME: there is a corner case here: if a thread was not loaded yet, but was already
     // removed by another client, it will still show up when a new page is requested. Maybe it
     // should be handle internally in History::ThreadView?
+}
+
+void HistoryThreadModel::timerEvent(QTimerEvent *event)
+{
+    if (event->timerId() == mFetchTimer) {
+        killTimer(mFetchTimer);
+        mFetchTimer = 0;
+
+        fetchMore(QModelIndex());
+    }
 }
