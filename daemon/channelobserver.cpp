@@ -57,6 +57,12 @@ void ChannelObserver::observeChannels(const Tp::MethodInvocationContextPtr<> &co
 
     qDebug() << __PRETTY_FUNCTION__;
     Q_FOREACH (Tp::ChannelPtr channel, channels) {
+        // tp-qt has not support for the SMS interface
+        if (channel->immutableProperties().contains(TP_QT_IFACE_CHANNEL_INTERFACE_SMS + QLatin1String(".Flash"))) {
+            if (channel->immutableProperties()[TP_QT_IFACE_CHANNEL_INTERFACE_SMS + QLatin1String(".Flash")].toBool()) {
+                continue;
+            }
+        }
         mContexts[channel.data()] = context;
         mChannels.append(channel);
 
