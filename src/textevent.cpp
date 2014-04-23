@@ -19,9 +19,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <QDebug>
+#include <QDBusMetaType>
+
 #include "textevent.h"
 #include "textevent_p.h"
 #include "texteventattachment.h"
+
+Q_DECLARE_METATYPE(QList< QVariantMap >)
 
 namespace History {
 
@@ -101,6 +106,8 @@ TextEvent::TextEvent(const QString &accountId,
     : Event(*new TextEventPrivate(accountId, threadId, eventId, sender, timestamp, newEvent,
                                   message, messageType, messageStatus, readTimestamp, subject, attachments, participants))
 {
+    qDBusRegisterMetaType<QList<QVariantMap> >();
+    qRegisterMetaType<QList<QVariantMap> >();
 }
 
 TextEvent::~TextEvent()
@@ -176,7 +183,7 @@ Event TextEvent::fromProperties(const QVariantMap &properties)
     QDateTime readTimestamp = QDateTime::fromString(properties[FieldReadTimestamp].toString(), Qt::ISODate);
 
     // read the attachments
-    QList<QVariantMap> attachmentProperties = properties[FieldAttachments].value<QList<QVariantMap> >();
+    QList<QVariantMap> attachmentProperties = qdbus_cast<QList<QVariantMap> >(properties[FieldAttachments]);
     TextEventAttachments attachments;
     Q_FOREACH(const QVariantMap &map, attachmentProperties) {
         TextEventAttachment attachment = TextEventAttachment::fromProperties(map);
