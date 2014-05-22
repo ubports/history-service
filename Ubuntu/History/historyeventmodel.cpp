@@ -33,6 +33,7 @@
 #include "voiceevent.h"
 #include <QDebug>
 #include <QTimerEvent>
+#include <QDBusMetaType>
 
 HistoryEventModel::HistoryEventModel(QObject *parent) :
     QAbstractListModel(parent), mCanFetchMore(true), mFilter(0),
@@ -287,6 +288,34 @@ bool HistoryEventModel::removeEvent(const QString &accountId, const QString &thr
     return History::Manager::instance()->removeEvents(History::Events() << event);
 }
 
+bool HistoryEventModel::removeEventAttachment(const QString &accountId, const QString &threadId, const QString &eventId, int eventType, const QString &attachmentId)
+{
+    History::TextEvent textEvent;
+    History::Event event = History::Manager::instance()->getSingleEvent((History::EventType)eventType, accountId, threadId, eventId);
+    if (event.type() != History::EventTypeText) {
+        qDebug() << "Trying to remove an attachment from a non text event";
+        return false;
+    }
+    QVariantMap properties = event.properties();
+    QList<QVariantMap> attachmentProperties = qdbus_cast<QList<QVariantMap> >(properties[History::FieldAttachments]);
+    QList<QVariantMap> newAttachmentProperties;
+    int count = 0;
+    Q_FOREACH(const QVariantMap &map, attachmentProperties) {
+        if (map[History::FieldAttachmentId] != attachmentId) {
+            count++;
+            newAttachmentProperties << map;
+        }
+    }
+    if (count == attachmentProperties.size()) {
+        qDebug() << "No attachment found for id " << attachmentId;
+        return false;
+    }
+    properties[History::FieldAttachments] = QVariant::fromValue(newAttachmentProperties);
+    textEvent = History::TextEvent::fromProperties(properties);
+
+    return History::Manager::instance()->writeEvents(History::Events() << textEvent);
+}
+
 bool HistoryEventModel::markEventAsRead(const QString &accountId, const QString &threadId, const QString &eventId, int eventType)
 {
     History::Event event = History::Manager::instance()->getSingleEvent((History::EventType)eventType, accountId, threadId, eventId);
@@ -389,6 +418,10 @@ void HistoryEventModel::onEventsModified(const History::Events &events)
         if (pos >= 0) {
             mEvents[pos] = event;
             QModelIndex idx = index(pos);
+            if (event.type() == History::EventTypeText) {
+                History::TextEvent textEvent = event;
+                mAttachmentCache.remove(textEvent);
+            }
             Q_EMIT dataChanged(idx, idx);
         } else {
             newEvents << event;
