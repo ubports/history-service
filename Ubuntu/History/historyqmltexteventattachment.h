@@ -33,13 +33,13 @@ class HistoryQmlTextEventAttachment : public QObject
 {
     Q_OBJECT
     Q_ENUMS(AttachmentFlag)
-    Q_PROPERTY(QString accountId READ accountId)
-    Q_PROPERTY(QString threadId READ threadId)
-    Q_PROPERTY(QString eventId READ eventId)
-    Q_PROPERTY(QString attachmentId READ attachmentId)
-    Q_PROPERTY(QString contentType READ contentType)
-    Q_PROPERTY(QString filePath READ filePath)
-    Q_PROPERTY(int status READ status)
+    Q_PROPERTY(QString accountId READ accountId CONSTANT)
+    Q_PROPERTY(QString threadId READ threadId CONSTANT)
+    Q_PROPERTY(QString eventId READ eventId CONSTANT)
+    Q_PROPERTY(QString attachmentId READ attachmentId CONSTANT)
+    Q_PROPERTY(QString contentType READ contentType CONSTANT)
+    Q_PROPERTY(QString filePath READ filePath CONSTANT)
+    Q_PROPERTY(int status READ status CONSTANT)
 public:
     enum AttachmentFlag
     {

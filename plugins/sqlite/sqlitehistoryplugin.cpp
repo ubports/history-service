@@ -28,6 +28,7 @@
 #include <QDebug>
 #include <QStringList>
 #include <QSqlError>
+#include <QDBusMetaType>
 
 SQLiteHistoryPlugin::SQLiteHistoryPlugin(QObject *parent) :
     QObject(parent)
@@ -328,7 +329,7 @@ History::EventWriteResult SQLiteHistoryPlugin::writeTextEvent(const QVariantMap 
             }
         }
         // save the attachments
-        QList<QVariantMap> attachments = event[History::FieldAttachments].value<QList<QVariantMap> >();
+        QList<QVariantMap> attachments = qdbus_cast<QList<QVariantMap> >(event[History::FieldAttachments]);
         Q_FOREACH(const QVariantMap &attachment, attachments) {
             query.prepare("INSERT INTO text_event_attachments VALUES (:accountId, :threadId, :eventId, :attachmentId, :contentType, :filePath, :status)");
             query.bindValue(":accountId", attachment[History::FieldAccountId]);
