@@ -29,6 +29,7 @@
 class HistoryEventModel : public QAbstractListModel
 {
     Q_OBJECT
+    Q_PROPERTY(int count READ rowCount NOTIFY countChanged)
     Q_PROPERTY(HistoryQmlFilter *filter READ filter WRITE setFilter NOTIFY filterChanged)
     Q_PROPERTY(HistoryQmlSort *sort READ sort WRITE setSort NOTIFY sortChanged)
     Q_PROPERTY(HistoryThreadModel::EventType type READ type WRITE setType NOTIFY typeChanged)
@@ -56,7 +57,7 @@ public:
 
     explicit HistoryEventModel(QObject *parent = 0);
 
-    int rowCount(const QModelIndex &parent) const;
+    int rowCount(const QModelIndex &parent = QModelIndex()) const;
     QVariant data(const QModelIndex &index, int role) const;
 
     bool canFetchMore(const QModelIndex &parent) const;
@@ -83,8 +84,10 @@ public:
     Q_INVOKABLE bool markEventAsRead(const QString &accountId, const QString &threadId, const QString &eventId, int eventType);
 
     Q_INVOKABLE bool removeEventAttachment(const QString &accountId, const QString &threadId, const QString &eventId, int eventType, const QString &attachmentId);
+    Q_INVOKABLE QVariant at(int row) const;
 
 Q_SIGNALS:
+    void countChanged(int);
     void filterChanged();
     void sortChanged();
     void typeChanged();
