@@ -36,6 +36,7 @@ class HistoryThreadModel : public QAbstractListModel
     Q_PROPERTY(HistoryQmlFilter *filter READ filter WRITE setFilter NOTIFY filterChanged)
     Q_PROPERTY(HistoryQmlSort *sort READ sort WRITE setSort NOTIFY sortChanged)
     Q_PROPERTY(EventType type READ type WRITE setType NOTIFY typeChanged)
+    Q_PROPERTY(int count READ rowCount NOTIFY countChanged)
     Q_ENUMS(EventType)
     Q_ENUMS(Role)
     Q_ENUMS(MatchFlag)
@@ -89,7 +90,7 @@ public:
 
     explicit HistoryThreadModel(QObject *parent = 0);
 
-    int rowCount(const QModelIndex &parent) const;
+    int rowCount(const QModelIndex &parent = QModelIndex()) const;
     QVariant data(const QModelIndex &index, int role) const;
 
     bool canFetchMore(const QModelIndex &parent) const;
@@ -112,11 +113,13 @@ public:
                                                 int matchFlags = (int)History::MatchCaseSensitive,
                                                 bool create = false);
     Q_INVOKABLE bool removeThread(const QString &accountId, const QString &threadId, int eventType);
+    Q_INVOKABLE QVariant get(int row, const QByteArray &role) const;
 
 Q_SIGNALS:
     void filterChanged();
     void sortChanged();
     void typeChanged();
+    void countChanged();
 
 protected Q_SLOTS:
     void updateQuery();
