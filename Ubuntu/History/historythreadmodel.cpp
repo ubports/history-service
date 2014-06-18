@@ -316,12 +316,7 @@ QVariant HistoryThreadModel::get(int row) const
         return QVariant();
     }
 
-    QVariantMap thread;
-    Q_FOREACH(int role, mRoles.keys()) {
-        thread.insert(mRoles[role], data(createIndex(row, 0), role));
-    }
-
-    return thread;
+    return mThreads[row].properties();
 }
 
 void HistoryThreadModel::updateQuery()
