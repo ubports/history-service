@@ -113,7 +113,7 @@ public:
                                                 int matchFlags = (int)History::MatchCaseSensitive,
                                                 bool create = false);
     Q_INVOKABLE bool removeThread(const QString &accountId, const QString &threadId, int eventType);
-    Q_INVOKABLE QVariant get(int row, const QByteArray &role) const;
+    Q_INVOKABLE QVariant get(int row) const;
 
 Q_SIGNALS:
     void filterChanged();

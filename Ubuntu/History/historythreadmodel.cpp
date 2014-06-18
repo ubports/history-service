@@ -310,14 +310,18 @@ bool HistoryThreadModel::removeThread(const QString &accountId, const QString &t
     return History::Manager::instance()->removeThreads(History::Threads() << thread);
 }
 
-QVariant HistoryThreadModel::get(int row, const QByteArray &role) const
+QVariant HistoryThreadModel::get(int row) const
 {
-    int roleId = mRoles.key(role, -1);
-    if (roleId != -1) {
-        return data(createIndex(row, 0), roleId);
-    } else {
+    if (row < 0 || row >= mThreads.count()) {
         return QVariant();
     }
+
+    QVariantMap thread;
+    Q_FOREACH(int role, mRoles.keys()) {
+        thread.insert(mRoles[role], data(createIndex(row, 0), role));
+    }
+
+    return thread;
 }
 
 void HistoryThreadModel::updateQuery()
