@@ -39,8 +39,9 @@ HistoryEventModel::HistoryEventModel(QObject *parent) :
     QAbstractListModel(parent), mCanFetchMore(true), mFilter(0),
     mSort(0), mType(HistoryThreadModel::EventTypeText), mEventWritingTimer(0), mFetchTimer(0)
 {
-    connect(mEvents, SIGNAL(rowsInserted(QModelIndex,int,int)), this, SLOT(countChanged()));
-    connect(mEvents, SIGNAL(rowsRemoved(QModelIndex,int,int)), this, SLOT(countChanged()));
+    connect(this, SIGNAL(rowsInserted(QModelIndex,int,int)), this, SIGNAL(countChanged()));
+    connect(this, SIGNAL(rowsRemoved(QModelIndex,int,int)), this, SIGNAL(countChanged()));
+    connect(this, SIGNAL(modelReset()), this, SIGNAL(countChanged()));
 
     // configure the roles
     mRoles[AccountIdRole] = "accountId";
@@ -475,10 +476,11 @@ void HistoryEventModel::timerEvent(QTimerEvent *event)
     }
 }
 
-QVariant HistoryEventModel::at(int row) const
+QVariant HistoryEventModel::get(int row) const
 {
-    if (row >= this->rowCount() || row < 0)
+    if (row >= this->rowCount() || row < 0) {
         return QVariant();
+    }
 
     return QVariant(mEvents[row].properties());
 }

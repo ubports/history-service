@@ -84,7 +84,7 @@ public:
     Q_INVOKABLE bool markEventAsRead(const QString &accountId, const QString &threadId, const QString &eventId, int eventType);
 
     Q_INVOKABLE bool removeEventAttachment(const QString &accountId, const QString &threadId, const QString &eventId, int eventType, const QString &attachmentId);
-    Q_INVOKABLE QVariant at(int row) const;
+    Q_INVOKABLE QVariant get(int row) const;
 
 Q_SIGNALS:
     void countChanged();
