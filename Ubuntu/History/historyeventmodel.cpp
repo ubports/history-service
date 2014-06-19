@@ -39,6 +39,9 @@ HistoryEventModel::HistoryEventModel(QObject *parent) :
     QAbstractListModel(parent), mCanFetchMore(true), mFilter(0),
     mSort(0), mType(HistoryThreadModel::EventTypeText), mEventWritingTimer(0), mFetchTimer(0)
 {
+    connect(mEvents, SIGNAL(rowsInserted(QModelIndex,int,int)), this, SLOT(countChanged()));
+    connect(mEvents, SIGNAL(rowsRemoved(QModelIndex,int,int)), this, SLOT(countChanged()));
+
     // configure the roles
     mRoles[AccountIdRole] = "accountId";
     mRoles[ThreadIdRole] = "threadId";
@@ -199,7 +202,6 @@ void HistoryEventModel::fetchMore(const QModelIndex &parent)
         beginInsertRows(QModelIndex(), mEvents.count(), mEvents.count() + events.count() - 1);
         mEvents << events;
         endInsertRows();
-        Q_EMIT countChanged(this->rowCount());
     }
 }
 
@@ -409,7 +411,6 @@ void HistoryEventModel::onEventsAdded(const History::Events &events)
     beginInsertRows(QModelIndex(), mEvents.count(), mEvents.count() + filteredEvents.count() - 1);
     mEvents << filteredEvents;
     endInsertRows();
-    Q_EMIT countChanged(this->rowCount());
 }
 
 void HistoryEventModel::onEventsModified(const History::Events &events)
@@ -446,7 +447,6 @@ void HistoryEventModel::onEventsRemoved(const History::Events &events)
             endRemoveRows();
         }
     }
-    Q_EMIT countChanged(this->rowCount());
 
     // FIXME: there is a corner case here: if an event was not loaded yet, but was already
     // removed by another client, it will still show up when a new page is requested. Maybe it
@@ -480,13 +480,5 @@ QVariant HistoryEventModel::at(int row) const
     if (row >= this->rowCount() || row < 0)
         return QVariant();
 
-    QMap<QString, QVariant> eventData;
-    QHashIterator<int, QByteArray> hashItr(this->roleNames());
- 
-    while(hashItr.hasNext())
-    {
-        hashItr.next();
-        eventData.insert(hashItr.value(), QVariant(this->data(index(row), hashItr.key())));
-    }
-    return QVariant(eventData);
+    return QVariant(mEvents[row].properties());
 }

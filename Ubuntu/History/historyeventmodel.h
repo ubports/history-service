@@ -87,7 +87,7 @@ public:
     Q_INVOKABLE QVariant at(int row) const;
 
 Q_SIGNALS:
-    void countChanged(int);
+    void countChanged();
     void filterChanged();
     void sortChanged();
     void typeChanged();
