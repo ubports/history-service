@@ -1,3 +1,14 @@
+history-service (0.1+14.10.20140619-0ubuntu1) utopic; urgency=low
+
+  [ Ken VanDine ]
+  * Added count and at functions to HistoryEventModel to simplify
+    getting single events from the model.
+
+  [ Renato Araujo Oliveira Filho ]
+  * Export property count and get to QML.
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 19 Jun 2014 17:47:44 +0000
+
 history-service (0.1+14.10.20140522-0ubuntu1) utopic; urgency=low
 
   [ Tiago Salem Herrmann ]
