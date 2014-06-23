@@ -60,8 +60,8 @@ public:
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
     QVariant data(const QModelIndex &index, int role) const;
 
-    bool canFetchMore(const QModelIndex &parent) const;
-    void fetchMore(const QModelIndex &parent);
+    Q_INVOKABLE bool canFetchMore(const QModelIndex &parent = QModelIndex()) const;
+    Q_INVOKABLE void fetchMore(const QModelIndex &parent = QModelIndex());
 
     QHash<int, QByteArray> roleNames() const;
 
