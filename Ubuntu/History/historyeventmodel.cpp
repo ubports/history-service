@@ -39,6 +39,10 @@ HistoryEventModel::HistoryEventModel(QObject *parent) :
     QAbstractListModel(parent), mCanFetchMore(true), mFilter(0),
     mSort(0), mType(HistoryThreadModel::EventTypeText), mEventWritingTimer(0), mFetchTimer(0)
 {
+    connect(this, SIGNAL(rowsInserted(QModelIndex,int,int)), this, SIGNAL(countChanged()));
+    connect(this, SIGNAL(rowsRemoved(QModelIndex,int,int)), this, SIGNAL(countChanged()));
+    connect(this, SIGNAL(modelReset()), this, SIGNAL(countChanged()));
+
     // configure the roles
     mRoles[AccountIdRole] = "accountId";
     mRoles[ThreadIdRole] = "threadId";
@@ -470,4 +474,13 @@ void HistoryEventModel::timerEvent(QTimerEvent *event)
         mFetchTimer = 0;
         fetchMore(QModelIndex());
     }
+}
+
+QVariant HistoryEventModel::get(int row) const
+{
+    if (row >= this->rowCount() || row < 0) {
+        return QVariant();
+    }
+
+    return QVariant(mEvents[row].properties());
 }

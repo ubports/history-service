@@ -60,6 +60,10 @@ HistoryThreadModel::HistoryThreadModel(QObject *parent) :
     mRoles[LastEventCallMissedRole] = "eventCallMissed";
     mRoles[LastEventCallDurationRole] = "eventCallDuration";
 
+    connect(this, SIGNAL(rowsInserted(QModelIndex,int,int)), SIGNAL(countChanged()));
+    connect(this, SIGNAL(rowsRemoved(QModelIndex,int,int)), SIGNAL(countChanged()));
+    connect(this, SIGNAL(modelReset()), SIGNAL(countChanged()));
+
     // create the results view
     updateQuery();
 }
@@ -306,6 +310,15 @@ bool HistoryThreadModel::removeThread(const QString &accountId, const QString &t
     return History::Manager::instance()->removeThreads(History::Threads() << thread);
 }
 
+QVariant HistoryThreadModel::get(int row) const
+{
+    if (row < 0 || row >= mThreads.count()) {
+        return QVariant();
+    }
+
+    return mThreads[row].properties();
+}
+
 void HistoryThreadModel::updateQuery()
 {
     // remove all events from the model
@@ -314,7 +327,7 @@ void HistoryThreadModel::updateQuery()
         mThreads.clear();
         endRemoveRows();
     }
- 
+
     // and fetch again
     mCanFetchMore = true;
 
