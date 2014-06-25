@@ -315,7 +315,7 @@ History::EventWriteResult SQLiteHistoryPlugin::writeTextEvent(const QVariantMap 
 
     History::MessageType messageType = (History::MessageType) event[History::FieldMessageType].toInt();
 
-    if (messageType == History::MessageTypeMultiParty) {
+    if (messageType == History::MessageTypeMultiPart) {
         // if the writing is an update, we need to remove the previous attachments
         if (result == History::EventWriteModified) {
             query.prepare("DELETE FROM text_event_attachments WHERE accountId=:accountId AND threadId=:threadId "
@@ -584,7 +584,7 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseEventResults(History::EventType typ
         switch (type) {
         case History::EventTypeText:
             messageType = (History::MessageType) query.value(8).toInt();
-            if (messageType == History::MessageTypeMultiParty)  {
+            if (messageType == History::MessageTypeMultiPart)  {
                 QSqlQuery attachmentsQuery(SQLiteDatabase::instance()->database());
                 attachmentsQuery.prepare("SELECT attachmentId, contentType, filePath, status FROM text_event_attachments "
                                     "WHERE accountId=:accountId and threadId=:threadId and eventId=:eventId");

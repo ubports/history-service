@@ -456,7 +456,7 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
         QString normalizedEventId = QString(QCryptographicHash::hash(message.messageToken().toLatin1(), QCryptographicHash::Md5).toHex());
         QString mmsStoragePath = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation);
 
-        type = History::MessageTypeMultiParty;
+        type = History::MessageTypeMultiPart;
         subject = message.header()["subject"].variant().toString();
 
         QDir dir(mmsStoragePath);
@@ -543,7 +543,7 @@ void HistoryDaemon::onMessageSent(const Tp::TextChannelPtr textChannel, const Tp
         QString normalizedEventId = QString(QCryptographicHash::hash(messageToken.toLatin1(), QCryptographicHash::Md5).toHex());
         QString mmsStoragePath = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation);
 
-        type = History::MessageTypeMultiParty;
+        type = History::MessageTypeMultiPart;
         subject = message.header()["subject"].variant().toString();
 
         QDir dir(mmsStoragePath);

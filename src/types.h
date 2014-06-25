@@ -70,7 +70,7 @@ enum MessageStatus
 enum MessageType
 {
     MessageTypeText,
-    MessageTypeMultiParty
+    MessageTypeMultiPart
 };
 
 enum AttachmentFlag

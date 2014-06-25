@@ -312,7 +312,7 @@ void SqlitePluginTest::testWriteTextEvent_data()
                                                 "text/plain", "/the/file/path", History::AttachmentDownloaded);
     QTest::newRow("text event with attachments") << History::TextEvent("mmsAccountId", "mmsSender", "mmsEventId", "mmsSender",
                                                                        QDateTime::currentDateTime(), false, "Hello with attachments",
-                                                                       History::MessageTypeMultiParty, History::MessageStatusDelivered,
+                                                                       History::MessageTypeMultiPart, History::MessageStatusDelivered,
                                                                        QDateTime::currentDateTime(), "The Subject", attachments).properties();
 }
 
@@ -356,7 +356,7 @@ void SqlitePluginTest::testWriteTextEvent()
     QCOMPARE(count, 1);
 
     // check that the attachments got saved, if any
-    if (event[History::FieldMessageType].toInt() == History::MessageTypeMultiParty) {
+    if (event[History::FieldMessageType].toInt() == History::MessageTypeMultiPart) {
         QVariantMap attachment = event[History::FieldAttachments].value<QList<QVariantMap> >()[0];
         QVERIFY(query.exec("SELECT * FROM text_event_attachments"));
         int count = 0;
@@ -397,7 +397,7 @@ void SqlitePluginTest::testModifyTextEvent()
     History::TextEventAttachment attachment(thread[History::FieldAccountId].toString(), thread[History::FieldThreadId].toString(),
                                             thread[History::FieldEventId].toString(), "theAttachmentId", "text/plain", "/file/path");
     History::TextEvent textEvent(thread[History::FieldAccountId].toString(), thread[History::FieldThreadId].toString(), "theEventId",
-                                 "theParticipant", QDateTime::currentDateTime(), true, "Hi there!", History::MessageTypeMultiParty,
+                                 "theParticipant", QDateTime::currentDateTime(), true, "Hi there!", History::MessageTypeMultiPart,
                                  History::MessageStatusPending, QDateTime::currentDateTime(), "theSubject",
                                  History::TextEventAttachments() << attachment);
     QCOMPARE(mPlugin->writeTextEvent(textEvent.properties()), History::EventWriteCreated);
@@ -592,7 +592,7 @@ void SqlitePluginTest::testEventsForThread()
                                                 "text/plain", "/some/file/path");
         History::TextEvent textEvent(textThread[History::FieldAccountId].toString(), textThread[History::FieldThreadId].toString(),
                                      QString("textEventId%1").arg(QString::number(i)), "textParticipant",
-                                     QDateTime::currentDateTime(), true, "Hello World!", History::MessageTypeMultiParty,
+                                     QDateTime::currentDateTime(), true, "Hello World!", History::MessageTypeMultiPart,
                                      History::MessageStatusPending, QDateTime::currentDateTime(),
                                      "theSubject", History::TextEventAttachments() << attachment);
         QCOMPARE(mPlugin->writeTextEvent(textEvent.properties()), History::EventWriteCreated);
@@ -646,7 +646,7 @@ void SqlitePluginTest::testGetSingleEvent_data()
                                                 "text/plain", "/the/file/path", History::AttachmentDownloaded);
     QTest::newRow("text event with attachments") << History::TextEvent("mmsAccountId", "mmsSender", "mmsEventId", "mmsSender",
                                                                        QDateTime::currentDateTime(), false, "Hello with attachments",
-                                                                       History::MessageTypeMultiParty, History::MessageStatusDelivered,
+                                                                       History::MessageTypeMultiPart, History::MessageStatusDelivered,
                                                                        QDateTime::currentDateTime(), "The Subject", attachments).properties();
     QTest::newRow("missed call") << History::VoiceEvent("theAccountId", "theSenderId", "theEventId", "theSenderId",
                                                         QDateTime::currentDateTime(), true, true).properties();
