@@ -66,7 +66,7 @@ void TextEventTest::testCreateNewEvent_data()
                                     << QDateTime::currentDateTime().addDays(-5) << "Test Subject 3";
     QTest::newRow("multi party message") << "testAccountId" << "testThreadId" << "testEventId"
                                     << "testSenderId" << QDateTime::currentDateTime().addDays(-10)
-                                    << true << "One Test Message" << (int)History::MessageTypeMultiParty
+                                    << true << "One Test Message" << (int)History::MessageTypeMultiPart
                                     << 0 << QDateTime::currentDateTime().addDays(-5) << QString();
 }
 
@@ -150,7 +150,7 @@ void TextEventTest::testFromProperties_data()
                                     << QDateTime::currentDateTime().addDays(-5) << "Test Subject 3";
     QTest::newRow("multi party message") << "testAccountId" << "testThreadId" << "testEventId"
                                     << "testSenderId" << QDateTime::currentDateTime().addDays(-10)
-                                    << true << "One Test Message" << (int)History::MessageTypeMultiParty
+                                    << true << "One Test Message" << (int)History::MessageTypeMultiPart
                                     << 0 << QDateTime::currentDateTime().addDays(-5) << QString();
 }
 
@@ -232,7 +232,7 @@ void TextEventTest::testProperties_data()
                                     << QDateTime::currentDateTime().addDays(-5) << "Test Subject 3";
     QTest::newRow("multi party message") << "testAccountId" << "testThreadId" << "testEventId"
                                     << "testSenderId" << QDateTime::currentDateTime().addDays(-10)
-                                    << true << "One Test Message" << (int)History::MessageTypeMultiParty
+                                    << true << "One Test Message" << (int)History::MessageTypeMultiPart
                                     << 0 << QDateTime::currentDateTime().addDays(-5) << QString();
 }
 

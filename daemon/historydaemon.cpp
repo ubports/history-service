@@ -456,7 +456,7 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
         QString normalizedEventId = QString(QCryptographicHash::hash(message.messageToken().toLatin1(), QCryptographicHash::Md5).toHex());
         QString mmsStoragePath = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation);
 
-        type = History::MessageTypeMultiParty;
+        type = History::MessageTypeMultiPart;
         subject = message.header()["subject"].variant().toString();
 
         QDir dir(mmsStoragePath);
@@ -524,15 +524,66 @@ void HistoryDaemon::onMessageSent(const Tp::TextChannelPtr textChannel, const Tp
 {
     qDebug() << __PRETTY_FUNCTION__;
     QStringList participants;
+    QList<QVariantMap> attachments;
+    History::MessageType type = History::MessageTypeText;
+    int count = 1;
+    QString subject;
     Q_FOREACH(const Tp::ContactPtr contact, textChannel->groupContacts(false)) {
         participants << contact->id();
     }
 
-   QVariantMap thread = threadForParticipants(textChannel->property(History::FieldAccountId).toString(),
+    QVariantMap thread = threadForParticipants(textChannel->property(History::FieldAccountId).toString(),
                                               History::EventTypeText,
                                               participants,
                                               matchFlagsForChannel(textChannel),
                                               true);
+    if (message.hasNonTextContent()) {
+        QString normalizedAccountId = QString(QCryptographicHash::hash(thread[History::FieldAccountId].toString().toLatin1(), QCryptographicHash::Md5).toHex());
+        QString normalizedThreadId = QString(QCryptographicHash::hash(thread[History::FieldThreadId].toString().toLatin1(), QCryptographicHash::Md5).toHex());
+        QString normalizedEventId = QString(QCryptographicHash::hash(messageToken.toLatin1(), QCryptographicHash::Md5).toHex());
+        QString mmsStoragePath = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation);
+
+        type = History::MessageTypeMultiPart;
+        subject = message.header()["subject"].variant().toString();
+
+        QDir dir(mmsStoragePath);
+        if (!dir.exists("history-service") && !dir.mkpath("history-service")) {
+            qDebug() << "Failed to create dir";
+            return;
+        }
+        dir.cd("history-service");
+
+        Q_FOREACH(const Tp::MessagePart &part, message.parts()) {
+            // ignore the header part
+            if (part["content-type"].variant().toString().isEmpty()) {
+                continue;
+            }
+            mmsStoragePath = dir.absoluteFilePath(QString("attachments/%1/%2/%3/").
+                                                  arg(normalizedAccountId,
+                                                      normalizedThreadId,
+                                                      normalizedEventId));
+
+            QFile file(mmsStoragePath+QString::number(count++));
+            if (!dir.mkpath(mmsStoragePath) || !file.open(QIODevice::WriteOnly)) {
+                qWarning() << "Failed to save attachment";
+                continue;
+            }
+            file.write(part["content"].variant().toByteArray());
+            file.close();
+
+            QVariantMap attachment;
+            attachment[History::FieldAccountId] = thread[History::FieldAccountId];
+            attachment[History::FieldThreadId] = thread[History::FieldThreadId];
+            attachment[History::FieldEventId] = messageToken;
+            attachment[History::FieldAttachmentId] = part["identifier"].variant();
+            attachment[History::FieldContentType] = part["content-type"].variant();
+            attachment[History::FieldFilePath] = file.fileName();
+            attachment[History::FieldStatus] = (int) History::AttachmentDownloaded;
+            attachments << attachment;
+        }
+    }
+
+
     QVariantMap event;
     event[History::FieldType] = History::EventTypeText;
     event[History::FieldAccountId] = thread[History::FieldAccountId];
@@ -542,10 +593,11 @@ void HistoryDaemon::onMessageSent(const Tp::TextChannelPtr textChannel, const Tp
     event[History::FieldTimestamp] = QDateTime::currentDateTime().toString(Qt::ISODate); // FIXME: check why message.sent() is empty
     event[History::FieldNewEvent] =  false; // outgoing messages are never new (unseen)
     event[History::FieldMessage] = message.text();
-    event[History::FieldMessageType] = (int)History::MessageTypeText; // FIXME: add support for MMS
+    event[History::FieldMessageType] = type;
     event[History::FieldMessageStatus] = (int)History::MessageStatusUnknown;
     event[History::FieldReadTimestamp] = QDateTime().toString(Qt::ISODate);
     event[History::FieldSubject] = "";
+    event[History::FieldAttachments] = QVariant::fromValue(attachments);
 
     writeEvents(QList<QVariantMap>() << event);
 }
