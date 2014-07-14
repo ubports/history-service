@@ -23,6 +23,7 @@
 #include "historythreadmodel.h"
 #include "phoneutils_p.h"
 #include <QTimer>
+#include <QDebug>
 
 HistoryThreadGroupingProxyModel::HistoryThreadGroupingProxyModel(QObject *parent) :
     SortProxyModel(parent)
