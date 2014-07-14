@@ -73,6 +73,7 @@ public:
         ParticipantsRole,
         CountRole,
         UnreadCountRole,
+        PropertiesRole,
         LastEventIdRole,
         LastEventSenderIdRole,
         LastEventTimestampRole,
