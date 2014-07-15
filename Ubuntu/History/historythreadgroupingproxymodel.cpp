@@ -60,10 +60,10 @@ QVariant HistoryThreadGroupingProxyModel::data(const QModelIndex &index, int rol
             result = count;
             break;
         }
-        case ThreadIdsRole: {
-            QStringList threads;
+        case ThreadsRole: {
+            QVariantList threads;
             Q_FOREACH(const QPersistentModelIndex &row, group.rows) {
-                threads << row.data(HistoryThreadModel::ThreadIdRole).toString();
+                threads << row.data(HistoryThreadModel::PropertiesRole).toMap();
             }
             result = threads;
             break;
@@ -320,7 +320,7 @@ void HistoryThreadGroupingProxyModel::onSourceModelChanged()
     }
 
     mRoles = SortProxyModel::roleNames();
-    mRoles[ThreadIdsRole] = "threadIds";
+    mRoles[ThreadsRole] = "threads";
 
     processGrouping();
     triggerDataChanged();

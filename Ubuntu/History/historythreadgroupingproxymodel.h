@@ -48,7 +48,7 @@ class HistoryThreadGroupingProxyModel : public SortProxyModel
 
 public:
     enum CustomRoles {
-        ThreadIdsRole = (Qt::UserRole + 100),
+        ThreadsRole = (Qt::UserRole + 100),
     };
 
     explicit HistoryThreadGroupingProxyModel(QObject *parent = 0);
