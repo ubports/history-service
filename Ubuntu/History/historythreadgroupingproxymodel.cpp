@@ -108,6 +108,10 @@ HistoryThreadGroup & HistoryThreadGroupingProxyModel::groupForEntry(const QVaria
         if (finalValue.isEmpty()) {
             // FIXME: find a separator that is not used in any IM service id
             finalValue = participants.join("||");
+            HistoryThreadGroup &group = mGroups[finalValue];
+            // set participants, otherwise they will be empty and further phone comparison will fail
+            group.participants = propertyValue.toStringList();
+            return group;
         }
     }
     if (finalValue.isEmpty()) {
