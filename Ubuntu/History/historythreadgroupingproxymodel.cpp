@@ -287,6 +287,7 @@ void HistoryThreadGroupingProxyModel::onDataChanged(const QModelIndex &topLeft, 
     }
 
     for (int row = start; row <= end; ++row) {
+        processRowGrouping(row); 
         QModelIndex sourceIndex = model->index(row, 0, QModelIndex());
         HistoryThreadGroup group = groupForSourceIndex(sourceIndex);
         if (row != group.displayedIndex.row()) {
