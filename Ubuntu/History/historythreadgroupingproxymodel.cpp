@@ -292,12 +292,6 @@ void HistoryThreadGroupingProxyModel::onDataChanged(const QModelIndex &topLeft, 
 
     for (int row = start; row <= end; ++row) {
         processRowGrouping(row); 
-        QModelIndex sourceIndex = model->index(row, 0, QModelIndex());
-        HistoryThreadGroup group = groupForSourceIndex(sourceIndex);
-        if (row != group.displayedIndex.row()) {
-            // in order to get the data updated on screen, we need to notify the data changed on the source index
-            markIndexAsChanged(group.displayedIndex);
-        }
     }
     triggerDataChanged();
 }
