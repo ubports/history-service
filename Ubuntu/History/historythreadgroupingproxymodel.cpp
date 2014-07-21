@@ -182,7 +182,7 @@ void HistoryThreadGroupingProxyModel::processRowGrouping(int sourceRow)
     markIndexAsChanged(sourceIndex);
 }
 
-void HistoryThreadGroupingProxyModel::removeRowFromGroup(int sourceRow, const QVariant &propertyValue)
+void HistoryThreadGroupingProxyModel::removeRowFromGroup(int sourceRow)
 {
     HistoryThreadModel *model = qobject_cast<HistoryThreadModel*>(sourceModel());
     if (!model) {
@@ -207,7 +207,7 @@ void HistoryThreadGroupingProxyModel::removeRowFromGroup(int sourceRow, const QV
         }
 
         if (group.rows.isEmpty()) {
-            removeGroup(propertyValue);
+            removeGroup(properties[mGroupingProperty]);
         } else {
             group.displayedIndex = latestIndex;
             group.latestTime = latestTimestamp;
