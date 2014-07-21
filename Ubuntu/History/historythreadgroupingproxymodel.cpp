@@ -176,10 +176,8 @@ void HistoryThreadGroupingProxyModel::processRowGrouping(int sourceRow)
         if (oldDisplayedIndex.isValid() && oldDisplayedIndex != group.displayedIndex) {
             markIndexAsChanged(oldDisplayedIndex);
         }
+        markIndexAsChanged(group.displayedIndex);
     }
-
-    markIndexAsChanged(group.displayedIndex);
-    markIndexAsChanged(sourceIndex);
 }
 
 void HistoryThreadGroupingProxyModel::removeRowFromGroup(int sourceRow)
