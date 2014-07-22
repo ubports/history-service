@@ -88,7 +88,6 @@ bool HistoryThreadGroupingProxyModel::filterAcceptsRow(int sourceRow, const QMod
     }
 
     HistoryThreadGroup group = groupForSourceIndex(sourceIndex);
-    qDebug() << "Group displayed index: " << group.displayedIndex << " group rows" << group.rows << " source index " << sourceIndex;
     return (group.displayedIndex == sourceIndex);
 }
 
