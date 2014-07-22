@@ -212,7 +212,6 @@ void HistoryThreadGroupingProxyModel::removeRowFromGroup(int sourceRow)
             markIndexAsChanged(group.displayedIndex);
         }
     }
-    markIndexAsChanged(sourceIndex);
 }
 
 void HistoryThreadGroupingProxyModel::triggerDataChanged()
@@ -234,13 +233,13 @@ void HistoryThreadGroupingProxyModel::markIndexAsChanged(const QModelIndex &inde
 
 void HistoryThreadGroupingProxyModel::notifyDataChanged()
 {
-    mRequestedDataChanged = true;
     QAbstractItemModel *model = sourceModel();
     Q_FOREACH(const QPersistentModelIndex &index, mChangedIndexes) {
-        Q_EMIT model->dataChanged(index, index);
+        if (index.isValid()) {
+            Q_EMIT model->dataChanged(index, index);
+        }
     }
     mChangedIndexes.clear();
-    mRequestedDataChanged = false;
     mDataChangedTriggered = false;
 }
 

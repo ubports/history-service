@@ -86,7 +86,6 @@ protected:
     bool compareParticipants(const QStringList &list1, const QStringList &list2) const;
 
 private:
-    bool mRequestedDataChanged;
     bool mDataChangedTriggered;
     QString mGroupingProperty;
 
