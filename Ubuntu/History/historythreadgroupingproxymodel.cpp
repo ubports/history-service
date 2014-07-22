@@ -293,7 +293,6 @@ void HistoryThreadGroupingProxyModel::onSourceModelChanged()
 {
     QAbstractItemModel *model = sourceModel();
     if (model) {
-        setSourceModel(model);
 
         connect(model,
                 SIGNAL(rowsInserted(QModelIndex,int,int)),
