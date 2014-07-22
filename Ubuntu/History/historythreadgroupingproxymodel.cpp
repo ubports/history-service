@@ -283,10 +283,6 @@ void HistoryThreadGroupingProxyModel::onDataChanged(const QModelIndex &topLeft, 
 
     int start = topLeft.row();
     int end = bottomRight.row();
-    HistoryThreadModel *model = qobject_cast<HistoryThreadModel*>(sourceModel());
-    if (!model) {
-        return;
-    }
 
     for (int row = start; row <= end; ++row) {
         processRowGrouping(row); 
@@ -296,7 +292,6 @@ void HistoryThreadGroupingProxyModel::onDataChanged(const QModelIndex &topLeft, 
 
 void HistoryThreadGroupingProxyModel::onSourceModelChanged()
 {
-    // disconnect the previous model
     QAbstractItemModel *model = sourceModel();
     if (model) {
         setSourceModel(model);
@@ -305,7 +300,7 @@ void HistoryThreadGroupingProxyModel::onSourceModelChanged()
                 SIGNAL(rowsInserted(QModelIndex,int,int)),
                 SLOT(onRowsInserted(QModelIndex,int,int)));
         connect(model,
-                SIGNAL(rowsRemoved(QModelIndex,int,int)),
+                SIGNAL(rowsAboutToBeRemoved(QModelIndex,int,int)),
                 SLOT(onRowsRemoved(QModelIndex,int,int)));
         connect(model,
                 SIGNAL(modelReset()),
