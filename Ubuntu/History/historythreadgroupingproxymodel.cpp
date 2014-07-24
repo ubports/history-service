@@ -88,7 +88,6 @@ bool HistoryThreadGroupingProxyModel::filterAcceptsRow(int sourceRow, const QMod
     }
 
     HistoryThreadGroup group = groupForSourceIndex(sourceIndex);
-    qDebug() << "Group displayed index: " << group.displayedIndex << " group rows" << group.rows << " source index " << sourceIndex;
     return (group.displayedIndex == sourceIndex);
 }
 
@@ -108,6 +107,10 @@ HistoryThreadGroup & HistoryThreadGroupingProxyModel::groupForEntry(const QVaria
         if (finalValue.isEmpty()) {
             // FIXME: find a separator that is not used in any IM service id
             finalValue = participants.join("||");
+            HistoryThreadGroup &group = mGroups[finalValue];
+            // set participants, otherwise they will be empty and further phone comparison will fail
+            group.participants = propertyValue.toStringList();
+            return group;
         }
     }
     if (finalValue.isEmpty()) {
@@ -172,13 +175,11 @@ void HistoryThreadGroupingProxyModel::processRowGrouping(int sourceRow)
         if (oldDisplayedIndex.isValid() && oldDisplayedIndex != group.displayedIndex) {
             markIndexAsChanged(oldDisplayedIndex);
         }
+        markIndexAsChanged(group.displayedIndex);
     }
-
-    markIndexAsChanged(group.displayedIndex);
-    markIndexAsChanged(sourceIndex);
 }
 
-void HistoryThreadGroupingProxyModel::removeRowFromGroup(int sourceRow, const QVariant &propertyValue)
+void HistoryThreadGroupingProxyModel::removeRowFromGroup(int sourceRow)
 {
     HistoryThreadModel *model = qobject_cast<HistoryThreadModel*>(sourceModel());
     if (!model) {
@@ -203,14 +204,13 @@ void HistoryThreadGroupingProxyModel::removeRowFromGroup(int sourceRow, const QV
         }
 
         if (group.rows.isEmpty()) {
-            removeGroup(propertyValue);
+            removeGroup(properties[mGroupingProperty]);
         } else {
             group.displayedIndex = latestIndex;
             group.latestTime = latestTimestamp;
             markIndexAsChanged(group.displayedIndex);
         }
     }
-    markIndexAsChanged(sourceIndex);
 }
 
 void HistoryThreadGroupingProxyModel::triggerDataChanged()
@@ -232,13 +232,13 @@ void HistoryThreadGroupingProxyModel::markIndexAsChanged(const QModelIndex &inde
 
 void HistoryThreadGroupingProxyModel::notifyDataChanged()
 {
-    mRequestedDataChanged = true;
     QAbstractItemModel *model = sourceModel();
     Q_FOREACH(const QPersistentModelIndex &index, mChangedIndexes) {
-        Q_EMIT model->dataChanged(index, index);
+        if (index.isValid()) {
+            Q_EMIT model->dataChanged(index, index);
+        }
     }
     mChangedIndexes.clear();
-    mRequestedDataChanged = false;
     mDataChangedTriggered = false;
 }
 
@@ -281,34 +281,23 @@ void HistoryThreadGroupingProxyModel::onDataChanged(const QModelIndex &topLeft, 
 
     int start = topLeft.row();
     int end = bottomRight.row();
-    HistoryThreadModel *model = qobject_cast<HistoryThreadModel*>(sourceModel());
-    if (!model) {
-        return;
-    }
 
     for (int row = start; row <= end; ++row) {
-        QModelIndex sourceIndex = model->index(row, 0, QModelIndex());
-        HistoryThreadGroup group = groupForSourceIndex(sourceIndex);
-        if (row != group.displayedIndex.row()) {
-            // in order to get the data updated on screen, we need to notify the data changed on the source index
-            markIndexAsChanged(group.displayedIndex);
-        }
+        processRowGrouping(row); 
     }
     triggerDataChanged();
 }
 
 void HistoryThreadGroupingProxyModel::onSourceModelChanged()
 {
-    // disconnect the previous model
     QAbstractItemModel *model = sourceModel();
     if (model) {
-        setSourceModel(model);
 
         connect(model,
                 SIGNAL(rowsInserted(QModelIndex,int,int)),
                 SLOT(onRowsInserted(QModelIndex,int,int)));
         connect(model,
-                SIGNAL(rowsRemoved(QModelIndex,int,int)),
+                SIGNAL(rowsAboutToBeRemoved(QModelIndex,int,int)),
                 SLOT(onRowsRemoved(QModelIndex,int,int)));
         connect(model,
                 SIGNAL(modelReset()),

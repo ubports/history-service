@@ -72,7 +72,7 @@ protected:
 private Q_SLOTS:
     void processGrouping();
     void processRowGrouping(int sourceRow);
-    void removeRowFromGroup(int sourceRow, const QVariant &propertyValue = QVariant());
+    void removeRowFromGroup(int sourceRow);
     void triggerDataChanged();
     void markIndexAsChanged(const QModelIndex &index);
     void notifyDataChanged();
@@ -86,7 +86,6 @@ protected:
     bool compareParticipants(const QStringList &list1, const QStringList &list2) const;
 
 private:
-    bool mRequestedDataChanged;
     bool mDataChangedTriggered;
     QString mGroupingProperty;
 
