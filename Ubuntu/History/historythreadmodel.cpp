@@ -174,14 +174,10 @@ QVariant HistoryThreadModel::data(const QModelIndex &index, int role) const
         }
         break;
     case LastEventTextAttachmentsRole:
-        qDebug() << "ATTACHMENT";
         if (!textEvent.isNull()) {
-        qDebug() << "ATTACHMENT 1";
             if (mAttachmentCache.contains(textEvent)) {
-        qDebug() << "CACHE";
                 result = mAttachmentCache.value(textEvent);
             } else {
-        qDebug() << "NON CACHE";
                 QList<QVariant> attachments;
                 Q_FOREACH(const History::TextEventAttachment &attachment, textEvent.attachments()) {
                     attachments << QVariant::fromValue(new HistoryQmlTextEventAttachment(attachment, const_cast<HistoryThreadModel*>(this)));
