@@ -204,7 +204,7 @@ QVariant HistoryThreadModel::data(const QModelIndex &index, int role) const
 
 bool HistoryThreadModel::canFetchMore(const QModelIndex &parent) const
 {
-    if (parent.isValid()) {
+    if (parent.isValid() || !mFilter) {
         return false;
     }
 
@@ -332,9 +332,6 @@ void HistoryThreadModel::updateQuery()
         endRemoveRows();
     }
 
-    // and fetch again
-    mCanFetchMore = true;
-
     History::Filter queryFilter;
     History::Sort querySort;
 
@@ -344,6 +341,9 @@ void HistoryThreadModel::updateQuery()
 
     if (mFilter) {
         queryFilter = mFilter->filter();
+    } else {
+        // we should not return anything if there is no filter
+        return;
     }
 
     if (mSort) {
@@ -375,6 +375,9 @@ void HistoryThreadModel::updateQuery()
     if (mFetchTimer) {
         killTimer(mFetchTimer);
     }
+
+    // and fetch again
+    mCanFetchMore = true;
 
     // delay the loading just to give the settings some time to settle down
     mFetchTimer = startTimer(100);

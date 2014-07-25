@@ -500,6 +500,8 @@ QString SQLiteHistoryPlugin::sqlQueryForThreads(History::EventType type, const Q
 QList<QVariantMap> SQLiteHistoryPlugin::parseThreadResults(History::EventType type, QSqlQuery &query)
 {
     QList<QVariantMap> threads;
+    QSqlQuery attachmentsQuery(SQLiteDatabase::instance()->database());
+    QList<QVariantMap> attachments;
     while (query.next()) {
         QVariantMap thread;
         thread[History::FieldType] = (int) type;
@@ -519,6 +521,32 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseThreadResults(History::EventType ty
         // the next step is to get the last event
         switch (type) {
         case History::EventTypeText:
+            attachmentsQuery.prepare("SELECT attachmentId, contentType, filePath, status FROM text_event_attachments "
+                                "WHERE accountId=:accountId and threadId=:threadId and eventId=:eventId");
+            attachmentsQuery.bindValue(":accountId", query.value(0));
+            attachmentsQuery.bindValue(":threadId", query.value(1));
+            attachmentsQuery.bindValue(":eventId", query.value(2));
+            if (!attachmentsQuery.exec()) {
+                qCritical() << "Error:" << attachmentsQuery.lastError() << attachmentsQuery.lastQuery();
+            }
+
+            while (attachmentsQuery.next()) {
+                QVariantMap attachment;
+                attachment[History::FieldAccountId] = query.value(0);
+                attachment[History::FieldThreadId] = query.value(1);
+                attachment[History::FieldEventId] = query.value(2);
+                attachment[History::FieldAttachmentId] = attachmentsQuery.value(0);
+                attachment[History::FieldContentType] = attachmentsQuery.value(1);
+                attachment[History::FieldFilePath] = attachmentsQuery.value(2);
+                attachment[History::FieldStatus] = attachmentsQuery.value(3);
+                attachments << attachment;
+
+            }
+            attachmentsQuery.clear();
+            if (attachments.size() > 0) {
+                thread[History::FieldAttachments] = QVariant::fromValue(attachments);
+                attachments.clear();
+            }
             thread[History::FieldMessage] = query.value(9);
             thread[History::FieldMessageType] = query.value(10);
             thread[History::FieldMessageStatus] = query.value(11);
