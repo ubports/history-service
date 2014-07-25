@@ -181,7 +181,7 @@ QVariant HistoryEventModel::data(const QModelIndex &index, int role) const
 
 bool HistoryEventModel::canFetchMore(const QModelIndex &parent) const
 {
-    if (parent.isValid() || !mFilter) {
+    if (parent.isValid() || !mFilter || mView.isNull()) {
         return false;
     }
 
@@ -190,7 +190,7 @@ bool HistoryEventModel::canFetchMore(const QModelIndex &parent) const
 
 void HistoryEventModel::fetchMore(const QModelIndex &parent)
 {
-    if (parent.isValid() || !mFilter) {
+    if (parent.isValid() || !mFilter || mView.isNull()) {
         return;
     }
 
