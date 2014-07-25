@@ -1,3 +1,12 @@
+history-service (0.1+14.10.20140725.1-0ubuntu1) utopic; urgency=low
+
+  [ Tiago Salem Herrmann ]
+  * fix attachments on thread queries. don't query the database for null
+    filters. Apps should use an empty filter if they want to query the
+    whole database. avoid performing queries when the filter is null.
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 25 Jul 2014 22:18:44 +0000
+
 history-service (0.1+14.10.20140724-0ubuntu1) utopic; urgency=low
 
   [ Tiago Salem Herrmann ]
