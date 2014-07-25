@@ -344,6 +344,9 @@ void HistoryThreadModel::updateQuery()
 
     if (mFilter) {
         queryFilter = mFilter->filter();
+    } else {
+        // we should not return anything if there is no filter
+        return;
     }
 
     if (mSort) {
