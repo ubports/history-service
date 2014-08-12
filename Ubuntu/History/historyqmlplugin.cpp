@@ -27,6 +27,7 @@
 #include "historythreadmodel.h"
 #include "historythreadgroupingproxymodel.h"
 #include "historyeventmodel.h"
+#include "historygroupedeventsmodel.h"
 #include "historyqmltexteventattachment.h"
 #include "sortproxymodel.h"
 #include <QQmlEngine>
@@ -43,6 +44,7 @@ void HistoryQmlPlugin::registerTypes(const char *uri)
 {
     // @uri History
     qmlRegisterType<HistoryEventModel>(uri, 0, 1, "HistoryEventModel");
+    qmlRegisterType<HistoryGroupedEventsModel>(uri, 0, 1, "HistoryGroupedEventsModel");
     qmlRegisterType<HistoryThreadModel>(uri, 0, 1, "HistoryThreadModel");
     qmlRegisterType<HistoryQmlFilter>(uri, 0, 1, "HistoryFilter");
     qmlRegisterType<HistoryQmlIntersectionFilter>(uri, 0, 1, "HistoryIntersectionFilter");

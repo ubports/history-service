@@ -37,7 +37,7 @@
 
 HistoryEventModel::HistoryEventModel(QObject *parent) :
     QAbstractListModel(parent), mCanFetchMore(true), mFilter(0),
-    mSort(0), mType(HistoryThreadModel::EventTypeText), mEventWritingTimer(0), mFetchTimer(0)
+    mSort(new HistoryQmlSort(this)), mType(HistoryThreadModel::EventTypeText), mEventWritingTimer(0), mFetchTimer(0)
 {
     connect(this, SIGNAL(rowsInserted(QModelIndex,int,int)), this, SIGNAL(countChanged()));
     connect(this, SIGNAL(rowsRemoved(QModelIndex,int,int)), this, SIGNAL(countChanged()));
@@ -81,7 +81,11 @@ QVariant HistoryEventModel::data(const QModelIndex &index, int role) const
         return QVariant();
     }
 
-    History::Event event = mEvents[index.row()];
+    return eventData(mEvents[index.row()], role);
+}
+
+QVariant HistoryEventModel::eventData(const History::Event &event, int role) const
+{
     History::TextEvent textEvent;
     History::VoiceEvent voiceEvent;
     History::Thread thread;
@@ -194,7 +198,7 @@ void HistoryEventModel::fetchMore(const QModelIndex &parent)
         return;
     }
 
-    History::Events events = mView->nextPage();
+    History::Events events = fetchNextPage();
 
     qDebug() << "Got events:" << events.count();
     if (events.isEmpty()) {
@@ -477,6 +481,11 @@ void HistoryEventModel::timerEvent(QTimerEvent *event)
         mFetchTimer = 0;
         fetchMore(QModelIndex());
     }
+}
+
+History::Events HistoryEventModel::fetchNextPage()
+{
+    return mView->nextPage();
 }
 
 QVariant HistoryEventModel::get(int row) const

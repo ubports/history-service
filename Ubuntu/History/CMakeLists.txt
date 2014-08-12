@@ -2,6 +2,7 @@
 
 set(plugin_SRCS
     historyeventmodel.cpp
+    historygroupedeventsmodel.cpp
     historythreadgroupingproxymodel.cpp
     historyqmltexteventattachment.cpp
     historyqmlfilter.cpp
@@ -15,6 +16,7 @@ set(plugin_SRCS
 
 set(plugin_HDRS
     historyeventmodel.h
+    historygroupedeventsmodel.h
     historythreadgroupingproxymodel.h
     historyqmltexteventattachment.h
     historyqmlfilter.h
