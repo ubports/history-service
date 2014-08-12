@@ -23,19 +23,16 @@
 #include "phoneutils_p.h"
 #include "sort.h"
 #include "historyqmlsort.h"
-#include <QDebug>
 
 HistoryGroupedEventsModel::HistoryGroupedEventsModel(QObject *parent) :
     HistoryEventModel(parent)
 {
-    qDebug() << __PRETTY_FUNCTION__;
     // create the view and get some objects
     updateQuery();
 }
 
 int HistoryGroupedEventsModel::rowCount(const QModelIndex &parent) const
 {
-    qDebug() << __PRETTY_FUNCTION__;
     if (parent.isValid()) {
         return 0;
     }
@@ -45,7 +42,6 @@ int HistoryGroupedEventsModel::rowCount(const QModelIndex &parent) const
 
 QVariant HistoryGroupedEventsModel::data(const QModelIndex &index, int role) const
 {
-    qDebug() << __PRETTY_FUNCTION__;
     if (!index.isValid() || index.row() < 0 || index.row() >= mEventGroups.count()) {
         return QVariant();
     }
@@ -91,7 +87,6 @@ void HistoryGroupedEventsModel::fetchMore(const QModelIndex &parent)
         for (; pos >= 0; pos--) {
             HistoryEventGroup &group = mEventGroups[pos];
             if (areOfSameGroup(event, group.displayedEvent)) {
-                qDebug() << "Found group for participants" << event.participants() << "at pos" << pos;
                 found = true;
                 addEventToGroup(event, group, pos);
                 break;
@@ -136,41 +131,54 @@ void HistoryGroupedEventsModel::updateQuery()
 
 void HistoryGroupedEventsModel::onEventsAdded(const History::Events &events)
 {
-    qDebug() << __PRETTY_FUNCTION__;
     if (!events.count()) {
         return;
     }
 
-    //FIXME: reimplement
-    /*beginInsertRows(QModelIndex(), mEvents.count(), mEvents.count() + filteredEvents.count() - 1);
-    mEvents << filteredEvents;
-    endInsertRows();*/
+    Q_FOREACH(const History::Event &event, events) {
+        int pos = positionForEvent(event);
+
+        // check if the event belongs to the group at the position
+        if (pos >= 0) {
+            HistoryEventGroup &group = mEventGroups[pos];
+            if (areOfSameGroup(event, group.displayedEvent)) {
+                addEventToGroup(event, group, pos);
+                continue;
+            }
+        }
+
+        // else, we just create a new group
+        beginInsertRows(QModelIndex(), pos, pos);
+        HistoryEventGroup group;
+        group.displayedEvent = event;
+        group.events << event;
+        mEventGroups.insert(pos, group);
+        endInsertRows();
+
+    }
 }
 
 void HistoryGroupedEventsModel::onEventsModified(const History::Events &events)
 {
-    // FIXME: reimplement
-    qDebug() << __PRETTY_FUNCTION__;
+    // FIXME: we are not yet handling events changing the property used for sorting
+    // so for now the behavior is to find the item and check if it needs inserting or
+    // updating in the group, which is exactly what onEventsAdded() does, so:
+    onEventsAdded(events);
 }
 
 void HistoryGroupedEventsModel::onEventsRemoved(const History::Events &events)
 {
-    qDebug() << __PRETTY_FUNCTION__;
-    // FIXME: reimplement
-    /*
     Q_FOREACH(const History::Event &event, events) {
-        int pos = mEvents.indexOf(event);
-        if (pos >= 0) {
-            beginRemoveRows(QModelIndex(), pos, pos);
-            mEvents.removeAt(pos);
-            endRemoveRows();
+        int pos = positionForEvent(event);
+        if (pos < 0 || pos >= rowCount()) {
+            continue;
         }
+        HistoryEventGroup &group = mEventGroups[pos];
+        if (!group.events.contains(event)) {
+            continue;
+        }
+        removeEventFromGroup(event, group, pos);
     }
-
-    // FIXME: there is a corner case here: if an event was not loaded yet, but was already
-    // removed by another client, it will still show up when a new page is requested. Maybe it
-    // should be handle internally in History::EventView?
-    */
 }
 
 bool HistoryGroupedEventsModel::compareParticipants(const QStringList &list1, const QStringList &list2)
@@ -222,12 +230,69 @@ void HistoryGroupedEventsModel::addEventToGroup(const History::Event &event, His
     }
 }
 
-bool HistoryGroupedEventsModel::lessThan(const History::Event &left, const History::Event &right)
+void HistoryGroupedEventsModel::removeEventFromGroup(const History::Event &event, HistoryEventGroup &group, int row)
+{
+    if (group.events.contains(event)) {
+        group.events.removeOne(event);
+    }
+
+    if (group.events.isEmpty()) {
+        beginRemoveRows(QModelIndex(), row, row);
+        mEventGroups.removeAt(row);
+        endRemoveRows();
+        return;
+    }
+
+    if (group.displayedEvent == event) {
+        // check what is the event that should be displayed
+       group.displayedEvent =  group.events.first();
+        Q_FOREACH(const History::Event &other, group.events) {
+            if (isAscending() ? lessThan(other, group.displayedEvent) : lessThan(group.displayedEvent, other)) {
+                group.displayedEvent = other;
+            }
+        }
+    }
+    QModelIndex idx = index(row);
+    Q_EMIT dataChanged(idx, idx);
+}
+
+bool HistoryGroupedEventsModel::lessThan(const History::Event &left, const History::Event &right) const
 {
 
     QVariant leftValue = left.properties()[sort()->sortField()];
     QVariant rightValue = right.properties()[sort()->sortField()];
     return leftValue < rightValue;
+}
+
+int HistoryGroupedEventsModel::positionForEvent(const History::Event &event) const
+{
+    // do a binary search for the item position on the list
+    int lowerBound = 0;
+    int upperBound = mEventGroups.count() - 1;
+    if (upperBound < 0) {
+        return 0;
+    }
+
+    while (true) {
+        int pos = (upperBound + lowerBound) / 2;
+        const History::Event &posEvent = mEventGroups[pos].displayedEvent;
+        if (lowerBound == pos) {
+            if (isAscending() ? lessThan(event, posEvent) : lessThan(posEvent, event)) {
+                return pos;
+            }
+        }
+        if (isAscending() ? lessThan(posEvent, event) : lessThan(event, posEvent)) {
+            lowerBound = pos + 1;          // its in the upper
+            if (lowerBound > upperBound) {
+                return pos += 1;
+            }
+        } else if (lowerBound > upperBound) {
+            return pos;
+        } else {
+            upperBound = pos - 1;          // its in the lower
+        }
+    }
+
 }
 
 QVariant HistoryGroupedEventsModel::get(int row) const
