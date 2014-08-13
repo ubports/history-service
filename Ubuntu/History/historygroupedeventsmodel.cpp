@@ -27,8 +27,6 @@
 HistoryGroupedEventsModel::HistoryGroupedEventsModel(QObject *parent) :
     HistoryEventModel(parent)
 {
-    // create the view and get some objects
-    updateQuery();
 }
 
 int HistoryGroupedEventsModel::rowCount(const QModelIndex &parent) const
@@ -314,7 +312,7 @@ void HistoryGroupedEventsModel::setGroupingProperty(const QString &property)
 {
     mGroupingProperty = property;
     Q_EMIT groupingPropertyChanged();
-    updateQuery();
+    triggerQueryUpdate();
 }
 
 bool HistoryGroupedEventsModel::isAscending() const

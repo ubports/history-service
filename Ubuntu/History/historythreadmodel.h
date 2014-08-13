@@ -123,6 +123,7 @@ Q_SIGNALS:
     void countChanged();
 
 protected Q_SLOTS:
+    void triggerQueryUpdate();
     void updateQuery();
     void onThreadsAdded(const History::Threads &threads);
     void onThreadsModified(const History::Threads &threads);
@@ -140,7 +141,7 @@ private:
     EventType mType;
     QHash<int, QByteArray> mRoles;
     mutable QMap<History::TextEvent, QList<QVariant> > mAttachmentCache;
-    int mFetchTimer;
+    int mUpdateTimer;
 };
 
 #endif // HISTORYTHREADMODEL_H

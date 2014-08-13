@@ -95,6 +95,7 @@ Q_SIGNALS:
     void typeChanged();
 
 protected Q_SLOTS:
+    void triggerQueryUpdate();
     virtual void updateQuery();
     virtual void onEventsAdded(const History::Events &events);
     virtual void onEventsModified(const History::Events &events);
@@ -115,7 +116,7 @@ private:
     mutable QMap<History::TextEvent, QList<QVariant> > mAttachmentCache;
     History::Events mEventWritingQueue;
     int mEventWritingTimer;
-    int mFetchTimer;
+    int mUpdateTimer;
 };
 
 #endif // HISTORYEVENTMODEL_H

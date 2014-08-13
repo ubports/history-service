@@ -35,7 +35,8 @@
 Q_DECLARE_METATYPE(History::TextEventAttachments)
 
 HistoryThreadModel::HistoryThreadModel(QObject *parent) :
-    QAbstractListModel(parent), mCanFetchMore(true), mFilter(0), mSort(0), mType(EventTypeText), mFetchTimer(0)
+    QAbstractListModel(parent), mCanFetchMore(true), mFilter(0), mSort(0),
+    mType(EventTypeText), mUpdateTimer(0)
 {
     // configure the roles
     mRoles[AccountIdRole] = "accountId";
@@ -66,7 +67,7 @@ HistoryThreadModel::HistoryThreadModel(QObject *parent) :
     connect(this, SIGNAL(modelReset()), SIGNAL(countChanged()));
 
     // create the results view
-    updateQuery();
+    triggerQueryUpdate();
 }
 
 int HistoryThreadModel::rowCount(const QModelIndex &parent) const
@@ -213,7 +214,7 @@ bool HistoryThreadModel::canFetchMore(const QModelIndex &parent) const
 
 void HistoryThreadModel::fetchMore(const QModelIndex &parent)
 {
-    if (parent.isValid()) {
+    if (parent.isValid() || mThreadView.isNull()) {
         return;
     }
 
@@ -248,11 +249,11 @@ void HistoryThreadModel::setFilter(HistoryQmlFilter *value)
     if (mFilter) {
         connect(mFilter,
                 SIGNAL(filterChanged()),
-                SLOT(updateQuery()));
+                SLOT(triggerQueryUpdate()));
     }
 
     Q_EMIT filterChanged();
-    updateQuery();
+    triggerQueryUpdate();
 }
 
 HistoryQmlSort *HistoryThreadModel::sort() const
@@ -271,11 +272,11 @@ void HistoryThreadModel::setSort(HistoryQmlSort *value)
     if (mSort) {
         connect(mSort,
                 SIGNAL(sortChanged()),
-                SLOT(updateQuery()));
+                SLOT(triggerQueryUpdate()));
     }
 
     Q_EMIT sortChanged();
-    updateQuery();
+    triggerQueryUpdate();
 }
 
 HistoryThreadModel::EventType HistoryThreadModel::type() const
@@ -287,7 +288,7 @@ void HistoryThreadModel::setType(HistoryThreadModel::EventType value)
 {
     mType = value;
     Q_EMIT typeChanged();
-    updateQuery();
+    triggerQueryUpdate();
 }
 
 QString HistoryThreadModel::threadIdForParticipants(const QString &accountId, int eventType, const QStringList &participants, int matchFlags, bool create)
@@ -321,6 +322,14 @@ QVariant HistoryThreadModel::get(int row) const
     }
 
     return mThreads[row].properties();
+}
+
+void HistoryThreadModel::triggerQueryUpdate()
+{
+    if (mUpdateTimer) {
+        killTimer(mUpdateTimer);
+    }
+    mUpdateTimer = startTimer(100);
 }
 
 void HistoryThreadModel::updateQuery()
@@ -362,7 +371,7 @@ void HistoryThreadModel::updateQuery()
             SLOT(onThreadsRemoved(History::Threads)));
     connect(mThreadView.data(),
             SIGNAL(invalidated()),
-            SLOT(updateQuery()));
+            SLOT(triggerQueryUpdate()));
 
     Q_FOREACH(const QVariant &attachment, mAttachmentCache) {
         HistoryQmlTextEventAttachment *qmlAttachment = attachment.value<HistoryQmlTextEventAttachment *>();
@@ -372,15 +381,9 @@ void HistoryThreadModel::updateQuery()
     }
     mAttachmentCache.clear();
 
-    if (mFetchTimer) {
-        killTimer(mFetchTimer);
-    }
-
     // and fetch again
     mCanFetchMore = true;
-
-    // delay the loading just to give the settings some time to settle down
-    mFetchTimer = startTimer(100);
+    fetchMore(QModelIndex());
 }
 
 void HistoryThreadModel::onThreadsAdded(const History::Threads &threads)
@@ -428,10 +431,9 @@ void HistoryThreadModel::onThreadsRemoved(const History::Threads &threads)
 
 void HistoryThreadModel::timerEvent(QTimerEvent *event)
 {
-    if (event->timerId() == mFetchTimer) {
-        killTimer(mFetchTimer);
-        mFetchTimer = 0;
-
-        fetchMore(QModelIndex());
+    if (event->timerId() == mUpdateTimer) {
+        killTimer(mUpdateTimer);
+        mUpdateTimer = 0;
+        updateQuery();
     }
 }
