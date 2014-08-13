@@ -33,6 +33,7 @@ class HistoryEventModel : public QAbstractListModel
     Q_PROPERTY(HistoryQmlFilter *filter READ filter WRITE setFilter NOTIFY filterChanged)
     Q_PROPERTY(HistoryQmlSort *sort READ sort WRITE setSort NOTIFY sortChanged)
     Q_PROPERTY(HistoryThreadModel::EventType type READ type WRITE setType NOTIFY typeChanged)
+    Q_PROPERTY(bool canFetchMore READ canFetchMore NOTIFY canFetchMoreChanged)
     Q_ENUMS(Role)
 public:
     enum Role {
@@ -91,6 +92,7 @@ Q_SIGNALS:
     void filterChanged();
     void sortChanged();
     void typeChanged();
+    void canFetchMoreChanged();
 
 protected Q_SLOTS:
     void updateQuery();
