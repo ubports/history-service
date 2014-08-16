@@ -204,16 +204,26 @@ bool HistoryGroupedEventsModel::areOfSameGroup(const History::Event &event1, con
 {
     QVariantMap props1 = event1.properties();
     QVariantMap props2 = event2.properties();
-    if (!props1.contains(mGroupingProperty) || !props2.contains(mGroupingProperty)) {
-        return false;
+
+    Q_FOREACH(const QString &property, mGroupingProperties) {
+        // first check if the property exists in the maps
+        if (!props1.contains(property) || !props2.contains(property)) {
+            return false;
+        }
+
+        // now check if the values are the same
+        if (property == History::FieldParticipants) {
+            if (!compareParticipants(props1[property].toStringList(),
+                                     props2[property].toStringList())) {
+                return false;
+            }
+        } else if (props1[property] != props2[property]) {
+            return false;
+        }
     }
 
-    if (mGroupingProperty == History::FieldParticipants) {
-        return compareParticipants(props1[mGroupingProperty].toStringList(),
-                                   props2[mGroupingProperty].toStringList());
-    }
-
-    return props1[mGroupingProperty] == props2[mGroupingProperty];
+    // if it didn't fail before, the events are indeed of the same group
+    return true;
 }
 
 void HistoryGroupedEventsModel::addEventToGroup(const History::Event &event, HistoryEventGroup &group, int row)
@@ -305,15 +315,15 @@ QVariant HistoryGroupedEventsModel::get(int row) const
 }
 
 
-QString HistoryGroupedEventsModel::groupingProperty() const
+QStringList HistoryGroupedEventsModel::groupingProperties() const
 {
-    return mGroupingProperty;
+    return mGroupingProperties;
 }
 
-void HistoryGroupedEventsModel::setGroupingProperty(const QString &property)
+void HistoryGroupedEventsModel::setGroupingProperties(const QStringList &properties)
 {
-    mGroupingProperty = property;
-    Q_EMIT groupingPropertyChanged();
+    mGroupingProperties = properties;
+    Q_EMIT groupingPropertiesChanged();
     updateQuery();
 }
 
