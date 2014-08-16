@@ -32,10 +32,10 @@ typedef struct {
 class HistoryGroupedEventsModel : public HistoryEventModel
 {
     Q_OBJECT
-    Q_PROPERTY(QString groupingProperty
-               READ groupingProperty
-               WRITE setGroupingProperty
-               NOTIFY groupingPropertyChanged)
+    Q_PROPERTY(QStringList groupingProperties
+               READ groupingProperties
+               WRITE setGroupingProperties
+               NOTIFY groupingPropertiesChanged)
     Q_ENUMS(GroupedRole)
 public:
     enum GroupedRole {
@@ -52,13 +52,13 @@ public:
     QHash<int, QByteArray> roleNames() const;
     Q_INVOKABLE QVariant get(int row) const;
 
-    QString groupingProperty() const;
-    void setGroupingProperty(const QString &property);
+    QStringList groupingProperties() const;
+    void setGroupingProperties(const QStringList &properties);
 
     bool isAscending() const;
 
 Q_SIGNALS:
-    void groupingPropertyChanged();
+    void groupingPropertiesChanged();
 
 protected Q_SLOTS:
     void updateQuery();
@@ -75,7 +75,7 @@ protected:
     int positionForEvent(const History::Event &event) const;
 
 private:
-    QString mGroupingProperty;
+    QStringList mGroupingProperties;
     QList<HistoryEventGroup> mEventGroups;
 };
 

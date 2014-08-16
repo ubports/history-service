@@ -106,6 +106,7 @@ static const char* FieldCount = "count";
 static const char* FieldUnreadCount = "unreadCount";
 static const char* FieldSenderId = "senderId";
 static const char* FieldTimestamp = "timestamp";
+static const char* FieldDate = "date";
 static const char* FieldNewEvent = "newEvent";
 
 // text event fields
