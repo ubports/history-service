@@ -204,6 +204,7 @@ void HistoryEventModel::fetchMore(const QModelIndex &parent)
     qDebug() << "Got events:" << events.count();
     if (events.isEmpty()) {
         mCanFetchMore = false;
+        Q_EMIT canFetchMoreChanged();
     } else {
         beginInsertRows(QModelIndex(), mEvents.count(), mEvents.count() + events.count() - 1);
         mEvents << events;
@@ -385,6 +386,7 @@ void HistoryEventModel::updateQuery()
             SLOT(triggerQueryUpdate()));
 
     mCanFetchMore = true;
+    Q_EMIT canFetchMoreChanged();
 
     Q_FOREACH(const QVariant &attachment, mAttachmentCache) {
         HistoryQmlTextEventAttachment *qmlAttachment = attachment.value<HistoryQmlTextEventAttachment *>();

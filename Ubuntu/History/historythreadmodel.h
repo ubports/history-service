@@ -37,6 +37,7 @@ class HistoryThreadModel : public QAbstractListModel
     Q_PROPERTY(HistoryQmlSort *sort READ sort WRITE setSort NOTIFY sortChanged)
     Q_PROPERTY(EventType type READ type WRITE setType NOTIFY typeChanged)
     Q_PROPERTY(int count READ rowCount NOTIFY countChanged)
+    Q_PROPERTY(bool canFetchMore READ canFetchMore NOTIFY canFetchMoreChanged)
     Q_ENUMS(EventType)
     Q_ENUMS(Role)
     Q_ENUMS(MatchFlag)
@@ -94,7 +95,7 @@ public:
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
     QVariant data(const QModelIndex &index, int role) const;
 
-    bool canFetchMore(const QModelIndex &parent) const;
+    bool canFetchMore(const QModelIndex &parent = QModelIndex()) const;
     void fetchMore(const QModelIndex &parent);
 
     QHash<int, QByteArray> roleNames() const;
@@ -121,6 +122,7 @@ Q_SIGNALS:
     void sortChanged();
     void typeChanged();
     void countChanged();
+    void canFetchMoreChanged();
 
 protected Q_SLOTS:
     void triggerQueryUpdate();

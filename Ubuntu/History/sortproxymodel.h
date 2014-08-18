@@ -31,6 +31,7 @@ class SortProxyModel : public QSortFilterProxyModel
                READ ascending
                WRITE setAscending
                NOTIFY ascendingChanged)
+    Q_PROPERTY(int count READ rowCount NOTIFY countChanged)
 
 public:
     explicit SortProxyModel(QObject *parent = 0);
@@ -38,11 +39,14 @@ public:
     bool ascending() const;
     void setAscending(bool value);
 
+    Q_INVOKABLE QVariant get(int row) const;
+
 private Q_SLOTS:
     void updateSorting();
 
 Q_SIGNALS:
     void ascendingChanged();
+    void countChanged();
 
 private:
     bool mAscending;
