@@ -1,3 +1,17 @@
+history-service (0.1+14.10.20140813-0ubuntu1) utopic; urgency=low
+
+  [ Ubuntu daily release ]
+  * New rebuild forced
+
+  [ Tiago Salem Herrmann ]
+  * Export canFetchMore to qml
+
+  [ Renato Araujo Oliveira Filho ]
+  * Added "count" property for sortproxymodel; Added "get" function for
+    sortproxymodel;
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 13 Aug 2014 22:21:25 +0000
+
 history-service (0.1+14.10.20140730-0ubuntu1) utopic; urgency=low
 
   [ Tiago Salem Herrmann ]

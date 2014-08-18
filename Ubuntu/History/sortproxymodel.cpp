@@ -27,6 +27,10 @@ SortProxyModel::SortProxyModel(QObject *parent) :
 {
     setDynamicSortFilter(true);
     updateSorting();
+
+    connect(this, SIGNAL(rowsInserted(QModelIndex,int,int)), SIGNAL(countChanged()));
+    connect(this, SIGNAL(rowsRemoved(QModelIndex,int,int)), SIGNAL(countChanged()));
+    connect(this, SIGNAL(modelReset()), SIGNAL(countChanged()));
 }
 
 bool SortProxyModel::ascending() const
@@ -41,6 +45,21 @@ void SortProxyModel::setAscending(bool value)
         updateSorting();
         Q_EMIT ascendingChanged();
     }
+}
+
+QVariant SortProxyModel::get(int row) const
+{
+    QVariantMap data;
+    QModelIndex sourceIndex = mapToSource(index(row, 0));
+    if (sourceIndex.isValid()) {
+        QAbstractItemModel *source = sourceModel();
+        QHash<int, QByteArray> roles = source->roleNames();
+        Q_FOREACH(int role, roles.keys()) {
+            data.insert(roles[role], source->data(sourceIndex, role));
+        }
+    }
+
+    return data;
 }
 
 void SortProxyModel::updateSorting()

@@ -220,6 +220,7 @@ void HistoryThreadModel::fetchMore(const QModelIndex &parent)
     History::Threads threads = mThreadView->nextPage();
     if (threads.isEmpty()) {
         mCanFetchMore = false;
+        Q_EMIT canFetchMoreChanged();
     } else {
         beginInsertRows(QModelIndex(), mThreads.count(), mThreads.count() + threads.count() - 1);
         mThreads << threads;
@@ -378,6 +379,7 @@ void HistoryThreadModel::updateQuery()
 
     // and fetch again
     mCanFetchMore = true;
+    Q_EMIT canFetchMoreChanged();
 
     // delay the loading just to give the settings some time to settle down
     mFetchTimer = startTimer(100);
