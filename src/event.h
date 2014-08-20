@@ -56,6 +56,7 @@ public:
     QVariantMap properties() const;
     bool isNull() const;
     bool operator==(const Event &other) const;
+    bool operator!=(const Event &other) const;
     bool operator<(const Event &other) const;
 
 protected:
