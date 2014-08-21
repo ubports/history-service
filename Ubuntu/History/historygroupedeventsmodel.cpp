@@ -137,7 +137,7 @@ void HistoryGroupedEventsModel::onEventsAdded(const History::Events &events)
         int pos = positionForEvent(event);
 
         // check if the event belongs to the group at the position
-        if (pos >= 0) {
+        if (pos >= 0 && pos < mEventGroups.count()) {
             HistoryEventGroup &group = mEventGroups[pos];
             if (areOfSameGroup(event, group.displayedEvent)) {
                 addEventToGroup(event, group, pos);
