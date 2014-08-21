@@ -227,12 +227,27 @@ bool HistoryGroupedEventsModel::areOfSameGroup(const History::Event &event1, con
 void HistoryGroupedEventsModel::addEventToGroup(const History::Event &event, HistoryEventGroup &group, int row)
 {
     if (!group.events.contains(event)) {
-        group.events << event;
+        // insert the event in the correct position according to the sort criteria
+        bool append = true;
+        for (int i = 0; i < group.events.count(); ++i) {
+            History::Event &otherEvent = group.events[i];
+            if (isAscending() ? lessThan(event, otherEvent) : lessThan(otherEvent, event)) {
+                group.events.insert(i, event);
+                append = false;
+                break;
+            }
+        }
+
+        // if it is not above any item, just append it
+        if (append) {
+            group.events.append(event);
+        }
     }
 
     // now check if the displayed event should be updated
-    if (isAscending() ? lessThan(event, group.displayedEvent) : lessThan(group.displayedEvent, event)) {
-        group.displayedEvent = event;
+    History::Event &firstEvent = group.events.first();
+    if (group.displayedEvent != firstEvent) {
+        group.displayedEvent = firstEvent;
         QModelIndex idx(index(row));
         Q_EMIT dataChanged(idx, idx);
     }

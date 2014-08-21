@@ -244,6 +244,11 @@ bool Event::operator==(const Event &other) const
     return true;
 }
 
+bool Event::operator!=(const Event &other) const
+{
+    return !(*this == other);
+}
+
 bool Event::operator<(const Event &other) const
 {
     QString selfData = accountId() + threadId() + eventId();
