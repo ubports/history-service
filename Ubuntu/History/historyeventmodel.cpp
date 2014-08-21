@@ -37,7 +37,8 @@
 
 HistoryEventModel::HistoryEventModel(QObject *parent) :
     QAbstractListModel(parent), mCanFetchMore(true), mFilter(0),
-    mSort(new HistoryQmlSort(this)), mType(HistoryThreadModel::EventTypeText), mEventWritingTimer(0), mFetchTimer(0)
+    mSort(new HistoryQmlSort(this)), mType(HistoryThreadModel::EventTypeText),
+    mEventWritingTimer(0), mUpdateTimer(0)
 {
     connect(this, SIGNAL(rowsInserted(QModelIndex,int,int)), this, SIGNAL(countChanged()));
     connect(this, SIGNAL(rowsRemoved(QModelIndex,int,int)), this, SIGNAL(countChanged()));
@@ -63,7 +64,7 @@ HistoryEventModel::HistoryEventModel(QObject *parent) :
     mRoles[CallDurationRole] = "callDuration";
 
     // create the view and get some objects
-    updateQuery();
+    triggerQueryUpdate();
 }
 
 int HistoryEventModel::rowCount(const QModelIndex &parent) const
@@ -231,11 +232,11 @@ void HistoryEventModel::setFilter(HistoryQmlFilter *value)
     if (mFilter) {
         connect(mFilter,
                 SIGNAL(filterChanged()),
-                SLOT(updateQuery()));
+                SLOT(triggerQueryUpdate()));
     }
 
     Q_EMIT filterChanged();
-    updateQuery();
+    triggerQueryUpdate();
 }
 
 HistoryQmlSort *HistoryEventModel::sort() const
@@ -254,11 +255,11 @@ void HistoryEventModel::setSort(HistoryQmlSort *value)
     if (mSort) {
         connect(mSort,
                 SIGNAL(sortChanged()),
-                SLOT(updateQuery()));
+                SLOT(triggerQueryUpdate()));
     }
 
     Q_EMIT sortChanged();
-    updateQuery();
+    triggerQueryUpdate();
 }
 
 HistoryThreadModel::EventType HistoryEventModel::type() const
@@ -270,7 +271,7 @@ void HistoryEventModel::setType(HistoryThreadModel::EventType value)
 {
     mType = value;
     Q_EMIT typeChanged();
-    updateQuery();
+    triggerQueryUpdate();
 }
 
 QString HistoryEventModel::threadIdForParticipants(const QString &accountId, int eventType, const QStringList &participants, int matchFlags, bool create)
@@ -382,7 +383,7 @@ void HistoryEventModel::updateQuery()
             SLOT(onEventsRemoved(History::Events)));
     connect(mView.data(),
             SIGNAL(invalidated()),
-            SLOT(updateQuery()));
+            SLOT(triggerQueryUpdate()));
 
     mCanFetchMore = true;
     Q_EMIT canFetchMoreChanged();
@@ -395,12 +396,7 @@ void HistoryEventModel::updateQuery()
     }
     mAttachmentCache.clear();
 
-    if (mFetchTimer) {
-        killTimer(mFetchTimer);
-    }
-
-    // delay the loading of the model data until the settings settle down
-    mFetchTimer = startTimer(100);
+    fetchMore(QModelIndex());
 }
 
 void HistoryEventModel::onEventsAdded(const History::Events &events)
@@ -478,10 +474,10 @@ void HistoryEventModel::timerEvent(QTimerEvent *event)
             qDebug() << "... succeeded!";
             mEventWritingQueue.clear();
         }
-    } else if (event->timerId() == mFetchTimer) {
-        killTimer(mFetchTimer);
-        mFetchTimer = 0;
-        fetchMore(QModelIndex());
+    } else if (event->timerId() == mUpdateTimer) {
+        killTimer(mUpdateTimer);
+        mUpdateTimer = 0;
+        updateQuery();
     }
 }
 
@@ -497,4 +493,13 @@ QVariant HistoryEventModel::get(int row) const
     }
 
     return QVariant(mEvents[row].properties());
+}
+
+void HistoryEventModel::triggerQueryUpdate()
+{
+    if (mUpdateTimer) {
+        killTimer(mUpdateTimer);
+    }
+    // delay the loading of the model data until the settings settle down
+    mUpdateTimer = startTimer(100);
 }
