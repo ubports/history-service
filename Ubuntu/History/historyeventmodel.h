@@ -53,18 +53,20 @@ public:
         TextReadSubjectRole,
         TextMessageAttachmentsRole,
         CallMissedRole,
-        CallDurationRole
+        CallDurationRole,
+        LastRole
     };
 
     explicit HistoryEventModel(QObject *parent = 0);
 
-    int rowCount(const QModelIndex &parent = QModelIndex()) const;
-    QVariant data(const QModelIndex &index, int role) const;
+    virtual int rowCount(const QModelIndex &parent = QModelIndex()) const;
+    virtual QVariant data(const QModelIndex &index, int role) const;
+    QVariant eventData(const History::Event &event, int role) const;
 
-    Q_INVOKABLE bool canFetchMore(const QModelIndex &parent = QModelIndex()) const;
-    Q_INVOKABLE void fetchMore(const QModelIndex &parent = QModelIndex());
+    Q_INVOKABLE virtual bool canFetchMore(const QModelIndex &parent = QModelIndex()) const;
+    Q_INVOKABLE virtual void fetchMore(const QModelIndex &parent = QModelIndex());
 
-    QHash<int, QByteArray> roleNames() const;
+    virtual QHash<int, QByteArray> roleNames() const;
 
     HistoryQmlFilter *filter() const;
     void setFilter(HistoryQmlFilter *value);
@@ -85,7 +87,7 @@ public:
     Q_INVOKABLE bool markEventAsRead(const QString &accountId, const QString &threadId, const QString &eventId, int eventType);
 
     Q_INVOKABLE bool removeEventAttachment(const QString &accountId, const QString &threadId, const QString &eventId, int eventType, const QString &attachmentId);
-    Q_INVOKABLE QVariant get(int row) const;
+    Q_INVOKABLE virtual QVariant get(int row) const;
 
 Q_SIGNALS:
     void countChanged();
@@ -95,13 +97,14 @@ Q_SIGNALS:
     void canFetchMoreChanged();
 
 protected Q_SLOTS:
-    void updateQuery();
-    void onEventsAdded(const History::Events &events);
-    void onEventsModified(const History::Events &events);
-    void onEventsRemoved(const History::Events &events);
+    virtual void updateQuery();
+    virtual void onEventsAdded(const History::Events &events);
+    virtual void onEventsModified(const History::Events &events);
+    virtual void onEventsRemoved(const History::Events &events);
 
 protected:
     void timerEvent(QTimerEvent *event);
+    History::Events fetchNextPage();
 
 private:
     History::EventViewPtr mView;

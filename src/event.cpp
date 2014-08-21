@@ -55,6 +55,7 @@ QVariantMap EventPrivate::properties() const
     map[FieldEventId] = eventId;
     map[FieldSenderId] = senderId;
     map[FieldTimestamp] = timestamp.toString(Qt::ISODate);
+    map[FieldDate] = timestamp.date().toString(Qt::ISODate);
     map[FieldNewEvent] = newEvent;
     map[FieldType] = type();
     map[FieldParticipants] = participants;
@@ -241,6 +242,11 @@ bool Event::operator==(const Event &other) const
         return false;
     }
     return true;
+}
+
+bool Event::operator!=(const Event &other) const
+{
+    return !(*this == other);
 }
 
 bool Event::operator<(const Event &other) const
