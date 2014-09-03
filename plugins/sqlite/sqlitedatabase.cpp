@@ -129,6 +129,8 @@ bool SQLiteDatabase::createOrUpdateDatabase()
     parseVersionInfo();
 
     QSqlQuery query(mDatabase);
+    // use memory to create temporary tables
+    query.exec("PRAGMA temp_store = MEMORY");
 
     QStringList statements;
 
