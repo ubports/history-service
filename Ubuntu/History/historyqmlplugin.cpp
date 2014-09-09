@@ -29,7 +29,6 @@
 #include "historyeventmodel.h"
 #include "historygroupedeventsmodel.h"
 #include "historyqmltexteventattachment.h"
-#include "sortproxymodel.h"
 #include <QQmlEngine>
 #include <qqml.h>
 
