@@ -67,6 +67,16 @@ QVariant HistoryThreadModel::data(const QModelIndex &index, int role) const
     }
 
     History::Thread thread = mThreads[index.row()];
+    QVariant result = threadData(thread, role);
+    if (result.isNull()) {
+        result = HistoryModel::data(index, role);
+    }
+
+    return result;
+}
+
+QVariant HistoryThreadModel::threadData(const History::Thread &thread, int role) const
+{
     History::Event event = thread.lastEvent();
     History::TextEvent textEvent;
     History::VoiceEvent voiceEvent;
@@ -167,9 +177,6 @@ QVariant HistoryThreadModel::data(const QModelIndex &index, int role) const
             result = voiceEvent.duration();
         }
         break;
-    default:
-        result = HistoryModel::data(index, role);
-        break;
     }
 
     return result;
@@ -190,7 +197,7 @@ void HistoryThreadModel::fetchMore(const QModelIndex &parent)
         return;
     }
 
-    History::Threads threads = mThreadView->nextPage();
+    History::Threads threads = fetchNextPage();
     if (threads.isEmpty()) {
         mCanFetchMore = false;
         Q_EMIT canFetchMoreChanged();
@@ -273,25 +280,37 @@ void HistoryThreadModel::onThreadsAdded(const History::Threads &threads)
         return;
     }
 
-    // FIXME: handle sorting
-    beginInsertRows(QModelIndex(), mThreads.count(), mThreads.count() + threads.count() - 1);
-    mThreads << threads;
-    endInsertRows();
+    Q_FOREACH(const History::Thread &thread, threads) {
+        // if the thread is already inserted, skip it
+        if (mThreads.contains(thread)) {
+            continue;
+        }
+
+        int pos = positionForItem(thread.properties());
+        beginInsertRows(QModelIndex(), pos, pos);
+        mThreads.insert(pos, thread);
+        endInsertRows();
+    }
 }
 
 void HistoryThreadModel::onThreadsModified(const History::Threads &threads)
 {
+    History::Threads newThreads;
     Q_FOREACH(const History::Thread &thread, threads) {
         int pos = mThreads.indexOf(thread);
         if (pos >= 0) {
             mThreads[pos] = thread;
             QModelIndex idx = index(pos);
             Q_EMIT dataChanged(idx, idx);
+        } else {
+            newThreads << thread;
         }
     }
 
-    // FIXME: append modified threads that are not loaded yet and make sure they don´t
-    // get added twice to the model
+    // add threads that were not yet on the model
+    if (!newThreads.isEmpty()) {
+        onThreadsAdded(newThreads);
+    }
 }
 
 void HistoryThreadModel::onThreadsRemoved(const History::Threads &threads)
@@ -308,4 +327,9 @@ void HistoryThreadModel::onThreadsRemoved(const History::Threads &threads)
     // FIXME: there is a corner case here: if a thread was not loaded yet, but was already
     // removed by another client, it will still show up when a new page is requested. Maybe it
     // should be handle internally in History::ThreadView?
+}
+
+History::Threads HistoryThreadModel::fetchNextPage()
+{
+    return mThreadView->nextPage();
 }

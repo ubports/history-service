@@ -39,7 +39,7 @@ class HistoryGroupedEventsModel : public HistoryEventModel
     Q_ENUMS(GroupedRole)
 public:
     enum GroupedRole {
-        EventsRole = HistoryEventModel::LastRole,
+        EventsRole = HistoryEventModel::LastEventRole,
         EventCountRole
     };
 

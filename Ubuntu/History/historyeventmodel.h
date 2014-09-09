@@ -46,7 +46,7 @@ public:
         TextMessageAttachmentsRole,
         CallMissedRole,
         CallDurationRole,
-        LastRole
+        LastEventRole
     };
 
     explicit HistoryEventModel(QObject *parent = 0);

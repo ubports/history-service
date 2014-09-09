@@ -303,18 +303,17 @@ void HistoryEventModel::onEventsAdded(const History::Events &events)
         return;
     }
 
-    // filter the list for items already in the model
-    History::Events filteredEvents;
     Q_FOREACH(const History::Event &event, events) {
-        if (!mEvents.contains(event)) {
-            filteredEvents << event;
+        // if the event is already on the model, skip it
+        if (mEvents.contains(event)) {
+            continue;
         }
-    }
 
-    //FIXME: handle sorting
-    beginInsertRows(QModelIndex(), mEvents.count(), mEvents.count() + filteredEvents.count() - 1);
-    mEvents << filteredEvents;
-    endInsertRows();
+        int pos = positionForItem(event.properties());
+        beginInsertRows(QModelIndex(), pos, pos);
+        mEvents.insert(pos, event);
+        endInsertRows();
+    }
 }
 
 void HistoryEventModel::onEventsModified(const History::Events &events)

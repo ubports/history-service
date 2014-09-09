@@ -52,13 +52,15 @@ public:
         LastEventTextSubjectRole,
         LastEventTextAttachmentsRole,
         LastEventCallMissedRole,
-        LastEventCallDurationRole
+        LastEventCallDurationRole,
+        LastThreadRole
     };
 
     explicit HistoryThreadModel(QObject *parent = 0);
 
-    int rowCount(const QModelIndex &parent = QModelIndex()) const;
-    QVariant data(const QModelIndex &index, int role) const;
+    virtual int rowCount(const QModelIndex &parent = QModelIndex()) const;
+    virtual QVariant data(const QModelIndex &index, int role) const;
+    QVariant threadData(const History::Thread &thread, int role) const;
 
     bool canFetchMore(const QModelIndex &parent = QModelIndex()) const;
     void fetchMore(const QModelIndex &parent);
@@ -68,10 +70,13 @@ public:
     Q_INVOKABLE bool removeThread(const QString &accountId, const QString &threadId, int eventType);
 
 protected Q_SLOTS:
-    void updateQuery();
-    void onThreadsAdded(const History::Threads &threads);
-    void onThreadsModified(const History::Threads &threads);
-    void onThreadsRemoved(const History::Threads &threads);
+    virtual void updateQuery();
+    virtual void onThreadsAdded(const History::Threads &threads);
+    virtual void onThreadsModified(const History::Threads &threads);
+    virtual void onThreadsRemoved(const History::Threads &threads);
+
+protected:
+    History::Threads fetchNextPage();
 
 private:
     History::ThreadViewPtr mThreadView;
