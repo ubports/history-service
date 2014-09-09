@@ -315,7 +315,6 @@ int HistoryGroupedEventsModel::positionForEvent(const History::Event &event) con
             upperBound = pos - 1;          // its in the lower
         }
     }
-
 }
 
 QVariant HistoryGroupedEventsModel::get(int row) const

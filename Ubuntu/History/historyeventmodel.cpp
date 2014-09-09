@@ -20,44 +20,23 @@
  */
 
 #include "historyeventmodel.h"
-#include "historyqmlfilter.h"
-#include "historyqmlsort.h"
 #include "eventview.h"
-#include "intersectionfilter.h"
-#include "manager.h"
-#include "thread.h"
-#include "textevent.h"
-#include "texteventattachment.h"
 #include "historyqmltexteventattachment.h"
-#include "phoneutils_p.h"
-#include "thread.h"
-#include "types.h"
-#include "voiceevent.h"
-#include "contactmatcher_p.h"
+#include "manager.h"
+#include <QDBusMetaType>
 #include <QDebug>
 #include <QTimerEvent>
-#include <QDBusMetaType>
 
 HistoryEventModel::HistoryEventModel(QObject *parent) :
-    QAbstractListModel(parent), mCanFetchMore(true), mFilter(0),
-    mSort(new HistoryQmlSort(this)), mType(HistoryThreadModel::EventTypeText),
-    mMatchContacts(false), mEventWritingTimer(0), mUpdateTimer(0)
+    HistoryModel(parent), mCanFetchMore(true), mEventWritingTimer(0)
 {
-    connect(this, SIGNAL(rowsInserted(QModelIndex,int,int)), this, SIGNAL(countChanged()));
-    connect(this, SIGNAL(rowsRemoved(QModelIndex,int,int)), this, SIGNAL(countChanged()));
-    connect(this, SIGNAL(modelReset()), this, SIGNAL(countChanged()));
-
     // configure the roles
-    mRoles[AccountIdRole] = "accountId";
-    mRoles[ThreadIdRole] = "threadId";
-    mRoles[ParticipantsRole] = "participants";
-    mRoles[TypeRole] = "type";
+    mRoles = HistoryModel::roleNames();
     mRoles[EventIdRole] = "eventId";
     mRoles[SenderIdRole] = "senderId";
     mRoles[TimestampRole] = "timestamp";
     mRoles[DateRole] = "date";
     mRoles[NewEventRole] = "newEvent";
-    mRoles[PropertiesRole] = "properties";
     mRoles[TextMessageRole] = "textMessage";
     mRoles[TextMessageTypeRole] = "textMessageType";
     mRoles[TextMessageStatusRole] = "textMessageStatus";
@@ -66,13 +45,6 @@ HistoryEventModel::HistoryEventModel(QObject *parent) :
     mRoles[TextReadSubjectRole] = "textSubject";
     mRoles[CallMissedRole] = "callMissed";
     mRoles[CallDurationRole] = "callDuration";
-
-    connect(ContactMatcher::instance(),
-            SIGNAL(contactInfoChanged(QString,QVariantMap)),
-            SLOT(onContactInfoChanged(QString,QVariantMap)));
-
-    // create the view and get some objects
-    triggerQueryUpdate();
 }
 
 int HistoryEventModel::rowCount(const QModelIndex &parent) const
@@ -90,8 +62,12 @@ QVariant HistoryEventModel::data(const QModelIndex &index, int role) const
         return QVariant();
     }
 
-    return eventData(mEvents[index.row()], role);
-}
+    QVariant result = eventData(mEvents[index.row()], role);
+    if (result.isNull()) {
+        result = HistoryModel::data(index, role);
+    }
+    return result;
+ }
 
 QVariant HistoryEventModel::eventData(const History::Event &event, int role) const
 {
@@ -110,22 +86,6 @@ QVariant HistoryEventModel::eventData(const History::Event &event, int role) con
     QVariant result;
 
     switch (role) {
-    case AccountIdRole:
-        result = event.accountId();
-        break;
-    case ThreadIdRole:
-        result = event.threadId();
-        break;
-    case ParticipantsRole:
-        if (mMatchContacts) {
-            result = ContactMatcher::instance()->contactInfo(event.participants());
-        } else {
-            result = event.participants();
-        }
-        break;
-    case TypeRole:
-        result = event.type();
-        break;
     case EventIdRole:
         result = event.eventId();
         break;
@@ -215,7 +175,6 @@ void HistoryEventModel::fetchMore(const QModelIndex &parent)
 
     History::Events events = fetchNextPage();
 
-    qDebug() << "Got events:" << events.count();
     if (events.isEmpty()) {
         mCanFetchMore = false;
         Q_EMIT canFetchMoreChanged();
@@ -231,97 +190,6 @@ QHash<int, QByteArray> HistoryEventModel::roleNames() const
     return mRoles;
 }
 
-HistoryQmlFilter *HistoryEventModel::filter() const
-{
-    return mFilter;
-}
-
-void HistoryEventModel::setFilter(HistoryQmlFilter *value)
-{
-    if (mFilter) {
-        mFilter->disconnect(this);
-    }
-
-    mFilter = value;
-    if (mFilter) {
-        connect(mFilter,
-                SIGNAL(filterChanged()),
-                SLOT(triggerQueryUpdate()));
-    }
-
-    Q_EMIT filterChanged();
-    triggerQueryUpdate();
-}
-
-HistoryQmlSort *HistoryEventModel::sort() const
-{
-    return mSort;
-}
-
-void HistoryEventModel::setSort(HistoryQmlSort *value)
-{
-    // disconnect the previous sort
-    if (mSort) {
-        mSort->disconnect(this);
-    }
-
-    mSort = value;
-    if (mSort) {
-        connect(mSort,
-                SIGNAL(sortChanged()),
-                SLOT(triggerQueryUpdate()));
-    }
-
-    Q_EMIT sortChanged();
-    triggerQueryUpdate();
-}
-
-HistoryThreadModel::EventType HistoryEventModel::type() const
-{
-    return mType;
-}
-
-void HistoryEventModel::setType(HistoryThreadModel::EventType value)
-{
-    mType = value;
-    Q_EMIT typeChanged();
-    triggerQueryUpdate();
-}
-
-bool HistoryEventModel::matchContacts() const
-{
-    return mMatchContacts;
-}
-
-void HistoryEventModel::setMatchContacts(bool value)
-{
-    mMatchContacts = value;
-    Q_EMIT matchContactsChanged();
-
-    // mark all indexes as changed
-    if (rowCount() > 0) {
-        Q_EMIT dataChanged(index(0), index(rowCount()-1));
-    }
-}
-
-QString HistoryEventModel::threadIdForParticipants(const QString &accountId, int eventType, const QStringList &participants, int matchFlags, bool create)
-{
-    if (participants.isEmpty()) {
-        return QString::null;
-    }
-
-    History::Thread thread = History::Manager::instance()->threadForParticipants(accountId,
-                                                                                 (History::EventType)eventType,
-                                                                                 participants,
-                                                                                 (History::MatchFlags)matchFlags,
-                                                                                 create);
-    if (!thread.isNull()) {
-        return thread.threadId();
-    }
-
-    return QString::null;
-}
-
 bool HistoryEventModel::removeEvent(const QString &accountId, const QString &threadId, const QString &eventId, int eventType)
 {
     History::Event event = History::Manager::instance()->getSingleEvent((History::EventType)eventType, accountId, threadId, eventId);
@@ -333,7 +201,7 @@ bool HistoryEventModel::removeEventAttachment(const QString &accountId, const QS
     History::TextEvent textEvent;
     History::Event event = History::Manager::instance()->getSingleEvent((History::EventType)eventType, accountId, threadId, eventId);
     if (event.type() != History::EventTypeText) {
-        qDebug() << "Trying to remove an attachment from a non text event";
+        qWarning() << "Trying to remove an attachment from a non text event";
         return false;
     }
     QVariantMap properties = event.properties();
@@ -347,7 +215,7 @@ bool HistoryEventModel::removeEventAttachment(const QString &accountId, const QS
         }
     }
     if (count == attachmentProperties.size()) {
-        qDebug() << "No attachment found for id " << attachmentId;
+        qWarning() << "No attachment found for id " << attachmentId;
         return false;
     }
     properties[History::FieldAttachments] = QVariant::fromValue(newAttachmentProperties);
@@ -489,36 +357,9 @@ void HistoryEventModel::onEventsRemoved(const History::Events &events)
     // should be handle internally in History::EventView?
 }
 
-void HistoryEventModel::onContactInfoChanged(const QString &phoneNumber, const QVariantMap &contactInfo)
-{
-    Q_UNUSED(contactInfo)
-    if (!mMatchContacts) {
-        return;
-    }
-
-    QList<QModelIndex> changedIndexes;
-    int count = rowCount();
-    for (int i = 0; i < count; ++i) {
-        // WARNING: do not use mEvents directly to verify which indexes to change as there is the
-        // HistoryGroupedEventsModel which is based on this model and handles the items in a different way
-        QModelIndex idx = index(i);
-        QVariantMap eventProperties = idx.data(PropertiesRole).toMap();
-        QStringList participants = eventProperties[History::FieldParticipants].toStringList();
-        Q_FOREACH(const QString &participant, participants) {
-            if (PhoneUtils::comparePhoneNumbers(participant, phoneNumber)) {
-                changedIndexes << idx;
-            }
-        }
-    }
-
-    // now emit the dataChanged signal to all changed indexes
-    Q_FOREACH(const QModelIndex &idx, changedIndexes) {
-        Q_EMIT dataChanged(idx, idx);
-    }
-}
-
 void HistoryEventModel::timerEvent(QTimerEvent *event)
 {
+    HistoryModel::timerEvent(event);
     if (event->timerId() == mEventWritingTimer) {
         killTimer(mEventWritingTimer);
         mEventWritingTimer = 0;
@@ -532,32 +373,10 @@ void HistoryEventModel::timerEvent(QTimerEvent *event)
             qDebug() << "... succeeded!";
             mEventWritingQueue.clear();
         }
-    } else if (event->timerId() == mUpdateTimer) {
-        killTimer(mUpdateTimer);
-        mUpdateTimer = 0;
-        updateQuery();
     }
 }
 
 History::Events HistoryEventModel::fetchNextPage()
 {
     return mView->nextPage();
-}
-
-QVariant HistoryEventModel::get(int row) const
-{
-    if (row >= this->rowCount() || row < 0) {
-        return QVariant();
-    }
-
-    return QVariant(mEvents[row].properties());
-}
-
-void HistoryEventModel::triggerQueryUpdate()
-{
-    if (mUpdateTimer) {
-        killTimer(mUpdateTimer);
-    }
-    // delay the loading of the model data until the settings settle down
-    mUpdateTimer = startTimer(100);
 }
