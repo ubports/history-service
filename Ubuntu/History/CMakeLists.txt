@@ -4,6 +4,7 @@ set(plugin_SRCS
     contactmatcher.cpp
     historyeventmodel.cpp
     historygroupedeventsmodel.cpp
+    historygroupedthreadsmodel.cpp
     historymodel.cpp
     historyqmlfilter.cpp
     historyqmlintersectionfilter.cpp
@@ -11,7 +12,6 @@ set(plugin_SRCS
     historyqmlsort.cpp
     historyqmltexteventattachment.cpp
     historyqmlunionfilter.cpp
-    historythreadgroupingproxymodel.cpp
     historythreadmodel.cpp
     sortproxymodel.cpp
     )
@@ -20,6 +20,7 @@ set(plugin_HDRS
     contactmatcher_p.h
     historyeventmodel.h
     historygroupedeventsmodel.h
+    historygroupedthreadsmodel.h
     historymodel.cpp
     historyqmlfilter.h
     historyqmlintersectionfilter.h
@@ -27,7 +28,6 @@ set(plugin_HDRS
     historyqmlsort.h
     historyqmltexteventattachment.h
     historyqmlunionfilter.h
-    historythreadgroupingproxymodel.h
     historythreadmodel.h
     sortproxymodel.h
 )

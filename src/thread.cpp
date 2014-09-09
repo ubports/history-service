@@ -164,6 +164,8 @@ QVariantMap Thread::properties() const
     map[FieldParticipants] = d->participants;
     map[FieldCount] = d->count;
     map[FieldUnreadCount] = d->unreadCount;
+    map[FieldLastEventId] = lastEvent().eventId();
+    map[FieldLastEventTimestamp] = lastEvent().timestamp();
 
     return map;
 }

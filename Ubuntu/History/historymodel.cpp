@@ -27,6 +27,7 @@
 #include "thread.h"
 #include "manager.h"
 #include <QTimerEvent>
+#include <QDebug>
 
 HistoryModel::HistoryModel(QObject *parent) :
     QAbstractListModel(parent), mFilter(0), mSort(new HistoryQmlSort(this)),
@@ -224,7 +225,7 @@ void HistoryModel::timerEvent(QTimerEvent *event)
 }
 
 
-bool HistoryModel::compareParticipants(const QStringList &list1, const QStringList &list2)
+bool HistoryModel::compareParticipants(const QStringList &list1, const QStringList &list2) const
 {
     if (list1.count() != list2.count()) {
         return false;
@@ -247,6 +248,7 @@ bool HistoryModel::lessThan(const QVariantMap &left, const QVariantMap &right) c
 {
     QVariant leftValue = left[sort()->sortField()];
     QVariant rightValue = right[sort()->sortField()];
+
     return leftValue < rightValue;
 }
 
@@ -287,11 +289,16 @@ bool HistoryModel::isAscending() const
 
 QVariant HistoryModel::get(int row) const
 {
-    if (row >= rowCount() || row < 0) {
-        return QVariant();
+    QVariantMap data;
+    QModelIndex idx = index(row, 0);
+    if (idx.isValid()) {
+        QHash<int, QByteArray> roles = roleNames();
+        Q_FOREACH(int role, roles.keys()) {
+            data.insert(roles[role], idx.data(role));
+        }
     }
 
-    return index(row).data(PropertiesRole);
+    return data;
 }
 
 void HistoryModel::triggerQueryUpdate()

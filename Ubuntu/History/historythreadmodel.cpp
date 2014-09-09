@@ -184,7 +184,7 @@ QVariant HistoryThreadModel::threadData(const History::Thread &thread, int role)
 
 bool HistoryThreadModel::canFetchMore(const QModelIndex &parent) const
 {
-    if (parent.isValid() || !mFilter) {
+    if (parent.isValid() || !mFilter || mThreadView.isNull()) {
         return false;
     }
 
