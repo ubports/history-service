@@ -63,6 +63,11 @@ QVariant HistoryGroupedEventsModel::data(const QModelIndex &index, int role) con
         break;
     }
 
+    if (result.isNull()) {
+        // for the shared roles
+        result = HistoryModel::data(index, role);
+    }
+
     return result;
 }
 
