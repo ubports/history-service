@@ -221,7 +221,9 @@ void ContactMatcher::requestContactInfo(const QString &phoneNumber)
     QContactFetchRequest *request = new QContactFetchRequest(this);
     mRequests[request] = phoneNumber;
     request->setFilter(QContactPhoneNumber::match(phoneNumber));
-    connect(request, SIGNAL(stateChanged(QContactAbstractRequest::State)), SLOT(onRequestStateChanged(QContactAbstractRequest::State)));
+    connect(request,
+            SIGNAL(stateChanged(QContactAbstractRequest::State)),
+            SLOT(onRequestStateChanged(QContactAbstractRequest::State)));
     request->setManager(mManager);
     request->start();
 }
