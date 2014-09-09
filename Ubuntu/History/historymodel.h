@@ -118,6 +118,11 @@ protected Q_SLOTS:
 
 protected:
     virtual void timerEvent(QTimerEvent *event);
+    bool compareParticipants(const QStringList &list1, const QStringList &list2);
+    bool lessThan(const QVariantMap &left, const QVariantMap &right) const;
+    int positionForItem(const QVariantMap &item) const;
+    bool isAscending() const;
+
     HistoryQmlFilter *mFilter;
     HistoryQmlSort *mSort;
     EventType mType;

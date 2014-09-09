@@ -223,6 +223,68 @@ void HistoryModel::timerEvent(QTimerEvent *event)
     }
 }
 
+
+bool HistoryModel::compareParticipants(const QStringList &list1, const QStringList &list2)
+{
+    if (list1.count() != list2.count()) {
+        return false;
+    }
+
+    int found = 0;
+    Q_FOREACH(const QString &participant, list1) {
+        Q_FOREACH(const QString &item, list2) {
+            if (PhoneUtils::comparePhoneNumbers(participant, item)) {
+                found++;
+                break;
+            }
+        }
+    }
+
+    return found == list1.count();
+}
+
+bool HistoryModel::lessThan(const QVariantMap &left, const QVariantMap &right) const
+{
+    QVariant leftValue = left[sort()->sortField()];
+    QVariant rightValue = right[sort()->sortField()];
+    return leftValue < rightValue;
+}
+
+int HistoryModel::positionForItem(const QVariantMap &item) const
+{
+    // do a binary search for the item position on the list
+    int lowerBound = 0;
+    int upperBound = rowCount() - 1;
+    if (upperBound < 0) {
+        return 0;
+    }
+
+    while (true) {
+        int pos = (upperBound + lowerBound) / 2;
+        const QVariantMap posItem = index(pos).data(PropertiesRole).toMap();
+        if (lowerBound == pos) {
+            if (isAscending() ? lessThan(item, posItem) : lessThan(posItem, item)) {
+                return pos;
+            }
+        }
+        if (isAscending() ? lessThan(posItem, item) : lessThan(item, posItem)) {
+            lowerBound = pos + 1;          // its in the upper
+            if (lowerBound > upperBound) {
+                return pos += 1;
+            }
+        } else if (lowerBound > upperBound) {
+            return pos;
+        } else {
+            upperBound = pos - 1;          // its in the lower
+        }
+    }
+}
+
+bool HistoryModel::isAscending() const
+{
+    return mSort && mSort->sort().sortOrder() == Qt::AscendingOrder;
+}
+
 QVariant HistoryModel::get(int row) const
 {
     if (row >= rowCount() || row < 0) {

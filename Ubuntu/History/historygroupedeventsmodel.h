@@ -55,8 +55,6 @@ public:
     QStringList groupingProperties() const;
     void setGroupingProperties(const QStringList &properties);
 
-    bool isAscending() const;
-
 Q_SIGNALS:
     void groupingPropertiesChanged();
 
@@ -67,12 +65,9 @@ protected Q_SLOTS:
     void onEventsRemoved(const History::Events &events);
 
 protected:
-    bool compareParticipants(const QStringList &list1, const QStringList &list2);
     bool areOfSameGroup(const History::Event &event1, const History::Event &event2);
     void addEventToGroup(const History::Event &event, HistoryEventGroup &group, int row);
     void removeEventFromGroup(const History::Event &event, HistoryEventGroup &group, int row);
-    bool lessThan(const History::Event &left, const History::Event &right) const;
-    int positionForEvent(const History::Event &event) const;
 
 private:
     QStringList mGroupingProperties;
