@@ -219,12 +219,18 @@ void ContactMatcher::requestContactInfo(const QString &phoneNumber)
     }
 
     QContactFetchRequest *request = new QContactFetchRequest(this);
-    mRequests[request] = phoneNumber;
+    QContactFetchHint hint;
+    hint.setDetailTypesHint(QList<QContactDetail::DetailType>() << QContactDetail::TypeDisplayLabel
+                                                                << QContactDetail::TypePhoneNumber
+                                                                << QContactDetail::TypeAvatar);
+    request->setFetchHint(hint);
     request->setFilter(QContactPhoneNumber::match(phoneNumber));
+    request->setManager(mManager);
     connect(request,
             SIGNAL(stateChanged(QContactAbstractRequest::State)),
             SLOT(onRequestStateChanged(QContactAbstractRequest::State)));
-    request->setManager(mManager);
+
+    mRequests[request] = phoneNumber;
     request->start();
 }
 
