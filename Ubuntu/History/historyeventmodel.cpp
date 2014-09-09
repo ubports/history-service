@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Canonical, Ltd.
+ * Copyright (C) 2013-2014 Canonical, Ltd.
  *
  * Authors:
  *  Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>
@@ -29,8 +29,11 @@
 #include "textevent.h"
 #include "texteventattachment.h"
 #include "historyqmltexteventattachment.h"
+#include "phoneutils_p.h"
 #include "thread.h"
+#include "types.h"
 #include "voiceevent.h"
+#include "contactmatcher_p.h"
 #include <QDebug>
 #include <QTimerEvent>
 #include <QDBusMetaType>
@@ -38,7 +41,7 @@
 HistoryEventModel::HistoryEventModel(QObject *parent) :
     QAbstractListModel(parent), mCanFetchMore(true), mFilter(0),
     mSort(new HistoryQmlSort(this)), mType(HistoryThreadModel::EventTypeText),
-    mEventWritingTimer(0), mUpdateTimer(0)
+    mMatchContacts(false), mEventWritingTimer(0), mUpdateTimer(0)
 {
     connect(this, SIGNAL(rowsInserted(QModelIndex,int,int)), this, SIGNAL(countChanged()));
     connect(this, SIGNAL(rowsRemoved(QModelIndex,int,int)), this, SIGNAL(countChanged()));
@@ -54,6 +57,7 @@ HistoryEventModel::HistoryEventModel(QObject *parent) :
     mRoles[TimestampRole] = "timestamp";
     mRoles[DateRole] = "date";
     mRoles[NewEventRole] = "newEvent";
+    mRoles[PropertiesRole] = "properties";
     mRoles[TextMessageRole] = "textMessage";
     mRoles[TextMessageTypeRole] = "textMessageType";
     mRoles[TextMessageStatusRole] = "textMessageStatus";
@@ -62,6 +66,10 @@ HistoryEventModel::HistoryEventModel(QObject *parent) :
     mRoles[TextReadSubjectRole] = "textSubject";
     mRoles[CallMissedRole] = "callMissed";
     mRoles[CallDurationRole] = "callDuration";
+
+    connect(ContactMatcher::instance(),
+            SIGNAL(contactInfoChanged(QString,QVariantMap)),
+            SLOT(onContactInfoChanged(QString,QVariantMap)));
 
     // create the view and get some objects
     triggerQueryUpdate();
@@ -89,7 +97,6 @@ QVariant HistoryEventModel::eventData(const History::Event &event, int role) con
 {
     History::TextEvent textEvent;
     History::VoiceEvent voiceEvent;
-    History::Thread thread;
 
     switch (event.type()) {
     case History::EventTypeText:
@@ -110,7 +117,11 @@ QVariant HistoryEventModel::eventData(const History::Event &event, int role) con
         result = event.threadId();
         break;
     case ParticipantsRole:
-        result = event.participants();
+        if (mMatchContacts) {
+            result = ContactMatcher::instance()->contactInfo(event.participants());
+        } else {
+            result = event.participants();
+        }
         break;
     case TypeRole:
         result = event.type();
@@ -129,6 +140,9 @@ QVariant HistoryEventModel::eventData(const History::Event &event, int role) con
         break;
     case NewEventRole:
         result = event.newEvent();
+        break;
+    case PropertiesRole:
+        result = event.properties();
         break;
     case TextMessageRole:
         if (!textEvent.isNull()) {
@@ -272,6 +286,22 @@ void HistoryEventModel::setType(HistoryThreadModel::EventType value)
     mType = value;
     Q_EMIT typeChanged();
     triggerQueryUpdate();
+}
+
+bool HistoryEventModel::matchContacts() const
+{
+    return mMatchContacts;
+}
+
+void HistoryEventModel::setMatchContacts(bool value)
+{
+    mMatchContacts = value;
+    Q_EMIT matchContactsChanged();
+
+    // mark all indexes as changed
+    if (rowCount() > 0) {
+        Q_EMIT dataChanged(index(0), index(rowCount()-1));
+    }
 }
 
 QString HistoryEventModel::threadIdForParticipants(const QString &accountId, int eventType, const QStringList &participants, int matchFlags, bool create)
@@ -457,6 +487,34 @@ void HistoryEventModel::onEventsRemoved(const History::Events &events)
     // FIXME: there is a corner case here: if an event was not loaded yet, but was already
     // removed by another client, it will still show up when a new page is requested. Maybe it
     // should be handle internally in History::EventView?
+}
+
+void HistoryEventModel::onContactInfoChanged(const QString &phoneNumber, const QVariantMap &contactInfo)
+{
+    Q_UNUSED(contactInfo)
+    if (!mMatchContacts) {
+        return;
+    }
+
+    QList<QModelIndex> changedIndexes;
+    int count = rowCount();
+    for (int i = 0; i < count; ++i) {
+        // WARNING: do not use mEvents directly to verify which indexes to change as there is the
+        // HistoryGroupedEventsModel which is based on this model and handles the items in a different way
+        QModelIndex idx = index(i);
+        QVariantMap eventProperties = idx.data(PropertiesRole).toMap();
+        QStringList participants = eventProperties[History::FieldParticipants].toStringList();
+        Q_FOREACH(const QString &participant, participants) {
+            if (PhoneUtils::comparePhoneNumbers(participant, phoneNumber)) {
+                changedIndexes << idx;
+            }
+        }
+    }
+
+    // now emit the dataChanged signal to all changed indexes
+    Q_FOREACH(const QModelIndex &idx, changedIndexes) {
+        Q_EMIT dataChanged(idx, idx);
+    }
 }
 
 void HistoryEventModel::timerEvent(QTimerEvent *event)

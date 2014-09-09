@@ -1,6 +1,7 @@
 # QML plugin
 
 set(plugin_SRCS
+    contactmatcher.cpp
     historyeventmodel.cpp
     historygroupedeventsmodel.cpp
     historythreadgroupingproxymodel.cpp
@@ -15,6 +16,7 @@ set(plugin_SRCS
     )
 
 set(plugin_HDRS
+    contactmatcher_p.h
     historyeventmodel.h
     historygroupedeventsmodel.h
     historythreadgroupingproxymodel.h
@@ -34,7 +36,7 @@ include_directories(
 
 add_library(history-qml SHARED ${plugin_SRCS} ${plugin_HDRS})
 
-qt5_use_modules(history-qml Core Qml Quick)
+qt5_use_modules(history-qml Contacts Core Qml Quick)
 
 target_link_libraries(history-qml
     historyservice

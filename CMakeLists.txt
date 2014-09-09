@@ -29,6 +29,7 @@ ENDIF(CMAKE_BUILD_TYPE MATCHES [cC][oO][vV][eE][rR][aA][gG][eE])
 # Instruct CMake to run moc automatically when needed.
 set(CMAKE_AUTOMOC ON)
 
+find_package(Qt5Contacts)
 find_package(Qt5Core)
 find_package(Qt5DBus)
 find_package(Qt5Qml)

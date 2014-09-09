@@ -140,6 +140,14 @@ static const char* FieldFilterValue = "filterValue";
 static const char* FieldMatchFlags = "matchFlags";
 static const char* FieldFilters = "filters";
 
+// contact matching stuff
+static const char* FieldContactId = "contactId";
+static const char* FieldAlias = "alias";
+static const char* FieldAvatar = "avatar";
+static const char* FieldPhoneNumber = "phoneNumber";
+static const char* FieldPhoneSubTypes = "phoneSubTypes";
+static const char* FieldPhoneContexts = "phoneContexts";
+
 }
 
 #endif // TYPES_H

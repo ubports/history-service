@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Canonical, Ltd.
+ * Copyright (C) 2013-2014 Canonical, Ltd.
  *
  * Authors:
  *  Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>
@@ -29,6 +29,8 @@
 #include "texteventattachment.h"
 #include "historyqmltexteventattachment.h"
 #include "voiceevent.h"
+#include "contactmatcher_p.h"
+#include "phoneutils_p.h"
 #include <QDebug>
 #include <QTimerEvent>
 
@@ -36,7 +38,7 @@ Q_DECLARE_METATYPE(History::TextEventAttachments)
 
 HistoryThreadModel::HistoryThreadModel(QObject *parent) :
     QAbstractListModel(parent), mCanFetchMore(true), mFilter(0), mSort(0),
-    mType(EventTypeText), mUpdateTimer(0)
+    mType(EventTypeText), mMatchContacts(false), mUpdateTimer(0)
 {
     // configure the roles
     mRoles[AccountIdRole] = "accountId";
@@ -65,6 +67,9 @@ HistoryThreadModel::HistoryThreadModel(QObject *parent) :
     connect(this, SIGNAL(rowsInserted(QModelIndex,int,int)), SIGNAL(countChanged()));
     connect(this, SIGNAL(rowsRemoved(QModelIndex,int,int)), SIGNAL(countChanged()));
     connect(this, SIGNAL(modelReset()), SIGNAL(countChanged()));
+    connect(ContactMatcher::instance(),
+            SIGNAL(contactInfoChanged(QString,QVariantMap)),
+            SLOT(onContactInfoChanged(QString,QVariantMap)));
 
     // create the results view
     triggerQueryUpdate();
@@ -113,7 +118,11 @@ QVariant HistoryThreadModel::data(const QModelIndex &index, int role) const
         result = (int) thread.type();
         break;
     case ParticipantsRole:
-        result = thread.participants();
+        if (mMatchContacts) {
+            result = ContactMatcher::instance()->contactInfo(thread.participants());
+        } else {
+            result = thread.participants();
+        }
         break;
     case CountRole:
         result = thread.count();
@@ -292,6 +301,22 @@ void HistoryThreadModel::setType(HistoryThreadModel::EventType value)
     triggerQueryUpdate();
 }
 
+bool HistoryThreadModel::matchContacts() const
+{
+    return mMatchContacts;
+}
+
+void HistoryThreadModel::setMatchContacts(bool value)
+{
+    mMatchContacts = value;
+    Q_EMIT matchContactsChanged();
+
+    // mark all indexes as changed
+    if (rowCount() > 0) {
+        Q_EMIT dataChanged(index(0), index(rowCount()-1));
+    }
+}
+
 QString HistoryThreadModel::threadIdForParticipants(const QString &accountId, int eventType, const QStringList &participants, int matchFlags, bool create)
 {
     if (participants.isEmpty()) {
@@ -437,5 +462,34 @@ void HistoryThreadModel::timerEvent(QTimerEvent *event)
         killTimer(mUpdateTimer);
         mUpdateTimer = 0;
         updateQuery();
+    }
+}
+
+
+void HistoryThreadModel::onContactInfoChanged(const QString &phoneNumber, const QVariantMap &contactInfo)
+{
+    Q_UNUSED(contactInfo)
+    if (!mMatchContacts) {
+        return;
+    }
+
+    QList<QModelIndex> changedIndexes;
+    int count = rowCount();
+    for (int i = 0; i < count; ++i) {
+        // WARNING: do not use mEvents directly to verify which indexes to change as there is the
+        // HistoryGroupedEventsModel which is based on this model and handles the items in a different way
+        QModelIndex idx = index(i);
+        QVariantMap eventProperties = idx.data(PropertiesRole).toMap();
+        QStringList participants = eventProperties[History::FieldParticipants].toStringList();
+        Q_FOREACH(const QString &participant, participants) {
+            if (PhoneUtils::comparePhoneNumbers(participant, phoneNumber)) {
+                changedIndexes << idx;
+            }
+        }
+    }
+
+    // now emit the dataChanged signal to all changed indexes
+    Q_FOREACH(const QModelIndex &idx, changedIndexes) {
+        Q_EMIT dataChanged(idx, idx);
     }
 }
