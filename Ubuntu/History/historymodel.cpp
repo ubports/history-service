@@ -31,7 +31,7 @@
 
 HistoryModel::HistoryModel(QObject *parent) :
     QAbstractListModel(parent), mFilter(0), mSort(new HistoryQmlSort(this)),
-    mType(EventTypeText), mMatchContacts(false), mUpdateTimer(0)
+    mType(EventTypeText), mMatchContacts(false), mUpdateTimer(0), mWaitingForQml(false)
 {
     // configure the roles
     mRoles[AccountIdRole] = "accountId";
@@ -217,7 +217,7 @@ void HistoryModel::onContactInfoChanged(const QString &phoneNumber, const QVaria
 
 void HistoryModel::timerEvent(QTimerEvent *event)
 {
-    if (event->timerId() == mUpdateTimer) {
+    if (event->timerId() == mUpdateTimer && !mWaitingForQml) {
         killTimer(mUpdateTimer);
         mUpdateTimer = 0;
         updateQuery();
@@ -299,6 +299,21 @@ QVariant HistoryModel::get(int row) const
     }
 
     return data;
+}
+
+void HistoryModel::classBegin()
+{
+    mWaitingForQml = true;
+}
+
+void HistoryModel::componentComplete()
+{
+    mWaitingForQml = false;
+    if (mUpdateTimer) {
+        killTimer(mUpdateTimer);
+        mUpdateTimer = 0;
+    }
+    updateQuery();
 }
 
 void HistoryModel::triggerQueryUpdate()

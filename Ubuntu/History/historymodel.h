@@ -27,10 +27,12 @@
 #include "historyqmlsort.h"
 #include <QAbstractListModel>
 #include <QStringList>
+#include <QQmlParserStatus>
 
-class HistoryModel : public QAbstractListModel
+class HistoryModel : public QAbstractListModel, public QQmlParserStatus
 {
     Q_OBJECT
+    Q_INTERFACES(QQmlParserStatus)
     Q_PROPERTY(int count READ rowCount NOTIFY countChanged)
     Q_PROPERTY(HistoryQmlFilter *filter READ filter WRITE setFilter NOTIFY filterChanged)
     Q_PROPERTY(HistoryQmlSort *sort READ sort WRITE setSort NOTIFY sortChanged)
@@ -103,6 +105,10 @@ public:
 
     Q_INVOKABLE virtual QVariant get(int row) const;
 
+    // QML parser status things
+    void classBegin();
+    void componentComplete();
+
 Q_SIGNALS:
     void countChanged();
     void filterChanged();
@@ -131,6 +137,7 @@ protected:
 private:
     QHash<int, QByteArray> mRoles;
     int mUpdateTimer;
+    bool mWaitingForQml;
 };
 
 #endif // HISTORYMODEL_H
