@@ -74,6 +74,10 @@ void TextChannelObserver::onMessageSent(const Tp::Message &message, Tp::MessageS
         return;
     }
 
+    if (message.parts()[0]["skip-storage"].variant().toBool()) {
+        return;
+    }
+ 
     Q_EMIT messageSent(textChannel, message, sentMessageToken);
 }
 
