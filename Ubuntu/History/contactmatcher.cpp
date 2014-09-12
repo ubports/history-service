@@ -271,7 +271,6 @@ void ContactMatcher::populateInfo(const QString &phoneNumber, const QContact &co
         contactInfo[History::FieldContactId] = contact.id().toString();
         contactInfo[History::FieldAlias] = QContactDisplayLabel(contact.detail(QContactDetail::TypeDisplayLabel)).label();
         contactInfo[History::FieldAvatar] = QContactAvatar(contact.detail(QContactDetail::TypeAvatar)).imageUrl().toString();
-        //contactInfo[History::FieldAlias] = contact.dis
         Q_FOREACH(const QContactPhoneNumber number, contact.details(QContactDetail::TypePhoneNumber)) {
             if (PhoneUtils::comparePhoneNumbers(number.number(), phoneNumber)) {
                 contactInfo[History::FieldPhoneSubTypes] = toVariantList(number.subTypes());
