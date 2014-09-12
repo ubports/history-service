@@ -55,7 +55,7 @@ ContactMatcher *ContactMatcher::instance()
 
 QVariantMap ContactMatcher::contactInfo(const QString &phoneNumber)
 {
-    // first do a simple stirng match on the map
+    // first do a simple string match on the map
     if (mContactMap.contains(phoneNumber)) {
         return mContactMap[phoneNumber];
     }
