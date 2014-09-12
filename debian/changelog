@@ -1,3 +1,20 @@
+history-service (0.1+14.10.20140912-0ubuntu1) utopic; urgency=low
+
+  [ Gustavo Pichorim Boiko ]
+  * Add support for matching contact info in the data models. (LP:
+    #1362387)
+  * Keep the models sorted all the time, even when new events arrive.
+    Also replace the thread grouping proxy model by a real model that
+    groups threads.
+  * If the models are used from QML, update the query right after the
+    component setup is finished.
+
+  [ Tiago Salem Herrmann ]
+  * Create temporary tables in memory
+  * Skip messages with the "skip-storage" flag set (LP: #1340255)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 12 Sep 2014 21:28:40 +0000
+
 history-service (0.1+14.10.20140821.1-0ubuntu1) utopic; urgency=low
 
   [ Gustavo Pichorim Boiko ]
