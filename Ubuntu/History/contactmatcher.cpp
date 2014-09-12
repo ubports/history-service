@@ -42,6 +42,9 @@ ContactMatcher::ContactMatcher(QObject *parent) :
     connect(mManager,
             SIGNAL(contactsRemoved(QList<QContactId>)),
             SLOT(onContactsRemoved(QList<QContactId>)));
+    connect(mManager,
+            SIGNAL(dataChanged()),
+            SLOT(onDataChanged()));
 }
 
 ContactMatcher *ContactMatcher::instance()
@@ -177,6 +180,19 @@ void ContactMatcher::onContactsRemoved(QList<QContactId> ids)
     Q_FOREACH(const QString &phoneNumber, phoneNumbersToMatch) {
         mContactMap.remove(phoneNumber);
         requestContactInfo(phoneNumber);
+    }
+}
+
+void ContactMatcher::onDataChanged()
+{
+    // invalidate the cache
+    QStringList phoneNumbers = mContactMap.keys();
+    mContactMap.clear();
+
+    Q_FOREACH(const QString &phoneNumber, phoneNumbers) {
+        QVariantMap info;
+        info[History::FieldPhoneNumber] = phoneNumber;
+        Q_EMIT contactInfoChanged(phoneNumber, info);
     }
 }
 

@@ -45,6 +45,7 @@ protected Q_SLOTS:
     void onContactsAdded(QList<QContactId> ids);
     void onContactsChanged(QList<QContactId> ids);
     void onContactsRemoved(QList<QContactId> ids);
+    void onDataChanged();
     void onRequestStateChanged(QContactAbstractRequest::State state);
 
 protected:
