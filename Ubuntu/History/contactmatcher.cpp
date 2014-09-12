@@ -42,17 +42,24 @@ ContactMatcher::ContactMatcher(QObject *parent) :
     connect(mManager,
             SIGNAL(contactsRemoved(QList<QContactId>)),
             SLOT(onContactsRemoved(QList<QContactId>)));
+    connect(mManager,
+            SIGNAL(dataChanged()),
+            SLOT(onDataChanged()));
+}
+
+ContactMatcher::~ContactMatcher()
+{
 }
 
 ContactMatcher *ContactMatcher::instance()
 {
-    static ContactMatcher *self = new ContactMatcher();
-    return self;
+    static ContactMatcher self;
+    return &self;
 }
 
 QVariantMap ContactMatcher::contactInfo(const QString &phoneNumber)
 {
-    // first do a simple stirng match on the map
+    // first do a simple string match on the map
     if (mContactMap.contains(phoneNumber)) {
         return mContactMap[phoneNumber];
     }
@@ -180,6 +187,19 @@ void ContactMatcher::onContactsRemoved(QList<QContactId> ids)
     }
 }
 
+void ContactMatcher::onDataChanged()
+{
+    // invalidate the cache
+    QStringList phoneNumbers = mContactMap.keys();
+    mContactMap.clear();
+
+    Q_FOREACH(const QString &phoneNumber, phoneNumbers) {
+        QVariantMap info;
+        info[History::FieldPhoneNumber] = phoneNumber;
+        Q_EMIT contactInfoChanged(phoneNumber, info);
+    }
+}
+
 void ContactMatcher::onRequestStateChanged(QContactAbstractRequest::State state)
 {
     QContactFetchRequest *request = qobject_cast<QContactFetchRequest*>(sender());
@@ -251,7 +271,6 @@ void ContactMatcher::populateInfo(const QString &phoneNumber, const QContact &co
         contactInfo[History::FieldContactId] = contact.id().toString();
         contactInfo[History::FieldAlias] = QContactDisplayLabel(contact.detail(QContactDetail::TypeDisplayLabel)).label();
         contactInfo[History::FieldAvatar] = QContactAvatar(contact.detail(QContactDetail::TypeAvatar)).imageUrl().toString();
-        //contactInfo[History::FieldAlias] = contact.dis
         Q_FOREACH(const QContactPhoneNumber number, contact.details(QContactDetail::TypePhoneNumber)) {
             if (PhoneUtils::comparePhoneNumbers(number.number(), phoneNumber)) {
                 contactInfo[History::FieldPhoneSubTypes] = toVariantList(number.subTypes());
