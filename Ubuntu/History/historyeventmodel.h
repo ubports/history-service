@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Canonical, Ltd.
+ * Copyright (C) 2013-2014 Canonical, Ltd.
  *
  * Authors:
  *  Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>
@@ -33,6 +33,7 @@ class HistoryEventModel : public QAbstractListModel
     Q_PROPERTY(HistoryQmlFilter *filter READ filter WRITE setFilter NOTIFY filterChanged)
     Q_PROPERTY(HistoryQmlSort *sort READ sort WRITE setSort NOTIFY sortChanged)
     Q_PROPERTY(HistoryThreadModel::EventType type READ type WRITE setType NOTIFY typeChanged)
+    Q_PROPERTY(bool matchContacts READ matchContacts WRITE setMatchContacts NOTIFY matchContactsChanged)
     Q_PROPERTY(bool canFetchMore READ canFetchMore NOTIFY canFetchMoreChanged)
     Q_ENUMS(Role)
 public:
@@ -46,6 +47,7 @@ public:
         TimestampRole,
         DateRole,
         NewEventRole,
+        PropertiesRole,
         TextMessageRole,
         TextMessageTypeRole,
         TextMessageStatusRole,
@@ -77,6 +79,9 @@ public:
     HistoryThreadModel::EventType type() const;
     void setType(HistoryThreadModel::EventType value);
 
+    bool matchContacts() const;
+    void setMatchContacts(bool value);
+
     Q_INVOKABLE QString threadIdForParticipants(const QString &accountId,
                                                 int eventType,
                                                 const QStringList &participants,
@@ -94,6 +99,7 @@ Q_SIGNALS:
     void filterChanged();
     void sortChanged();
     void typeChanged();
+    void matchContactsChanged();
     void canFetchMoreChanged();
 
 protected Q_SLOTS:
@@ -102,6 +108,7 @@ protected Q_SLOTS:
     virtual void onEventsAdded(const History::Events &events);
     virtual void onEventsModified(const History::Events &events);
     virtual void onEventsRemoved(const History::Events &events);
+    void onContactInfoChanged(const QString &phoneNumber, const QVariantMap &contactInfo);
 
 protected:
     void timerEvent(QTimerEvent *event);
@@ -114,6 +121,7 @@ private:
     HistoryQmlFilter *mFilter;
     HistoryQmlSort *mSort;
     HistoryThreadModel::EventType mType;
+    bool mMatchContacts;
     QHash<int, QByteArray> mRoles;
     mutable QMap<History::TextEvent, QList<QVariant> > mAttachmentCache;
     History::Events mEventWritingQueue;

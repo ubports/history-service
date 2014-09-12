@@ -17,6 +17,8 @@ Build-Depends: cmake,
                qt5-default,
                qtbase5-dev (>= 5.0),
                qtdeclarative5-dev (>= 5.0),
+#              version 5.0~git... is not greater or equal 5.0, so leave it as 5
+               qtpim5-dev (>= 5),
                sqlite3,
                telepathy-mission-control-5,
 Standards-Version: 3.9.4
