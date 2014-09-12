@@ -55,6 +55,7 @@ protected:
 
 private:
     explicit ContactMatcher(QObject *parent = 0);
+    ~ContactMatcher();
 
     ContactMap mContactMap;
     QMap<QContactFetchRequest*, QString> mRequests;

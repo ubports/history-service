@@ -47,10 +47,14 @@ ContactMatcher::ContactMatcher(QObject *parent) :
             SLOT(onDataChanged()));
 }
 
+ContactMatcher::~ContactMatcher()
+{
+}
+
 ContactMatcher *ContactMatcher::instance()
 {
-    static ContactMatcher *self = new ContactMatcher();
-    return self;
+    static ContactMatcher self;
+    return &self;
 }
 
 QVariantMap ContactMatcher::contactInfo(const QString &phoneNumber)
