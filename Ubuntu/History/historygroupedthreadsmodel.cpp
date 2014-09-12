@@ -108,7 +108,7 @@ int HistoryGroupedThreadsModel::existingPositionForEntry(const QVariant &propert
     int pos = -1;
     for (int i = 0; i < mGroups.count(); ++i) {
         const HistoryThreadGroup &group = mGroups[i];
-        if (mGroupingProperty == "participants") {
+        if (mGroupingProperty == History::FieldParticipants) {
             QStringList participants = propertyValue.toStringList();
             if (compareParticipants(group.displayedThread.participants(), participants)) {
                 pos = i;
