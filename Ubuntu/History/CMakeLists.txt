@@ -4,30 +4,30 @@ set(plugin_SRCS
     contactmatcher.cpp
     historyeventmodel.cpp
     historygroupedeventsmodel.cpp
-    historythreadgroupingproxymodel.cpp
-    historyqmltexteventattachment.cpp
+    historygroupedthreadsmodel.cpp
+    historymodel.cpp
     historyqmlfilter.cpp
     historyqmlintersectionfilter.cpp
     historyqmlplugin.cpp
     historyqmlsort.cpp
+    historyqmltexteventattachment.cpp
     historyqmlunionfilter.cpp
     historythreadmodel.cpp
-    sortproxymodel.cpp
     )
 
 set(plugin_HDRS
     contactmatcher_p.h
     historyeventmodel.h
     historygroupedeventsmodel.h
-    historythreadgroupingproxymodel.h
-    historyqmltexteventattachment.h
+    historygroupedthreadsmodel.h
+    historymodel.cpp
     historyqmlfilter.h
     historyqmlintersectionfilter.h
     historyqmlplugin.h
     historyqmlsort.h
+    historyqmltexteventattachment.h
     historyqmlunionfilter.h
     historythreadmodel.h
-    sortproxymodel.h
 )
 
 include_directories(

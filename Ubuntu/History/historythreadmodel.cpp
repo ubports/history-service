@@ -20,34 +20,20 @@
  */
 
 #include "historythreadmodel.h"
-#include "thread.h"
-#include "historyqmlfilter.h"
-#include "historyqmlsort.h"
+#include "historyqmltexteventattachment.h"
 #include "manager.h"
 #include "threadview.h"
-#include "textevent.h"
-#include "texteventattachment.h"
-#include "historyqmltexteventattachment.h"
 #include "voiceevent.h"
-#include "contactmatcher_p.h"
-#include "phoneutils_p.h"
-#include <QDebug>
-#include <QTimerEvent>
 
 Q_DECLARE_METATYPE(History::TextEventAttachments)
 
 HistoryThreadModel::HistoryThreadModel(QObject *parent) :
-    QAbstractListModel(parent), mCanFetchMore(true), mFilter(0), mSort(0),
-    mType(EventTypeText), mMatchContacts(false), mUpdateTimer(0)
+    HistoryModel(parent), mCanFetchMore(true)
 {
     // configure the roles
-    mRoles[AccountIdRole] = "accountId";
-    mRoles[ThreadIdRole] = "threadId";
-    mRoles[TypeRole] = "type";
-    mRoles[ParticipantsRole] = "participants";
+    mRoles = HistoryModel::roleNames();
     mRoles[CountRole] = "count";
     mRoles[UnreadCountRole] = "unreadCount";
-    mRoles[PropertiesRole] = "properties";
 
     // roles related to the thread´s last event
     mRoles[LastEventIdRole] = "eventId";
@@ -63,16 +49,6 @@ HistoryThreadModel::HistoryThreadModel(QObject *parent) :
     mRoles[LastEventTextSubjectRole] = "eventTextSubject";
     mRoles[LastEventCallMissedRole] = "eventCallMissed";
     mRoles[LastEventCallDurationRole] = "eventCallDuration";
-
-    connect(this, SIGNAL(rowsInserted(QModelIndex,int,int)), SIGNAL(countChanged()));
-    connect(this, SIGNAL(rowsRemoved(QModelIndex,int,int)), SIGNAL(countChanged()));
-    connect(this, SIGNAL(modelReset()), SIGNAL(countChanged()));
-    connect(ContactMatcher::instance(),
-            SIGNAL(contactInfoChanged(QString,QVariantMap)),
-            SLOT(onContactInfoChanged(QString,QVariantMap)));
-
-    // create the results view
-    triggerQueryUpdate();
 }
 
 int HistoryThreadModel::rowCount(const QModelIndex &parent) const
@@ -91,6 +67,16 @@ QVariant HistoryThreadModel::data(const QModelIndex &index, int role) const
     }
 
     History::Thread thread = mThreads[index.row()];
+    QVariant result = threadData(thread, role);
+    if (result.isNull()) {
+        result = HistoryModel::data(index, role);
+    }
+
+    return result;
+}
+
+QVariant HistoryThreadModel::threadData(const History::Thread &thread, int role) const
+{
     History::Event event = thread.lastEvent();
     History::TextEvent textEvent;
     History::VoiceEvent voiceEvent;
@@ -108,22 +94,6 @@ QVariant HistoryThreadModel::data(const QModelIndex &index, int role) const
 
     QVariant result;
     switch (role) {
-    case AccountIdRole:
-        result = thread.accountId();
-        break;
-    case ThreadIdRole:
-        result = thread.threadId();
-        break;
-    case TypeRole:
-        result = (int) thread.type();
-        break;
-    case ParticipantsRole:
-        if (mMatchContacts) {
-            result = ContactMatcher::instance()->contactInfo(thread.participants());
-        } else {
-            result = thread.participants();
-        }
-        break;
     case CountRole:
         result = thread.count();
         break;
@@ -214,7 +184,7 @@ QVariant HistoryThreadModel::data(const QModelIndex &index, int role) const
 
 bool HistoryThreadModel::canFetchMore(const QModelIndex &parent) const
 {
-    if (parent.isValid() || !mFilter) {
+    if (parent.isValid() || !mFilter || mThreadView.isNull()) {
         return false;
     }
 
@@ -227,7 +197,7 @@ void HistoryThreadModel::fetchMore(const QModelIndex &parent)
         return;
     }
 
-    History::Threads threads = mThreadView->nextPage();
+    History::Threads threads = fetchNextPage();
     if (threads.isEmpty()) {
         mCanFetchMore = false;
         Q_EMIT canFetchMoreChanged();
@@ -243,119 +213,10 @@ QHash<int, QByteArray> HistoryThreadModel::roleNames() const
     return mRoles;
 }
 
-HistoryQmlFilter *HistoryThreadModel::filter() const
-{
-    return mFilter;
-}
-
-void HistoryThreadModel::setFilter(HistoryQmlFilter *value)
-{
-    // disconnect the previous filter
-    if (mFilter) {
-        mFilter->disconnect(this);
-    }
-
-    mFilter = value;
-    if (mFilter) {
-        connect(mFilter,
-                SIGNAL(filterChanged()),
-                SLOT(triggerQueryUpdate()));
-    }
-
-    Q_EMIT filterChanged();
-    triggerQueryUpdate();
-}
-
-HistoryQmlSort *HistoryThreadModel::sort() const
-{
-    return mSort;
-}
-
-void HistoryThreadModel::setSort(HistoryQmlSort *value)
-{
-    // disconnect the previous sort
-    if (mSort) {
-        mSort->disconnect(this);
-    }
-
-    mSort = value;
-    if (mSort) {
-        connect(mSort,
-                SIGNAL(sortChanged()),
-                SLOT(triggerQueryUpdate()));
-    }
-
-    Q_EMIT sortChanged();
-    triggerQueryUpdate();
-}
-
-HistoryThreadModel::EventType HistoryThreadModel::type() const
-{
-    return mType;
-}
-
-void HistoryThreadModel::setType(HistoryThreadModel::EventType value)
-{
-    mType = value;
-    Q_EMIT typeChanged();
-    triggerQueryUpdate();
-}
-
-bool HistoryThreadModel::matchContacts() const
-{
-    return mMatchContacts;
-}
-
-void HistoryThreadModel::setMatchContacts(bool value)
-{
-    mMatchContacts = value;
-    Q_EMIT matchContactsChanged();
-
-    // mark all indexes as changed
-    if (rowCount() > 0) {
-        Q_EMIT dataChanged(index(0), index(rowCount()-1));
-    }
-}
-
-QString HistoryThreadModel::threadIdForParticipants(const QString &accountId, int eventType, const QStringList &participants, int matchFlags, bool create)
-{
-    if (participants.isEmpty()) {
-        return QString::null;
-    }
-
-    History::Thread thread = History::Manager::instance()->threadForParticipants(accountId,
-                                                                                 (History::EventType)eventType,
-                                                                                 participants,
-                                                                                 (History::MatchFlags)matchFlags,
-                                                                                 create);
-    if (!thread.isNull()) {
-        return thread.threadId();
-    }
-
-    return QString::null;
-}
-
 bool HistoryThreadModel::removeThread(const QString &accountId, const QString &threadId, int eventType)
 {
     History::Thread thread = History::Manager::instance()->getSingleThread((History::EventType)eventType, accountId, threadId);
     return History::Manager::instance()->removeThreads(History::Threads() << thread);
-}
-
-QVariant HistoryThreadModel::get(int row) const
-{
-    if (row < 0 || row >= mThreads.count()) {
-        return QVariant();
-    }
-
-    return mThreads[row].properties();
-}
-
-void HistoryThreadModel::triggerQueryUpdate()
-{
-    if (mUpdateTimer) {
-        killTimer(mUpdateTimer);
-    }
-    mUpdateTimer = startTimer(100);
 }
 
 void HistoryThreadModel::updateQuery()
@@ -419,25 +280,37 @@ void HistoryThreadModel::onThreadsAdded(const History::Threads &threads)
         return;
     }
 
-    // FIXME: handle sorting
-    beginInsertRows(QModelIndex(), mThreads.count(), mThreads.count() + threads.count() - 1);
-    mThreads << threads;
-    endInsertRows();
+    Q_FOREACH(const History::Thread &thread, threads) {
+        // if the thread is already inserted, skip it
+        if (mThreads.contains(thread)) {
+            continue;
+        }
+
+        int pos = positionForItem(thread.properties());
+        beginInsertRows(QModelIndex(), pos, pos);
+        mThreads.insert(pos, thread);
+        endInsertRows();
+    }
 }
 
 void HistoryThreadModel::onThreadsModified(const History::Threads &threads)
 {
+    History::Threads newThreads;
     Q_FOREACH(const History::Thread &thread, threads) {
         int pos = mThreads.indexOf(thread);
         if (pos >= 0) {
             mThreads[pos] = thread;
             QModelIndex idx = index(pos);
             Q_EMIT dataChanged(idx, idx);
+        } else {
+            newThreads << thread;
         }
     }
 
-    // FIXME: append modified threads that are not loaded yet and make sure they don´t
-    // get added twice to the model
+    // add threads that were not yet on the model
+    if (!newThreads.isEmpty()) {
+        onThreadsAdded(newThreads);
+    }
 }
 
 void HistoryThreadModel::onThreadsRemoved(const History::Threads &threads)
@@ -456,40 +329,7 @@ void HistoryThreadModel::onThreadsRemoved(const History::Threads &threads)
     // should be handle internally in History::ThreadView?
 }
 
-void HistoryThreadModel::timerEvent(QTimerEvent *event)
+History::Threads HistoryThreadModel::fetchNextPage()
 {
-    if (event->timerId() == mUpdateTimer) {
-        killTimer(mUpdateTimer);
-        mUpdateTimer = 0;
-        updateQuery();
-    }
-}
-
-
-void HistoryThreadModel::onContactInfoChanged(const QString &phoneNumber, const QVariantMap &contactInfo)
-{
-    Q_UNUSED(contactInfo)
-    if (!mMatchContacts) {
-        return;
-    }
-
-    QList<QModelIndex> changedIndexes;
-    int count = rowCount();
-    for (int i = 0; i < count; ++i) {
-        // WARNING: do not use mEvents directly to verify which indexes to change as there is the
-        // HistoryGroupedEventsModel which is based on this model and handles the items in a different way
-        QModelIndex idx = index(i);
-        QVariantMap eventProperties = idx.data(PropertiesRole).toMap();
-        QStringList participants = eventProperties[History::FieldParticipants].toStringList();
-        Q_FOREACH(const QString &participant, participants) {
-            if (PhoneUtils::comparePhoneNumbers(participant, phoneNumber)) {
-                changedIndexes << idx;
-            }
-        }
-    }
-
-    // now emit the dataChanged signal to all changed indexes
-    Q_FOREACH(const QModelIndex &idx, changedIndexes) {
-        Q_EMIT dataChanged(idx, idx);
-    }
+    return mThreadView->nextPage();
 }

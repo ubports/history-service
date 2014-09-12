@@ -22,7 +22,7 @@
 #ifndef HISTORYTHREADMODEL_H
 #define HISTORYTHREADMODEL_H
 
-#include <QAbstractListModel>
+#include "historymodel.h"
 #include "types.h"
 #include "textevent.h"
 #include "thread.h"
@@ -30,52 +30,16 @@
 class HistoryQmlFilter;
 class HistoryQmlSort;
 
-class HistoryThreadModel : public QAbstractListModel
+class HistoryThreadModel : public HistoryModel
 {
     Q_OBJECT
-    Q_PROPERTY(HistoryQmlFilter *filter READ filter WRITE setFilter NOTIFY filterChanged)
-    Q_PROPERTY(HistoryQmlSort *sort READ sort WRITE setSort NOTIFY sortChanged)
-    Q_PROPERTY(EventType type READ type WRITE setType NOTIFY typeChanged)
-    Q_PROPERTY(bool matchContacts READ matchContacts WRITE setMatchContacts NOTIFY matchContactsChanged)
-    Q_PROPERTY(int count READ rowCount NOTIFY countChanged)
-    Q_PROPERTY(bool canFetchMore READ canFetchMore NOTIFY canFetchMoreChanged)
-    Q_ENUMS(EventType)
-    Q_ENUMS(Role)
-    Q_ENUMS(MatchFlag)
-    Q_ENUMS(MessageStatus)
+    Q_ENUMS(ThreadRole)
+
 public:
-    enum EventType {
-        EventTypeText = History::EventTypeText,
-        EventTypeVoice = History::EventTypeVoice
-    };
 
-    enum MatchFlag {
-        MatchCaseSensitive = History::MatchCaseSensitive,
-        MatchCaseInsensitive = History::MatchCaseInsensitive,
-        MatchContains = History::MatchContains,
-        MatchPhoneNumber = History::MatchPhoneNumber
-    };
-
-    enum MessageStatus
-    {
-        MessageStatusUnknown = History::MessageStatusUnknown,
-        MessageStatusDelivered = History::MessageStatusDelivered,
-        MessageStatusTemporarilyFailed = History::MessageStatusTemporarilyFailed,
-        MessageStatusPermanentlyFailed = History::MessageStatusPermanentlyFailed,
-        MessageStatusAccepted = History::MessageStatusAccepted,
-        MessageStatusRead = History::MessageStatusRead,
-        MessageStatusDeleted = History::MessageStatusDeleted,
-        MessageStatusPending = History::MessageStatusPending // pending attachment download
-    };
-
-    enum Role {
-        AccountIdRole = Qt::UserRole,
-        ThreadIdRole,
-        TypeRole,
-        ParticipantsRole,
-        CountRole,
+    enum ThreadRole {
+        CountRole = HistoryModel::LastRole,
         UnreadCountRole,
-        PropertiesRole,
         LastEventIdRole,
         LastEventSenderIdRole,
         LastEventTimestampRole,
@@ -88,69 +52,38 @@ public:
         LastEventTextSubjectRole,
         LastEventTextAttachmentsRole,
         LastEventCallMissedRole,
-        LastEventCallDurationRole
+        LastEventCallDurationRole,
+        LastThreadRole
     };
 
     explicit HistoryThreadModel(QObject *parent = 0);
 
-    int rowCount(const QModelIndex &parent = QModelIndex()) const;
-    QVariant data(const QModelIndex &index, int role) const;
+    virtual int rowCount(const QModelIndex &parent = QModelIndex()) const;
+    virtual QVariant data(const QModelIndex &index, int role) const;
+    QVariant threadData(const History::Thread &thread, int role) const;
 
     bool canFetchMore(const QModelIndex &parent = QModelIndex()) const;
     void fetchMore(const QModelIndex &parent);
 
-    QHash<int, QByteArray> roleNames() const;
+    virtual QHash<int, QByteArray> roleNames() const;
 
-    HistoryQmlFilter *filter() const;
-    void setFilter(HistoryQmlFilter *value);
-
-    HistoryQmlSort *sort() const;
-    void setSort(HistoryQmlSort *value);
-
-    EventType type() const;
-    void setType(EventType value);
-
-    bool matchContacts() const;
-    void setMatchContacts(bool value);
-
-    Q_INVOKABLE QString threadIdForParticipants(const QString &accountId,
-                                                int eventType,
-                                                const QStringList &participants,
-                                                int matchFlags = (int)History::MatchCaseSensitive,
-                                                bool create = false);
     Q_INVOKABLE bool removeThread(const QString &accountId, const QString &threadId, int eventType);
-    Q_INVOKABLE QVariant get(int row) const;
-
-Q_SIGNALS:
-    void filterChanged();
-    void sortChanged();
-    void typeChanged();
-    void matchContactsChanged();
-    void countChanged();
-    void canFetchMoreChanged();
 
 protected Q_SLOTS:
-    void triggerQueryUpdate();
-    void updateQuery();
-    void onThreadsAdded(const History::Threads &threads);
-    void onThreadsModified(const History::Threads &threads);
-    void onThreadsRemoved(const History::Threads &threads);
-    void onContactInfoChanged(const QString &phoneNumber, const QVariantMap &contactInfo);
+    virtual void updateQuery();
+    virtual void onThreadsAdded(const History::Threads &threads);
+    virtual void onThreadsModified(const History::Threads &threads);
+    virtual void onThreadsRemoved(const History::Threads &threads);
 
 protected:
-    void timerEvent(QTimerEvent *event);
+    History::Threads fetchNextPage();
 
 private:
     History::ThreadViewPtr mThreadView;
     History::Threads mThreads;
     bool mCanFetchMore;
-    HistoryQmlFilter *mFilter;
-    HistoryQmlSort *mSort;
-    EventType mType;
-    bool mMatchContacts;
     QHash<int, QByteArray> mRoles;
     mutable QMap<History::TextEvent, QList<QVariant> > mAttachmentCache;
-    int mUpdateTimer;
 };
 
 #endif // HISTORYTHREADMODEL_H
