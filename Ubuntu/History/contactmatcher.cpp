@@ -49,6 +49,12 @@ ContactMatcher::ContactMatcher(QObject *parent) :
 
 ContactMatcher::~ContactMatcher()
 {
+    Q_FOREACH(QContactFetchRequest *request, mRequests.keys()) {
+        request->deleteLater();
+    }
+    mRequests.clear();
+    mContactMap.clear();
+    mManager->deleteLater();
 }
 
 ContactMatcher *ContactMatcher::instance()
