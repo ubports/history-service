@@ -102,6 +102,10 @@ public:
                                                 const QStringList &participants,
                                                 int matchFlags = (int)History::MatchCaseSensitive,
                                                 bool create = false);
+    Q_INVOKABLE bool writeTextInformationEvent(const QString &accountId,
+                                   const QString &threadId,
+                                   const QStringList &participants,
+                                   const QString &message);
 
     Q_INVOKABLE virtual QVariant get(int row) const;
 

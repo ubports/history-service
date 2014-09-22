@@ -25,8 +25,10 @@
 #include "contactmatcher_p.h"
 #include "phoneutils_p.h"
 #include "thread.h"
+#include "textevent.h"
 #include "manager.h"
 #include <QTimerEvent>
+#include <QCryptographicHash>
 #include <QDebug>
 
 HistoryModel::HistoryModel(QObject *parent) :
@@ -185,6 +187,29 @@ QString HistoryModel::threadIdForParticipants(const QString &accountId, int even
     }
 
     return QString::null;
+}
+
+bool HistoryModel::writeTextInformationEvent(const QString &accountId, const QString &threadId, const QStringList &participants, const QString &message)
+{
+    if (participants.isEmpty() || threadId.isEmpty() || accountId.isEmpty()) {
+        return false;
+    }
+
+    History::TextEvent historyEvent = History::TextEvent(accountId,
+                                                         threadId,
+                                                         QString(QCryptographicHash::hash(QByteArray(
+                                                                 QDateTime::currentDateTime().toString().toLatin1()), 
+                                                                 QCryptographicHash::Md5)),
+                                                         "self",
+                                                         QDateTime::currentDateTime(),
+                                                         false,
+                                                         message,
+                                                         History::MessageTypeInformation,
+                                                         History::MessageStatusUnknown,
+                                                         QDateTime::currentDateTime());
+    History::Events events;
+    events << historyEvent;
+    return History::Manager::instance()->writeEvents(events);
 }
 
 void HistoryModel::onContactInfoChanged(const QString &phoneNumber, const QVariantMap &contactInfo)
