@@ -40,7 +40,7 @@ BEGIN
     UPDATE threads SET lastEventId=(SELECT eventId FROM text_events WHERE
         accountId=new.accountId AND
         threadId=new.threadId AND
-        messageType!=2)
+        messageType!=2
         ORDER BY timestamp DESC LIMIT 1)
         WHERE accountId=new.accountId AND threadId=new.threadId AND type=0;
     UPDATE threads SET lastEventTimestamp=(SELECT timestamp FROM text_events WHERE
