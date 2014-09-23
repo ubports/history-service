@@ -199,7 +199,7 @@ bool HistoryModel::writeTextInformationEvent(const QString &accountId, const QSt
                                                          threadId,
                                                          QString(QCryptographicHash::hash(QByteArray(
                                                                  QDateTime::currentDateTime().toString().toLatin1()), 
-                                                                 QCryptographicHash::Md5)),
+                                                                 QCryptographicHash::Md5).toHex()),
                                                          "self",
                                                          QDateTime::currentDateTime(),
                                                          false,
