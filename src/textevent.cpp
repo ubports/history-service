@@ -70,7 +70,7 @@ QVariantMap TextEventPrivate::properties() const
     map[FieldMessage] = message;
     map[FieldMessageType] = (int)messageType;
     map[FieldMessageStatus] = (int)messageStatus;
-    map[FieldReadTimestamp] = readTimestamp.toString(Qt::ISODate);
+    map[FieldReadTimestamp] = readTimestamp.toString("yyyy-MM-ddTHH:mm:ss.zzz");
     map[FieldSubject] = subject;
 
     QList<QVariantMap> attachmentsMap;

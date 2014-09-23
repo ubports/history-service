@@ -173,12 +173,12 @@ void TextEventTest::testFromProperties()
     properties[History::FieldThreadId] = threadId;
     properties[History::FieldEventId] = eventId;
     properties[History::FieldSenderId] = senderId;
-    properties[History::FieldTimestamp] = timestamp.toString(Qt::ISODate);
+    properties[History::FieldTimestamp] = timestamp.toString("yyyy-MM-ddTHH:mm:ss.zzz");
     properties[History::FieldNewEvent] = newEvent;
     properties[History::FieldMessage] = message;
     properties[History::FieldMessageType] = messageType;
     properties[History::FieldMessageStatus] = messageStatus;
-    properties[History::FieldReadTimestamp] = readTimestamp.toString(Qt::ISODate);
+    properties[History::FieldReadTimestamp] = readTimestamp.toString("yyyy-MM-ddTHH:mm:ss.zzz");
     properties[History::FieldSubject] = subject;
 
     History::TextEvent textEvent = History::TextEvent::fromProperties(properties);
@@ -258,12 +258,12 @@ void TextEventTest::testProperties()
     QCOMPARE(properties[History::FieldThreadId].toString(), threadId);
     QCOMPARE(properties[History::FieldEventId].toString(), eventId);
     QCOMPARE(properties[History::FieldSenderId].toString(), senderId);
-    QCOMPARE(properties[History::FieldTimestamp].toString(), timestamp.toString(Qt::ISODate));
+    QCOMPARE(properties[History::FieldTimestamp].toString(), timestamp.toString("yyyy-MM-ddTHH:mm:ss.zzz"));
     QCOMPARE(properties[History::FieldNewEvent].toBool(), newEvent);
     QCOMPARE(properties[History::FieldMessage].toString(), message);
     QCOMPARE(properties[History::FieldMessageType].toInt(), messageType);
     QCOMPARE(properties[History::FieldMessageStatus].toInt(), messageStatus);
-    QCOMPARE(properties[History::FieldReadTimestamp].toString(), readTimestamp.toString(Qt::ISODate));
+    QCOMPARE(properties[History::FieldReadTimestamp].toString(), readTimestamp.toString("yyyy-MM-ddTHH:mm:ss.zzz"));
     QCOMPARE(properties[History::FieldSubject].toString(), subject);
 }
 
