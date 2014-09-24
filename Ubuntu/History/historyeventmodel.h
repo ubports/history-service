@@ -54,7 +54,6 @@ public:
     virtual int rowCount(const QModelIndex &parent = QModelIndex()) const;
     virtual QVariant data(const QModelIndex &index, int role) const;
     QVariant eventData(const History::Event &event, int role) const;
-    Q_INVOKABLE int rowForEventId(const QString &eventId);
 
     Q_INVOKABLE virtual bool canFetchMore(const QModelIndex &parent = QModelIndex()) const;
     Q_INVOKABLE virtual void fetchMore(const QModelIndex &parent = QModelIndex());

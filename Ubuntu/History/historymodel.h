@@ -40,6 +40,7 @@ class HistoryModel : public QAbstractListModel, public QQmlParserStatus
     Q_PROPERTY(bool matchContacts READ matchContacts WRITE setMatchContacts NOTIFY matchContactsChanged)
     Q_PROPERTY(bool canFetchMore READ canFetchMore NOTIFY canFetchMoreChanged)
     Q_ENUMS(EventType)
+    Q_ENUMS(MessageType)
     Q_ENUMS(MatchFlag)
     Q_ENUMS(MessageStatus)
     Q_ENUMS(Role)
@@ -48,6 +49,12 @@ public:
     enum EventType {
         EventTypeText = History::EventTypeText,
         EventTypeVoice = History::EventTypeVoice
+    };
+
+    enum MessageType {
+        MessageTypeText = History::MessageTypeText,
+        MessageTypeMultiPart = History::MessageTypeMultiPart,
+        MessageTypeInformation = History::MessageTypeInformation
     };
 
     enum MatchFlag {
