@@ -379,3 +379,14 @@ History::Events HistoryEventModel::fetchNextPage()
 {
     return mView->nextPage();
 }
+
+int HistoryEventModel::rowForEventId(const QString &eventId)
+{
+    Q_FOREACH(const History::Event &event, mEvents) {
+        if (event.eventId() == eventId) {
+            return mEvents.indexOf(event);
+        }
+    }
+    return -1;
+}
+
