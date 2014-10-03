@@ -1,3 +1,14 @@
+history-service (0.1+14.10.20141003-0ubuntu1) 14.09; urgency=low
+
+  [ Ubuntu daily release ]
+  * New rebuild forced
+
+  [ Tiago Salem Herrmann ]
+  * Add support for a new message Type: MessageTypeInformation (LP:
+    #1356950)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 03 Oct 2014 15:48:10 +0000
+
 history-service (0.1+14.10.20140912-0ubuntu1) utopic; urgency=low
 
   [ Gustavo Pichorim Boiko ]
