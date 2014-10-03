@@ -54,7 +54,7 @@ QVariantMap EventPrivate::properties() const
     map[FieldThreadId] = threadId;
     map[FieldEventId] = eventId;
     map[FieldSenderId] = senderId;
-    map[FieldTimestamp] = timestamp.toString(Qt::ISODate);
+    map[FieldTimestamp] = timestamp.toString("yyyy-MM-ddTHH:mm:ss.zzz");
     map[FieldDate] = timestamp.date().toString(Qt::ISODate);
     map[FieldNewEvent] = newEvent;
     map[FieldType] = type();
