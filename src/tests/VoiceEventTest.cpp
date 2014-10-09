@@ -205,7 +205,7 @@ void VoiceEventTest::testProperties()
     QCOMPARE(properties[History::FieldThreadId].toString(), threadId);
     QCOMPARE(properties[History::FieldEventId].toString(), eventId);
     QCOMPARE(properties[History::FieldSenderId].toString(), senderId);
-    QCOMPARE(properties[History::FieldTimestamp].toString(), timestamp.toString(Qt::ISODate));
+    QCOMPARE(properties[History::FieldTimestamp].toString(), timestamp.toString("yyyy-MM-ddTHH:mm:ss.zzz"));
     QCOMPARE(properties[History::FieldNewEvent].toBool(), newEvent);
     QCOMPARE(properties[History::FieldMissed].toBool(), missed);
     QCOMPARE(QTime(0,0).addSecs(properties[History::FieldDuration].toInt()), duration);
