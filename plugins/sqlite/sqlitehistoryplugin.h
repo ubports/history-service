@@ -78,8 +78,7 @@ public:
     QString sqlQueryForEvents(History::EventType type, const QString &condition, const QString &order);
     QList<QVariantMap> parseEventResults(History::EventType type, QSqlQuery &query);
 
-private:
-    QString toLocalTimeString(const QDateTime &timestamp);
+    static QString toLocalTimeString(const QDateTime &timestamp);
 };
 
 #endif // SQLITEHISTORYPLUGIN_H

@@ -657,5 +657,5 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseEventResults(History::EventType typ
 
 QString SQLiteHistoryPlugin::toLocalTimeString(const QDateTime &timestamp)
 {
-    return QDateTime(timestamp.date(), timestamp.time(), Qt::UTC).toLocalTime().toString(Qt::ISODate);
+    return QDateTime(timestamp.date(), timestamp.time(), Qt::UTC).toLocalTime().toString("yyyy-MM-ddTHH:mm:ss.zzz");
 }
