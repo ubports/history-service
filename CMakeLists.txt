@@ -70,4 +70,5 @@ set(PACKAGE_VERSION ${HISTORY_VERSION_MAJOR}.${HISTORY_VERSION_MINOR}.${HISTORY_
 add_subdirectory(src)
 add_subdirectory(daemon)
 add_subdirectory(plugins)
+add_subdirectory(tools)
 add_subdirectory(Ubuntu)

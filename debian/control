@@ -41,6 +41,20 @@ Description: History service to store messages and calls
  This package contains the history service daemon that watches for Telepathy
  events and stores.
 
+Package: history-service-tools
+Architecture: any
+Multi-Arch: foreign
+Pre-Depends: dpkg (>= 1.15.6~),
+Section: utils
+Depends: history-service (= ${binary:Version}),
+         ${misc:Depends},
+         ${shlibs:Depends},
+Description: History service to store messages and calls - tools
+ A service to record the messages that are sent and received and the calls that
+ are made in the Ubuntu Touch platform.
+ .
+ This package contains some tools to be used with the history service.
+
 Package: libhistoryservice0
 Architecture: any
 Multi-Arch: same
