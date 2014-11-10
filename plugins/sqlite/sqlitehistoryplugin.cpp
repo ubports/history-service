@@ -300,12 +300,12 @@ History::EventWriteResult SQLiteHistoryPlugin::writeTextEvent(const QVariantMap 
     query.bindValue(":threadId", event[History::FieldThreadId]);
     query.bindValue(":eventId", event[History::FieldEventId]);
     query.bindValue(":senderId", event[History::FieldSenderId]);
-    query.bindValue(":timestamp", event[History::FieldTimestamp]);
+    query.bindValue(":timestamp", event[History::FieldTimestamp].toDateTime().toUTC());
     query.bindValue(":newEvent", event[History::FieldNewEvent]);
     query.bindValue(":message", event[History::FieldMessage]);
     query.bindValue(":messageType", event[History::FieldMessageType]);
     query.bindValue(":messageStatus", event[History::FieldMessageStatus]);
-    query.bindValue(":readTimestamp", event[History::FieldReadTimestamp]);
+    query.bindValue(":readTimestamp", event[History::FieldReadTimestamp].toDateTime().toUTC());
     query.bindValue(":subject", event[History::FieldSubject].toString());
 
     if (!query.exec()) {
@@ -394,7 +394,7 @@ History::EventWriteResult SQLiteHistoryPlugin::writeVoiceEvent(const QVariantMap
     query.bindValue(":threadId", event[History::FieldThreadId]);
     query.bindValue(":eventId", event[History::FieldEventId]);
     query.bindValue(":senderId", event[History::FieldSenderId]);
-    query.bindValue(":timestamp", event[History::FieldTimestamp]);
+    query.bindValue(":timestamp", event[History::FieldTimestamp].toDateTime().toUTC());
     query.bindValue(":newEvent", event[History::FieldNewEvent]);
     query.bindValue(":duration", event[History::FieldDuration]);
     query.bindValue(":missed", event[History::FieldMissed]);
@@ -515,7 +515,7 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseThreadResults(History::EventType ty
 
         // the generic event fields
         thread[History::FieldSenderId] = query.value(6);
-        thread[History::FieldTimestamp] = query.value(7);
+        thread[History::FieldTimestamp] = toLocalTimeString(query.value(7).toDateTime());
         thread[History::FieldNewEvent] = query.value(8);
 
         // the next step is to get the last event
@@ -550,7 +550,7 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseThreadResults(History::EventType ty
             thread[History::FieldMessage] = query.value(9);
             thread[History::FieldMessageType] = query.value(10);
             thread[History::FieldMessageStatus] = query.value(11);
-            thread[History::FieldReadTimestamp] = query.value(12);
+            thread[History::FieldReadTimestamp] = toLocalTimeString(query.value(12).toDateTime());
             break;
         case History::EventTypeVoice:
             thread[History::FieldMissed] = query.value(10);
@@ -604,7 +604,7 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseEventResults(History::EventType typ
         event[History::FieldThreadId] = threadId;
         event[History::FieldEventId] = eventId;
         event[History::FieldSenderId] = query.value(3);
-        event[History::FieldTimestamp] = query.value(4);
+        event[History::FieldTimestamp] = toLocalTimeString(query.value(4).toDateTime());
         event[History::FieldNewEvent] = query.value(5);
         event[History::FieldParticipants] = query.value(6).toString().split("|,|");
 
@@ -642,7 +642,7 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseEventResults(History::EventType typ
             event[History::FieldMessage] = query.value(7);
             event[History::FieldMessageType] = query.value(8);
             event[History::FieldMessageStatus] = query.value(9);
-            event[History::FieldReadTimestamp] = query.value(10);
+            event[History::FieldReadTimestamp] = toLocalTimeString(query.value(10).toDateTime());
             break;
         case History::EventTypeVoice:
             event[History::FieldDuration] = query.value(7).toInt();
@@ -653,4 +653,9 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseEventResults(History::EventType typ
         events << event;
     }
     return events;
+}
+
+QString SQLiteHistoryPlugin::toLocalTimeString(const QDateTime &timestamp)
+{
+    return QDateTime(timestamp.date(), timestamp.time(), Qt::UTC).toLocalTime().toString("yyyy-MM-ddTHH:mm:ss.zzz");
 }

@@ -343,12 +343,14 @@ void SqlitePluginTest::testWriteTextEvent()
         QCOMPARE(query.value("threadId"), event[History::FieldThreadId]);
         QCOMPARE(query.value("eventId"), event[History::FieldEventId]);
         QCOMPARE(query.value("senderId"), event[History::FieldSenderId]);
-        QCOMPARE(query.value("timestamp"), event[History::FieldTimestamp]);
+        QCOMPARE(mPlugin->toLocalTimeString(query.value("timestamp").toDateTime()),
+                 event[History::FieldTimestamp].toString());
         QCOMPARE(query.value("newEvent"), event[History::FieldNewEvent]);
         QCOMPARE(query.value("message"), event[History::FieldMessage]);
         QCOMPARE(query.value("messageType"), event[History::FieldMessageType]);
         QCOMPARE(query.value("messageStatus"), event[History::FieldMessageStatus]);
-        QCOMPARE(query.value("readTimestamp"), event[History::FieldReadTimestamp]);
+        QCOMPARE(mPlugin->toLocalTimeString(query.value("readTimestamp").toDateTime()),
+                 event[History::FieldReadTimestamp].toString());
         QCOMPARE(query.value("subject"), event[History::FieldSubject]);
     }
 
@@ -419,12 +421,14 @@ void SqlitePluginTest::testModifyTextEvent()
         QCOMPARE(query.value("threadId"), event[History::FieldThreadId]);
         QCOMPARE(query.value("eventId"), event[History::FieldEventId]);
         QCOMPARE(query.value("senderId"), event[History::FieldSenderId]);
-        QCOMPARE(query.value("timestamp"), event[History::FieldTimestamp]);
+        QCOMPARE(mPlugin->toLocalTimeString(query.value("timestamp").toDateTime()),
+                 event[History::FieldTimestamp].toString());
         QCOMPARE(query.value("newEvent"), event[History::FieldNewEvent]);
         QCOMPARE(query.value("message"), event[History::FieldMessage]);
         QCOMPARE(query.value("messageType"), event[History::FieldMessageType]);
         QCOMPARE(query.value("messageStatus"), event[History::FieldMessageStatus]);
-        QCOMPARE(query.value("readTimestamp"), event[History::FieldReadTimestamp]);
+        QCOMPARE(mPlugin->toLocalTimeString(query.value("readTimestamp").toDateTime()),
+                 event[History::FieldReadTimestamp].toString());
         QCOMPARE(query.value("subject"), event[History::FieldSubject]);
     }
 
@@ -495,7 +499,8 @@ void SqlitePluginTest::testWriteVoiceEvent()
         QCOMPARE(query.value("threadId"), event[History::FieldThreadId]);
         QCOMPARE(query.value("eventId"), event[History::FieldEventId]);
         QCOMPARE(query.value("senderId"), event[History::FieldSenderId]);
-        QCOMPARE(query.value("timestamp"), event[History::FieldTimestamp]);
+        QCOMPARE(mPlugin->toLocalTimeString(query.value("timestamp").toDateTime()),
+                 event[History::FieldTimestamp].toString());
         QCOMPARE(query.value("newEvent"), event[History::FieldNewEvent]);
         QCOMPARE(query.value("missed"), event[History::FieldMissed]);
         QCOMPARE(query.value("duration"), event[History::FieldDuration]);
@@ -542,7 +547,8 @@ void SqlitePluginTest::testModifyVoiceEvent()
         QCOMPARE(query.value("threadId"), event[History::FieldThreadId]);
         QCOMPARE(query.value("eventId"), event[History::FieldEventId]);
         QCOMPARE(query.value("senderId"), event[History::FieldSenderId]);
-        QCOMPARE(query.value("timestamp"), event[History::FieldTimestamp]);
+        QCOMPARE(mPlugin->toLocalTimeString(query.value("timestamp").toDateTime()),
+                 event[History::FieldTimestamp].toString());
         QCOMPARE(query.value("newEvent"), event[History::FieldNewEvent]);
         QCOMPARE(query.value("missed"), event[History::FieldMissed]);
         QCOMPARE(query.value("duration"), event[History::FieldDuration]);
