@@ -10,7 +10,6 @@ Build-Depends: cmake,
                gnome-keyring,
                libqt5sql5-sqlite,
                libsqlite3-dev,
-               libtelepathy-logger-qt5-dev,
                libtelepathy-qt5-dev,
                pkg-config,
                python,
@@ -54,8 +53,7 @@ Description: History service to store messages and calls - tools
  A service to record the messages that are sent and received and the calls that
  are made in the Ubuntu Touch platform.
  .
- This package contains some tools to be used with the history service. Currently
- there is just one tool to import existing logs from Telepathy Logger.
+ This package contains some tools to be used with the history service.
 
 Package: libhistoryservice0
 Architecture: any
