@@ -1,3 +1,12 @@
+history-service (0.1+15.04.20141110-0ubuntu1) vivid; urgency=low
+
+  [ Gustavo Pichorim Boiko ]
+  * Save timestamps in UTC. (LP: #1379018)
+  * Remove the tools and their dependencies: they are obsolete and not
+    useful anymore.
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 10 Nov 2014 13:23:06 +0000
+
 history-service (0.1+14.10.20141003-0ubuntu1) 14.09; urgency=low
 
   [ Ubuntu daily release ]
