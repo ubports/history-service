@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2014 Canonical, Ltd.
+ * Copyright (C) 2013-2015 Canonical, Ltd.
  *
  * Authors:
  *  Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>
@@ -190,10 +190,31 @@ QHash<int, QByteArray> HistoryEventModel::roleNames() const
     return mRoles;
 }
 
-bool HistoryEventModel::removeEvent(const QString &accountId, const QString &threadId, const QString &eventId, int eventType)
+bool HistoryEventModel::removeEvents(const QVariantList &eventsProperties)
 {
-    History::Event event = History::Manager::instance()->getSingleEvent((History::EventType)eventType, accountId, threadId, eventId);
-    return History::Manager::instance()->removeEvents(History::Events() << event);
+    History::Events events;
+    Q_FOREACH(const QVariant &entry, eventsProperties) {
+        QVariantMap eventProperties = entry.toMap();
+        History::Event event;
+        switch (eventProperties[History::FieldType].toInt()) {
+        case History::EventTypeText:
+            event = History::TextEvent::fromProperties(eventProperties);
+            break;
+        case History::EventTypeVoice:
+            event = History::VoiceEvent::fromProperties(eventProperties);
+            break;
+        }
+
+        if (!event.isNull()) {
+            events << event;
+        }
+    }
+
+    if (events.isEmpty()) {
+        return false;
+    }
+
+    return History::Manager::instance()->removeEvents(events);
 }
 
 bool HistoryEventModel::removeEventAttachment(const QString &accountId, const QString &threadId, const QString &eventId, int eventType, const QString &attachmentId)
