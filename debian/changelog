@@ -1,3 +1,10 @@
+history-service (0.1+15.04.20150106-0ubuntu1) vivid; urgency=low
+
+  [ Gustavo Pichorim Boiko ]
+  * Make it possible to delete multiple entries from QML. (LP: #1404286)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 06 Jan 2015 17:47:46 +0000
+
 history-service (0.1+15.04.20141110-0ubuntu1) vivid; urgency=low
 
   [ Gustavo Pichorim Boiko ]
