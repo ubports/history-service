@@ -39,7 +39,7 @@ SQLiteHistoryThreadView::SQLiteHistoryThreadView(SQLiteHistoryPlugin *plugin,
     mQuery.setForwardOnly(true);
 
     // FIXME: validate the filter
-    QString condition = filter.toString();
+    QString condition = mPlugin->filterToString(filter);
     QString order;
     if (!sort.sortField().isNull()) {
         order = QString("ORDER BY %1 %2").arg(sort.sortField(), sort.sortOrder() == Qt::AscendingOrder ? "ASC" : "DESC");
