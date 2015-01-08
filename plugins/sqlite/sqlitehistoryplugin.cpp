@@ -725,7 +725,7 @@ QString SQLiteHistoryPlugin::filterToString(const History::Filter &filter, const
         QString propertyName = propertyPrefix.isNull() ? filterProperty : QString("%1.%2").arg(propertyPrefix, filterProperty);
         // FIXME: need to check for other match flags and multiple match flags
         if (filter.matchFlags() & History::MatchContains) {
-            result = QString("%1=\"\%%2\%\"").arg(propertyName, filterValue.toString());
+            result = QString("%1 LIKE \"\%%2\%\"").arg(propertyName, filterValue.toString());
         } else {
             result = QString("%1=%2").arg(propertyName, value);
         }

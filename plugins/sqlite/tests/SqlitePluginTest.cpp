@@ -738,7 +738,7 @@ void SqlitePluginTest::testFilterToString_data()
 
     filter.setMatchFlags(History::MatchContains);
     filter.setFilterValue("partialString");
-    QTest::newRow("match contains") << filter.properties() << QString() << "testProperty=\"\%partialString\%\"";
+    QTest::newRow("match contains") << filter.properties() << QString() << "testProperty LIKE \"\%partialString\%\"";
 
     History::IntersectionFilter intersectionFilter;
     filter.setMatchFlags(History::MatchFlags());
