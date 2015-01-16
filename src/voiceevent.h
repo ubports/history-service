@@ -45,6 +45,7 @@ public:
                bool newEvent,
                bool missed,
                const QTime &duration = QTime(),
+               const QString &remoteParticipant = QString::null,
                const QStringList &participants = QStringList());
     ~VoiceEvent();
 
@@ -54,6 +55,12 @@ public:
 
     bool missed() const;
     QTime duration() const;
+
+    /***
+     * Returns the ID of the remote participant.
+     * On incoming calls that's the same as the sender() property
+     */
+    QString remoteParticipant() const;
 
     static Event fromProperties(const QVariantMap &properties);
 };

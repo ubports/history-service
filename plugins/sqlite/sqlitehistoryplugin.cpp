@@ -379,13 +379,14 @@ History::EventWriteResult SQLiteHistoryPlugin::writeVoiceEvent(const QVariantMap
     History::EventWriteResult result;
     if (existingEvent.isEmpty()) {
         // create new
-        query.prepare("INSERT INTO voice_events (accountId, threadId, eventId, senderId, timestamp, newEvent, duration, missed) "
-                      "VALUES (:accountId, :threadId, :eventId, :senderId, :timestamp, :newEvent, :duration, :missed)");
+        query.prepare("INSERT INTO voice_events (accountId, threadId, eventId, senderId, timestamp, newEvent, duration, missed, remoteParticipant) "
+                      "VALUES (:accountId, :threadId, :eventId, :senderId, :timestamp, :newEvent, :duration, :missed, :remoteParticipant)");
         result = History::EventWriteCreated;
     } else {
         // update existing event
         query.prepare("UPDATE voice_events SET senderId=:senderId, timestamp=:timestamp, newEvent=:newEvent, duration=:duration, "
-                      "missed=:missed WHERE accountId=:accountId AND threadId=:threadId AND eventId=:eventId");
+                      "missed=:missed, remoteParticipant=:remoteParticipant "
+                      "WHERE accountId=:accountId AND threadId=:threadId AND eventId=:eventId");
 
         result = History::EventWriteModified;
     }
@@ -398,6 +399,7 @@ History::EventWriteResult SQLiteHistoryPlugin::writeVoiceEvent(const QVariantMap
     query.bindValue(":newEvent", event[History::FieldNewEvent]);
     query.bindValue(":duration", event[History::FieldDuration]);
     query.bindValue(":missed", event[History::FieldMissed]);
+    query.bindValue(":remoteParticipant", event[History::FieldRemoteParticipant]);
 
     if (!query.exec()) {
         qCritical() << "Failed to save the voice event: Error:" << query.lastError() << query.lastQuery();
@@ -482,7 +484,7 @@ QString SQLiteHistoryPlugin::sqlQueryForThreads(History::EventType type, const Q
         break;
     case History::EventTypeVoice:
         table = "voice_events";
-        extraFields << "voice_events.duration" << "voice_events.missed";
+        extraFields << "voice_events.duration" << "voice_events.missed" << "voice_events.remoteParticipant";
         break;
     }
 
@@ -555,6 +557,7 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseThreadResults(History::EventType ty
         case History::EventTypeVoice:
             thread[History::FieldMissed] = query.value(10);
             thread[History::FieldDuration] = query.value(9);
+            thread[History::FieldRemoteParticipant] = query.value(11);
             break;
         }
         threads << thread;
@@ -583,7 +586,7 @@ QString SQLiteHistoryPlugin::sqlQueryForEvents(History::EventType type, const QS
     case History::EventTypeVoice:
         participantsField = participantsField.arg("voice_events", QString::number(type));
         queryText = QString("SELECT accountId, threadId, eventId, senderId, timestamp, newEvent, %1, "
-                            "duration, missed FROM voice_events %2 %3").arg(participantsField, modifiedCondition, order);
+                            "duration, missed, remoteParticipant FROM voice_events %2 %3").arg(participantsField, modifiedCondition, order);
         break;
     }
 
@@ -647,6 +650,7 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseEventResults(History::EventType typ
         case History::EventTypeVoice:
             event[History::FieldDuration] = query.value(7).toInt();
             event[History::FieldMissed] = query.value(8);
+            event[History::FieldRemoteParticipant] = query.value(9);
             break;
         }
 
