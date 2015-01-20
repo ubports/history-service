@@ -25,6 +25,8 @@
 #include "textevent.h"
 #include "texteventattachment.h"
 #include "voiceevent.h"
+#include "intersectionfilter.h"
+#include "unionfilter.h"
 
 Q_DECLARE_METATYPE(History::EventType)
 Q_DECLARE_METATYPE(History::MatchFlags)
@@ -57,6 +59,8 @@ private Q_SLOTS:
     void testEventsForThread();
     void testGetSingleEvent_data();
     void testGetSingleEvent();
+    void testFilterToString_data();
+    void testFilterToString();
 
 private:
     SQLiteHistoryPlugin *mPlugin;
@@ -707,6 +711,63 @@ void SqlitePluginTest::testGetSingleEvent()
         QCOMPARE(retrievedEvent[History::FieldDuration], event[History::FieldDuration]);
         break;
     }
+}
+
+void SqlitePluginTest::testFilterToString_data()
+{
+    QTest::addColumn<QVariantMap>("filterProperties");
+    QTest::addColumn<QString>("propertyPrefix");
+    QTest::addColumn<QString>("resultString");
+
+    History::Filter filter;
+    filter.setFilterProperty("testProperty");
+    filter.setFilterValue("stringValue");
+    QTest::newRow("simple string filter") << filter.properties() << QString() << "testProperty=\"stringValue\"";
+
+    filter.setFilterValue(12345);
+    QTest::newRow("simple integer filter") << filter.properties() << QString() << "testProperty=12345";
+
+    filter.setFilterValue(true);
+    QTest::newRow("simple true boolean filter") << filter.properties() << QString() << "testProperty=1";
+
+    filter.setFilterValue(false);
+    QTest::newRow("simple false boolean filter") << filter.properties() << QString() << "testProperty=0";
+
+    filter.setFilterValue(12345);
+    QTest::newRow("filter with a prefix") << filter.properties() << QString("prefix") << "prefix.testProperty=12345";
+
+    filter.setMatchFlags(History::MatchContains);
+    filter.setFilterValue("partialString");
+    QTest::newRow("match contains") << filter.properties() << QString() << "testProperty LIKE \"\%partialString\%\"";
+
+    History::IntersectionFilter intersectionFilter;
+    filter.setMatchFlags(History::MatchFlags());
+    filter.setFilterValue(12345);
+    intersectionFilter.append(filter);
+    filter.setFilterValue(true);
+    intersectionFilter.append(filter);
+    filter.setFilterValue("a string");
+    intersectionFilter.append(filter);
+    QTest::newRow("intersection filter") << intersectionFilter.properties() << QString() << "( (testProperty=12345) AND (testProperty=1) AND (testProperty=\"a string\") )";
+
+    History::UnionFilter unionFilter;
+    filter.setFilterValue(12345);
+    unionFilter.append(filter);
+    filter.setFilterValue(true);
+    unionFilter.append(filter);
+    filter.setFilterValue("a string");
+    unionFilter.append(filter);
+    QTest::newRow("union filter") << unionFilter.properties() << QString() << "( (testProperty=12345) OR (testProperty=1) OR (testProperty=\"a string\") )";
+}
+
+void SqlitePluginTest::testFilterToString()
+{
+    QFETCH(QVariantMap, filterProperties);
+    QFETCH(QString, propertyPrefix);
+    QFETCH(QString, resultString);
+
+    QString result = mPlugin->filterToString(History::Filter::fromProperties(filterProperties), propertyPrefix);
+    QCOMPARE(result, resultString);
 }
 
 QTEST_MAIN(SqlitePluginTest)
