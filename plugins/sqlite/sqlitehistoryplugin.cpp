@@ -707,7 +707,7 @@ QString SQLiteHistoryPlugin::filterToString(const History::Filter &filter, const
         case QVariant::String:
             // FIXME: need to escape strings
             // wrap strings
-            value = QString("\"%1\"").arg(filterValue.toString());
+            value = QString("\"%1\"").arg(escapeFilterValue(filterValue.toString()));
             break;
         case QVariant::Bool:
             value = filterValue.toBool() ? "1" : "0";
@@ -732,4 +732,15 @@ QString SQLiteHistoryPlugin::filterToString(const History::Filter &filter, const
     }
 
     return result;
+}
+
+QString SQLiteHistoryPlugin::escapeFilterValue(const QString &value) const
+{
+    QString escaped = value;
+    escaped.replace("\\", "\\\\")
+           .replace("\"", "\\\"")
+           .replace("'", "\\'")
+           .replace("%", "\\%")
+           .replace("_", "\\_");
+    return escaped;
 }

@@ -61,6 +61,8 @@ private Q_SLOTS:
     void testGetSingleEvent();
     void testFilterToString_data();
     void testFilterToString();
+    void testEscapeFilterValue_data();
+    void testEscapeFilterValue();
 
 private:
     SQLiteHistoryPlugin *mPlugin;
@@ -724,6 +726,9 @@ void SqlitePluginTest::testFilterToString_data()
     filter.setFilterValue("stringValue");
     QTest::newRow("simple string filter") << filter.properties() << QString() << "testProperty=\"stringValue\"";
 
+    filter.setFilterValue("escaped\\0\\n\"");
+    QTest::newRow("check that strings are escaped") << filter.properties() << QString() << "testProperty=\"escaped\\\\0\\\\n\\\"\"";
+
     filter.setFilterValue(12345);
     QTest::newRow("simple integer filter") << filter.properties() << QString() << "testProperty=12345";
 
@@ -768,6 +773,27 @@ void SqlitePluginTest::testFilterToString()
 
     QString result = mPlugin->filterToString(History::Filter::fromProperties(filterProperties), propertyPrefix);
     QCOMPARE(result, resultString);
+}
+
+void SqlitePluginTest::testEscapeFilterValue_data()
+{
+    QTest::addColumn<QString>("originalString");
+    QTest::addColumn<QString>("escapedString");
+
+    QTest::newRow("backslash") << QString("\\") << QString("\\\\");
+    QTest::newRow("quote") << QString("\"") << QString("\\\"");
+    QTest::newRow("single quote") << QString("'") << QString("\\'");
+    QTest::newRow("percent") << QString("%") << QString("\\%");
+    QTest::newRow("underscore") << QString("_") << QString("\\_");
+    QTest::newRow("string with all of that") << QString("\\0\"'%_bla") << QString("\\\\0\\\"\\'\\%\\_bla");
+}
+
+void SqlitePluginTest::testEscapeFilterValue()
+{
+    QFETCH(QString, originalString);
+    QFETCH(QString, escapedString);
+
+    QCOMPARE(mPlugin->escapeFilterValue(originalString), escapedString);
 }
 
 QTEST_MAIN(SqlitePluginTest)
