@@ -724,10 +724,10 @@ void SqlitePluginTest::testFilterToString_data()
     History::Filter filter;
     filter.setFilterProperty("testProperty");
     filter.setFilterValue("stringValue");
-    QTest::newRow("simple string filter") << filter.properties() << QString() << "testProperty=\"stringValue\"";
+    QTest::newRow("simple string filter") << filter.properties() << QString() << "testProperty='stringValue'";
 
-    filter.setFilterValue("escaped\\0\\n\"");
-    QTest::newRow("check that strings are escaped") << filter.properties() << QString() << "testProperty=\"escaped\\\\0\\\\n\\\"\"";
+    filter.setFilterValue("escaped\\0\\n%");
+    QTest::newRow("check that strings are escaped") << filter.properties() << QString() << "testProperty='escaped\\\\0\\\\n\\%'";
 
     filter.setFilterValue(12345);
     QTest::newRow("simple integer filter") << filter.properties() << QString() << "testProperty=12345";
@@ -743,10 +743,10 @@ void SqlitePluginTest::testFilterToString_data()
 
     filter.setMatchFlags(History::MatchContains);
     filter.setFilterValue("partialString");
-    QTest::newRow("match contains") << filter.properties() << QString() << "testProperty LIKE \"\%partialString\%\"";
+    QTest::newRow("match contains") << filter.properties() << QString() << "testProperty LIKE '\%partialString\%' ESCAPE '\\'";
 
     filter.setFilterValue("%");
-    QTest::newRow("partial match escaped") << filter.properties() << QString() << "testProperty LIKE \"\%\\\%\%\"";
+    QTest::newRow("partial match escaped") << filter.properties() << QString() << "testProperty LIKE '\%\\\%\%' ESCAPE '\\'";
 
     History::IntersectionFilter intersectionFilter;
     filter.setMatchFlags(History::MatchFlags());
@@ -756,7 +756,7 @@ void SqlitePluginTest::testFilterToString_data()
     intersectionFilter.append(filter);
     filter.setFilterValue("a string");
     intersectionFilter.append(filter);
-    QTest::newRow("intersection filter") << intersectionFilter.properties() << QString() << "( (testProperty=12345) AND (testProperty=1) AND (testProperty=\"a string\") )";
+    QTest::newRow("intersection filter") << intersectionFilter.properties() << QString() << "( (testProperty=12345) AND (testProperty=1) AND (testProperty='a string') )";
 
     History::UnionFilter unionFilter;
     filter.setFilterValue(12345);
@@ -765,7 +765,7 @@ void SqlitePluginTest::testFilterToString_data()
     unionFilter.append(filter);
     filter.setFilterValue("a string");
     unionFilter.append(filter);
-    QTest::newRow("union filter") << unionFilter.properties() << QString() << "( (testProperty=12345) OR (testProperty=1) OR (testProperty=\"a string\") )";
+    QTest::newRow("union filter") << unionFilter.properties() << QString() << "( (testProperty=12345) OR (testProperty=1) OR (testProperty='a string') )";
 }
 
 void SqlitePluginTest::testFilterToString()
@@ -784,11 +784,10 @@ void SqlitePluginTest::testEscapeFilterValue_data()
     QTest::addColumn<QString>("escapedString");
 
     QTest::newRow("backslash") << QString("\\") << QString("\\\\");
-    QTest::newRow("quote") << QString("\"") << QString("\\\"");
-    QTest::newRow("single quote") << QString("'") << QString("\\'");
+    QTest::newRow("single quote") << QString("'") << QString("''");
     QTest::newRow("percent") << QString("%") << QString("\\%");
     QTest::newRow("underscore") << QString("_") << QString("\\_");
-    QTest::newRow("string with all of that") << QString("\\0\"'%_bla") << QString("\\\\0\\\"\\'\\%\\_bla");
+    QTest::newRow("string with all of that") << QString("\\0\"'%_bla") << QString("\\\\0\"''\\%\\_bla");
 }
 
 void SqlitePluginTest::testEscapeFilterValue()

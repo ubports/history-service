@@ -707,7 +707,7 @@ QString SQLiteHistoryPlugin::filterToString(const History::Filter &filter, const
         case QVariant::String:
             // FIXME: need to escape strings
             // wrap strings
-            value = QString("\"%1\"").arg(escapeFilterValue(filterValue.toString()));
+            value = QString("'%1'").arg(escapeFilterValue(filterValue.toString()));
             break;
         case QVariant::Bool:
             value = filterValue.toBool() ? "1" : "0";
@@ -725,7 +725,7 @@ QString SQLiteHistoryPlugin::filterToString(const History::Filter &filter, const
         QString propertyName = propertyPrefix.isNull() ? filterProperty : QString("%1.%2").arg(propertyPrefix, filterProperty);
         // FIXME: need to check for other match flags and multiple match flags
         if (filter.matchFlags() & History::MatchContains) {
-            result = QString("%1 LIKE \"\%%2\%\"").arg(propertyName, escapeFilterValue(filterValue.toString()));
+            result = QString("%1 LIKE '\%%2\%' ESCAPE '\\'").arg(propertyName, escapeFilterValue(filterValue.toString()));
         } else {
             result = QString("%1=%2").arg(propertyName, value);
         }
@@ -738,8 +738,7 @@ QString SQLiteHistoryPlugin::escapeFilterValue(const QString &value) const
 {
     QString escaped = value;
     escaped.replace("\\", "\\\\")
-           .replace("\"", "\\\"")
-           .replace("'", "\\'")
+           .replace("'", "''")
            .replace("%", "\\%")
            .replace("_", "\\_");
     return escaped;
