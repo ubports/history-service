@@ -24,6 +24,8 @@
 #include "sqlitedatabase.h"
 #include "sqlitehistoryeventview.h"
 #include "sqlitehistorythreadview.h"
+#include "intersectionfilter.h"
+#include "unionfilter.h"
 #include <QDateTime>
 #include <QDebug>
 #include <QStringList>
@@ -662,4 +664,86 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseEventResults(History::EventType typ
 QString SQLiteHistoryPlugin::toLocalTimeString(const QDateTime &timestamp)
 {
     return QDateTime(timestamp.date(), timestamp.time(), Qt::UTC).toLocalTime().toString("yyyy-MM-ddTHH:mm:ss.zzz");
+}
+
+QString SQLiteHistoryPlugin::filterToString(const History::Filter &filter, const QString &propertyPrefix) const
+{
+    QString result;
+    History::Filters filters;
+    QString linking;
+    QString value;
+    int count;
+    QString filterProperty = filter.filterProperty();
+    QVariant filterValue = filter.filterValue();
+
+    switch (filter.type()) {
+    case History::FilterTypeIntersection:
+        filters = History::IntersectionFilter(filter).filters();
+        linking = " AND ";
+    case History::FilterTypeUnion:
+        if (filter.type() == History::FilterTypeUnion) {
+            filters = History::UnionFilter(filter).filters();
+            linking = " OR ";
+        }
+
+        if (filters.isEmpty()) {
+            break;
+        }
+
+        result = "( ";
+        count = filters.count();
+        for (int i = 0; i < count; ++i) {
+            // run recursively through the inner filters
+            result += QString("(%1)").arg(filterToString(filters[i], propertyPrefix));
+            if (i != count-1) {
+                result += linking;
+            }
+        }
+        result += " )";
+        break;
+    default:
+        // FIXME: remove the toString() functionality or replace it by a better implementation
+        if (filterProperty.isEmpty() || filterValue.isNull()) {
+            break;
+        }
+
+        switch (filterValue.type()) {
+        case QVariant::String:
+            // FIXME: need to escape strings
+            // wrap strings
+            value = QString("'%1'").arg(escapeFilterValue(filterValue.toString()));
+            break;
+        case QVariant::Bool:
+            value = filterValue.toBool() ? "1" : "0";
+            break;
+        case QVariant::Int:
+            value = QString::number(filterValue.toInt());
+            break;
+        case QVariant::Double:
+            value = QString::number(filterValue.toDouble());
+            break;
+        default:
+            value = filterValue.toString();
+        }
+
+        QString propertyName = propertyPrefix.isNull() ? filterProperty : QString("%1.%2").arg(propertyPrefix, filterProperty);
+        // FIXME: need to check for other match flags and multiple match flags
+        if (filter.matchFlags() & History::MatchContains) {
+            result = QString("%1 LIKE '\%%2\%' ESCAPE '\\'").arg(propertyName, escapeFilterValue(filterValue.toString()));
+        } else {
+            result = QString("%1=%2").arg(propertyName, value);
+        }
+    }
+
+    return result;
+}
+
+QString SQLiteHistoryPlugin::escapeFilterValue(const QString &value) const
+{
+    QString escaped = value;
+    escaped.replace("\\", "\\\\")
+           .replace("'", "''")
+           .replace("%", "\\%")
+           .replace("_", "\\_");
+    return escaped;
 }

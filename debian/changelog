@@ -1,3 +1,21 @@
+history-service (0.1+15.04.20150125-0ubuntu1) vivid; urgency=low
+
+  [ Gustavo Pichorim Boiko ]
+  * Make sure string filters are correctly escaped.
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Sun, 25 Jan 2015 13:27:20 +0000
+
+history-service (0.1+15.04.20150120-0ubuntu1) vivid; urgency=low
+
+  [ Ubuntu daily release ]
+  * New rebuild forced
+
+  [ Gustavo Pichorim Boiko ]
+  * Convert the filter to a string in the plugin itself and add support
+    for the MatchContains match flag. (LP: #1376793)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 20 Jan 2015 21:03:27 +0000
+
 history-service (0.1+15.04.20150106-0ubuntu1) vivid; urgency=low
 
   [ Gustavo Pichorim Boiko ]

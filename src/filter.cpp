@@ -48,6 +48,7 @@ FilterPrivate::~FilterPrivate()
 
 QString FilterPrivate::toString(const QString &propertyPrefix) const
 {
+    // FIXME: remove the toString() functionality or replace it by a better implementation
     if (filterProperty.isEmpty() || filterValue.isNull()) {
         return QString::null;
     }
