@@ -363,6 +363,8 @@ void HistoryDaemon::onCallEnded(const Tp::CallChannelPtr &channel)
     event[History::FieldNewEvent] = missed; // only mark as a new (unseen) event if it is a missed call
     event[History::FieldMissed] = missed;
     event[History::FieldDuration] = duration;
+    // FIXME: check what to do when there are more than just one remote participant
+    event[History::FieldRemoteParticipant] = participants[0];
     writeEvents(QList<QVariantMap>() << event);
 }
 

@@ -45,6 +45,7 @@ HistoryEventModel::HistoryEventModel(QObject *parent) :
     mRoles[TextReadSubjectRole] = "textSubject";
     mRoles[CallMissedRole] = "callMissed";
     mRoles[CallDurationRole] = "callDuration";
+    mRoles[RemoteParticipantRole] = "remoteParticipant";
 }
 
 int HistoryEventModel::rowCount(const QModelIndex &parent) const
@@ -151,6 +152,11 @@ QVariant HistoryEventModel::eventData(const History::Event &event, int role) con
     case CallDurationRole:
         if (!voiceEvent.isNull()) {
             result = voiceEvent.duration();
+        }
+        break;
+    case RemoteParticipantRole:
+        if (!voiceEvent.isNull()) {
+            result = voiceEvent.remoteParticipant();
         }
         break;
     }

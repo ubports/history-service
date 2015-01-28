@@ -46,16 +46,21 @@ void VoiceEventTest::testCreateNewEvent_data()
     QTest::addColumn<bool>("newEvent");
     QTest::addColumn<bool>("missed");
     QTest::addColumn<QTime>("duration");
+    QTest::addColumn<QString>("remoteParticipant");
+    QTest::addColumn<QStringList>("participants");
 
     QTest::newRow("unread missed call") << "testAccountId" << "testThreadId" << "testEventId"
                                  << "testSenderId" << QDateTime::currentDateTime().addDays(-10)
-                                 << true << true << QTime(0, 0, 0);
+                                 << true << true << QTime(0, 0, 0) << QString("remoteParticipant")
+                                 << (QStringList() << "testSenderId");
     QTest::newRow("missed call") << "testAccountId2" << "testThreadId2" << "testEventId2"
                                  << "testSenderId2" << QDateTime::currentDateTime().addDays(-5)
-                                 << false << true << QTime(0, 0, 0);
+                                 << false << true << QTime(0, 0, 0) << QString("remoteParticipant2")
+                                 << (QStringList() << "testSenderId2");
     QTest::newRow("not missed call") << "testAccountId" << "testThreadId" << "testEventId"
                                  << "testSenderId" << QDateTime::currentDateTime().addDays(-10)
-                                 << false << false << QTime(1, 2, 3);
+                                 << false << false << QTime(1, 2, 3) << QString("remoteParticipant")
+                                 << (QStringList() << "testSenderId");
 }
 
 void VoiceEventTest::testCreateNewEvent()
@@ -68,8 +73,10 @@ void VoiceEventTest::testCreateNewEvent()
     QFETCH(bool, newEvent);
     QFETCH(bool, missed);
     QFETCH(QTime, duration);
+    QFETCH(QString, remoteParticipant);
+    QFETCH(QStringList, participants);
     History::VoiceEvent event(accountId, threadId, eventId, senderId, timestamp, newEvent,
-                              missed, duration);
+                              missed, duration, remoteParticipant, participants);
 
     // check that the values are properly set
     QCOMPARE(event.accountId(), accountId);
@@ -80,12 +87,14 @@ void VoiceEventTest::testCreateNewEvent()
     QCOMPARE(event.newEvent(), newEvent);
     QCOMPARE(event.missed(), missed);
     QCOMPARE(event.duration(), duration);
+    QCOMPARE(event.remoteParticipant(), remoteParticipant);
+    QCOMPARE(event.participants(), participants);
 }
 
 void VoiceEventTest::testCastToEventAndBack()
 {
     History::VoiceEvent voiceEvent("oneAccountId", "oneThreadId", "oneEventId", "oneSender", QDateTime::currentDateTime(),
-                                   true, true, QTime(1,2,3));
+                                   true, true, QTime(1,2,3), "remoteParticipant", QStringList() << "oneParticipant");
 
     // test the copy constructor
     History::Event historyEvent(voiceEvent);
@@ -112,16 +121,17 @@ void VoiceEventTest::testFromProperties_data()
     QTest::addColumn<bool>("newEvent");
     QTest::addColumn<bool>("missed");
     QTest::addColumn<QTime>("duration");
+    QTest::addColumn<QStringList>("participants");
 
     QTest::newRow("unread missed call") << "testAccountId" << "testThreadId" << "testEventId"
                                  << "testSenderId" << QDateTime::currentDateTime().addDays(-10)
-                                 << true << true << QTime(0, 0, 0);
+                                 << true << true << QTime(0, 0, 0) << (QStringList() << "testParticipant");
     QTest::newRow("missed call") << "testAccountId2" << "testThreadId2" << "testEventId2"
                                  << "testSenderId2" << QDateTime::currentDateTime().addDays(-5)
-                                 << false << true << QTime(0, 0, 0);
+                                 << false << true << QTime(0, 0, 0) << (QStringList() << "testParticipant2");
     QTest::newRow("not missed call") << "testAccountId" << "testThreadId" << "testEventId"
                                  << "testSenderId" << QDateTime::currentDateTime().addDays(-10)
-                                 << false << false << QTime(1, 2, 3);
+                                 << false << false << QTime(1, 2, 3) << (QStringList() << "testParticipant");
 }
 
 void VoiceEventTest::testFromProperties()
@@ -134,6 +144,7 @@ void VoiceEventTest::testFromProperties()
     QFETCH(bool, newEvent);
     QFETCH(bool, missed);
     QFETCH(QTime, duration);
+    QFETCH(QStringList, participants);
 
     QVariantMap properties;
     properties[History::FieldAccountId] = accountId;
@@ -144,6 +155,7 @@ void VoiceEventTest::testFromProperties()
     properties[History::FieldNewEvent] = newEvent;
     properties[History::FieldMissed] = missed;
     properties[History::FieldDuration] = QTime(0,0,0,0).secsTo(duration);
+    properties[History::FieldParticipants] = participants;
 
     History::VoiceEvent voiceEvent = History::VoiceEvent::fromProperties(properties);
     QCOMPARE(voiceEvent.accountId(), accountId);
@@ -154,6 +166,7 @@ void VoiceEventTest::testFromProperties()
     QCOMPARE(voiceEvent.newEvent(), newEvent);
     QCOMPARE(voiceEvent.missed(), missed);
     QCOMPARE(voiceEvent.duration(), duration);
+    QCOMPARE(voiceEvent.participants(), participants);
 }
 
 void VoiceEventTest::testFromNullProperties()
@@ -174,16 +187,21 @@ void VoiceEventTest::testProperties_data()
     QTest::addColumn<bool>("newEvent");
     QTest::addColumn<bool>("missed");
     QTest::addColumn<QTime>("duration");
+    QTest::addColumn<QString>("remoteParticipant");
+    QTest::addColumn<QStringList>("participants");
 
     QTest::newRow("unread missed call") << "testAccountId" << "testThreadId" << "testEventId"
                                  << "testSenderId" << QDateTime::currentDateTime().addDays(-10)
-                                 << true << true << QTime(0, 0, 0);
+                                 << true << true << QTime(0, 0, 0) << QString("remoteParticipant")
+                                 << (QStringList() << "testParticipant");
     QTest::newRow("missed call") << "testAccountId2" << "testThreadId2" << "testEventId2"
                                  << "testSenderId2" << QDateTime::currentDateTime().addDays(-5)
-                                 << false << true << QTime(0, 0, 0);
+                                 << false << true << QTime(0, 0, 0) << QString("remoteParticipant2")
+                                 << (QStringList() << "testParticipant2");
     QTest::newRow("not missed call") << "testAccountId" << "testThreadId" << "testEventId"
                                  << "testSenderId" << QDateTime::currentDateTime().addDays(-10)
-                                 << false << false << QTime(1, 2, 3);
+                                 << false << false << QTime(1, 2, 3) << QString("remoteParticipant3")
+                                 << (QStringList() << "testParticipant3");
 }
 
 void VoiceEventTest::testProperties()
@@ -196,8 +214,10 @@ void VoiceEventTest::testProperties()
     QFETCH(bool, newEvent);
     QFETCH(bool, missed);
     QFETCH(QTime, duration);
+    QFETCH(QString, remoteParticipant);
+    QFETCH(QStringList, participants);
     History::VoiceEvent event(accountId, threadId, eventId, senderId, timestamp, newEvent,
-                              missed, duration);
+                              missed, duration, remoteParticipant, participants);
 
     // check that the values are properly set
     QVariantMap properties = event.properties();
@@ -209,6 +229,8 @@ void VoiceEventTest::testProperties()
     QCOMPARE(properties[History::FieldNewEvent].toBool(), newEvent);
     QCOMPARE(properties[History::FieldMissed].toBool(), missed);
     QCOMPARE(QTime(0,0).addSecs(properties[History::FieldDuration].toInt()), duration);
+    QCOMPARE(properties[History::FieldRemoteParticipant].toString(), remoteParticipant);
+    QCOMPARE(properties[History::FieldParticipants].toStringList(), participants);
 }
 
 QTEST_MAIN(VoiceEventTest)

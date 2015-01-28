@@ -38,9 +38,11 @@ VoiceEventPrivate::VoiceEventPrivate(const QString &theAccountId,
                                    const QDateTime &theTimestamp,
                                    bool theNewEvent,
                                    bool theMissed,
-                                   const QTime &theDuration, const QStringList &theParticipants)
+                                   const QTime &theDuration,
+                                   const QString &theRemoteParticipant,
+                                   const QStringList &theParticipants)
     : EventPrivate(theAccountId, theThreadId, theEventId, theSender, theTimestamp, theNewEvent, theParticipants),
-      missed(theMissed), duration(theDuration)
+      missed(theMissed), duration(theDuration), remoteParticipant(theRemoteParticipant)
 {
 }
 
@@ -59,6 +61,7 @@ QVariantMap VoiceEventPrivate::properties() const
 
     map[FieldMissed] = missed;
     map[FieldDuration] = QTime(0,0,0,0).secsTo(duration);
+    map[FieldRemoteParticipant] = remoteParticipant;
 
     return map;
 }
@@ -81,8 +84,10 @@ VoiceEvent::VoiceEvent(const QString &accountId,
                      const QDateTime &timestamp,
                      bool newEvent,
                      bool missed,
-                     const QTime &duration, const QStringList &participants)
-    : Event(*new VoiceEventPrivate(accountId, threadId, eventId, sender, timestamp, newEvent, missed, duration, participants))
+                     const QTime &duration,
+                     const QString &remoteParticipant,
+                     const QStringList &participants)
+    : Event(*new VoiceEventPrivate(accountId, threadId, eventId, sender, timestamp, newEvent, missed, duration, remoteParticipant, participants))
 {
 }
 
@@ -102,6 +107,12 @@ QTime VoiceEvent::duration() const
     return d->duration;
 }
 
+QString VoiceEvent::remoteParticipant() const
+{
+    Q_D(const VoiceEvent);
+    return d->remoteParticipant;
+}
+
 Event VoiceEvent::fromProperties(const QVariantMap &properties)
 {
     Event event;
@@ -117,8 +128,9 @@ Event VoiceEvent::fromProperties(const QVariantMap &properties)
     QStringList participants = properties[FieldParticipants].toStringList();
     bool missed = properties[FieldMissed].toBool();
     QTime duration = QTime(0,0,0).addSecs(properties[FieldDuration].toInt());
+    QString remoteParticipant = properties[FieldRemoteParticipant].toString();
     event = VoiceEvent(accountId, threadId, eventId, senderId, timestamp, newEvent,
-                             missed, duration, participants);
+                             missed, duration, remoteParticipant, participants);
     return event;
 }
 
