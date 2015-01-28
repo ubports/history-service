@@ -80,7 +80,7 @@ public:
 
     static QString toLocalTimeString(const QDateTime &timestamp);
 
-    QString filterToString(const History::Filter &filter, const QString &propertyPrefix = QString::null) const;
+    QString filterToString(const History::Filter &filter, QVariantMap &bindValues, const QString &propertyPrefix = QString::null) const;
     QString escapeFilterValue(const QString &value) const;
 };
 

@@ -666,7 +666,7 @@ QString SQLiteHistoryPlugin::toLocalTimeString(const QDateTime &timestamp)
     return QDateTime(timestamp.date(), timestamp.time(), Qt::UTC).toLocalTime().toString("yyyy-MM-ddTHH:mm:ss.zzz");
 }
 
-QString SQLiteHistoryPlugin::filterToString(const History::Filter &filter, const QString &propertyPrefix) const
+QString SQLiteHistoryPlugin::filterToString(const History::Filter &filter, QVariantMap &bindValues, const QString &propertyPrefix) const
 {
     QString result;
     History::Filters filters;
@@ -694,7 +694,7 @@ QString SQLiteHistoryPlugin::filterToString(const History::Filter &filter, const
         count = filters.count();
         for (int i = 0; i < count; ++i) {
             // run recursively through the inner filters
-            result += QString("(%1)").arg(filterToString(filters[i], propertyPrefix));
+            result += QString("(%1)").arg(filterToString(filters[i], bindValues, propertyPrefix));
             if (i != count-1) {
                 result += linking;
             }
@@ -702,36 +702,20 @@ QString SQLiteHistoryPlugin::filterToString(const History::Filter &filter, const
         result += " )";
         break;
     default:
-        // FIXME: remove the toString() functionality or replace it by a better implementation
         if (filterProperty.isEmpty() || filterValue.isNull()) {
             break;
         }
 
-        switch (filterValue.type()) {
-        case QVariant::String:
-            // FIXME: need to escape strings
-            // wrap strings
-            value = QString("'%1'").arg(escapeFilterValue(filterValue.toString()));
-            break;
-        case QVariant::Bool:
-            value = filterValue.toBool() ? "1" : "0";
-            break;
-        case QVariant::Int:
-            value = QString::number(filterValue.toInt());
-            break;
-        case QVariant::Double:
-            value = QString::number(filterValue.toDouble());
-            break;
-        default:
-            value = filterValue.toString();
-        }
+        QString bindId = QString(":filterValue%1").arg(bindValues.count());
 
         QString propertyName = propertyPrefix.isNull() ? filterProperty : QString("%1.%2").arg(propertyPrefix, filterProperty);
         // FIXME: need to check for other match flags and multiple match flags
         if (filter.matchFlags() & History::MatchContains) {
+            // FIXME: maybe we should use QString("%1 LIKE '\%'||%2'\%'").arg(bindId) ?? needs more time for investigating
             result = QString("%1 LIKE '\%%2\%' ESCAPE '\\'").arg(propertyName, escapeFilterValue(filterValue.toString()));
         } else {
-            result = QString("%1=%2").arg(propertyName, value);
+            result = QString("%1=%2").arg(propertyName, bindId);
+            bindValues[bindId] = filterValue;
         }
     }
 
