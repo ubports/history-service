@@ -39,7 +39,8 @@ SQLiteHistoryThreadView::SQLiteHistoryThreadView(SQLiteHistoryPlugin *plugin,
     mQuery.setForwardOnly(true);
 
     // FIXME: validate the filter
-    QString condition = mPlugin->filterToString(filter);
+    QVariantMap filterValues;
+    QString condition = mPlugin->filterToString(filter, filterValues);
     QString order;
     if (!sort.sortField().isNull()) {
         order = QString("ORDER BY %1 %2").arg(sort.sortField(), sort.sortOrder() == Qt::AscendingOrder ? "ASC" : "DESC");
@@ -49,8 +50,19 @@ SQLiteHistoryThreadView::SQLiteHistoryThreadView(SQLiteHistoryPlugin *plugin,
     QString queryText = QString("CREATE TEMP TABLE %1 AS ").arg(mTemporaryTable);
     queryText += mPlugin->sqlQueryForThreads(type, condition, order);
 
+    if (!mQuery.prepare(queryText)) {
+        qCritical() << "Error:" << mQuery.lastError() << mQuery.lastQuery();
+        mValid = false;
+        Q_EMIT Invalidated();
+        return;
+    }
+
+    Q_FOREACH(const QString &key, filterValues.keys()) {
+        mQuery.bindValue(key, filterValues[key]);
+    }
+
     // create the temporary table
-    if (!mQuery.exec(queryText)) {
+    if (!mQuery.exec()) {
         qCritical() << "Error:" << mQuery.lastError() << mQuery.lastQuery();
         mValid = false;
         Q_EMIT Invalidated();

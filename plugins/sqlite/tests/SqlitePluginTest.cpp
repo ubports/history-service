@@ -718,35 +718,41 @@ void SqlitePluginTest::testGetSingleEvent()
 void SqlitePluginTest::testFilterToString_data()
 {
     QTest::addColumn<QVariantMap>("filterProperties");
+    QTest::addColumn<QVariantMap>("filterValues");
     QTest::addColumn<QString>("propertyPrefix");
     QTest::addColumn<QString>("resultString");
 
     History::Filter filter;
+    QVariantMap filterValues;
     filter.setFilterProperty("testProperty");
     filter.setFilterValue("stringValue");
-    QTest::newRow("simple string filter") << filter.properties() << QString() << "testProperty='stringValue'";
-
-    filter.setFilterValue("escaped\\0\\n%");
-    QTest::newRow("check that strings are escaped") << filter.properties() << QString() << "testProperty='escaped\\\\0\\\\n\\%'";
+    filterValues[":filterValue0"] = filter.filterValue();
+    QTest::newRow("simple string filter") << filter.properties() << filterValues << QString() << "testProperty=:filterValue0";
 
     filter.setFilterValue(12345);
-    QTest::newRow("simple integer filter") << filter.properties() << QString() << "testProperty=12345";
+    filterValues[":filterValue0"] = filter.filterValue();
+    QTest::newRow("simple integer filter") << filter.properties() << filterValues << QString() << "testProperty=:filterValue0";
 
     filter.setFilterValue(true);
-    QTest::newRow("simple true boolean filter") << filter.properties() << QString() << "testProperty=1";
+    filterValues[":filterValue0"] = filter.filterValue();
+    QTest::newRow("simple true boolean filter") << filter.properties() << filterValues << QString() << "testProperty=:filterValue0";
 
     filter.setFilterValue(false);
-    QTest::newRow("simple false boolean filter") << filter.properties() << QString() << "testProperty=0";
+    filterValues[":filterValue0"] = filter.filterValue();
+    QTest::newRow("simple false boolean filter") << filter.properties() << filterValues << QString() << "testProperty=:filterValue0";
 
     filter.setFilterValue(12345);
-    QTest::newRow("filter with a prefix") << filter.properties() << QString("prefix") << "prefix.testProperty=12345";
+    filterValues[":filterValue0"] = filter.filterValue();
+    QTest::newRow("filter with a prefix") << filter.properties() << filterValues << QString("prefix") << "prefix.testProperty=:filterValue0";
 
     filter.setMatchFlags(History::MatchContains);
     filter.setFilterValue("partialString");
-    QTest::newRow("match contains") << filter.properties() << QString() << "testProperty LIKE '\%partialString\%' ESCAPE '\\'";
+    filterValues.clear();
+    QTest::newRow("match contains") << filter.properties() << filterValues << QString() << "testProperty LIKE '\%partialString\%' ESCAPE '\\'";
 
     filter.setFilterValue("%");
-    QTest::newRow("partial match escaped") << filter.properties() << QString() << "testProperty LIKE '\%\\\%\%' ESCAPE '\\'";
+    filterValues.clear();
+    QTest::newRow("partial match escaped") << filter.properties() << filterValues << QString() << "testProperty LIKE '\%\\\%\%' ESCAPE '\\'";
 
     History::IntersectionFilter intersectionFilter;
     filter.setMatchFlags(History::MatchFlags());
@@ -756,7 +762,11 @@ void SqlitePluginTest::testFilterToString_data()
     intersectionFilter.append(filter);
     filter.setFilterValue("a string");
     intersectionFilter.append(filter);
-    QTest::newRow("intersection filter") << intersectionFilter.properties() << QString() << "( (testProperty=12345) AND (testProperty=1) AND (testProperty='a string') )";
+    filterValues.clear();
+    filterValues[":filterValue0"] = 12345;
+    filterValues[":filterValue1"] = true;
+    filterValues[":filterValue2"] = "a string";
+    QTest::newRow("intersection filter") << intersectionFilter.properties() << filterValues << QString() << "( (testProperty=:filterValue0) AND (testProperty=:filterValue1) AND (testProperty=:filterValue2) )";
 
     History::UnionFilter unionFilter;
     filter.setFilterValue(12345);
@@ -765,17 +775,25 @@ void SqlitePluginTest::testFilterToString_data()
     unionFilter.append(filter);
     filter.setFilterValue("a string");
     unionFilter.append(filter);
-    QTest::newRow("union filter") << unionFilter.properties() << QString() << "( (testProperty=12345) OR (testProperty=1) OR (testProperty='a string') )";
+    filterValues.clear();
+    filterValues[":filterValue0"] = 12345;
+    filterValues[":filterValue1"] = true;
+    filterValues[":filterValue2"] = "a string";
+    QTest::newRow("union filter") << unionFilter.properties() << filterValues << QString() << "( (testProperty=:filterValue0) OR (testProperty=:filterValue1) OR (testProperty=:filterValue2) )";
 }
 
 void SqlitePluginTest::testFilterToString()
 {
     QFETCH(QVariantMap, filterProperties);
+    QFETCH(QVariantMap, filterValues);
     QFETCH(QString, propertyPrefix);
     QFETCH(QString, resultString);
 
-    QString result = mPlugin->filterToString(History::Filter::fromProperties(filterProperties), propertyPrefix);
+    QVariantMap resultValues;
+    QString result = mPlugin->filterToString(History::Filter::fromProperties(filterProperties), resultValues, propertyPrefix);
     QCOMPARE(result, resultString);
+    QCOMPARE(resultValues, filterValues);
+
 }
 
 void SqlitePluginTest::testEscapeFilterValue_data()

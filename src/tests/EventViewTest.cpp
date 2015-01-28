@@ -39,6 +39,7 @@ class EventViewTest : public QObject
 private Q_SLOTS:
     void initTestCase();
     void testNextPage();
+    void testFilter_data();
     void testFilter();
     void testSort();
 
@@ -66,28 +67,66 @@ void EventViewTest::testNextPage()
         events = view->nextPage();
     }
 
-    QCOMPARE(allEvents.count(), EVENT_COUNT * 2);
+    QCOMPARE(allEvents.count(), EVENT_COUNT * 2 + 1); // include the group text event
     Q_FOREACH(const History::Event &event, events) {
         QCOMPARE(event.type(), History::EventTypeText);
     }
 }
 
-void EventViewTest::testFilter()
+void EventViewTest::testFilter_data()
 {
+    QTest::addColumn<QVariantMap>("filterProperties");
+    QTest::addColumn<History::EventType>("eventType");
+    QTest::addColumn<int>("resultCount");
+    QTest::addColumn<QVariantMap>("firstEventProperties");
+
     History::IntersectionFilter filter;
     filter.append(History::Filter(History::FieldAccountId, "account0"));
     filter.append(History::Filter(History::FieldThreadId, "participant0"));
     filter.append(History::Filter(History::FieldEventId, "event21"));
+    History::VoiceEvent voiceEvent = History::Manager::instance()->getSingleEvent(History::EventTypeVoice,
+                                                                                  "account0",
+                                                                                  "participant0",
+                                                                                  "event21");
+    QVERIFY(!voiceEvent.isNull());
+    QTest::newRow("filter by accountId, threadId and eventId") << filter.properties() << History::EventTypeVoice << 1 << voiceEvent.properties();
 
-    History::EventViewPtr view = History::Manager::instance()->queryEvents(History::EventTypeVoice, History::Sort(History::FieldAccountId), filter);
+    filter.clear();
+    QStringList participants;
+    participants << "groupParticipant1" << "groupParticipant2";
+    History::Thread thread = History::Manager::instance()->threadForParticipants("groupAccount",
+                                                                                 History::EventTypeText,
+                                                                                 participants,
+                                                                                 History::MatchCaseSensitive);
+    QVERIFY(!thread.isNull());
+    History::TextEvent textEvent = History::Manager::instance()->getSingleEvent(History::EventTypeText,
+                                                                                thread.accountId(),
+                                                                                thread.threadId(),
+                                                                                "groupEvent0");
+    QVERIFY(!textEvent.isNull());
+    filter.append(History::Filter(History::FieldAccountId, thread.accountId()));
+    filter.append(History::Filter(History::FieldThreadId, thread.threadId()));
+    QTest::newRow("filter for a group conversation") << filter.properties() << History::EventTypeText << 1 << textEvent.properties();
+}
+
+void EventViewTest::testFilter()
+{
+    QFETCH(QVariantMap, filterProperties);
+    QFETCH(History::EventType, eventType);
+    QFETCH(int, resultCount);
+    QFETCH(QVariantMap, firstEventProperties);
+
+    History::Filter filter = History::Filter::fromProperties(filterProperties);
+    History::EventViewPtr view = History::Manager::instance()->queryEvents(eventType,
+                                                                           History::Sort(History::FieldAccountId),
+                                                                           filter);
     QVERIFY(view->isValid());
+
     History::Events events = view->nextPage();
-    QCOMPARE(events.count(), 1);
+    QCOMPARE(events.count(), resultCount);
+
     History::Event event = events.first();
-    QCOMPARE(event.accountId(), QString("account0"));
-    QCOMPARE(event.type(), History::EventTypeVoice);
-    QCOMPARE(event.threadId(), QString("participant0"));
-    QCOMPARE(event.eventId(), QString("event21"));
+    QCOMPARE(event.properties(), firstEventProperties);
 
     // make sure no more items are returned
     QVERIFY(view->nextPage().isEmpty());
@@ -106,7 +145,7 @@ void EventViewTest::testSort()
     }
 
     QCOMPARE(allEvents.first().eventId(), QString("event00"));
-    QCOMPARE(allEvents.last().eventId(), QString("event%1").arg(EVENT_COUNT-1));
+    QCOMPARE(allEvents.last().eventId(), QString("groupEvent0"));
 
     History::Sort descendingSort(History::FieldEventId, Qt::DescendingOrder);
     allEvents.clear();
@@ -118,7 +157,7 @@ void EventViewTest::testSort()
         events = view->nextPage();
     }
 
-    QCOMPARE(allEvents.first().eventId(), QString("event%1").arg(EVENT_COUNT-1));
+    QCOMPARE(allEvents.first().eventId(), QString("groupEvent0"));
     QCOMPARE(allEvents.last().eventId(), QString("event00"));
 }
 
@@ -166,6 +205,49 @@ void EventViewTest::populate()
         }
         QVERIFY(History::Manager::instance()->writeEvents(events));
     }
+
+    // create a text thread with multiple participants
+    QStringList participants;
+    participants << "groupParticipant1" << "groupParticipant2";
+
+    History::Thread groupTextThread = History::Manager::instance()->threadForParticipants("groupAccount",
+                                                                                          History::EventTypeText,
+                                                                                          participants,
+                                                                                          History::MatchCaseSensitive,
+                                                                                          true);
+    QVERIFY(!groupTextThread.isNull());
+
+    // and write a single event to it, just to make sure it works
+    History::TextEvent groupTextEvent("groupAccount",
+                                      groupTextThread.threadId(),
+                                      "groupEvent0",
+                                      "groupSender",
+                                      QDateTime::currentDateTime(),
+                                      true,
+                                      "A group message",
+                                      History::MessageTypeText);
+    QVERIFY(History::Manager::instance()->writeEvents(History::Events() << groupTextEvent));
+
+    // create a text thread with multiple participants
+    participants.clear();
+    participants << "groupParticipant1" << "groupParticipant2";
+
+    History::Thread groupVoiceThread = History::Manager::instance()->threadForParticipants("groupAccount",
+                                                                                           History::EventTypeVoice,
+                                                                                           participants,
+                                                                                           History::MatchCaseSensitive,
+                                                                                           true);
+    QVERIFY(!groupVoiceThread.isNull());
+
+    // and write a single event to it, just to make sure it works
+    History::VoiceEvent groupVoiceEvent("groupAccount",
+                                        groupVoiceThread.threadId(),
+                                        "groupEvent0",
+                                        "groupSender",
+                                        QDateTime::currentDateTime(),
+                                        true,
+                                        true);
+    QVERIFY(History::Manager::instance()->writeEvents(History::Events() << groupVoiceEvent));
 }
 
 QTEST_MAIN(EventViewTest)
