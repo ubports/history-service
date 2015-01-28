@@ -1,3 +1,13 @@
+history-service (0.1+15.04.20150128-0ubuntu1) vivid; urgency=low
+
+  [ Gustavo Pichorim Boiko ]
+  * Store the number that was used to call a given voice event. (LP:
+    #1410500)
+  * Use QSqlQuery::bindValue() to pass filter arguments to the query to
+    prevent errors.
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 28 Jan 2015 23:15:37 +0000
+
 history-service (0.1+15.04.20150125-0ubuntu1) vivid; urgency=low
 
   [ Gustavo Pichorim Boiko ]
