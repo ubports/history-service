@@ -62,6 +62,7 @@ public:
     virtual QHash<int, QByteArray> roleNames() const;
 
     Q_INVOKABLE bool removeEvents(const QVariantList &eventsProperties);
+    Q_INVOKABLE bool writeEvents(const QVariantList &eventsProperties);
     Q_INVOKABLE bool markEventAsRead(const QString &accountId, const QString &threadId, const QString &eventId, int eventType);
     Q_INVOKABLE bool removeEventAttachment(const QString &accountId, const QString &threadId, const QString &eventId, int eventType, const QString &attachmentId);
 

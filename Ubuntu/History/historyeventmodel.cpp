@@ -223,6 +223,33 @@ bool HistoryEventModel::removeEvents(const QVariantList &eventsProperties)
     return History::Manager::instance()->removeEvents(events);
 }
 
+bool HistoryEventModel::writeEvents(const QVariantList &eventsProperties)
+{
+    History::Events events;
+    Q_FOREACH(const QVariant &entry, eventsProperties) {
+        QVariantMap eventProperties = entry.toMap();
+        History::Event event;
+        switch (eventProperties[History::FieldType].toInt()) {
+        case History::EventTypeText:
+            event = History::TextEvent::fromProperties(eventProperties);
+            break;
+        case History::EventTypeVoice:
+            event = History::VoiceEvent::fromProperties(eventProperties);
+            break;
+        }
+
+        if (!event.isNull()) {
+            events << event;
+        }
+    }
+
+    if (events.isEmpty()) {
+        return false;
+    }
+
+    return History::Manager::instance()->writeEvents(events);
+}
+
 bool HistoryEventModel::removeEventAttachment(const QString &accountId, const QString &threadId, const QString &eventId, int eventType, const QString &attachmentId)
 {
     History::TextEvent textEvent;
