@@ -38,7 +38,8 @@ SQLiteHistoryEventView::SQLiteHistoryEventView(SQLiteHistoryPlugin *plugin,
     mQuery.setForwardOnly(true);
 
     // FIXME: validate the filter
-    QString condition = filter.toString();
+    QVariantMap filterValues;
+    QString condition = mPlugin->filterToString(filter, filterValues);
     QString order;
     if (!sort.sortField().isNull()) {
         order = QString("ORDER BY %1 %2").arg(sort.sortField(), sort.sortOrder() == Qt::AscendingOrder ? "ASC" : "DESC");
@@ -48,7 +49,18 @@ SQLiteHistoryEventView::SQLiteHistoryEventView(SQLiteHistoryPlugin *plugin,
     QString queryText = QString("CREATE TEMP TABLE %1 AS ").arg(mTemporaryTable);
     queryText += mPlugin->sqlQueryForEvents(type, condition, order);
 
-    if (!mQuery.exec(queryText)) {
+    if (!mQuery.prepare(queryText)) {
+        mValid = false;
+        Q_EMIT Invalidated();
+        qCritical() << "Error:" << mQuery.lastError() << mQuery.lastQuery();
+        return;
+    }
+
+    Q_FOREACH(const QString &key, filterValues.keys()) {
+        mQuery.bindValue(key, filterValues[key]);
+    }
+
+    if (!mQuery.exec()) {
         mValid = false;
         Q_EMIT Invalidated();
         qCritical() << "Error:" << mQuery.lastError() << mQuery.lastQuery();

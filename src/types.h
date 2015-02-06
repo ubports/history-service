@@ -132,6 +132,7 @@ static const char* FieldStatus = "status";
 // voice event fields
 static const char* FieldMissed = "missed";
 static const char* FieldDuration = "duration";
+static const char* FieldRemoteParticipant = "remoteParticipant";
 
 // sort stuff
 static const char* FieldSortField = "sortField";

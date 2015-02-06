@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2014 Canonical, Ltd.
+ * Copyright (C) 2013-2015 Canonical, Ltd.
  *
  * Authors:
  *  Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>
@@ -46,6 +46,7 @@ public:
         TextMessageAttachmentsRole,
         CallMissedRole,
         CallDurationRole,
+        RemoteParticipantRole,
         LastEventRole
     };
 
@@ -60,7 +61,7 @@ public:
 
     virtual QHash<int, QByteArray> roleNames() const;
 
-    Q_INVOKABLE bool removeEvent(const QString &accountId, const QString &threadId, const QString &eventId, int eventType);
+    Q_INVOKABLE bool removeEvents(const QVariantList &eventsProperties);
     Q_INVOKABLE bool markEventAsRead(const QString &accountId, const QString &threadId, const QString &eventId, int eventType);
     Q_INVOKABLE bool removeEventAttachment(const QString &accountId, const QString &threadId, const QString &eventId, int eventType, const QString &attachmentId);
 

@@ -24,6 +24,8 @@
 #include "sqlitedatabase.h"
 #include "sqlitehistoryeventview.h"
 #include "sqlitehistorythreadview.h"
+#include "intersectionfilter.h"
+#include "unionfilter.h"
 #include <QDateTime>
 #include <QDebug>
 #include <QStringList>
@@ -300,12 +302,12 @@ History::EventWriteResult SQLiteHistoryPlugin::writeTextEvent(const QVariantMap 
     query.bindValue(":threadId", event[History::FieldThreadId]);
     query.bindValue(":eventId", event[History::FieldEventId]);
     query.bindValue(":senderId", event[History::FieldSenderId]);
-    query.bindValue(":timestamp", event[History::FieldTimestamp]);
+    query.bindValue(":timestamp", event[History::FieldTimestamp].toDateTime().toUTC());
     query.bindValue(":newEvent", event[History::FieldNewEvent]);
     query.bindValue(":message", event[History::FieldMessage]);
     query.bindValue(":messageType", event[History::FieldMessageType]);
     query.bindValue(":messageStatus", event[History::FieldMessageStatus]);
-    query.bindValue(":readTimestamp", event[History::FieldReadTimestamp]);
+    query.bindValue(":readTimestamp", event[History::FieldReadTimestamp].toDateTime().toUTC());
     query.bindValue(":subject", event[History::FieldSubject].toString());
 
     if (!query.exec()) {
@@ -379,13 +381,14 @@ History::EventWriteResult SQLiteHistoryPlugin::writeVoiceEvent(const QVariantMap
     History::EventWriteResult result;
     if (existingEvent.isEmpty()) {
         // create new
-        query.prepare("INSERT INTO voice_events (accountId, threadId, eventId, senderId, timestamp, newEvent, duration, missed) "
-                      "VALUES (:accountId, :threadId, :eventId, :senderId, :timestamp, :newEvent, :duration, :missed)");
+        query.prepare("INSERT INTO voice_events (accountId, threadId, eventId, senderId, timestamp, newEvent, duration, missed, remoteParticipant) "
+                      "VALUES (:accountId, :threadId, :eventId, :senderId, :timestamp, :newEvent, :duration, :missed, :remoteParticipant)");
         result = History::EventWriteCreated;
     } else {
         // update existing event
         query.prepare("UPDATE voice_events SET senderId=:senderId, timestamp=:timestamp, newEvent=:newEvent, duration=:duration, "
-                      "missed=:missed WHERE accountId=:accountId AND threadId=:threadId AND eventId=:eventId");
+                      "missed=:missed, remoteParticipant=:remoteParticipant "
+                      "WHERE accountId=:accountId AND threadId=:threadId AND eventId=:eventId");
 
         result = History::EventWriteModified;
     }
@@ -394,10 +397,11 @@ History::EventWriteResult SQLiteHistoryPlugin::writeVoiceEvent(const QVariantMap
     query.bindValue(":threadId", event[History::FieldThreadId]);
     query.bindValue(":eventId", event[History::FieldEventId]);
     query.bindValue(":senderId", event[History::FieldSenderId]);
-    query.bindValue(":timestamp", event[History::FieldTimestamp]);
+    query.bindValue(":timestamp", event[History::FieldTimestamp].toDateTime().toUTC());
     query.bindValue(":newEvent", event[History::FieldNewEvent]);
     query.bindValue(":duration", event[History::FieldDuration]);
     query.bindValue(":missed", event[History::FieldMissed]);
+    query.bindValue(":remoteParticipant", event[History::FieldRemoteParticipant]);
 
     if (!query.exec()) {
         qCritical() << "Failed to save the voice event: Error:" << query.lastError() << query.lastQuery();
@@ -482,7 +486,7 @@ QString SQLiteHistoryPlugin::sqlQueryForThreads(History::EventType type, const Q
         break;
     case History::EventTypeVoice:
         table = "voice_events";
-        extraFields << "voice_events.duration" << "voice_events.missed";
+        extraFields << "voice_events.duration" << "voice_events.missed" << "voice_events.remoteParticipant";
         break;
     }
 
@@ -515,7 +519,7 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseThreadResults(History::EventType ty
 
         // the generic event fields
         thread[History::FieldSenderId] = query.value(6);
-        thread[History::FieldTimestamp] = query.value(7);
+        thread[History::FieldTimestamp] = toLocalTimeString(query.value(7).toDateTime());
         thread[History::FieldNewEvent] = query.value(8);
 
         // the next step is to get the last event
@@ -550,11 +554,12 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseThreadResults(History::EventType ty
             thread[History::FieldMessage] = query.value(9);
             thread[History::FieldMessageType] = query.value(10);
             thread[History::FieldMessageStatus] = query.value(11);
-            thread[History::FieldReadTimestamp] = query.value(12);
+            thread[History::FieldReadTimestamp] = toLocalTimeString(query.value(12).toDateTime());
             break;
         case History::EventTypeVoice:
             thread[History::FieldMissed] = query.value(10);
             thread[History::FieldDuration] = query.value(9);
+            thread[History::FieldRemoteParticipant] = query.value(11);
             break;
         }
         threads << thread;
@@ -583,7 +588,7 @@ QString SQLiteHistoryPlugin::sqlQueryForEvents(History::EventType type, const QS
     case History::EventTypeVoice:
         participantsField = participantsField.arg("voice_events", QString::number(type));
         queryText = QString("SELECT accountId, threadId, eventId, senderId, timestamp, newEvent, %1, "
-                            "duration, missed FROM voice_events %2 %3").arg(participantsField, modifiedCondition, order);
+                            "duration, missed, remoteParticipant FROM voice_events %2 %3").arg(participantsField, modifiedCondition, order);
         break;
     }
 
@@ -604,7 +609,7 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseEventResults(History::EventType typ
         event[History::FieldThreadId] = threadId;
         event[History::FieldEventId] = eventId;
         event[History::FieldSenderId] = query.value(3);
-        event[History::FieldTimestamp] = query.value(4);
+        event[History::FieldTimestamp] = toLocalTimeString(query.value(4).toDateTime());
         event[History::FieldNewEvent] = query.value(5);
         event[History::FieldParticipants] = query.value(6).toString().split("|,|");
 
@@ -642,15 +647,87 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseEventResults(History::EventType typ
             event[History::FieldMessage] = query.value(7);
             event[History::FieldMessageType] = query.value(8);
             event[History::FieldMessageStatus] = query.value(9);
-            event[History::FieldReadTimestamp] = query.value(10);
+            event[History::FieldReadTimestamp] = toLocalTimeString(query.value(10).toDateTime());
             break;
         case History::EventTypeVoice:
             event[History::FieldDuration] = query.value(7).toInt();
             event[History::FieldMissed] = query.value(8);
+            event[History::FieldRemoteParticipant] = query.value(9);
             break;
         }
 
         events << event;
     }
     return events;
+}
+
+QString SQLiteHistoryPlugin::toLocalTimeString(const QDateTime &timestamp)
+{
+    return QDateTime(timestamp.date(), timestamp.time(), Qt::UTC).toLocalTime().toString("yyyy-MM-ddTHH:mm:ss.zzz");
+}
+
+QString SQLiteHistoryPlugin::filterToString(const History::Filter &filter, QVariantMap &bindValues, const QString &propertyPrefix) const
+{
+    QString result;
+    History::Filters filters;
+    QString linking;
+    QString value;
+    int count;
+    QString filterProperty = filter.filterProperty();
+    QVariant filterValue = filter.filterValue();
+
+    switch (filter.type()) {
+    case History::FilterTypeIntersection:
+        filters = History::IntersectionFilter(filter).filters();
+        linking = " AND ";
+    case History::FilterTypeUnion:
+        if (filter.type() == History::FilterTypeUnion) {
+            filters = History::UnionFilter(filter).filters();
+            linking = " OR ";
+        }
+
+        if (filters.isEmpty()) {
+            break;
+        }
+
+        result = "( ";
+        count = filters.count();
+        for (int i = 0; i < count; ++i) {
+            // run recursively through the inner filters
+            result += QString("(%1)").arg(filterToString(filters[i], bindValues, propertyPrefix));
+            if (i != count-1) {
+                result += linking;
+            }
+        }
+        result += " )";
+        break;
+    default:
+        if (filterProperty.isEmpty() || filterValue.isNull()) {
+            break;
+        }
+
+        QString bindId = QString(":filterValue%1").arg(bindValues.count());
+
+        QString propertyName = propertyPrefix.isNull() ? filterProperty : QString("%1.%2").arg(propertyPrefix, filterProperty);
+        // FIXME: need to check for other match flags and multiple match flags
+        if (filter.matchFlags() & History::MatchContains) {
+            // FIXME: maybe we should use QString("%1 LIKE '\%'||%2'\%'").arg(bindId) ?? needs more time for investigating
+            result = QString("%1 LIKE '\%%2\%' ESCAPE '\\'").arg(propertyName, escapeFilterValue(filterValue.toString()));
+        } else {
+            result = QString("%1=%2").arg(propertyName, bindId);
+            bindValues[bindId] = filterValue;
+        }
+    }
+
+    return result;
+}
+
+QString SQLiteHistoryPlugin::escapeFilterValue(const QString &value) const
+{
+    QString escaped = value;
+    escaped.replace("\\", "\\\\")
+           .replace("'", "''")
+           .replace("%", "\\%")
+           .replace("_", "\\_");
+    return escaped;
 }

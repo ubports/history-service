@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2014 Canonical, Ltd.
+ * Copyright (C) 2013-2015 Canonical, Ltd.
  *
  * Authors:
  *  Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>
@@ -67,7 +67,7 @@ public:
 
     virtual QHash<int, QByteArray> roleNames() const;
 
-    Q_INVOKABLE bool removeThread(const QString &accountId, const QString &threadId, int eventType);
+    Q_INVOKABLE bool removeThreads(const QVariantList &threadsProperties);
 
 protected Q_SLOTS:
     virtual void updateQuery();

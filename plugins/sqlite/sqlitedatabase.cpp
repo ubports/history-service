@@ -22,6 +22,7 @@
 #include "phoneutils_p.h"
 #include "sqlite3.h"
 #include "sqlitedatabase.h"
+#include "types.h"
 #include <QStandardPaths>
 #include <QSqlDriver>
 #include <QSqlQuery>
@@ -29,6 +30,7 @@
 #include <QDebug>
 #include <QFile>
 #include <QDir>
+#include <QDateTime>
 
 Q_DECLARE_OPAQUE_POINTER(sqlite3*)
 Q_DECLARE_METATYPE(sqlite3*)
@@ -133,6 +135,7 @@ bool SQLiteDatabase::createOrUpdateDatabase()
     query.exec("PRAGMA temp_store = MEMORY");
 
     QStringList statements;
+    int existingVersion = 0;
 
     if (create) {
          statements = parseSchemaFile(":/database/schema/schema.sql");
@@ -144,7 +147,8 @@ bool SQLiteDatabase::createOrUpdateDatabase()
             return false;
         }
 
-        int upgradeToVersion = query.value(0).toInt() + 1;
+        existingVersion = query.value(0).toInt();
+        int upgradeToVersion = existingVersion + 1;
         while (upgradeToVersion <= mSchemaVersion) {
             statements += parseSchemaFile(QString(":/database/schema/v%1.sql").arg(QString::number(upgradeToVersion)));
             ++upgradeToVersion;
@@ -177,6 +181,18 @@ bool SQLiteDatabase::createOrUpdateDatabase()
         qCritical() << "Failed to insert new schema version. SQL Statement:" << query.lastQuery() << "Error:" << query.lastError();
         rollbackTransaction();
         return false;
+    }
+
+    // now check if any data updating is required
+    if (existingVersion > 0) {
+        // v10 - timestamps in UTC
+        if (existingVersion > 0 && existingVersion < 10) {
+            if (!changeTimestampsToUtc()) {
+                qCritical() << "Failed to update existing data.";
+                rollbackTransaction();
+                return false;
+            }
+        }
     }
 
     finishTransaction();
@@ -239,4 +255,76 @@ void SQLiteDatabase::parseVersionInfo()
 
     QString version = schema.readAll();
     mSchemaVersion = version.toInt();
+}
+
+bool SQLiteDatabase::changeTimestampsToUtc()
+{
+    // update the text events
+    QSqlQuery query(database());
+    QString queryText = "SELECT accountId, threadId, eventId, timestamp, readTimestamp FROM text_events";
+
+    if (!query.exec(queryText)) {
+        qWarning() << "Failed to update text events:" << query.lastError();
+        return false;
+    }
+
+    QList<QVariantMap> events;
+    while (query.next()) {
+        QVariantMap event;
+        event[History::FieldAccountId] = query.value(0);
+        event[History::FieldThreadId] = query.value(1);
+        event[History::FieldEventId] = query.value(2);
+        event[History::FieldTimestamp] = query.value(3);
+        event[History::FieldReadTimestamp] = query.value(4);
+        events << event;
+    }
+    query.clear();
+    queryText = "UPDATE text_events SET timestamp=:timestamp, readTimestamp=:readTimestamp";
+    queryText += " WHERE accountId=:accountId AND threadId=:threadId AND eventId=:eventId";
+    query.prepare(queryText);
+    Q_FOREACH (const QVariantMap &event, events) {
+        query.bindValue(":accountId", event[History::FieldAccountId]);
+        query.bindValue(":threadId", event[History::FieldThreadId]);
+        query.bindValue(":eventId", event[History::FieldEventId]);
+        query.bindValue(":timestamp", event[History::FieldTimestamp].toDateTime().toUTC().toString("yyyy-MM-ddTHH:mm:ss.zzz"));
+        query.bindValue(":readTimestamp", event[History::FieldReadTimestamp].toDateTime().toUTC().toString("yyyy-MM-ddTHH:mm:ss.zzz"));
+        if (!query.exec()) {
+            qWarning() << "Failed to update text event:" << query.lastError();
+            return false;
+        }
+    }
+
+    // and do the same for voice events
+    queryText = "SELECT accountId, threadId, eventId, timestamp FROM voice_events";
+
+    if (!query.exec(queryText)) {
+        qWarning() << "Failed to update voice events:" << query.lastError();
+        return false;
+    }
+
+    events.clear();
+    while (query.next()) {
+        QVariantMap event;
+        event[History::FieldAccountId] = query.value(0);
+        event[History::FieldThreadId] = query.value(1);
+        event[History::FieldEventId] = query.value(2);
+        event[History::FieldTimestamp] = query.value(3);
+        events << event;
+    }
+    query.clear();
+    queryText = "UPDATE voice_events SET timestamp=:timestamp";
+    queryText += " WHERE accountId=:accountId AND threadId=:threadId AND eventId=:eventId";
+    query.prepare(queryText);
+    Q_FOREACH (const QVariantMap &event, events) {
+        query.bindValue(":accountId", event[History::FieldAccountId]);
+        query.bindValue(":threadId", event[History::FieldThreadId]);
+        query.bindValue(":eventId", event[History::FieldEventId]);
+        query.bindValue(":timestamp", event[History::FieldTimestamp].toDateTime().toUTC().toString("yyyy-MM-ddTHH:mm:ss.zzz"));
+        if (!query.exec()) {
+            qWarning() << "Failed to update voice event:" << query.lastError();
+            return false;
+        }
+    }
+
+    return true;
 }

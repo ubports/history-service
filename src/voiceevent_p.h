@@ -39,10 +39,12 @@ public:
                     bool theNewEvent,
                     bool theMissed,
                     const QTime &theDuration,
+                    const QString &theRemoteParticipant,
                     const QStringList &theParticipants);
     ~VoiceEventPrivate();
     bool missed;
     QTime duration;
+    QString remoteParticipant;
 
     EventType type() const;
     QVariantMap properties() const;

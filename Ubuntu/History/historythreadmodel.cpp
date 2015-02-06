@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2014 Canonical, Ltd.
+ * Copyright (C) 2013-2015 Canonical, Ltd.
  *
  * Authors:
  *  Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>
@@ -213,10 +213,23 @@ QHash<int, QByteArray> HistoryThreadModel::roleNames() const
     return mRoles;
 }
 
-bool HistoryThreadModel::removeThread(const QString &accountId, const QString &threadId, int eventType)
+bool HistoryThreadModel::removeThreads(const QVariantList &threadsProperties)
 {
-    History::Thread thread = History::Manager::instance()->getSingleThread((History::EventType)eventType, accountId, threadId);
-    return History::Manager::instance()->removeThreads(History::Threads() << thread);
+    History::Threads threads;
+    Q_FOREACH(const QVariant &entry, threadsProperties) {
+        QVariantMap threadProperties = entry.toMap();
+        History::Thread thread = History::Thread::fromProperties(threadProperties);
+
+        if (!thread.isNull()) {
+            threads << thread;
+        }
+    }
+
+    if (threads.isEmpty()) {
+        return false;
+    }
+
+    return History::Manager::instance()->removeThreads(threads);
 }
 
 void HistoryThreadModel::updateQuery()

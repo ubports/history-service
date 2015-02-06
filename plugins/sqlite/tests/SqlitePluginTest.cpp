@@ -25,6 +25,8 @@
 #include "textevent.h"
 #include "texteventattachment.h"
 #include "voiceevent.h"
+#include "intersectionfilter.h"
+#include "unionfilter.h"
 
 Q_DECLARE_METATYPE(History::EventType)
 Q_DECLARE_METATYPE(History::MatchFlags)
@@ -57,6 +59,10 @@ private Q_SLOTS:
     void testEventsForThread();
     void testGetSingleEvent_data();
     void testGetSingleEvent();
+    void testFilterToString_data();
+    void testFilterToString();
+    void testEscapeFilterValue_data();
+    void testEscapeFilterValue();
 
 private:
     SQLiteHistoryPlugin *mPlugin;
@@ -343,12 +349,14 @@ void SqlitePluginTest::testWriteTextEvent()
         QCOMPARE(query.value("threadId"), event[History::FieldThreadId]);
         QCOMPARE(query.value("eventId"), event[History::FieldEventId]);
         QCOMPARE(query.value("senderId"), event[History::FieldSenderId]);
-        QCOMPARE(query.value("timestamp"), event[History::FieldTimestamp]);
+        QCOMPARE(mPlugin->toLocalTimeString(query.value("timestamp").toDateTime()),
+                 event[History::FieldTimestamp].toString());
         QCOMPARE(query.value("newEvent"), event[History::FieldNewEvent]);
         QCOMPARE(query.value("message"), event[History::FieldMessage]);
         QCOMPARE(query.value("messageType"), event[History::FieldMessageType]);
         QCOMPARE(query.value("messageStatus"), event[History::FieldMessageStatus]);
-        QCOMPARE(query.value("readTimestamp"), event[History::FieldReadTimestamp]);
+        QCOMPARE(mPlugin->toLocalTimeString(query.value("readTimestamp").toDateTime()),
+                 event[History::FieldReadTimestamp].toString());
         QCOMPARE(query.value("subject"), event[History::FieldSubject]);
     }
 
@@ -419,12 +427,14 @@ void SqlitePluginTest::testModifyTextEvent()
         QCOMPARE(query.value("threadId"), event[History::FieldThreadId]);
         QCOMPARE(query.value("eventId"), event[History::FieldEventId]);
         QCOMPARE(query.value("senderId"), event[History::FieldSenderId]);
-        QCOMPARE(query.value("timestamp"), event[History::FieldTimestamp]);
+        QCOMPARE(mPlugin->toLocalTimeString(query.value("timestamp").toDateTime()),
+                 event[History::FieldTimestamp].toString());
         QCOMPARE(query.value("newEvent"), event[History::FieldNewEvent]);
         QCOMPARE(query.value("message"), event[History::FieldMessage]);
         QCOMPARE(query.value("messageType"), event[History::FieldMessageType]);
         QCOMPARE(query.value("messageStatus"), event[History::FieldMessageStatus]);
-        QCOMPARE(query.value("readTimestamp"), event[History::FieldReadTimestamp]);
+        QCOMPARE(mPlugin->toLocalTimeString(query.value("readTimestamp").toDateTime()),
+                 event[History::FieldReadTimestamp].toString());
         QCOMPARE(query.value("subject"), event[History::FieldSubject]);
     }
 
@@ -495,7 +505,8 @@ void SqlitePluginTest::testWriteVoiceEvent()
         QCOMPARE(query.value("threadId"), event[History::FieldThreadId]);
         QCOMPARE(query.value("eventId"), event[History::FieldEventId]);
         QCOMPARE(query.value("senderId"), event[History::FieldSenderId]);
-        QCOMPARE(query.value("timestamp"), event[History::FieldTimestamp]);
+        QCOMPARE(mPlugin->toLocalTimeString(query.value("timestamp").toDateTime()),
+                 event[History::FieldTimestamp].toString());
         QCOMPARE(query.value("newEvent"), event[History::FieldNewEvent]);
         QCOMPARE(query.value("missed"), event[History::FieldMissed]);
         QCOMPARE(query.value("duration"), event[History::FieldDuration]);
@@ -542,7 +553,8 @@ void SqlitePluginTest::testModifyVoiceEvent()
         QCOMPARE(query.value("threadId"), event[History::FieldThreadId]);
         QCOMPARE(query.value("eventId"), event[History::FieldEventId]);
         QCOMPARE(query.value("senderId"), event[History::FieldSenderId]);
-        QCOMPARE(query.value("timestamp"), event[History::FieldTimestamp]);
+        QCOMPARE(mPlugin->toLocalTimeString(query.value("timestamp").toDateTime()),
+                 event[History::FieldTimestamp].toString());
         QCOMPARE(query.value("newEvent"), event[History::FieldNewEvent]);
         QCOMPARE(query.value("missed"), event[History::FieldMissed]);
         QCOMPARE(query.value("duration"), event[History::FieldDuration]);
@@ -701,6 +713,107 @@ void SqlitePluginTest::testGetSingleEvent()
         QCOMPARE(retrievedEvent[History::FieldDuration], event[History::FieldDuration]);
         break;
     }
+}
+
+void SqlitePluginTest::testFilterToString_data()
+{
+    QTest::addColumn<QVariantMap>("filterProperties");
+    QTest::addColumn<QVariantMap>("filterValues");
+    QTest::addColumn<QString>("propertyPrefix");
+    QTest::addColumn<QString>("resultString");
+
+    History::Filter filter;
+    QVariantMap filterValues;
+    filter.setFilterProperty("testProperty");
+    filter.setFilterValue("stringValue");
+    filterValues[":filterValue0"] = filter.filterValue();
+    QTest::newRow("simple string filter") << filter.properties() << filterValues << QString() << "testProperty=:filterValue0";
+
+    filter.setFilterValue(12345);
+    filterValues[":filterValue0"] = filter.filterValue();
+    QTest::newRow("simple integer filter") << filter.properties() << filterValues << QString() << "testProperty=:filterValue0";
+
+    filter.setFilterValue(true);
+    filterValues[":filterValue0"] = filter.filterValue();
+    QTest::newRow("simple true boolean filter") << filter.properties() << filterValues << QString() << "testProperty=:filterValue0";
+
+    filter.setFilterValue(false);
+    filterValues[":filterValue0"] = filter.filterValue();
+    QTest::newRow("simple false boolean filter") << filter.properties() << filterValues << QString() << "testProperty=:filterValue0";
+
+    filter.setFilterValue(12345);
+    filterValues[":filterValue0"] = filter.filterValue();
+    QTest::newRow("filter with a prefix") << filter.properties() << filterValues << QString("prefix") << "prefix.testProperty=:filterValue0";
+
+    filter.setMatchFlags(History::MatchContains);
+    filter.setFilterValue("partialString");
+    filterValues.clear();
+    QTest::newRow("match contains") << filter.properties() << filterValues << QString() << "testProperty LIKE '\%partialString\%' ESCAPE '\\'";
+
+    filter.setFilterValue("%");
+    filterValues.clear();
+    QTest::newRow("partial match escaped") << filter.properties() << filterValues << QString() << "testProperty LIKE '\%\\\%\%' ESCAPE '\\'";
+
+    History::IntersectionFilter intersectionFilter;
+    filter.setMatchFlags(History::MatchFlags());
+    filter.setFilterValue(12345);
+    intersectionFilter.append(filter);
+    filter.setFilterValue(true);
+    intersectionFilter.append(filter);
+    filter.setFilterValue("a string");
+    intersectionFilter.append(filter);
+    filterValues.clear();
+    filterValues[":filterValue0"] = 12345;
+    filterValues[":filterValue1"] = true;
+    filterValues[":filterValue2"] = "a string";
+    QTest::newRow("intersection filter") << intersectionFilter.properties() << filterValues << QString() << "( (testProperty=:filterValue0) AND (testProperty=:filterValue1) AND (testProperty=:filterValue2) )";
+
+    History::UnionFilter unionFilter;
+    filter.setFilterValue(12345);
+    unionFilter.append(filter);
+    filter.setFilterValue(true);
+    unionFilter.append(filter);
+    filter.setFilterValue("a string");
+    unionFilter.append(filter);
+    filterValues.clear();
+    filterValues[":filterValue0"] = 12345;
+    filterValues[":filterValue1"] = true;
+    filterValues[":filterValue2"] = "a string";
+    QTest::newRow("union filter") << unionFilter.properties() << filterValues << QString() << "( (testProperty=:filterValue0) OR (testProperty=:filterValue1) OR (testProperty=:filterValue2) )";
+}
+
+void SqlitePluginTest::testFilterToString()
+{
+    QFETCH(QVariantMap, filterProperties);
+    QFETCH(QVariantMap, filterValues);
+    QFETCH(QString, propertyPrefix);
+    QFETCH(QString, resultString);
+
+    QVariantMap resultValues;
+    QString result = mPlugin->filterToString(History::Filter::fromProperties(filterProperties), resultValues, propertyPrefix);
+    QCOMPARE(result, resultString);
+    QCOMPARE(resultValues, filterValues);
+
+}
+
+void SqlitePluginTest::testEscapeFilterValue_data()
+{
+    QTest::addColumn<QString>("originalString");
+    QTest::addColumn<QString>("escapedString");
+
+    QTest::newRow("backslash") << QString("\\") << QString("\\\\");
+    QTest::newRow("single quote") << QString("'") << QString("''");
+    QTest::newRow("percent") << QString("%") << QString("\\%");
+    QTest::newRow("underscore") << QString("_") << QString("\\_");
+    QTest::newRow("string with all of that") << QString("\\0\"'%_bla") << QString("\\\\0\"''\\%\\_bla");
+}
+
+void SqlitePluginTest::testEscapeFilterValue()
+{
+    QFETCH(QString, originalString);
+    QFETCH(QString, escapedString);
+
+    QCOMPARE(mPlugin->escapeFilterValue(originalString), escapedString);
 }
 
 QTEST_MAIN(SqlitePluginTest)
