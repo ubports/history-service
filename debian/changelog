@@ -1,3 +1,10 @@
+history-service (0.1+15.04.20150206.1-0ubuntu1) vivid; urgency=medium
+
+  [ Tiago Salem Herrmann ]
+  * Add tools to populate the history database.
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 06 Feb 2015 15:26:43 +0000
+
 history-service (0.1+15.04.20150128-0ubuntu1) vivid; urgency=low
 
   [ Gustavo Pichorim Boiko ]
