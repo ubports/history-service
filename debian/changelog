@@ -1,3 +1,11 @@
+history-service (0.1+15.04.20150210-0ubuntu1) vivid; urgency=medium
+
+  [ Tiago Salem Herrmann ]
+  * Add support for writing events from qml. Iterate over attachments
+    when qdbus_cast fails. (LP: #1417353)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 10 Feb 2015 19:22:48 +0000
+
 history-service (0.1+15.04.20150206.1-0ubuntu1) vivid; urgency=medium
 
   [ Tiago Salem Herrmann ]
