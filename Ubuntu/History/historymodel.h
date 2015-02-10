@@ -43,6 +43,7 @@ class HistoryModel : public QAbstractListModel, public QQmlParserStatus
     Q_ENUMS(MessageType)
     Q_ENUMS(MatchFlag)
     Q_ENUMS(MessageStatus)
+    Q_ENUMS(AttachmentFlag)
     Q_ENUMS(Role)
 
 public:
@@ -76,6 +77,13 @@ public:
         MessageStatusPending = History::MessageStatusPending // pending attachment download
     };
 
+    enum AttachmentFlag
+    {
+        AttachmentDownloaded = History::AttachmentDownloaded,
+        AttachmentPending = History::AttachmentPending,
+        AttachmentError = History::AttachmentError
+    };
+ 
     enum Role {
         AccountIdRole = Qt::UserRole,
         ThreadIdRole,
