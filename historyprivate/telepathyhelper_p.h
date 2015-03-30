@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012-2013 Canonical, Ltd.
+ * Copyright (C) 2012-2015 Canonical, Ltd.
  *
  * Authors:
  *  Tiago Salem Herrmann <tiago.herrmann@canonical.com>
@@ -29,8 +29,7 @@
 #include <TelepathyQt/Connection>
 #include <TelepathyQt/ConnectionManager>
 #include <TelepathyQt/Types>
-#include "channelobserver.h"
-
+#include "channelobserver_p.h"
 
 class TelepathyHelper : public QObject
 {

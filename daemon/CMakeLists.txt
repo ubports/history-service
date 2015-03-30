@@ -1,11 +1,9 @@
 
 set(qt_SRCS
     callchannelobserver.cpp
-    channelobserver.cpp
     historydaemon.cpp
     historyservicedbus.cpp
     pluginmanager.cpp
-    telepathyhelper.cpp
     textchannelobserver.cpp
     )
 
@@ -14,6 +12,7 @@ set(daemon_SRCS main.cpp ${qt_SRCS})
 include_directories(
     ${TP_QT5_INCLUDE_DIRS}
     ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/historyprivate
     ${CMAKE_CURRENT_BINARY_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}
     )
@@ -26,6 +25,7 @@ qt5_use_modules(history-daemon Core DBus)
 target_link_libraries(history-daemon
     ${TP_QT5_LIBRARIES}
     historyservice
+    historyprivate
     )
 
 # Handle i18n in desktop files
