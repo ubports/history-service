@@ -27,6 +27,7 @@
 #include "thread.h"
 #include "textevent.h"
 #include "manager.h"
+#include "utils_p.h"
 #include <QTimerEvent>
 #include <QCryptographicHash>
 #include <QDebug>
@@ -45,9 +46,6 @@ HistoryModel::HistoryModel(QObject *parent) :
     connect(this, SIGNAL(rowsInserted(QModelIndex,int,int)), this, SIGNAL(countChanged()));
     connect(this, SIGNAL(rowsRemoved(QModelIndex,int,int)), this, SIGNAL(countChanged()));
     connect(this, SIGNAL(modelReset()), this, SIGNAL(countChanged()));
-    connect(ContactMatcher::instance(),
-            SIGNAL(contactInfoChanged(QString,QVariantMap)),
-            SLOT(onContactInfoChanged(QString,QVariantMap)));
 
     // create the view and get some objects
     triggerQueryUpdate();
@@ -89,7 +87,8 @@ QVariant HistoryModel::data(const QModelIndex &index, int role) const
         break;
     case ParticipantsRole:
         if (mMatchContacts) {
-            result = ContactMatcher::instance()->contactInfo(properties[History::FieldParticipants].toStringList());
+            result = ContactMatcher::instance()->contactInfo(properties[History::FieldAccountId].toString(),
+                                                             properties[History::FieldParticipants].toStringList());
         } else {
             result = properties[History::FieldParticipants];
         }
@@ -162,8 +161,20 @@ bool HistoryModel::matchContacts() const
 
 void HistoryModel::setMatchContacts(bool value)
 {
+    if (mMatchContacts == value) {
+        return;
+    }
+
     mMatchContacts = value;
     Q_EMIT matchContactsChanged();
+
+    if (mMatchContacts) {
+        connect(ContactMatcher::instance(),
+                SIGNAL(contactInfoChanged(QString,QString,QVariantMap)),
+                SLOT(onContactInfoChanged(QString,QString,QVariantMap)));
+    } else {
+        ContactMatcher::instance()->disconnect(this);
+    }
 
     // mark all indexes as changed
     if (rowCount() > 0) {
@@ -212,7 +223,7 @@ bool HistoryModel::writeTextInformationEvent(const QString &accountId, const QSt
     return History::Manager::instance()->writeEvents(events);
 }
 
-void HistoryModel::onContactInfoChanged(const QString &phoneNumber, const QVariantMap &contactInfo)
+void HistoryModel::onContactInfoChanged(const QString &accountId, const QString &identifier, const QVariantMap &contactInfo)
 {
     Q_UNUSED(contactInfo)
     if (!mMatchContacts) {
@@ -228,7 +239,10 @@ void HistoryModel::onContactInfoChanged(const QString &phoneNumber, const QVaria
         QVariantMap properties = idx.data(PropertiesRole).toMap();
         QStringList participants = properties[History::FieldParticipants].toStringList();
         Q_FOREACH(const QString &participant, participants) {
-            if (PhoneUtils::comparePhoneNumbers(participant, phoneNumber)) {
+            // FIXME: right now we might be grouping threads from different accounts, so we are not enforcing
+            // the accountId to be the same as the one from the contact info, but maybe we need to do that
+            // in the future?
+            if (History::Utils::compareIds(accountId, participant, identifier)) {
                 changedIndexes << idx;
             }
         }
@@ -250,7 +264,7 @@ void HistoryModel::timerEvent(QTimerEvent *event)
 }
 
 
-bool HistoryModel::compareParticipants(const QStringList &list1, const QStringList &list2) const
+bool HistoryModel::compareParticipants(const QString &accountId, const QStringList &list1, const QStringList &list2) const
 {
     if (list1.count() != list2.count()) {
         return false;
@@ -259,7 +273,7 @@ bool HistoryModel::compareParticipants(const QStringList &list1, const QStringLi
     int found = 0;
     Q_FOREACH(const QString &participant, list1) {
         Q_FOREACH(const QString &item, list2) {
-            if (PhoneUtils::comparePhoneNumbers(participant, item)) {
+            if (History::Utils::compareIds(accountId, participant, item)) {
                 found++;
                 break;
             }

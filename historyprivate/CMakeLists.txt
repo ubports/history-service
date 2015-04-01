@@ -1,6 +1,15 @@
 set(library_SRCS
     channelobserver.cpp
+    contactmatcher.cpp
     telepathyhelper.cpp
+    utils.cpp
+    )
+
+set(library_HDRS
+    channelobserver_p.h
+    contactmatcher_p.h
+    telepathyhelper_p.h
+    utils_p.h
     )
 
 include_directories(

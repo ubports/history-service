@@ -44,6 +44,7 @@ HistoryDaemon::HistoryDaemon(QObject *parent)
     connect(TelepathyHelper::instance(),
             SIGNAL(channelObserverCreated(ChannelObserver*)),
             SLOT(onObserverCreated()));
+    TelepathyHelper::instance()->registerChannelObserver();
 
     connect(&mCallObserver,
             SIGNAL(callEnded(Tp::CallChannelPtr)),

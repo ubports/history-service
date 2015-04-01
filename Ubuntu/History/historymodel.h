@@ -139,11 +139,11 @@ Q_SIGNALS:
 protected Q_SLOTS:
     void triggerQueryUpdate();
     virtual void updateQuery() = 0;
-    void onContactInfoChanged(const QString &phoneNumber, const QVariantMap &contactInfo);
+    void onContactInfoChanged(const QString &accountId, const QString &identifier, const QVariantMap &contactInfo);
 
 protected:
     virtual void timerEvent(QTimerEvent *event);
-    bool compareParticipants(const QStringList &list1, const QStringList &list2) const;
+    bool compareParticipants(const QString &accountId, const QStringList &list1, const QStringList &list2) const;
     bool lessThan(const QVariantMap &left, const QVariantMap &right) const;
     int positionForItem(const QVariantMap &item) const;
     bool isAscending() const;

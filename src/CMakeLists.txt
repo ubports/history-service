@@ -28,6 +28,8 @@ set(library_HDRS
     intersectionfilter.h
     Manager
     manager.h
+    phoneutils_p.h
+    phonenumberutils_p.h
     Plugin
     plugin.h
     PluginThreadView

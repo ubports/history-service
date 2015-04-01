@@ -1,7 +1,6 @@
 # QML plugin
 
 set(plugin_SRCS
-    contactmatcher.cpp
     historyeventmodel.cpp
     historygroupedeventsmodel.cpp
     historygroupedthreadsmodel.cpp
@@ -16,7 +15,6 @@ set(plugin_SRCS
     )
 
 set(plugin_HDRS
-    contactmatcher_p.h
     historyeventmodel.h
     historygroupedeventsmodel.h
     historygroupedthreadsmodel.h
@@ -32,6 +30,7 @@ set(plugin_HDRS
 
 include_directories(
     ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/historyprivate
     )
 
 add_library(history-qml SHARED ${plugin_SRCS} ${plugin_HDRS})
@@ -40,6 +39,7 @@ qt5_use_modules(history-qml Contacts Core Qml Quick)
 
 target_link_libraries(history-qml
     historyservice
+    historyprivate
     )
 
 set(PLUGIN_DIR ${QT_INSTALL_QML}/Ubuntu/History)

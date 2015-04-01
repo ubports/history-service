@@ -42,15 +42,21 @@ public:
     ChannelObserver *channelObserver() const;
 
     void registerClient(Tp::AbstractClient *client, QString name);
+    Tp::AccountPtr accountForId(const QString &accountId);
+    QList<Tp::AccountPtr> accounts() const;
 
 Q_SIGNALS:
     void channelObserverCreated(ChannelObserver *observer);
+    void accountAdded(const Tp::AccountPtr &account);
+    void accountRemoved(const Tp::AccountPtr &account);
 
 public Q_SLOTS:
     void registerChannelObserver();
 
 private Q_SLOTS:
     void onAccountManagerReady(Tp::PendingOperation *op);
+    void onNewAccount(const Tp::AccountPtr &account);
+    void onAccountRemoved();
 
 private:
     explicit TelepathyHelper(QObject *parent = 0);
@@ -61,6 +67,7 @@ private:
     Tp::Features mConnectionFeatures;
     Tp::ClientRegistrarPtr mClientRegistrar;
     ChannelObserver *mChannelObserver;
+    QList<Tp::AccountPtr> mAccounts;
 };
 
 #endif // TELEPATHYHELPER_H
