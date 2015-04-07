@@ -75,6 +75,8 @@ bool SQLiteDatabase::initializeDatabase()
     mDatabase = QSqlDatabase::addDatabase("QSQLITE");
     mDatabase.setDatabaseName(mDatabasePath);
 
+    qDebug() << "Using database at" << mDatabasePath;
+
     // always run the createDatabase function at least during the development
     if (!createOrUpdateDatabase()) {
         qCritical() << "Failed to create or update the database";
