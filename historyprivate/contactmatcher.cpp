@@ -36,9 +36,13 @@
 
 using namespace QtContacts;
 
-ContactMatcher::ContactMatcher(QObject *parent) :
-    QObject(parent), mManager(new QContactManager("galera"))
+ContactMatcher::ContactMatcher(QContactManager *manager, QObject *parent) :
+    QObject(parent), mManager(manager)
 {
+    if (!manager) {
+        new QContactManager("galera");
+    }
+
     // just trigger the creation of TelepathyHelper
     TelepathyHelper::instance();
 
@@ -66,9 +70,9 @@ ContactMatcher::~ContactMatcher()
     mManager->deleteLater();
 }
 
-ContactMatcher *ContactMatcher::instance()
+ContactMatcher *ContactMatcher::instance(QContactManager *manager)
 {
-    static ContactMatcher self;
+    static ContactMatcher self(manager);
     return &self;
 }
 
@@ -310,6 +314,7 @@ void ContactMatcher::requestContactInfo(const QString &accountId, const QString 
             topLevelFilter.append(intersectionFilter);
         }
     }
+
     request->setFilter(topLevelFilter);
     request->setManager(mManager);
     connect(request,
