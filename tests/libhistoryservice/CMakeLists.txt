@@ -1,5 +1,6 @@
 include_directories(
     ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_BINARY_DIR}
 )
 
 generate_test(FilterTest SOURCES FilterTest.cpp LIBRARIES historyservice)
