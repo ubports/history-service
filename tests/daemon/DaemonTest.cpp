@@ -131,6 +131,7 @@ void DaemonTest::testMessageReceived()
     QDateTime sentTime = QDateTime::currentDateTime();
     properties["Sender"] = sender;
     properties["SentTime"] = sentTime.toString(Qt::ISODate);
+    properties["Recipients"] = QStringList() << sender;
 
     QSignalSpy handlerSpy(mHandler, SIGNAL(textChannelAvailable(Tp::TextChannelPtr)));
 

@@ -116,15 +116,6 @@ QString MockTextChannel::sendMessage(const Tp::MessagePartList& message, uint fl
 
     Q_EMIT messageSent(messageText, properties);
 
-    QTimer *deliveryReportTimer = new QTimer(this);
-    deliveryReportTimer->setSingleShot(true);
-    deliveryReportTimer->setInterval(100);
-    connect(deliveryReportTimer, &QTimer::timeout, [id, deliveryReportTimer, this] {
-        this->placeDeliveryReport(id, "sent");
-        deliveryReportTimer->deleteLater();
-    });
-    deliveryReportTimer->start();
-
     return id;
 }
 
