@@ -1,3 +1,14 @@
+history-service (0.1+15.04.20150409-0ubuntu1) vivid; urgency=medium
+
+  [ Gustavo Pichorim Boiko ]
+  * Change the tests to use the same infrastructure as the one used in
+    telephony-service, and add some tests for the contact matching
+    changes.
+  * Improve contact matching by accepting other addressable fields than
+    just phone numbers.
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Thu, 09 Apr 2015 19:06:12 +0000
+
 history-service (0.1+15.04.20150210-0ubuntu1) vivid; urgency=medium
 
   [ Tiago Salem Herrmann ]
