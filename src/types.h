@@ -23,6 +23,7 @@
 #define TYPES_H
 
 #include <QSharedPointer>
+#include <QFlags>
 
 #define DefineSharedPointer(type) class type; typedef QSharedPointer<type> type##Ptr; typedef QWeakPointer<type> type##WeakPtr; typedef QList<type##Ptr> type##s;
 
@@ -150,9 +151,8 @@ static const char* FieldFilters = "filters";
 static const char* FieldContactId = "contactId";
 static const char* FieldAlias = "alias";
 static const char* FieldAvatar = "avatar";
-static const char* FieldPhoneNumber = "phoneNumber";
-static const char* FieldPhoneSubTypes = "phoneSubTypes";
-static const char* FieldPhoneContexts = "phoneContexts";
+static const char* FieldIdentifier = "identifier";
+static const char* FieldDetailProperties = "detailProperties";
 
 }
 

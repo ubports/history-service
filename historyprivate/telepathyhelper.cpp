@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012-2013 Canonical, Ltd.
+ * Copyright (C) 2012-2015 Canonical, Ltd.
  *
  * Authors:
  *  Tiago Salem Herrmann <tiago.herrmann@canonical.com>
@@ -20,7 +20,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "telepathyhelper.h"
+#include "telepathyhelper_p.h"
 
 #include <TelepathyQt/ClientRegistrar>
 
@@ -28,7 +28,8 @@ TelepathyHelper::TelepathyHelper(QObject *parent)
     : QObject(parent),
       mChannelObserver(0)
 {
-    mAccountFeatures << Tp::Account::FeatureCore;
+    mAccountFeatures << Tp::Account::FeatureCore
+                     << Tp::Account::FeatureProtocolInfo;
     mContactFeatures << Tp::Contact::FeatureAlias
                      << Tp::Contact::FeatureAvatarData
                      << Tp::Contact::FeatureAvatarToken
@@ -104,9 +105,53 @@ void TelepathyHelper::registerClient(Tp::AbstractClient *client, QString name)
     }
 }
 
+Tp::AccountPtr TelepathyHelper::accountForId(const QString &accountId)
+{
+    Q_FOREACH(const Tp::AccountPtr &account, mAccounts) {
+        if (account->uniqueIdentifier() == accountId) {
+            return account;
+        }
+    }
+
+    return Tp::AccountPtr();
+}
+
+QList<Tp::AccountPtr> TelepathyHelper::accounts() const
+{
+    return mAccounts;
+}
+
 void TelepathyHelper::onAccountManagerReady(Tp::PendingOperation *op)
 {
     Q_UNUSED(op)
 
-    registerChannelObserver();
+    Q_FOREACH(const Tp::AccountPtr &account, mAccountManager->allAccounts()) {
+        onNewAccount(account);
+    }
+
+    connect(mAccountManager.data(),
+            SIGNAL(newAccount(Tp::AccountPtr)),
+            SLOT(onNewAccount(Tp::AccountPtr)));
+}
+
+void TelepathyHelper::onNewAccount(const Tp::AccountPtr &account)
+{
+    connect(account.data(),
+            SIGNAL(removed()),
+            SLOT(onAccountRemoved()));
+    mAccounts.append(account);
+    Q_EMIT accountAdded(account);
+}
+
+void TelepathyHelper::onAccountRemoved()
+{
+    Tp::AccountPtr account(qobject_cast<Tp::Account*>(sender()));
+    if (account.isNull() || !mAccounts.contains(account)) {
+        qWarning() << "The removed account was not found.";
+        return;
+    }
+
+    account.data()->disconnect(this);
+    mAccounts.removeAll(account);
+    Q_EMIT accountRemoved(account);
 }

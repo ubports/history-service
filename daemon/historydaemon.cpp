@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Canonical, Ltd.
+ * Copyright (C) 2013-2015 Canonical, Ltd.
  *
  * Authors:
  *  Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>
@@ -20,7 +20,7 @@
  */
 
 #include "historydaemon.h"
-#include "telepathyhelper.h"
+#include "telepathyhelper_p.h"
 #include "filter.h"
 #include "sort.h"
 
@@ -44,6 +44,7 @@ HistoryDaemon::HistoryDaemon(QObject *parent)
     connect(TelepathyHelper::instance(),
             SIGNAL(channelObserverCreated(ChannelObserver*)),
             SLOT(onObserverCreated()));
+    TelepathyHelper::instance()->registerChannelObserver();
 
     connect(&mCallObserver,
             SIGNAL(callEnded(Tp::CallChannelPtr)),

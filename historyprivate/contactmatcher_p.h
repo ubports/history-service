@@ -29,17 +29,24 @@
 
 using namespace QtContacts;
 
-typedef QMap<QString, QVariantMap> ContactMap;
+typedef QMap<QString, QVariantMap> InternalContactMap;
+typedef QMap<QString, InternalContactMap> ContactMap;
+
+typedef struct {
+    QString accountId;
+    QString identifier;
+} RequestInfo;
+
 class ContactMatcher : public QObject
 {
     Q_OBJECT
 public:
     static ContactMatcher *instance();
-    QVariantMap contactInfo(const QString &phoneNumber);
-    QVariantList contactInfo(const QStringList &numbers);
+    QVariantMap contactInfo(const QString &accountId, const QString &identifier);
+    QVariantList contactInfo(const QString &accountId, const QStringList &identifiers);
 
 Q_SIGNALS:
-    void contactInfoChanged(const QString &phoneNumber, const QVariantMap &contactInfo);
+    void contactInfoChanged(const QString &acountId, const QString &identifier, const QVariantMap &contactInfo);
 
 protected Q_SLOTS:
     void onContactsAdded(QList<QContactId> ids);
@@ -49,16 +56,18 @@ protected Q_SLOTS:
     void onRequestStateChanged(QContactAbstractRequest::State state);
 
 protected:
-    void requestContactInfo(const QString &phoneNumber);
+    void requestContactInfo(const QString &accountId, const QString &identifier);
     QVariantList toVariantList(const QList<int> &list);
-    void populateInfo(const QString &phoneNumber, const QContact &contact);
+    bool matchAndUpdate(const QString &accountId, const QString &identifier, const QContact &contact);
+    QStringList addressableFields(const QString &accountId);
 
 private:
     explicit ContactMatcher(QObject *parent = 0);
     ~ContactMatcher();
 
     ContactMap mContactMap;
-    QMap<QContactFetchRequest*, QString> mRequests;
+    QMap<QContactFetchRequest*, RequestInfo> mRequests;
+    QMap<QString, QStringList> mAddressableFields;
     QContactManager *mManager;
 };
 

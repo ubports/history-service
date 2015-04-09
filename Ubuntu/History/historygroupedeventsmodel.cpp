@@ -196,9 +196,13 @@ bool HistoryGroupedEventsModel::areOfSameGroup(const History::Event &event1, con
             return false;
         }
 
+        // get one of the account ids to use for comparing
+        QString accountId = props1[History::FieldAccountId].toString();
+
         // now check if the values are the same
         if (property == History::FieldParticipants) {
-            if (!compareParticipants(props1[property].toStringList(),
+            if (!compareParticipants(accountId,
+                                     props1[property].toStringList(),
                                      props2[property].toStringList())) {
                 return false;
             }
