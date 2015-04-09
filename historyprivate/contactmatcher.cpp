@@ -39,8 +39,8 @@ using namespace QtContacts;
 ContactMatcher::ContactMatcher(QContactManager *manager, QObject *parent) :
     QObject(parent), mManager(manager)
 {
-    if (!manager) {
-        new QContactManager("galera");
+    if (!mManager) {
+        mManager = new QContactManager("galera");
     }
 
     // just trigger the creation of TelepathyHelper
