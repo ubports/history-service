@@ -96,5 +96,3 @@ install(FILES ${library_HDRS} DESTINATION ${INCLUDE_INSTALL_DIR}/History)
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/history-service.pc.in ${CMAKE_CURRENT_BINARY_DIR}/history-service.pc)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/history-service.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig COMPONENT pkgconfig)
-
-add_subdirectory(tests)

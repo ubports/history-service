@@ -41,7 +41,7 @@ class ContactMatcher : public QObject
 {
     Q_OBJECT
 public:
-    static ContactMatcher *instance();
+    static ContactMatcher *instance(QContactManager *manager = 0);
     QVariantMap contactInfo(const QString &accountId, const QString &identifier);
     QVariantList contactInfo(const QString &accountId, const QStringList &identifiers);
 
@@ -62,7 +62,7 @@ protected:
     QStringList addressableFields(const QString &accountId);
 
 private:
-    explicit ContactMatcher(QObject *parent = 0);
+    explicit ContactMatcher(QContactManager *manager = 0, QObject *parent = 0);
     ~ContactMatcher();
 
     ContactMap mContactMap;
