@@ -53,7 +53,7 @@ QString Utils::protocolFromAccountId(const QString &accountId)
     if (parsedId.count() < 3) {
         return QString::null;
     }
-    return parsedId[2];
+    return parsedId[1];
 }
 
 bool Utils::compareIds(const QString &accountId, const QString &id1, const QString &id2)
