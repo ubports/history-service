@@ -132,6 +132,8 @@ void TelepathyHelper::onAccountManagerReady(Tp::PendingOperation *op)
     connect(mAccountManager.data(),
             SIGNAL(newAccount(Tp::AccountPtr)),
             SLOT(onNewAccount(Tp::AccountPtr)));
+
+    Q_EMIT setupReady();
 }
 
 void TelepathyHelper::onNewAccount(const Tp::AccountPtr &account)
@@ -154,4 +156,16 @@ void TelepathyHelper::onAccountRemoved()
     account.data()->disconnect(this);
     mAccounts.removeAll(account);
     Q_EMIT accountRemoved(account);
+}
+
+
+bool TelepathyHelper::connected() const
+{
+    Q_FOREACH(const Tp::AccountPtr &account, mAccounts) {
+        if (!account->connection().isNull()) {
+            return true;
+        }
+    }
+
+    return false;
 }

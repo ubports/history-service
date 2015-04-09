@@ -44,11 +44,13 @@ public:
     void registerClient(Tp::AbstractClient *client, QString name);
     Tp::AccountPtr accountForId(const QString &accountId);
     QList<Tp::AccountPtr> accounts() const;
+    bool connected() const;
 
 Q_SIGNALS:
     void channelObserverCreated(ChannelObserver *observer);
     void accountAdded(const Tp::AccountPtr &account);
     void accountRemoved(const Tp::AccountPtr &account);
+    void setupReady();
 
 public Q_SLOTS:
     void registerChannelObserver();
