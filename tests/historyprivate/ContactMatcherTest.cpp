@@ -41,6 +41,7 @@ private Q_SLOTS:
     void clean();
     void testMatchExistingContact_data();
     void testMatchExistingContact();
+    void testContactAdded();
 private:
     QContactManager *mContactManager;
     QContact mPhoneContact;
@@ -125,6 +126,28 @@ void ContactMatcherTest::testMatchExistingContact()
     } else {
         QCOMPARE(info[History::FieldIdentifier].toString(), identifier);
     }
+}
+
+void ContactMatcherTest::testContactAdded()
+{
+    QSignalSpy contactInfoSpy(ContactMatcher::instance(), SIGNAL(contactInfoChanged(QString,QString,QVariantMap)));
+    QString identifier("5555555");
+    QString accountId("mock/ofono/account0");
+    QVariantMap info = ContactMatcher::instance()->contactInfo(accountId, identifier);
+    QCOMPARE(info[History::FieldIdentifier].toString(), identifier);
+    QVERIFY(!info.contains(History::FieldContactId));
+
+    // now add a contact that matches this item
+    QContact contact;
+    QContactPhoneNumber phoneNumber;
+    phoneNumber.setNumber(identifier);
+    QVERIFY(contact.saveDetail(&phoneNumber));
+    QVERIFY(mContactManager->saveContact(&contact));
+
+    QTRY_COMPARE(contactInfoSpy.count(), 1);
+    QCOMPARE(contactInfoSpy.first()[0].toString(), accountId);
+    QCOMPARE(contactInfoSpy.first()[1].toString(), identifier);
+    QCOMPARE(contactInfoSpy.first()[2].toMap()[History::FieldContactId].toString(), contact.id().toString());
 }
 
 QTEST_MAIN(ContactMatcherTest)
