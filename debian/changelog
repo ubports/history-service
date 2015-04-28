@@ -1,3 +1,11 @@
+history-service (0.1+15.04.20150428.1-0ubuntu1) vivid; urgency=medium
+
+  [ Gustavo Pichorim Boiko ]
+  * Fix a crash that was happening when matching new contacts. Also add
+    a unit test to make sure it doesn't happen again. (LP: #1449662)
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Tue, 28 Apr 2015 21:42:14 +0000
+
 history-service (0.1+15.04.20150409-0ubuntu1) vivid; urgency=medium
 
   [ Gustavo Pichorim Boiko ]
