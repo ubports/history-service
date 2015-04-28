@@ -98,6 +98,7 @@ QVariantMap ContactMatcher::contactInfo(const QString &accountId, const QString 
     requestContactInfo(accountId, identifier);
     QVariantMap map;
     map[History::FieldIdentifier] = identifier;
+    mContactMap[accountId][identifier] = map;
     return map;
 }
 
@@ -123,7 +124,7 @@ void ContactMatcher::onContactsAdded(QList<QContactId> ids)
         InternalContactMap &internalMap = it.value();
         InternalContactMap::iterator it2 = internalMap.begin();
         InternalContactMap::iterator end2 = internalMap.end();
-        for (; it2 != end2; ++it) {
+        for (; it2 != end2; ++it2) {
             QString identifier = it2.key();
             // skip entries that already have a match
             if (it2.value().contains(History::FieldContactId)) {
