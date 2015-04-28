@@ -201,7 +201,7 @@ void ContactMatcher::onContactsRemoved(QList<QContactId> ids)
 
             Q_FOREACH(const QContactId &id, ids) {
                 if (id.toString() == it2.value()[History::FieldContactId].toString()) {
-                    identifiersToMatch << it.key();
+                    identifiersToMatch << it2.key();
                     break;
                 }
             }
@@ -210,7 +210,7 @@ void ContactMatcher::onContactsRemoved(QList<QContactId> ids)
         // now make sure to try a new match on the phone numbers whose contact was removed
         Q_FOREACH(const QString &identifier, identifiersToMatch) {
             internalMap.remove(identifier);
-            requestContactInfo(accountId, identifier);
+            Q_EMIT contactInfoChanged(accountId, identifier, contactInfo(accountId, identifier));
         }
     }
 }
