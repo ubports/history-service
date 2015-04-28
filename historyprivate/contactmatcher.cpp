@@ -98,6 +98,7 @@ QVariantMap ContactMatcher::contactInfo(const QString &accountId, const QString 
     requestContactInfo(accountId, identifier);
     QVariantMap map;
     map[History::FieldIdentifier] = identifier;
+    mContactMap[accountId][identifier] = map;
     return map;
 }
 
@@ -123,7 +124,7 @@ void ContactMatcher::onContactsAdded(QList<QContactId> ids)
         InternalContactMap &internalMap = it.value();
         InternalContactMap::iterator it2 = internalMap.begin();
         InternalContactMap::iterator end2 = internalMap.end();
-        for (; it2 != end2; ++it) {
+        for (; it2 != end2; ++it2) {
             QString identifier = it2.key();
             // skip entries that already have a match
             if (it2.value().contains(History::FieldContactId)) {
@@ -200,7 +201,7 @@ void ContactMatcher::onContactsRemoved(QList<QContactId> ids)
 
             Q_FOREACH(const QContactId &id, ids) {
                 if (id.toString() == it2.value()[History::FieldContactId].toString()) {
-                    identifiersToMatch << it.key();
+                    identifiersToMatch << it2.key();
                     break;
                 }
             }
@@ -209,7 +210,7 @@ void ContactMatcher::onContactsRemoved(QList<QContactId> ids)
         // now make sure to try a new match on the phone numbers whose contact was removed
         Q_FOREACH(const QString &identifier, identifiersToMatch) {
             internalMap.remove(identifier);
-            requestContactInfo(accountId, identifier);
+            Q_EMIT contactInfoChanged(accountId, identifier, contactInfo(accountId, identifier));
         }
     }
 }
