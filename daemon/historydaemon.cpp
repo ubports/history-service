@@ -372,6 +372,13 @@ void HistoryDaemon::onCallEnded(const Tp::CallChannelPtr &channel)
 void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, const Tp::ReceivedMessage &message)
 {
     qDebug() << __PRETTY_FUNCTION__;
+    QString eventId;
+    if (message.messageToken().isEmpty()) {
+        eventId = QDateTime().toString("yyyy-MM-ddTHH:mm:ss.zzz");
+    } else {
+        eventId = message.messageToken();
+    }
+ 
     // ignore delivery reports for now.
     // FIXME: maybe we should set the readTimestamp when a delivery report is received
     if (message.isRescued() || message.isScrollback()) {
@@ -456,7 +463,7 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
     if (message.hasNonTextContent()) {
         QString normalizedAccountId = QString(QCryptographicHash::hash(thread[History::FieldAccountId].toString().toLatin1(), QCryptographicHash::Md5).toHex());
         QString normalizedThreadId = QString(QCryptographicHash::hash(thread[History::FieldThreadId].toString().toLatin1(), QCryptographicHash::Md5).toHex());
-        QString normalizedEventId = QString(QCryptographicHash::hash(message.messageToken().toLatin1(), QCryptographicHash::Md5).toHex());
+        QString normalizedEventId = QString(QCryptographicHash::hash(eventId.toLatin1(), QCryptographicHash::Md5).toHex());
         QString mmsStoragePath = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation);
 
         type = History::MessageTypeMultiPart;
@@ -490,7 +497,7 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
             QVariantMap attachment;
             attachment[History::FieldAccountId] = thread[History::FieldAccountId];
             attachment[History::FieldThreadId] = thread[History::FieldThreadId];
-            attachment[History::FieldEventId] = message.messageToken();
+            attachment[History::FieldEventId] = eventId;
             attachment[History::FieldAttachmentId] = part["identifier"].variant();
             attachment[History::FieldContentType] = part["content-type"].variant();
             attachment[History::FieldFilePath] = file.fileName();
@@ -503,7 +510,7 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
     event[History::FieldType] = History::EventTypeText;
     event[History::FieldAccountId] = thread[History::FieldAccountId];
     event[History::FieldThreadId] = thread[History::FieldThreadId];
-    event[History::FieldEventId] = message.messageToken();
+    event[History::FieldEventId] = eventId;
     event[History::FieldSenderId] = message.sender()->id();
     event[History::FieldTimestamp] = message.received().toString("yyyy-MM-ddTHH:mm:ss.zzz");
     event[History::FieldNewEvent] = true; // message is always unread until it reaches HistoryDaemon::onMessageRead
@@ -531,6 +538,14 @@ void HistoryDaemon::onMessageSent(const Tp::TextChannelPtr textChannel, const Tp
     History::MessageType type = History::MessageTypeText;
     int count = 1;
     QString subject;
+    QString eventId;
+
+    if (messageToken.isEmpty()) {
+        eventId = QDateTime().toString("yyyy-MM-ddTHH:mm:ss.zzz");
+    } else {
+        eventId = messageToken;
+    }
+ 
     Q_FOREACH(const Tp::ContactPtr contact, textChannel->groupContacts(false)) {
         participants << contact->id();
     }
@@ -543,7 +558,7 @@ void HistoryDaemon::onMessageSent(const Tp::TextChannelPtr textChannel, const Tp
     if (message.hasNonTextContent()) {
         QString normalizedAccountId = QString(QCryptographicHash::hash(thread[History::FieldAccountId].toString().toLatin1(), QCryptographicHash::Md5).toHex());
         QString normalizedThreadId = QString(QCryptographicHash::hash(thread[History::FieldThreadId].toString().toLatin1(), QCryptographicHash::Md5).toHex());
-        QString normalizedEventId = QString(QCryptographicHash::hash(messageToken.toLatin1(), QCryptographicHash::Md5).toHex());
+        QString normalizedEventId = QString(QCryptographicHash::hash(eventId.toLatin1(), QCryptographicHash::Md5).toHex());
         QString mmsStoragePath = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation);
 
         type = History::MessageTypeMultiPart;
@@ -577,7 +592,7 @@ void HistoryDaemon::onMessageSent(const Tp::TextChannelPtr textChannel, const Tp
             QVariantMap attachment;
             attachment[History::FieldAccountId] = thread[History::FieldAccountId];
             attachment[History::FieldThreadId] = thread[History::FieldThreadId];
-            attachment[History::FieldEventId] = messageToken;
+            attachment[History::FieldEventId] = eventId;
             attachment[History::FieldAttachmentId] = part["identifier"].variant();
             attachment[History::FieldContentType] = part["content-type"].variant();
             attachment[History::FieldFilePath] = file.fileName();
@@ -591,13 +606,17 @@ void HistoryDaemon::onMessageSent(const Tp::TextChannelPtr textChannel, const Tp
     event[History::FieldType] = History::EventTypeText;
     event[History::FieldAccountId] = thread[History::FieldAccountId];
     event[History::FieldThreadId] = thread[History::FieldThreadId];
-    event[History::FieldEventId] = messageToken;
+    event[History::FieldEventId] = eventId;
     event[History::FieldSenderId] = "self";
     event[History::FieldTimestamp] = QDateTime::currentDateTime().toString("yyyy-MM-ddTHH:mm:ss.zzz"); // FIXME: check why message.sent() is empty
     event[History::FieldNewEvent] =  false; // outgoing messages are never new (unseen)
     event[History::FieldMessage] = message.text();
     event[History::FieldMessageType] = type;
-    event[History::FieldMessageStatus] = (int)History::MessageStatusUnknown;
+    if (textChannel->deliveryReportingSupport() & Tp::DeliveryReportingSupportFlagReceiveSuccesses) {
+        event[History::FieldMessageStatus] = (int)History::MessageStatusUnknown;
+    } else {
+        event[History::FieldMessageStatus] = (int)History::MessageStatusAccepted;
+    }
     event[History::FieldReadTimestamp] = QDateTime().toString("yyyy-MM-ddTHH:mm:ss.zzz");
     event[History::FieldSubject] = "";
     event[History::FieldAttachments] = QVariant::fromValue(attachments);
