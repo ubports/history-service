@@ -107,7 +107,10 @@ QString MockTextChannel::sendMessage(const Tp::MessagePartList& message, uint fl
     static int serial = 0;
 
     // FIXME: check what other data we need to emit in the signal
-    QString id = QString("sentmessage%1").arg(serial++);
+    QString id;
+    if (!header["no-event-id"].variant().toBool()) {
+        id = QString("sentmessage%1").arg(serial++);
+    }
     QString messageText = body["content"].variant().toString();
     QVariantMap properties;
     properties["SentTime"] = QDateTime::currentDateTime().toString(Qt::ISODate);

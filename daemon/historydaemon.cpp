@@ -374,7 +374,7 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
     qDebug() << __PRETTY_FUNCTION__;
     QString eventId;
     if (message.messageToken().isEmpty()) {
-        eventId = QDateTime().toString("yyyy-MM-ddTHH:mm:ss.zzz");
+        eventId = QDateTime::currentDateTime().toString("yyyy-MM-ddTHH:mm:ss.zzz");
     } else {
         eventId = message.messageToken();
     }
@@ -517,7 +517,7 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
     event[History::FieldMessage] = message.text();
     event[History::FieldMessageType] = (int)type;
     event[History::FieldMessageStatus] = (int)History::MessageStatusUnknown;
-    event[History::FieldReadTimestamp] = QDateTime().toString("yyyy-MM-ddTHH:mm:ss.zzz");
+    event[History::FieldReadTimestamp] = QDateTime::currentDateTime().toString("yyyy-MM-ddTHH:mm:ss.zzz");
     event[History::FieldSubject] = subject;
     event[History::FieldAttachments] = QVariant::fromValue(attachments);
 
@@ -541,7 +541,7 @@ void HistoryDaemon::onMessageSent(const Tp::TextChannelPtr textChannel, const Tp
     QString eventId;
 
     if (messageToken.isEmpty()) {
-        eventId = QDateTime().toString("yyyy-MM-ddTHH:mm:ss.zzz");
+        eventId = QDateTime::currentDateTime().toString("yyyy-MM-ddTHH:mm:ss.zzz");
     } else {
         eventId = messageToken;
     }
@@ -617,7 +617,7 @@ void HistoryDaemon::onMessageSent(const Tp::TextChannelPtr textChannel, const Tp
     } else {
         event[History::FieldMessageStatus] = (int)History::MessageStatusAccepted;
     }
-    event[History::FieldReadTimestamp] = QDateTime().toString("yyyy-MM-ddTHH:mm:ss.zzz");
+    event[History::FieldReadTimestamp] = QDateTime::currentDateTime().toString("yyyy-MM-ddTHH:mm:ss.zzz");
     event[History::FieldSubject] = "";
     event[History::FieldAttachments] = QVariant::fromValue(attachments);
 
