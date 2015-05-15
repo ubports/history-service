@@ -48,10 +48,10 @@ enum FilterType {
 };
 
 enum MatchFlag {
-    MatchCaseSensitive,
-    MatchCaseInsensitive,
-    MatchContains,
-    MatchPhoneNumber
+    MatchCaseSensitive = 0x01,
+    MatchCaseInsensitive = 0x02,
+    MatchContains = 0x04,
+    MatchPhoneNumber = 0x08
 };
 
 Q_DECLARE_FLAGS(MatchFlags, MatchFlag)
@@ -75,11 +75,13 @@ enum MessageType
     MessageTypeInformation = 2
 };
 
+// FIXME (boiko): I think this needs to be changed to a simple enum and not flags,
+// as the statuses are mutually exclusive
 enum AttachmentFlag
 {
-    AttachmentDownloaded,
-    AttachmentPending,
-    AttachmentError
+    AttachmentDownloaded = 0x01,
+    AttachmentPending = 0x02,
+    AttachmentError = 0x04
 };
 
 Q_DECLARE_FLAGS(AttachmentFlags, AttachmentFlag)
