@@ -87,6 +87,11 @@ void HistoryGroupedThreadsModel::fetchMore(const QModelIndex &parent)
         processThreadGrouping(thread);
     }
     notifyDataChanged();
+
+    if (threads.size() == 0) {
+        mCanFetchMore = false;
+        Q_EMIT canFetchMoreChanged();
+    }
 }
 
 QHash<int, QByteArray> HistoryGroupedThreadsModel::roleNames() const
