@@ -88,7 +88,7 @@ void HistoryGroupedThreadsModel::fetchMore(const QModelIndex &parent)
     }
     notifyDataChanged();
 
-    if (threads.size() == 0) {
+    if (threads.isEmpty()) {
         mCanFetchMore = false;
         Q_EMIT canFetchMoreChanged();
     }
