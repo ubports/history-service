@@ -21,9 +21,12 @@
 
 include(CMakeParseArguments)
 find_program(DBUS_RUNNER dbus-test-runner)
+find_program(XVFB_RUN_BIN
+    NAMES xvfb-run
+)
 
 function(generate_test TESTNAME)
-    set(options USE_DBUS USE_UI)
+    set(options USE_DBUS USE_UI USE_XVFB)
     set(oneValueArgs TIMEOUT WORKING_DIRECTORY QML_TEST WAIT_FOR)
     set(multiValueArgs TASKS LIBRARIES QT5_MODULES SOURCES ENVIRONMENT)
     cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
@@ -79,13 +82,16 @@ function(generate_test TESTNAME)
                                     MC_ACCOUNT_DIR=${TMPDIR}
                                     MC_MANAGER_DIR=${TMPDIR})
             endif ()
+            if (${ARG_USE_XVFB})
+                SET(XVFB_RUN ${XVFB_RUN_BIN} -a -s "-screen 0 1024x768x24")
+            endif ()
 
             set(TEST_COMMAND ${CMAKE_CURRENT_BINARY_DIR}/${TESTNAME} ${PLATFORM} -p -o -p -,txt -p -o -p ${CMAKE_BINARY_DIR}/test_${TESTNAME}.xml,xunitxml)
             if (DEFINED ARG_WAIT_FOR)
                 SET(TEST_COMMAND ${TEST_COMMAND} --wait-for ${ARG_WAIT_FOR})
             endif ()
 
-            add_test(${TESTNAME} ${DBUS_RUNNER} --keep-env --dbus-config=${CMAKE_BINARY_DIR}/tests/common/dbus-session.conf --max-wait=${ARG_TIMEOUT}
+            add_test(${TESTNAME} ${XVFB_RUN} ${DBUS_RUNNER} --keep-env --dbus-config=${CMAKE_BINARY_DIR}/tests/common/dbus-session.conf --max-wait=${ARG_TIMEOUT}
                                                 ${ARG_TASKS} --task ${TEST_COMMAND} --task-name ${TESTNAME})
         else ()
             add_test(${TESTNAME} ${CMAKE_CURRENT_BINARY_DIR}/${TESTNAME} ${PLATFORM} -o -,txt -o ${CMAKE_BINARY_DIR}/test_${TESTNAME}.xml,xunitxml)
