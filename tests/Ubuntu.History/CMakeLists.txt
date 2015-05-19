@@ -7,6 +7,4 @@ include_directories(
 set(SOURCE_DIR ${CMAKE_SOURCE_DIR}/Ubuntu/History)
 generate_test(HistoryGroupedThreadsModelTest
               SOURCES HistoryGroupedThreadsModelTest.cpp
-              LIBRARIES history-qml
-              QT5_MODULES Core DBus Qml Test)
-
+              LIBRARIES history-qml)
