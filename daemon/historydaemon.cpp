@@ -334,6 +334,12 @@ void HistoryDaemon::onCallEnded(const Tp::CallChannelPtr &channel)
         participants << contact->id();
     }
 
+    // it shouldn't happen, but in case it does, we won't crash
+    if (participants.isEmpty()) {
+        qWarning() << "Participants list was empty for call channel" << channel;
+        return;
+    }
+
     QString accountId = channel->property(History::FieldAccountId).toString();
     QVariantMap thread = threadForParticipants(accountId,
                                                History::EventTypeVoice,
