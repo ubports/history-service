@@ -32,6 +32,7 @@
 #include <QStandardPaths>
 #include <QCryptographicHash>
 #include <TelepathyQt/CallChannel>
+#include <TelepathyQt/ReferencedHandles>
 
 HistoryDaemon::HistoryDaemon(QObject *parent)
     : QObject(parent), mCallObserver(this), mTextObserver(this)
@@ -373,6 +374,15 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
 {
     qDebug() << __PRETTY_FUNCTION__;
     QString eventId;
+    Tp::MessagePart header = message.header();
+    QString senderId;
+    History::MessageStatus status = History::MessageStatusUnknown;
+    if (message.sender()->handle().at(0) == textChannel->connection()->selfHandle()) {
+        senderId = "self";
+        status = History::MessageStatusDelivered;
+    } else {
+        senderId = message.sender()->id();
+    }
     if (message.messageToken().isEmpty()) {
         eventId = QDateTime::currentDateTime().toString("yyyy-MM-ddTHH:mm:ss.zzz");
     } else {
@@ -381,7 +391,7 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
  
     // ignore delivery reports for now.
     // FIXME: maybe we should set the readTimestamp when a delivery report is received
-    if (message.isRescued() || message.isScrollback()) {
+    if (message.isRescued()) {
         return;
     }
 
@@ -511,12 +521,12 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
     event[History::FieldAccountId] = thread[History::FieldAccountId];
     event[History::FieldThreadId] = thread[History::FieldThreadId];
     event[History::FieldEventId] = eventId;
-    event[History::FieldSenderId] = message.sender()->id();
+    event[History::FieldSenderId] = senderId;
     event[History::FieldTimestamp] = message.received().toString("yyyy-MM-ddTHH:mm:ss.zzz");
     event[History::FieldNewEvent] = true; // message is always unread until it reaches HistoryDaemon::onMessageRead
     event[History::FieldMessage] = message.text();
     event[History::FieldMessageType] = (int)type;
-    event[History::FieldMessageStatus] = (int)History::MessageStatusUnknown;
+    event[History::FieldMessageStatus] = (int)status;
     event[History::FieldReadTimestamp] = QDateTime::currentDateTime().toString("yyyy-MM-ddTHH:mm:ss.zzz");
     event[History::FieldSubject] = subject;
     event[History::FieldAttachments] = QVariant::fromValue(attachments);
