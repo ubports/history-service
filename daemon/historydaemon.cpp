@@ -386,6 +386,11 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
             participants << contact->id();
         }
 
+        if (participants.isEmpty() && textChannel->targetHandleType() == Tp::HandleTypeContact &&
+               textChannel->targetContact() == textChannel->connection()->selfContact()) {
+            participants << textChannel->targetContact()->id();
+        }
+
         QVariantMap thread = threadForParticipants(textChannel->property(History::FieldAccountId).toString(),
                                                                          History::EventTypeText,
                                                                          participants,
@@ -441,6 +446,11 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
     QStringList participants;
     Q_FOREACH(const Tp::ContactPtr contact, textChannel->groupContacts(false)) {
         participants << contact->id();
+    }
+
+    if (participants.isEmpty() && textChannel->targetHandleType() == Tp::HandleTypeContact &&
+           textChannel->targetContact() == textChannel->connection()->selfContact()) {
+        participants << textChannel->targetContact()->id();
     }
 
     QVariantMap thread = threadForParticipants(textChannel->property(History::FieldAccountId).toString(),
@@ -534,6 +544,12 @@ void HistoryDaemon::onMessageSent(const Tp::TextChannelPtr textChannel, const Tp
     Q_FOREACH(const Tp::ContactPtr contact, textChannel->groupContacts(false)) {
         participants << contact->id();
     }
+    
+    if (participants.isEmpty() && textChannel->targetHandleType() == Tp::HandleTypeContact &&
+           textChannel->targetContact() == textChannel->connection()->selfContact()) {
+        participants << textChannel->targetContact()->id();
+    }
+
 
     QVariantMap thread = threadForParticipants(textChannel->property(History::FieldAccountId).toString(),
                                               History::EventTypeText,
