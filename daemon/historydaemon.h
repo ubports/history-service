@@ -37,7 +37,7 @@ public:
 
     static HistoryDaemon *instance();
 
-    QStringList participantsFromChannel(const Tp::TextChannelPtr &textChannel);
+    static QStringList participantsFromChannel(const Tp::TextChannelPtr &textChannel);
     QVariantMap threadForParticipants(const QString &accountId,
                                       History::EventType type,
                                       const QStringList &participants,
