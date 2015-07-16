@@ -58,6 +58,7 @@ private Q_SLOTS:
     void init();
     void cleanup();
     void testMessageReceived();
+    void testMessageSentNoEventId();
     void testMessageSent();
     void testMissedCall();
     void testOutgoingCall();
@@ -162,6 +163,54 @@ void DaemonTest::testMessageReceived()
     QTRY_COMPARE(handlerSpy.count(), 1);
     Tp::TextChannelPtr channel = handlerSpy.first().first().value<Tp::TextChannelPtr>();
     QVERIFY(channel);
+    channel->requestClose();
+}
+ 
+void DaemonTest::testMessageSentNoEventId()
+{
+    // Request the contact to start chatting to
+    QSignalSpy spy(this, SIGNAL(contactsReceived(QList<Tp::ContactPtr>)));
+
+    QString recipient = "11111111";
+
+    connect(mAccount->connection()->contactManager()->contactsForIdentifiers(QStringList() << recipient),
+            SIGNAL(finished(Tp::PendingOperation*)),
+            SLOT(onPendingContactsFinished(Tp::PendingOperation*)));
+
+    QTRY_COMPARE(spy.count(), 1);
+
+    QList<Tp::ContactPtr> contacts = spy.first().first().value<QList<Tp::ContactPtr> >();
+    QCOMPARE(contacts.count(), 1);
+    QCOMPARE(contacts.first()->id(), recipient);
+
+    QSignalSpy spyTextChannel(mHandler, SIGNAL(textChannelAvailable(Tp::TextChannelPtr)));
+
+    Q_FOREACH(Tp::ContactPtr contact, contacts) {
+        mAccount->ensureTextChat(contact, QDateTime::currentDateTime(), TP_QT_IFACE_CLIENT + ".HistoryTestHandler");
+    }
+    QTRY_COMPARE(spyTextChannel.count(), 1);
+
+    Tp::TextChannelPtr channel = spyTextChannel.first().first().value<Tp::TextChannelPtr>();
+    QVERIFY(channel);
+
+    QSignalSpy eventsAddedSpy(History::Manager::instance(), SIGNAL(eventsAdded(History::Events)));
+
+    QString messageText = "Hello, big world!";
+    Tp::Message m(Tp::ChannelTextMessageTypeNormal, messageText);
+    Tp::MessagePartList parts = m.parts();
+    Tp::MessagePart header = parts[0];
+    Tp::MessagePart body = parts[1];
+    header["no-event-id"] = QDBusVariant(true);
+    Tp::MessagePartList newPart;
+    newPart << header << body;
+    Tp::PendingSendMessage *message = channel->send(newPart);
+
+    QTRY_COMPARE(eventsAddedSpy.count(), 1);
+    History::Events events = eventsAddedSpy.first().first().value<History::Events>();
+    QCOMPARE(events.count(), 1);
+    History::TextEvent event = events.first();
+    QVERIFY(!event.eventId().isEmpty());
+
     channel->requestClose();
 }
 
