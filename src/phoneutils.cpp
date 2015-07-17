@@ -35,6 +35,17 @@ PhoneUtils::PhoneUtils(QObject *parent) :
 {
 }
 
+QString PhoneUtils::region()
+{
+    QString countryCode = QLocale::system().name().split("_").last();
+    if (countryCode.size() < 2) {
+        // fallback to US if no valid country code was provided, otherwise libphonenumber
+        // will fail to parse any numbers
+        return QString("US");
+    }
+    return countryCode;
+}
+
 QString PhoneUtils::normalizePhoneNumber(const QString &phoneNumber)
 {
     static i18n::phonenumbers::PhoneNumberUtil *phonenumberUtil = i18n::phonenumbers::PhoneNumberUtil::GetInstance();
@@ -62,11 +73,10 @@ bool PhoneUtils::comparePhoneNumbers(const QString &phoneNumberA, const QString 
 bool PhoneUtils::isPhoneNumber(const QString &phoneNumber)
 {
     static i18n::phonenumbers::PhoneNumberUtil *phonenumberUtil = i18n::phonenumbers::PhoneNumberUtil::GetInstance();
-    QString region = QLocale::system().name().split("_").last();
     std::string formattedNumber;
     i18n::phonenumbers::PhoneNumber number;
     i18n::phonenumbers::PhoneNumberUtil::ErrorType error;
-    error = phonenumberUtil->Parse(phoneNumber.toStdString(), region.toStdString(), &number);
+    error = phonenumberUtil->Parse(phoneNumber.toStdString(), region().toStdString(), &number);
 
     switch(error) {
     case i18n::phonenumbers::PhoneNumberUtil::INVALID_COUNTRY_CODE_ERROR:
