@@ -34,7 +34,8 @@ public:
     Q_INVOKABLE static bool comparePhoneNumbers(const QString &number1, const QString &number2);
     Q_INVOKABLE static bool isPhoneNumber(const QString &identifier);
     Q_INVOKABLE static QString normalizePhoneNumber(const QString &identifier);
-    
+private:
+    static QString region();
 };
 
 #endif // PHONEUTILS_H
