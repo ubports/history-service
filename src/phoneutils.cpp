@@ -60,10 +60,18 @@ QString PhoneUtils::normalizePhoneNumber(const QString &phoneNumber)
 bool PhoneUtils::comparePhoneNumbers(const QString &phoneNumberA, const QString &phoneNumberB)
 {
     static i18n::phonenumbers::PhoneNumberUtil *phonenumberUtil = i18n::phonenumbers::PhoneNumberUtil::GetInstance();
+    QString normalizedPhoneNumberA = normalizePhoneNumber(phoneNumberA);
+    QString normalizedPhoneNumberB = normalizePhoneNumber(phoneNumberB);
+
     // just do a simple string comparison if we are dealing with non phone numbers
     if (!isPhoneNumber(phoneNumberA) || !isPhoneNumber(phoneNumberB)) {
         return phoneNumberA == phoneNumberB;
     }
+
+    if (normalizedPhoneNumberA.size() < 7 || normalizedPhoneNumberB.size() < 7) {
+        return normalizedPhoneNumberA == normalizedPhoneNumberB;
+    }
+
     i18n::phonenumbers::PhoneNumberUtil::MatchType match = phonenumberUtil->
             IsNumberMatchWithTwoStrings(phoneNumberA.toStdString(),
                                         phoneNumberB.toStdString());
