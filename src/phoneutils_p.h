@@ -1,8 +1,10 @@
 /*
- * Copyright (C) 2012 Canonical, Ltd.
+ * Copyright (C) 2012-2015 Canonical, Ltd.
  *
  * Authors:
  *  Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>
+ *  Renato Araujo Oliveira Filho <renato.filho@canonical.com>
+ *  Tiago Salem Herrmann <tiago.herrmann@canonical.com>
  *
  * This file is part of history-service.
  *
@@ -31,6 +33,9 @@ public:
     explicit PhoneUtils(QObject *parent = 0);
     Q_INVOKABLE static bool comparePhoneNumbers(const QString &number1, const QString &number2);
     Q_INVOKABLE static bool isPhoneNumber(const QString &identifier);
+    Q_INVOKABLE static QString normalizePhoneNumber(const QString &identifier);
+private:
+    static QString region();
 };
 
 #endif // PHONEUTILS_H
