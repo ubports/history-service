@@ -29,7 +29,6 @@ set(library_HDRS
     Manager
     manager.h
     phoneutils_p.h
-    phonenumberutils_p.h
     Plugin
     plugin.h
     PluginThreadView
@@ -61,7 +60,6 @@ set(library_PRIV_HDRS
     intersectionfilter_p.h
     manager_p.h
     managerdbus_p.h
-    phonenumberutils_p.h
     phoneutils_p.h
     pluginthreadview_p.h
     plugineventview_p.h
@@ -78,7 +76,8 @@ qt5_add_dbus_adaptor(library_SRCS PluginThreadView.xml pluginthreadview.h Histor
 qt5_add_dbus_adaptor(library_SRCS PluginEventView.xml plugineventview.h History::PluginEventView)
 
 include_directories(${CMAKE_SOURCE_DIR}/src
-                    ${CMAKE_CURRENT_BINARY_DIR})
+                    ${CMAKE_CURRENT_BINARY_DIR}
+                    ${LibPhoneNumber_INCLUDE_DIRS})
 
 add_library(historyservice SHARED ${library_SRCS} ${library_HDRS} ${library_PRIV_HDRS})
 
@@ -87,6 +86,7 @@ set_target_properties(historyservice PROPERTIES
                       SOVERSION ${HISTORY_VERSION_MAJOR}
                       VERSION ${HISTORY_VERSION_MAJOR}.${HISTORY_VERSION_MINOR}.${HISTORY_VERSION_PATCH})
 
+target_link_libraries(historyservice ${LibPhoneNumber_LIBRARIES})
 qt5_use_modules(historyservice Core DBus)
 
 install(TARGETS historyservice DESTINATION ${CMAKE_INSTALL_LIBDIR})

@@ -1,3 +1,24 @@
+history-service (0.1+15.10.20150810-0ubuntu1) wily; urgency=medium
+
+  [ Tiago Salem Herrmann ]
+  * Use libphonenumber for phone number validation, normalization and
+    comparison. (LP: #1471545, #1473028)
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Mon, 10 Aug 2015 21:06:23 +0000
+
+history-service (0.1+15.10.20150701-0ubuntu2~gcc5.1) wily; urgency=medium
+
+  * No-change test rebuild for g++5 ABI transition
+
+ -- Steve Langasek <steve.langasek@ubuntu.com>  Wed, 15 Jul 2015 08:01:07 +0000
+
+history-service (0.1+15.10.20150701-0ubuntu1) wily; urgency=medium
+
+  [ Tiago Salem Herrmann ]
+  * Update to telepathy-qt 0.9.6.1.
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Wed, 01 Jul 2015 14:15:57 +0000
+
 history-service (0.1+15.04.20150428.1-0ubuntu1) vivid; urgency=medium
 
   [ Gustavo Pichorim Boiko ]
