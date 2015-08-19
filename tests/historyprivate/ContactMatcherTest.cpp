@@ -58,7 +58,7 @@ void ContactMatcherTest::initTestCase()
 
     // create two contacts to test
     QContactPhoneNumber phoneNumber;
-    phoneNumber.setNumber("12345678");
+    phoneNumber.setNumber("123456789");
     QVERIFY(mPhoneContact.saveDetail(&phoneNumber));
     QContactPhoneNumber phoneNumber2;
     phoneNumber2.setNumber("87654321");
@@ -71,7 +71,7 @@ void ContactMatcherTest::initTestCase()
 
     QContactExtendedDetail extendedDetail;
     extendedDetail.setName("x-mock-im");
-    extendedDetail.setData("12345678");
+    extendedDetail.setData("123456789");
     QVERIFY(mExtendedContact.saveDetail(&extendedDetail));
     name.setFirstName("Extended");
     name.setLastName("Generic Contact");
@@ -98,9 +98,9 @@ void ContactMatcherTest::testMatchExistingContact_data()
     QTest::addColumn<QString>("contactId");
     QTest::addColumn<bool>("phoneNumberCompare");
 
-    QTest::newRow("match exact phone id") << QString("mock/ofono/account0") << QString("12345678") << mPhoneContact.id().toString() << false;
-    QTest::newRow("match phone number with prefix") << QString("mock/ofono/account0") << QString("+187654321") << mPhoneContact.id().toString() << true;
-    QTest::newRow("match exact extra id") << QString("mock/mock/account0") << QString("12345678") << mExtendedContact.id().toString() << false;
+    QTest::newRow("match exact phone id") << QString("mock/ofono/account0") << QString("123456789") << mPhoneContact.id().toString() << false;
+    QTest::newRow("match phone number with prefix") << QString("mock/ofono/account0") << QString("+554187654321") << mPhoneContact.id().toString() << true;
+    QTest::newRow("match exact extra id") << QString("mock/mock/account0") << QString("123456789") << mExtendedContact.id().toString() << false;
 }
 
 void ContactMatcherTest::testMatchExistingContact()
