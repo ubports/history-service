@@ -163,7 +163,7 @@ void SqlitePluginTest::testThreadForParticipants_data()
                                                                    << History::EventTypeText
                                                                    << (QStringList() << "12345678" << "+19999999999")
                                                                    << History::MatchFlags(History::MatchPhoneNumber)
-                                                                   << (QStringList() << "+554112345678" << "99999999");
+                                                                   << (QStringList() << "+554112345678" << "9999999");
 }
 
 void SqlitePluginTest::testThreadForParticipants()
