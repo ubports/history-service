@@ -156,14 +156,14 @@ void SqlitePluginTest::testThreadForParticipants_data()
                                                             << (QStringList() << "second" << "first" << "third");
     QTest::newRow("phone number match with one participant") << "thePhoneAccount"
                                                              << History::EventTypeVoice
-                                                             << (QStringList() << "+1234567890")
+                                                             << (QStringList() << "+12345678901")
                                                              << History::MatchFlags(History::MatchPhoneNumber)
-                                                             << (QStringList() << "234567890");
+                                                             << (QStringList() << "2345678901");
     QTest::newRow("phone number match with multiple participants") << "phoneAccount"
                                                                    << History::EventTypeText
-                                                                   << (QStringList() << "1234567" << "+19999999999")
+                                                                   << (QStringList() << "12345678" << "+19999999999")
                                                                    << History::MatchFlags(History::MatchPhoneNumber)
-                                                                   << (QStringList() << "+55411234567" << "99999999");
+                                                                   << (QStringList() << "+554112345678" << "9999999");
 }
 
 void SqlitePluginTest::testThreadForParticipants()
