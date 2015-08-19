@@ -54,6 +54,7 @@ protected Q_SLOTS:
     void onContactsRemoved(QList<QContactId> ids);
     void onDataChanged();
     void onRequestStateChanged(QContactAbstractRequest::State state);
+    void onSetupReady();
 
 protected:
     void requestContactInfo(const QString &accountId, const QString &identifier);
@@ -68,6 +69,7 @@ private:
     ContactMap mContactMap;
     QMap<QContactFetchRequest*, RequestInfo> mRequests;
     QMap<QString, QStringList> mAddressableFields;
+    QList<RequestInfo> mPendingRequests;
     QContactManager *mManager;
 };
 

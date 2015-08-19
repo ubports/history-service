@@ -26,7 +26,8 @@
 
 TelepathyHelper::TelepathyHelper(QObject *parent)
     : QObject(parent),
-      mChannelObserver(0)
+      mChannelObserver(0),
+      mReady(false)
 {
     mAccountFeatures << Tp::Account::FeatureCore
                      << Tp::Account::FeatureProtocolInfo;
@@ -63,6 +64,11 @@ TelepathyHelper *TelepathyHelper::instance()
 {
     static TelepathyHelper* helper = new TelepathyHelper();
     return helper;
+}
+
+bool TelepathyHelper::ready() const
+{
+    return mReady;
 }
 
 ChannelObserver *TelepathyHelper::channelObserver() const
@@ -133,6 +139,7 @@ void TelepathyHelper::onAccountManagerReady(Tp::PendingOperation *op)
             SIGNAL(newAccount(Tp::AccountPtr)),
             SLOT(onNewAccount(Tp::AccountPtr)));
 
+    mReady = true;
     Q_EMIT setupReady();
 }
 
