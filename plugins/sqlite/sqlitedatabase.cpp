@@ -23,6 +23,7 @@
 #include "sqlite3.h"
 #include "sqlitedatabase.h"
 #include "types.h"
+#include "utils_p.h"
 #include <QStandardPaths>
 #include <QSqlDriver>
 #include <QSqlQuery>
@@ -41,6 +42,25 @@ void comparePhoneNumbers(sqlite3_context *context, int argc, sqlite3_value **arg
     QString arg1((const char*)sqlite3_value_text(argv[0]));
     QString arg2((const char*)sqlite3_value_text(argv[1]));
     sqlite3_result_int(context, (int)PhoneUtils::comparePhoneNumbers(arg1, arg2));
+}
+
+void compareNormalizedPhoneNumbers(sqlite3_context *context, int argc, sqlite3_value **argv)
+{
+    QString arg1((const char*)sqlite3_value_text(argv[0]));
+    QString arg2((const char*)sqlite3_value_text(argv[1]));
+    sqlite3_result_int(context, (int)PhoneUtils::compareNormalizedPhoneNumbers(arg1, arg2));
+}
+
+void normalizeId(sqlite3_context *context, int argc, sqlite3_value **argv)
+{
+    QString accountId((const char*)sqlite3_value_text(argv[0]));
+    QString id((const char*)sqlite3_value_text(argv[1]));
+    QString normalizedId = id;
+    // for now we only normalize phone number IDs
+    if (History::Utils::matchFlagsForAccount(accountId) & History::MatchPhoneNumber) {
+        normalizedId = PhoneUtils::normalizePhoneNumber(id);
+    }
+    sqlite3_result_text(context, normalizedId.toUtf8().data(), -1, NULL);
 }
 
 SQLiteDatabase::SQLiteDatabase(QObject *parent) :
@@ -126,9 +146,13 @@ bool SQLiteDatabase::createOrUpdateDatabase()
         return false;
     }
 
-    // create the comparePhoneNumbers custom sqlite function
+    // create the comparePhoneNumbers custom sqlite functions
     sqlite3 *handle = database().driver()->handle().value<sqlite3*>();
     sqlite3_create_function(handle, "comparePhoneNumbers", 2, SQLITE_ANY, NULL, &comparePhoneNumbers, NULL, NULL);
+    sqlite3_create_function(handle, "compareNormalizedPhoneNumbers", 2, SQLITE_ANY, NULL, &compareNormalizedPhoneNumbers, NULL, NULL);
+
+    // and also create the normalizeId function
+    sqlite3_create_function(handle, "normalizeId", 2, SQLITE_ANY, NULL, &normalizeId, NULL, NULL);
 
     parseVersionInfo();
 
