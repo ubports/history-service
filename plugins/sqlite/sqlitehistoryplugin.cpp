@@ -255,8 +255,8 @@ QVariantMap SQLiteHistoryPlugin::createThreadForParticipants(const QString &acco
 
     // and insert the participants
     Q_FOREACH(const QString &participant, participants) {
-        query.prepare("INSERT INTO thread_participants (accountId, threadId, type, participantId)"
-                      "VALUES (:accountId, :threadId, :type, :participantId)");
+        query.prepare("INSERT INTO thread_participants (accountId, threadId, type, participantId, normalizedId)"
+                      "VALUES (:accountId, :threadId, :type, :participantId, normalizeId(:accountId, :participantId))");
         query.bindValue(":accountId", accountId);
         query.bindValue(":threadId", threadId);
         query.bindValue(":type", type);
