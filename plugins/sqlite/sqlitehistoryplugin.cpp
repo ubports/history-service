@@ -97,6 +97,14 @@ QVariantMap SQLiteHistoryPlugin::threadForParticipants(const QString &accountId,
     if (participants.count() == 1 && !threadIds.isEmpty()) {
          existingThread = threadIds.first();
     } else {
+        QStringList normalizedParticipants = participants;
+        if (phoneCompare) {
+            normalizedParticipants.clear();
+            Q_FOREACH(const QString &participant, participants) {
+                normalizedParticipants << PhoneUtils::normalizePhoneNumber(participant);
+            }
+        }
+
         // now for each threadId, check if all the other participants are listed
         Q_FOREACH(const QString &threadId, threadIds) {
             queryString = "SELECT %1 FROM thread_participants WHERE "
@@ -118,14 +126,6 @@ QVariantMap SQLiteHistoryPlugin::threadForParticipants(const QString &accountId,
             // we can't use query.size() as it always return -1
             if (threadParticipants.count() != participants.count()) {
                 continue;
-            }
-
-
-            QStringList normalizedParticipants = participants;
-            if (phoneCompare) {
-                Q_FOREACH(const QString &participant, participants) {
-                    normalizedParticipants << PhoneUtils::normalizePhoneNumber(participant);
-                }
             }
 
             // and now compare the lists
