@@ -24,6 +24,7 @@
 #include "unionfilter.h"
 
 Q_DECLARE_METATYPE(History::MatchFlags)
+Q_DECLARE_METATYPE(History::MatchFlag)
 Q_DECLARE_METATYPE(History::Filter)
 
 class FilterTest : public QObject
@@ -42,6 +43,8 @@ private Q_SLOTS:
     void testNullToString();
     void testMatch_data();
     void testMatch();
+    void testMatchFlags_data();
+    void testMatchFlags();
     void testEqualsOperator();
     void testAssignmentOperator();
     void testIsValid_data();
@@ -54,6 +57,7 @@ private Q_SLOTS:
 void FilterTest::initTestCase()
 {
     qRegisterMetaType<History::MatchFlags>();
+    qRegisterMetaType<History::MatchFlag>();
     qRegisterMetaType<History::Filter>();
 }
 
@@ -200,6 +204,39 @@ void FilterTest::testMatch()
     History::Filter filter(filterProperty, filterValue, matchFlags);
     QCOMPARE(filter.match(properties), result);
 
+}
+
+void FilterTest::testMatchFlags_data()
+{
+    QTest::addColumn<History::MatchFlags>("flags");
+    QTest::addColumn<History::MatchFlag>("flagToMatch");
+    QTest::addColumn<bool>("match");
+    /*
+    MatchCaseSensitive = 0x01,
+    MatchCaseInsensitive = 0x02,
+    MatchContains = 0x04,
+    MatchPhoneNumber = 0x08
+    */
+    QTest::newRow("null flag") << History::MatchFlags() << History::MatchCaseSensitive << false;
+    QTest::newRow("case sensitive alone") << History::MatchFlags(History::MatchCaseSensitive) << History::MatchCaseSensitive << true;
+    QTest::newRow("case insensitive alone") << History::MatchFlags(History::MatchCaseInsensitive) << History::MatchCaseInsensitive << true;
+    QTest::newRow("contains alone") << History::MatchFlags(History::MatchContains) << History::MatchContains << true;
+    QTest::newRow("phone number alone") << History::MatchFlags(History::MatchPhoneNumber) << History::MatchPhoneNumber << true;
+    QTest::newRow("no mismatch") << History::MatchFlags(History::MatchPhoneNumber) << History::MatchContains << false;
+    QTest::newRow("all still match one") << History::MatchFlags(History::MatchCaseInsensitive |
+                                                                History::MatchCaseSensitive |
+                                                                History::MatchContains |
+                                                                History::MatchPhoneNumber) << History::MatchPhoneNumber << true;
+}
+
+void FilterTest::testMatchFlags()
+{
+    QFETCH(History::MatchFlags, flags);
+    QFETCH(History::MatchFlag, flagToMatch);
+    QFETCH(bool, match);
+
+    QCOMPARE(flags.testFlag(flagToMatch), match);
+    QCOMPARE((bool)(flags & flagToMatch), match);
 }
 
 void FilterTest::testEqualsOperator()
