@@ -97,12 +97,13 @@ QVariantMap SQLiteHistoryPlugin::threadForParticipants(const QString &accountId,
     if (participants.count() == 1 && !threadIds.isEmpty()) {
          existingThread = threadIds.first();
     } else {
-        QStringList normalizedParticipants = participants;
+        QStringList normalizedParticipants;
         if (phoneCompare) {
-            normalizedParticipants.clear();
             Q_FOREACH(const QString &participant, participants) {
                 normalizedParticipants << PhoneUtils::normalizePhoneNumber(participant);
             }
+        } else {
+            normalizedParticipants = participants;
         }
 
         // now for each threadId, check if all the other participants are listed
