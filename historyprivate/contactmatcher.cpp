@@ -44,7 +44,7 @@ ContactMatcher::ContactMatcher(QContactManager *manager, QObject *parent) :
     }
 
     // just trigger the creation of TelepathyHelper
-    TelepathyHelper::instance();
+    connect(TelepathyHelper::instance(), SIGNAL(setupReady()), SLOT(onSetupReady()));
 
     connect(mManager,
             SIGNAL(contactsAdded(QList<QContactId>)),
@@ -58,6 +58,14 @@ ContactMatcher::ContactMatcher(QContactManager *manager, QObject *parent) :
     connect(mManager,
             SIGNAL(dataChanged()),
             SLOT(onDataChanged()));
+}
+
+void ContactMatcher::onSetupReady()
+{
+    Q_FOREACH(const RequestInfo &request, mPendingRequests) {
+        requestContactInfo(request.accountId, request.identifier);
+    }
+    mPendingRequests.clear();
 }
 
 ContactMatcher::~ContactMatcher()
@@ -95,7 +103,12 @@ QVariantMap ContactMatcher::contactInfo(const QString &accountId, const QString 
     }
 
     // and if there was no match, asynchronously request the info, and return an empty map for now
-    requestContactInfo(accountId, identifier);
+    if (TelepathyHelper::instance()->ready()) {
+        requestContactInfo(accountId, identifier);
+    } else {
+        RequestInfo info{accountId, identifier};
+        mPendingRequests.append(info);
+    }
     QVariantMap map;
     map[History::FieldIdentifier] = identifier;
     mContactMap[accountId][identifier] = map;
@@ -400,11 +413,11 @@ QStringList ContactMatcher::addressableFields(const QString &accountId)
     QStringList fields;
     if (!account.isNull()) {
         fields = account->protocolInfo().addressableVCardFields();
+        mAddressableFields[accountId] = fields;
     } else {
         // use phonenumber as a fallback
         fields << "tel";
     }
 
-    mAddressableFields[accountId] = fields;
     return fields;
 }
