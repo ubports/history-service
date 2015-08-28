@@ -1,3 +1,20 @@
+history-service (0.1+15.10.20150828.1-0ubuntu1) wily; urgency=medium
+
+  [ Gustavo Pichorim Boiko ]
+  * Do not override the build type. Also remove a block of unused code
+    from debian/rules.
+  * Fix flags.
+  * Prevent the history-daemon from crashing in the event of an ended
+    call not having any remote member. (LP: #1458990)
+
+  [ Tiago Salem Herrmann ]
+  * Correctly set mCanFetchMore in the HistoryGroupedThreadsModel.
+  * Generate eventId when there is none Set status to "Accepted" if the
+    channel does not support delivery reports
+  * Manually add self id to participants list if needed. (LP: #1486187)
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Fri, 28 Aug 2015 10:16:13 +0000
+
 history-service (0.1+15.10.20150819.2-0ubuntu1) wily; urgency=medium
 
   [ Gustavo Pichorim Boiko ]
