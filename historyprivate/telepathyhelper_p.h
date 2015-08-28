@@ -45,6 +45,7 @@ public:
     Tp::AccountPtr accountForId(const QString &accountId);
     QList<Tp::AccountPtr> accounts() const;
     bool connected() const;
+    bool ready() const;
 
 Q_SIGNALS:
     void channelObserverCreated(ChannelObserver *observer);
@@ -70,6 +71,7 @@ private:
     Tp::ClientRegistrarPtr mClientRegistrar;
     ChannelObserver *mChannelObserver;
     QList<Tp::AccountPtr> mAccounts;
+    bool mReady;
 };
 
 #endif // TELEPATHYHELPER_H
