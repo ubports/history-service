@@ -72,10 +72,14 @@ bool PhoneUtils::comparePhoneNumbers(const QString &phoneNumberA, const QString 
 
 bool PhoneUtils::compareNormalizedPhoneNumbers(const QString &numberA, const QString &numberB)
 {
+    if (numberA == numberB) {
+        return true;
+    }
+
     static i18n::phonenumbers::PhoneNumberUtil *phonenumberUtil = i18n::phonenumbers::PhoneNumberUtil::GetInstance();
 
     if (numberA.size() < 7 || numberB.size() < 7) {
-        return numberA == numberB;
+        return false;
     }
 
     i18n::phonenumbers::PhoneNumberUtil::MatchType match = phonenumberUtil->
