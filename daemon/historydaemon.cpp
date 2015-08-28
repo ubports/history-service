@@ -76,6 +76,20 @@ HistoryDaemon *HistoryDaemon::instance()
     return self;
 }
 
+QStringList HistoryDaemon::participantsFromChannel(const Tp::TextChannelPtr &textChannel)
+{
+    QStringList participants;
+    Q_FOREACH(const Tp::ContactPtr contact, textChannel->groupContacts(false)) {
+        participants << contact->id();
+    }
+
+    if (participants.isEmpty() && textChannel->targetHandleType() == Tp::HandleTypeContact &&
+           textChannel->targetContact() == textChannel->connection()->selfContact()) {
+        participants << textChannel->targetContact()->id();
+    }
+    return participants;
+}
+
 QVariantMap HistoryDaemon::threadForParticipants(const QString &accountId,
                                                  History::EventType type,
                                                  const QStringList &participants,
@@ -398,10 +412,7 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
     if (message.isDeliveryReport() && message.deliveryDetails().hasOriginalToken()) {
         // at this point we assume the delivery report is for a message that was already
         // sent and properly saved at our database, so we can safely get it here to update
-        QStringList participants;
-        Q_FOREACH(const Tp::ContactPtr contact, textChannel->groupContacts(false)) {
-            participants << contact->id();
-        }
+        QStringList participants = participantsFromChannel(textChannel);
 
         QVariantMap thread = threadForParticipants(textChannel->property(History::FieldAccountId).toString(),
                                                                          History::EventTypeText,
@@ -455,10 +466,7 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
         return;
     }
 
-    QStringList participants;
-    Q_FOREACH(const Tp::ContactPtr contact, textChannel->groupContacts(false)) {
-        participants << contact->id();
-    }
+    QStringList participants = participantsFromChannel(textChannel);
 
     QVariantMap thread = threadForParticipants(textChannel->property(History::FieldAccountId).toString(),
                                                                      History::EventTypeText,
@@ -543,7 +551,7 @@ void HistoryDaemon::onMessageRead(const Tp::TextChannelPtr textChannel, const Tp
 void HistoryDaemon::onMessageSent(const Tp::TextChannelPtr textChannel, const Tp::Message &message, const QString &messageToken)
 {
     qDebug() << __PRETTY_FUNCTION__;
-    QStringList participants;
+    QStringList participants = participantsFromChannel(textChannel);
     QList<QVariantMap> attachments;
     History::MessageType type = History::MessageTypeText;
     int count = 1;
@@ -556,10 +564,6 @@ void HistoryDaemon::onMessageSent(const Tp::TextChannelPtr textChannel, const Tp
         eventId = messageToken;
     }
  
-    Q_FOREACH(const Tp::ContactPtr contact, textChannel->groupContacts(false)) {
-        participants << contact->id();
-    }
-
     QVariantMap thread = threadForParticipants(textChannel->property(History::FieldAccountId).toString(),
                                               History::EventTypeText,
                                               participants,
