@@ -77,11 +77,11 @@ protected Q_SLOTS:
 
 protected:
     History::Threads fetchNextPage();
+    bool mCanFetchMore;
 
 private:
     History::ThreadViewPtr mThreadView;
     History::Threads mThreads;
-    bool mCanFetchMore;
     QHash<int, QByteArray> mRoles;
     mutable QMap<History::TextEvent, QList<QVariant> > mAttachmentCache;
 };
