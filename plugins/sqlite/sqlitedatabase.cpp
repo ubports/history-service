@@ -60,7 +60,7 @@ void normalizeId(sqlite3_context *context, int argc, sqlite3_value **argv)
     if (History::Utils::matchFlagsForAccount(accountId) & History::MatchPhoneNumber) {
         normalizedId = PhoneUtils::normalizePhoneNumber(id);
     }
-    sqlite3_result_text(context, normalizedId.toUtf8().data(), -1, NULL);
+    sqlite3_result_text(context, strdup(normalizedId.toUtf8().data()), -1, &free);
 }
 
 SQLiteDatabase::SQLiteDatabase(QObject *parent) :
