@@ -100,6 +100,7 @@ void ManagerTest::testThreadForParticipants()
 
     // now try to get the thread again to see if it is returned correctly
     History::Thread sameThread = mManager->threadForParticipants(accountId, type, participantsToMatch, matchFlags, false);
+    QVERIFY(!sameThread.isNull());
     QCOMPARE(sameThread, thread);
 }
 
