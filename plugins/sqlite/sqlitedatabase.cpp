@@ -138,6 +138,55 @@ bool SQLiteDatabase::reopen()
     createOrUpdateDatabase();
 }
 
+QString SQLiteDatabase::dumpSchema() const
+{
+    // query copied from sqlite3's shell.c
+
+    QSqlQuery query(mDatabase);
+    if (!query.exec("SELECT sql FROM "
+                    "  (SELECT sql sql, type type, tbl_name tbl_name, name name, rowid x"
+                    "     FROM sqlite_master UNION ALL"
+                    "   SELECT sql, type, tbl_name, name, rowid FROM sqlite_temp_master) "
+                    "WHERE type!='meta' AND sql NOTNULL AND name NOT LIKE 'sqlite_%' "
+                    "ORDER BY rowid")) {
+        return QString::null;
+    }
+
+    QString schema;
+    while (query.next()) {
+        schema += query.value("sql").toString() + ";\n";
+    }
+
+    return schema;
+}
+
+bool SQLiteDatabase::runMultipleStatements(const QStringList &statements, bool useTransaction)
+{
+    if (statements.isEmpty()) {
+        return false;
+    }
+
+    QSqlQuery query(mDatabase);
+
+    if (useTransaction) {
+        beginTransation();
+    }
+    Q_FOREACH(const QString &statement, statements) {
+        if (!query.exec(statement)) {
+            if (useTransaction) {
+                rollbackTransaction();
+            }
+            qCritical() << "Failed to create or update database. SQL Statements:" << query.lastQuery() << "Error:" << query.lastError();
+            return false;
+        }
+    }
+
+    if (useTransaction) {
+        finishTransaction();
+    }
+    return true;
+}
+
 bool SQLiteDatabase::createOrUpdateDatabase()
 {
     bool create = !QFile(mDatabasePath).exists();
@@ -182,18 +231,11 @@ bool SQLiteDatabase::createOrUpdateDatabase()
     }
 
     // if at this point needsUpdate is still false, it means the database is up-to-date
-    if (statements.isEmpty()) {
-        return true;
-    }
-
     beginTransation();
 
-    Q_FOREACH(const QString &statement, statements) {
-        if (!query.exec(statement)) {
-            qCritical() << "Failed to create or update database. SQL Statements:" << query.lastQuery() << "Error:" << query.lastError();
-            rollbackTransaction();
-            return false;
-        }
+    if (!runMultipleStatements(statements, false)) {
+        rollbackTransaction();
+        return false;
     }
 
     // now set the new database schema version
@@ -277,6 +319,7 @@ void SQLiteDatabase::parseVersionInfo()
     if (!schema.open(QFile::ReadOnly)) {
         qDebug() << schema.error();
         qCritical() << "Failed to get database version";
+        return;
     }
 
     QString version = schema.readAll();
