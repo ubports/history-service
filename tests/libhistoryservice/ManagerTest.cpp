@@ -76,9 +76,9 @@ void ManagerTest::testThreadForParticipants_data()
                                                       << (QStringList() << "oneParticipant");
     QTest::newRow("voice thread using phone match") << "anotherAccountId"
                                                     << History::EventTypeVoice
-                                                    << (QStringList() << "+12345678901")
+                                                    << (QStringList() << "+554198765432")
                                                     << History::MatchFlags(History::MatchPhoneNumber)
-                                                    << (QStringList() << "45678901");
+                                                    << (QStringList() << "98765432");
 }
 
 void ManagerTest::testThreadForParticipants()
