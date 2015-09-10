@@ -279,7 +279,13 @@ void ContactMatcher::onRequestStateChanged(QContactAbstractRequest::State state)
 
 void ContactMatcher::requestContactInfo(const QString &accountId, const QString &identifier)
 {
-    bool phoneCompare = addressableFields(accountId).contains("tel");
+    QStringList addressableVCardFields = addressableFields(accountId);
+    if (addressableVCardFields.isEmpty()) {
+        // FIXME: add support for generic accounts
+        return;
+    }
+
+    bool phoneCompare = addressableVCardFields.contains("tel");
 
     // check if there is a request already going on for the given contact
     Q_FOREACH(const RequestInfo &info, mRequests.values()) {
@@ -297,6 +303,7 @@ void ContactMatcher::requestContactInfo(const QString &accountId, const QString 
 
     QContactFetchRequest *request = new QContactFetchRequest(this);
     QContactFetchHint hint;
+    hint.setMaxCountHint(1);
     // FIXME: maybe we need to fetch the full contact?
     hint.setDetailTypesHint(QList<QContactDetail::DetailType>() << QContactDetail::TypeDisplayLabel
                                                                 << QContactDetail::TypePhoneNumber
@@ -305,7 +312,7 @@ void ContactMatcher::requestContactInfo(const QString &accountId, const QString 
     request->setFetchHint(hint);
 
     QContactUnionFilter topLevelFilter;
-    Q_FOREACH(const QString &field, addressableFields(accountId)) {
+    Q_FOREACH(const QString &field, addressableVCardFields) {
         if (field == "tel") {
             topLevelFilter.append(QContactPhoneNumber::match(identifier));
         } else {
@@ -414,9 +421,6 @@ QStringList ContactMatcher::addressableFields(const QString &accountId)
     if (!account.isNull()) {
         fields = account->protocolInfo().addressableVCardFields();
         mAddressableFields[accountId] = fields;
-    } else {
-        // use phonenumber as a fallback
-        fields << "tel";
     }
 
     return fields;
