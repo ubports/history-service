@@ -23,6 +23,7 @@
 #include "sqlite3.h"
 #include "sqlitedatabase.h"
 #include "types.h"
+#include "utils_p.h"
 #include <QStandardPaths>
 #include <QSqlDriver>
 #include <QSqlQuery>
@@ -41,6 +42,25 @@ void comparePhoneNumbers(sqlite3_context *context, int argc, sqlite3_value **arg
     QString arg1((const char*)sqlite3_value_text(argv[0]));
     QString arg2((const char*)sqlite3_value_text(argv[1]));
     sqlite3_result_int(context, (int)PhoneUtils::comparePhoneNumbers(arg1, arg2));
+}
+
+void compareNormalizedPhoneNumbers(sqlite3_context *context, int argc, sqlite3_value **argv)
+{
+    QString arg1((const char*)sqlite3_value_text(argv[0]));
+    QString arg2((const char*)sqlite3_value_text(argv[1]));
+    sqlite3_result_int(context, (int)PhoneUtils::compareNormalizedPhoneNumbers(arg1, arg2));
+}
+
+void normalizeId(sqlite3_context *context, int argc, sqlite3_value **argv)
+{
+    QString accountId((const char*)sqlite3_value_text(argv[0]));
+    QString id((const char*)sqlite3_value_text(argv[1]));
+    QString normalizedId = id;
+    // for now we only normalize phone number IDs
+    if (History::Utils::matchFlagsForAccount(accountId) & History::MatchPhoneNumber) {
+        normalizedId = PhoneUtils::normalizePhoneNumber(id);
+    }
+    sqlite3_result_text(context, strdup(normalizedId.toUtf8().data()), -1, &free);
 }
 
 SQLiteDatabase::SQLiteDatabase(QObject *parent) :
@@ -118,6 +138,55 @@ bool SQLiteDatabase::reopen()
     createOrUpdateDatabase();
 }
 
+QString SQLiteDatabase::dumpSchema() const
+{
+    // query copied from sqlite3's shell.c
+
+    QSqlQuery query(mDatabase);
+    if (!query.exec("SELECT sql FROM "
+                    "  (SELECT sql sql, type type, tbl_name tbl_name, name name, rowid x"
+                    "     FROM sqlite_master UNION ALL"
+                    "   SELECT sql, type, tbl_name, name, rowid FROM sqlite_temp_master) "
+                    "WHERE type!='meta' AND sql NOTNULL AND name NOT LIKE 'sqlite_%' "
+                    "ORDER BY rowid")) {
+        return QString::null;
+    }
+
+    QString schema;
+    while (query.next()) {
+        schema += query.value("sql").toString() + ";\n";
+    }
+
+    return schema;
+}
+
+bool SQLiteDatabase::runMultipleStatements(const QStringList &statements, bool useTransaction)
+{
+    if (statements.isEmpty()) {
+        return false;
+    }
+
+    QSqlQuery query(mDatabase);
+
+    if (useTransaction) {
+        beginTransation();
+    }
+    Q_FOREACH(const QString &statement, statements) {
+        if (!query.exec(statement)) {
+            if (useTransaction) {
+                rollbackTransaction();
+            }
+            qCritical() << "Failed to create or update database. SQL Statements:" << query.lastQuery() << "Error:" << query.lastError();
+            return false;
+        }
+    }
+
+    if (useTransaction) {
+        finishTransaction();
+    }
+    return true;
+}
+
 bool SQLiteDatabase::createOrUpdateDatabase()
 {
     bool create = !QFile(mDatabasePath).exists();
@@ -126,9 +195,13 @@ bool SQLiteDatabase::createOrUpdateDatabase()
         return false;
     }
 
-    // create the comparePhoneNumbers custom sqlite function
+    // create the comparePhoneNumbers custom sqlite functions
     sqlite3 *handle = database().driver()->handle().value<sqlite3*>();
     sqlite3_create_function(handle, "comparePhoneNumbers", 2, SQLITE_ANY, NULL, &comparePhoneNumbers, NULL, NULL);
+    sqlite3_create_function(handle, "compareNormalizedPhoneNumbers", 2, SQLITE_ANY, NULL, &compareNormalizedPhoneNumbers, NULL, NULL);
+
+    // and also create the normalizeId function
+    sqlite3_create_function(handle, "normalizeId", 2, SQLITE_ANY, NULL, &normalizeId, NULL, NULL);
 
     parseVersionInfo();
 
@@ -158,18 +231,11 @@ bool SQLiteDatabase::createOrUpdateDatabase()
     }
 
     // if at this point needsUpdate is still false, it means the database is up-to-date
-    if (statements.isEmpty()) {
-        return true;
-    }
-
     beginTransation();
 
-    Q_FOREACH(const QString &statement, statements) {
-        if (!query.exec(statement)) {
-            qCritical() << "Failed to create or update database. SQL Statements:" << query.lastQuery() << "Error:" << query.lastError();
-            rollbackTransaction();
-            return false;
-        }
+    if (!runMultipleStatements(statements, false)) {
+        rollbackTransaction();
+        return false;
     }
 
     // now set the new database schema version
@@ -253,6 +319,7 @@ void SQLiteDatabase::parseVersionInfo()
     if (!schema.open(QFile::ReadOnly)) {
         qDebug() << schema.error();
         qCritical() << "Failed to get database version";
+        return;
     }
 
     QString version = schema.readAll();
