@@ -46,7 +46,7 @@ SQLiteHistoryPlugin::SQLiteHistoryPlugin(QObject *parent) :
     SQLiteDatabase::instance();
 
     // TODO query only for text threads
-    History::PluginThreadView *view = queryThreads(History::EventTypeText, History::Sort("timestamp"), History::Filter());
+    History::PluginThreadView *view = queryThreads(History::EventTypeText, History::Sort("timestamp", Qt::DescendingOrder), History::Filter());
     QList<QVariantMap> threads;
     while (view->IsValid()) {
         QList<QVariantMap> page = view->NextPage();
@@ -628,7 +628,7 @@ QString SQLiteHistoryPlugin::sqlQueryForThreads(History::EventType type, const Q
     return queryText;
 }
 
-QList<QVariantMap> SQLiteHistoryPlugin::parseThreadResults(History::EventType type, QSqlQuery &query)
+QList<QVariantMap> SQLiteHistoryPlugin::parseThreadResults(History::EventType type, QSqlQuery &query, bool grouped)
 {
     QList<QVariantMap> threads;
     QSqlQuery attachmentsQuery(SQLiteDatabase::instance()->database());
@@ -638,22 +638,23 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseThreadResults(History::EventType ty
         thread[History::FieldType] = (int) type;
         thread[History::FieldAccountId] = query.value(0);
         thread[History::FieldThreadId] = query.value(1);
-
-        QString cacheKey = thread[History::FieldAccountId].toString()+thread[History::FieldThreadId].toString();
-        qDebug() << mConversationsCache.keys();
-        if (/*group && */mInitialised && type == History::EventTypeText && 
-            !mConversationsCache.contains(cacheKey)) {
-            qDebug() << "skipped " << cacheKey;
-            continue;
-        }
-        qDebug() << "not skipped " << cacheKey;
-        QList<QVariantMap> groupedThreads;
-        if (mConversationsCache.contains(cacheKey)) {
-            Q_FOREACH (const History::Thread &thread, mConversationsCache[cacheKey]) {
-                groupedThreads << thread.properties();
+        if (grouped) {
+            QString cacheKey = thread[History::FieldAccountId].toString()+thread[History::FieldThreadId].toString();
+            qDebug() << mConversationsCache.keys();
+            if (mInitialised && type == History::EventTypeText && 
+                !mConversationsCache.contains(cacheKey)) {
+                qDebug() << "skipped " << cacheKey;
+                continue;
             }
+            qDebug() << "not skipped " << cacheKey;
+            QList<QVariantMap> groupedThreads;
+            if (mConversationsCache.contains(cacheKey)) {
+                Q_FOREACH (const History::Thread &thread, mConversationsCache[cacheKey]) {
+                    groupedThreads << thread.properties();
+                }
+            }
+	    thread[History::FieldGroupedThreads] = QVariant::fromValue(groupedThreads);
         }
-	thread[History::FieldGroupedThreads] = QVariant::fromValue(groupedThreads);
 
         thread[History::FieldEventId] = query.value(2);
         thread[History::FieldCount] = query.value(3);
