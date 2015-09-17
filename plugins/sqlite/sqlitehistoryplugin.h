@@ -74,7 +74,7 @@ public:
 
     // functions to be used internally
     QString sqlQueryForThreads(History::EventType type, const QString &condition, const QString &order);
-    QList<QVariantMap> parseThreadResults(History::EventType type, QSqlQuery &query);
+    QList<QVariantMap> parseThreadResults(History::EventType type, QSqlQuery &query, bool grouped = false);
 
     QString sqlQueryForEvents(History::EventType type, const QString &condition, const QString &order);
     QList<QVariantMap> parseEventResults(History::EventType type, QSqlQuery &query);

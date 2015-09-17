@@ -96,7 +96,7 @@ QList<QVariantMap> SQLiteHistoryThreadView::NextPage()
         return threads;
     }
 
-    threads = mPlugin->parseThreadResults(mType, mQuery);
+    threads = mPlugin->parseThreadResults(mType, mQuery, true/* TODO, use a property*/);
     mOffset += mPageSize;
     mQuery.clear();
 
