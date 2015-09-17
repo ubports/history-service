@@ -32,6 +32,8 @@ public:
     static MatchFlags matchFlagsForAccount(const QString &accountId);
     static QString protocolFromAccountId(const QString &accountId);
     static bool compareIds(const QString &accountId, const QString &id1, const QString & id2);
+    static bool compareParticipants(const QStringList &participants1, const QStringList &participants2, bool phoneComparison = false);
+    static bool compareNormalizedParticipants(const QStringList &participants1, const QStringList &participants2, bool phoneComparison = false);
 
 private:
     Utils();

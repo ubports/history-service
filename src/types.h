@@ -116,6 +116,7 @@ static const char* FieldNewEvent = "newEvent";
 // thread fields
 static const char* FieldLastEventId = "lastEventId";
 static const char* FieldLastEventTimestamp = "lastEventTimestamp";
+static const char* FieldGroupedThreads = "groupedThreads";
 
 // text event fields
 static const char* FieldMessage = "message";

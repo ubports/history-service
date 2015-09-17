@@ -23,6 +23,7 @@
 #define SQLITEHISTORYPLUGIN_H
 
 #include "plugin.h"
+#include "thread.h"
 #include <QObject>
 #include <QSqlQuery>
 
@@ -82,6 +83,11 @@ public:
 
     QString filterToString(const History::Filter &filter, QVariantMap &bindValues, const QString &propertyPrefix = QString::null) const;
     QString escapeFilterValue(const QString &value) const;
+private:
+    void addThreadsToCache(const QList<QVariantMap> &threads);
+    void removeThreadFromCache(const QVariantMap &thread);
+    QMap<QString, History::Threads> mConversationsCache;
+    bool mInitialised;
 };
 
 #endif // SQLITEHISTORYPLUGIN_H
