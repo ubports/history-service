@@ -24,16 +24,21 @@
 #include "manager.h"
 #include "threadview.h"
 #include "voiceevent.h"
+#include <QDBusMetaType>
 
 Q_DECLARE_METATYPE(History::TextEventAttachments)
+Q_DECLARE_METATYPE(QList<QVariantMap>)
 
 HistoryThreadModel::HistoryThreadModel(QObject *parent) :
     HistoryModel(parent), mCanFetchMore(true)
 {
+    qRegisterMetaType<QList<QVariantMap> >();
+    qDBusRegisterMetaType<QList<QVariantMap> >();
     // configure the roles
     mRoles = HistoryModel::roleNames();
     mRoles[CountRole] = "count";
     mRoles[UnreadCountRole] = "unreadCount";
+    mRoles[GroupedThreadsRole] = "groupedThreads";
 
     // roles related to the thread´s last event
     mRoles[LastEventIdRole] = "eventId";
@@ -100,6 +105,15 @@ QVariant HistoryThreadModel::threadData(const History::Thread &thread, int role)
     case UnreadCountRole:
         result = thread.unreadCount();
         break;
+    case GroupedThreadsRole:
+    {
+         QVariantList threads;
+         Q_FOREACH(const QVariantMap &thread, thread.groupedThreads()) {
+             threads << QVariant::fromValue(thread);
+         }
+         result = threads;
+         break;
+    }
     case PropertiesRole:
         result = thread.properties();
         break;
