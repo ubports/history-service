@@ -144,9 +144,10 @@ void SQLiteHistoryPlugin::removeThreadFromCache(const QVariantMap &properties)
 // Reader
 History::PluginThreadView *SQLiteHistoryPlugin::queryThreads(History::EventType type,
                                                              const History::Sort &sort,
-                                                             const History::Filter &filter)
+                                                             const History::Filter &filter,
+                                                             bool grouped)
 {
-    return new SQLiteHistoryThreadView(this, type, sort, filter);
+    return new SQLiteHistoryThreadView(this, type, sort, filter, grouped);
 }
 
 History::PluginEventView *SQLiteHistoryPlugin::queryEvents(History::EventType type,

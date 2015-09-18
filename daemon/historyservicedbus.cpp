@@ -114,6 +114,12 @@ QString HistoryServiceDBus::QueryThreads(int type, const QVariantMap &sort, cons
     return HistoryDaemon::instance()->queryThreads(type, sort, filter);
 }
 
+QString HistoryServiceDBus::QueryGroupedThreads(int type, const QVariantMap &sort, const QVariantMap &filter)
+{
+    qDebug() << __PRETTY_FUNCTION__;
+    return HistoryDaemon::instance()->queryThreads(type, sort, filter, true);
+}
+
 QString HistoryServiceDBus::QueryEvents(int type, const QVariantMap &sort, const QVariantMap &filter)
 {
     qDebug() << __PRETTY_FUNCTION__;

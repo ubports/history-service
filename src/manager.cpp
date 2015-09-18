@@ -84,9 +84,10 @@ Manager *Manager::instance()
 
 ThreadViewPtr Manager::queryThreads(EventType type,
                                     const Sort &sort,
-                                    const Filter &filter)
+                                    const Filter &filter,
+                                    bool grouped)
 {
-    return ThreadViewPtr(new ThreadView(type, sort, filter));
+    return ThreadViewPtr(new ThreadView(type, sort, filter, grouped));
 }
 
 EventViewPtr Manager::queryEvents(EventType type,

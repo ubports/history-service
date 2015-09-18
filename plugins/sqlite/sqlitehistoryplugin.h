@@ -44,7 +44,8 @@ public:
     // Reader part of the plugin
     History::PluginThreadView* queryThreads(History::EventType type,
                                             const History::Sort &sort = History::Sort(),
-                                            const History::Filter &filter = History::Filter());
+                                            const History::Filter &filter = History::Filter(),
+                                            bool grouped = false);
     History::PluginEventView* queryEvents(History::EventType type,
                                           const History::Sort &sort = History::Sort(),
                                           const History::Filter &filter = History::Filter());
