@@ -43,7 +43,7 @@ public:
                                       const QStringList &participants,
                                       History::MatchFlags matchFlags = History::MatchCaseSensitive,
                                       bool create = true);
-    QString queryThreads(int type, const QVariantMap &sort, const QVariantMap &filter);
+    QString queryThreads(int type, const QVariantMap &sort, const QVariantMap &filter, bool grouped = false);
     QString queryEvents(int type, const QVariantMap &sort, const QVariantMap &filter);
     QVariantMap getSingleThread(int type, const QString &accountId, const QString &threadId);
     QVariantMap getSingleEvent(int type, const QString &accountId, const QString &threadId, const QString &eventId);

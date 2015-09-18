@@ -41,7 +41,8 @@ class ThreadView : public QObject
 public:
     ThreadView(History::EventType type,
                const History::Sort &sort,
-               const History::Filter &filter);
+               const History::Filter &filter,
+               bool grouped);
     ~ThreadView();
 
     Threads nextPage();

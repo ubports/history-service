@@ -113,7 +113,7 @@ QVariantMap HistoryDaemon::threadForParticipants(const QString &accountId,
     return thread;
 }
 
-QString HistoryDaemon::queryThreads(int type, const QVariantMap &sort, const QVariantMap &filter)
+QString HistoryDaemon::queryThreads(int type, const QVariantMap &sort, const QVariantMap &filter, bool groupedThreads)
 {
     if (!mBackend) {
         return QString::null;
@@ -121,7 +121,7 @@ QString HistoryDaemon::queryThreads(int type, const QVariantMap &sort, const QVa
 
     History::Sort theSort = History::Sort::fromProperties(sort);
     History::Filter theFilter = History::Filter::fromProperties(filter);
-    History::PluginThreadView *view = mBackend->queryThreads((History::EventType)type, theSort, theFilter);
+    History::PluginThreadView *view = mBackend->queryThreads((History::EventType)type, theSort, theFilter, groupedThreads);
 
     if (!view) {
         return QString::null;

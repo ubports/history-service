@@ -60,6 +60,18 @@
             <annotation name="org.qtproject.QtDBus.QtTypeName.In1" value="QVariantMap"/>
             <annotation name="org.qtproject.QtDBus.QtTypeName.In2" value="QVariantMap"/>
         </method>
+        <method name="QueryGroupedThreads">
+            <dox:d><![CDATA[
+                Creates a threads view with the given filter and sort order.
+                Returns the object path to the created view.
+            ]]></dox:d>
+            <arg name="type" type="i" direction="in"/>
+            <arg name="sort" type="a{sv}" direction="in"/>
+            <arg name="filter" type="a{sv}" direction="in"/>
+            <arg type="s" direction="out"/>
+            <annotation name="org.qtproject.QtDBus.QtTypeName.In1" value="QVariantMap"/>
+            <annotation name="org.qtproject.QtDBus.QtTypeName.In2" value="QVariantMap"/>
+        </method>
         <method name="QueryEvents">
             <dox:d><![CDATA[
                 Creates an events view with the given filter and sort order.

@@ -47,7 +47,8 @@ public:
 
     ThreadViewPtr queryThreads(EventType type,
                                const Sort &sort = Sort(),
-                               const Filter &filter = Filter());
+                               const Filter &filter = Filter(),
+                               bool grouped = false);
 
     EventViewPtr queryEvents(EventType type,
                              const Sort &sort = Sort(),

@@ -30,7 +30,7 @@ Q_DECLARE_METATYPE(History::TextEventAttachments)
 Q_DECLARE_METATYPE(QList<QVariantMap>)
 
 HistoryThreadModel::HistoryThreadModel(QObject *parent) :
-    HistoryModel(parent), mCanFetchMore(true)
+    HistoryModel(parent), mCanFetchMore(true), mGroupedThreads(false)
 {
     qRegisterMetaType<QList<QVariantMap> >();
     qDBusRegisterMetaType<QList<QVariantMap> >();
@@ -56,6 +56,21 @@ HistoryThreadModel::HistoryThreadModel(QObject *parent) :
     mRoles[LastEventCallDurationRole] = "eventCallDuration";
 }
 
+
+void HistoryThreadModel::setGroupedThreads(bool grouped)
+{
+    bool changed = grouped != mGroupedThreads;
+    mGroupedThreads = grouped;
+    if (changed) {
+        updateQuery();
+    }
+}
+
+bool HistoryThreadModel::groupedThreads() const
+{
+    return mGroupedThreads;
+}
+ 
 int HistoryThreadModel::rowCount(const QModelIndex &parent) const
 {
     if (parent.isValid()) {
@@ -273,7 +288,7 @@ void HistoryThreadModel::updateQuery()
         querySort = mSort->sort();
     }
 
-    mThreadView = History::Manager::instance()->queryThreads((History::EventType)mType, querySort, queryFilter);
+    mThreadView = History::Manager::instance()->queryThreads((History::EventType)mType, querySort, queryFilter, mGroupedThreads);
     connect(mThreadView.data(),
             SIGNAL(threadsAdded(History::Threads)),
             SLOT(onThreadsAdded(History::Threads)));
