@@ -79,7 +79,7 @@ void SQLiteHistoryPlugin::addThreadsToCache(const QList<QVariantMap> &threads)
             const QString &thisThreadKey = it.key();
             History::Threads threads = it.value();
             Q_FOREACH(const History::Thread &groupedThread, threads) {
-                found = History::Utils::compareNormalizedParticipants(thread.participants(), groupedThread.participants(), true);
+                found = History::Utils::compareNormalizedParticipants(thread.participants(), groupedThread.participants(), History::MatchPhoneNumber);
                 if (found) {
                     qDebug() << "appending " << thread.accountId()  << thread.threadId() << " to " << thisThreadKey;
                     mConversationsCache[thisThreadKey] += thread;
@@ -126,7 +126,7 @@ void SQLiteHistoryPlugin::removeThreadFromCache(const QVariantMap &properties)
             History::Threads threads = it.value();
             History::Threads::iterator it2 = threads.begin();
             while (it2 != threads.end()) {
-                 if (History::Utils::compareNormalizedParticipants(thread.participants(), it2->participants(), true)) {
+                 if (History::Utils::compareNormalizedParticipants(thread.participants(), it2->participants(), History::MatchPhoneNumber)) {
                     qDebug() << "removing " << it2->accountId()  << it2->threadId() << " from " << threadKey;
                     threads.erase(it2);
                     mConversationsCache[threadKey] = threads;
@@ -230,32 +230,7 @@ QVariantMap SQLiteHistoryPlugin::threadForParticipants(const QString &accountId,
                 continue;
             }
 
-            // and now compare the lists
-            bool found = true;
-            Q_FOREACH(const QString &participant, normalizedParticipants) {
-                if (phoneCompare) {
-                    // we need to iterate the list and call the phone number comparing function for
-                    // each participant from the given thread
-                    bool inList = false;
-                    QStringList::iterator it = threadParticipants.begin();
-                    while (it != threadParticipants.end()) {
-                        if (PhoneUtils::compareNormalizedPhoneNumbers(*it, participant)) {
-                            inList = true;
-                            threadParticipants.erase(it);
-                            break;
-                        }
-                        ++it;
-                    }
-                    if (!inList) {
-                        found = false;
-                        break;
-                    }
-                } else if (!threadParticipants.contains(participant)) {
-                    found = false;
-                    break;
-                }
-            }
-
+            bool found = History::Utils::compareNormalizedParticipants(threadParticipants, participants, matchFlags);
             if (found) {
                 existingThread = threadId;
                 break;
