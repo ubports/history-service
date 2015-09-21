@@ -34,6 +34,7 @@ public:
     static bool compareIds(const QString &accountId, const QString &id1, const QString & id2);
     static bool compareParticipants(const QStringList &participants1, const QStringList &participants2, bool phoneComparison = false);
     static bool compareNormalizedParticipants(const QStringList &participants1, const QStringList &participants2, bool phoneComparison = false);
+    static bool shouldGroupAccount(const QString &accountId);
 
 private:
     Utils();

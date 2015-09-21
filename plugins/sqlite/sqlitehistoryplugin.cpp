@@ -68,8 +68,7 @@ void SQLiteHistoryPlugin::addThreadsToCache(const QList<QVariantMap> &threads)
  
         if (thread.type() != History::EventTypeText) {
              continue;
-        } else if (History::Utils::protocolFromAccountId(thread.accountId()) != "ofono" && 
-                 History::Utils::protocolFromAccountId(thread.accountId()) != "multimedia") {
+        } else if (!History::Utils::shouldGroupAccount(thread.accountId())) {
             // never group non phone accounts
             mConversationsCache[threadKey] = History::Threads() << thread;
             continue;
@@ -104,8 +103,7 @@ void SQLiteHistoryPlugin::removeThreadFromCache(const QVariantMap &properties)
     History::Thread thread = History::Thread::fromProperties(properties);
     QString threadKey = thread.accountId() + thread.threadId();
  
-    if (thread.type() != History::EventTypeText || (History::Utils::protocolFromAccountId(thread.accountId()) != "ofono" && 
-             History::Utils::protocolFromAccountId(thread.accountId()) != "multimedia")) {
+    if (thread.type() != History::EventTypeText || !History::Utils::shouldGroupAccount(thread.accountId())) {
         mConversationsCache.remove(threadKey);
         return;
     }
