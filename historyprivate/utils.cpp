@@ -30,6 +30,11 @@ Utils::Utils()
 {
 }
 
+bool Utils::shouldGroupAccount(const QString &accountId)
+{
+    return (protocolFromAccountId(accountId) != "ofono" &&
+                 protocolFromAccountId(accountId) != "multimedia");
+}
 
 MatchFlags Utils::matchFlagsForAccount(const QString &accountId)
 {
