@@ -32,8 +32,7 @@ Utils::Utils()
 
 bool Utils::shouldGroupAccount(const QString &accountId)
 {
-    return (protocolFromAccountId(accountId) != "ofono" &&
-                 protocolFromAccountId(accountId) != "multimedia");
+    return (matchFlagsForAccount(accountId) & MatchPhoneNumber);
 }
 
 MatchFlags Utils::matchFlagsForAccount(const QString &accountId)
@@ -41,6 +40,7 @@ MatchFlags Utils::matchFlagsForAccount(const QString &accountId)
     static QMap<QString, History::MatchFlags> protocolFlags;
     if (protocolFlags.isEmpty()) {
         protocolFlags["ofono"] = MatchPhoneNumber;
+        protocolFlags["multimedia"] = MatchPhoneNumber;
     }
 
     QString protocol = protocolFromAccountId(accountId);
