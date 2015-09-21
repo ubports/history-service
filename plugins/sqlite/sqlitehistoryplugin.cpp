@@ -45,7 +45,13 @@ SQLiteHistoryPlugin::SQLiteHistoryPlugin(QObject *parent) :
     // just trigger the database creation or update
     SQLiteDatabase::instance();
 
-    // TODO query only for text threads
+    updateGroupedThreadsCache();
+
+    mInitialised = true;
+}
+
+void SQLiteHistoryPlugin::updateGroupedThreadsCache()
+{
     History::PluginThreadView *view = queryThreads(History::EventTypeText, History::Sort("timestamp", Qt::DescendingOrder), History::Filter());
     QList<QVariantMap> threads;
     while (view->IsValid()) {
@@ -57,7 +63,6 @@ SQLiteHistoryPlugin::SQLiteHistoryPlugin(QObject *parent) :
         }
     }
     addThreadsToCache(threads);
-    mInitialised = true;
 }
 
 void SQLiteHistoryPlugin::addThreadsToCache(const QList<QVariantMap> &threads)
