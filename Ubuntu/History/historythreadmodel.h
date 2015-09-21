@@ -34,7 +34,7 @@ class HistoryThreadModel : public HistoryModel
 {
     Q_OBJECT
     Q_ENUMS(ThreadRole)
-    Q_PROPERTY(bool groupedThreads READ groupedThreads WRITE setGroupedThreads)
+    Q_PROPERTY(bool groupThreads READ groupThreads WRITE setGroupThreads)
 
 public:
 
@@ -71,8 +71,8 @@ public:
 
     Q_INVOKABLE bool removeThreads(const QVariantList &threadsProperties);
 
-    void setGroupedThreads(bool grouped);
-    bool groupedThreads() const;
+    void setGroupThreads(bool grouped);
+    bool groupThreads() const;
 
 protected Q_SLOTS:
     virtual void updateQuery();
@@ -89,7 +89,7 @@ private:
     History::Threads mThreads;
     QHash<int, QByteArray> mRoles;
     mutable QMap<History::TextEvent, QList<QVariant> > mAttachmentCache;
-    bool mGroupedThreads;
+    bool mGroupThreads;
 };
 
 #endif // HISTORYTHREADMODEL_H
