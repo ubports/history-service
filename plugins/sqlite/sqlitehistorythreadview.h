@@ -38,7 +38,7 @@ public:
                             History::EventType type,
                             const History::Sort &sort,
                             const History::Filter &filter,
-                            bool grouped);
+                            const QVariantMap &properties);
     ~SQLiteHistoryThreadView();
 
     QList<QVariantMap> NextPage();
@@ -54,7 +54,7 @@ private:
     QString mTemporaryTable;
     int mOffset;
     bool mValid;
-    bool mGrouped;
+    QVariantMap mQueryProperties;
 };
 
 #endif // SQLITEHISTORYTHREADVIEW_H

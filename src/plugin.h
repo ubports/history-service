@@ -43,7 +43,7 @@ public:
     virtual PluginThreadView* queryThreads(EventType type,
                                        const Sort &sort = Sort(),
                                        const Filter &filter = Filter(),
-                                       bool grouped = false) = 0;
+                                       const QVariantMap &properties = QVariantMap()) = 0;
     virtual PluginEventView* queryEvents(EventType type,
                                          const Sort &sort = Sort(),
                                          const Filter &filter = Filter()) = 0;

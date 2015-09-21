@@ -45,7 +45,7 @@ public:
     History::PluginThreadView* queryThreads(History::EventType type,
                                             const History::Sort &sort = History::Sort(),
                                             const History::Filter &filter = History::Filter(),
-                                            bool grouped = false);
+                                            const QVariantMap &properties = QVariantMap());
     History::PluginEventView* queryEvents(History::EventType type,
                                           const History::Sort &sort = History::Sort(),
                                           const History::Filter &filter = History::Filter());
@@ -75,7 +75,7 @@ public:
 
     // functions to be used internally
     QString sqlQueryForThreads(History::EventType type, const QString &condition, const QString &order);
-    QList<QVariantMap> parseThreadResults(History::EventType type, QSqlQuery &query, bool grouped = false);
+    QList<QVariantMap> parseThreadResults(History::EventType type, QSqlQuery &query, const QVariantMap &properties = QVariantMap());
 
     QString sqlQueryForEvents(History::EventType type, const QString &condition, const QString &order);
     QList<QVariantMap> parseEventResults(History::EventType type, QSqlQuery &query);
