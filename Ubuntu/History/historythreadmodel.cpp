@@ -306,7 +306,12 @@ void HistoryThreadModel::updateQuery()
         querySort = mSort->sort();
     }
 
-    mThreadView = History::Manager::instance()->queryThreads((History::EventType)mType, querySort, queryFilter, mGroupThreads);
+    QVariantMap properties;
+    if (mGroupThreads) {
+        properties["groupingProperty"] = "participants";
+    }
+
+    mThreadView = History::Manager::instance()->queryThreads((History::EventType)mType, querySort, queryFilter, properties);
     connect(mThreadView.data(),
             SIGNAL(threadsAdded(History::Threads)),
             SLOT(onThreadsAdded(History::Threads)));

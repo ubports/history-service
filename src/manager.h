@@ -48,7 +48,7 @@ public:
     ThreadViewPtr queryThreads(EventType type,
                                const Sort &sort = Sort(),
                                const Filter &filter = Filter(),
-                               bool grouped = false);
+                               const QVariantMap &properties = QVariantMap());
 
     EventViewPtr queryEvents(EventType type,
                              const Sort &sort = Sort(),

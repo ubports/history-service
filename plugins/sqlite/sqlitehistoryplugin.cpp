@@ -143,9 +143,9 @@ void SQLiteHistoryPlugin::removeThreadFromCache(const QVariantMap &properties)
 History::PluginThreadView *SQLiteHistoryPlugin::queryThreads(History::EventType type,
                                                              const History::Sort &sort,
                                                              const History::Filter &filter,
-                                                             bool grouped)
+                                                             const QVariantMap &properties)
 {
-    return new SQLiteHistoryThreadView(this, type, sort, filter, grouped);
+    return new SQLiteHistoryThreadView(this, type, sort, filter, properties);
 }
 
 History::PluginEventView *SQLiteHistoryPlugin::queryEvents(History::EventType type,
@@ -627,11 +627,15 @@ QString SQLiteHistoryPlugin::sqlQueryForThreads(History::EventType type, const Q
     return queryText;
 }
 
-QList<QVariantMap> SQLiteHistoryPlugin::parseThreadResults(History::EventType type, QSqlQuery &query, bool grouped)
+QList<QVariantMap> SQLiteHistoryPlugin::parseThreadResults(History::EventType type, QSqlQuery &query, const QVariantMap &properties)
 {
     QList<QVariantMap> threads;
     QSqlQuery attachmentsQuery(SQLiteDatabase::instance()->database());
     QList<QVariantMap> attachments;
+    bool grouped = false;
+    if (properties.contains("groupingProperty")) {
+        grouped = properties["groupingProperty"].toBool();
+    }
     while (query.next()) {
         QVariantMap thread;
         thread[History::FieldType] = (int) type;
