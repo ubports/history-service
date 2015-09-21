@@ -263,26 +263,6 @@ void HistoryModel::timerEvent(QTimerEvent *event)
     }
 }
 
-
-bool HistoryModel::compareParticipants(const QString &accountId, const QStringList &list1, const QStringList &list2) const
-{
-    if (list1.count() != list2.count()) {
-        return false;
-    }
-
-    int found = 0;
-    Q_FOREACH(const QString &participant, list1) {
-        Q_FOREACH(const QString &item, list2) {
-            if (History::Utils::compareIds(accountId, participant, item)) {
-                found++;
-                break;
-            }
-        }
-    }
-
-    return found == list1.count();
-}
-
 bool HistoryModel::lessThan(const QVariantMap &left, const QVariantMap &right) const
 {
     QVariant leftValue = left[sort()->sortField()];

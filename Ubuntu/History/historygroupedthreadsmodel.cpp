@@ -20,6 +20,7 @@
  */
 
 #include "historygroupedthreadsmodel.h"
+#include "utils_p.h"
 #include "phoneutils_p.h"
 #include <QTimer>
 #include <QDebug>
@@ -115,7 +116,7 @@ int HistoryGroupedThreadsModel::existingPositionForEntry(const QVariant &propert
         const HistoryThreadGroup &group = mGroups[i];
         if (mGroupingProperty == History::FieldParticipants) {
             QStringList participants = propertyValue.toStringList();
-            if (compareParticipants(group.displayedThread.accountId(), group.displayedThread.participants(), participants)) {
+            if (History::Utils::compareParticipants(group.displayedThread.participants(), participants, History::Utils::matchFlagsForAccount(group.displayedThread.accountId()))) {
                 pos = i;
                 break;
             }
