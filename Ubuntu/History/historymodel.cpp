@@ -86,12 +86,13 @@ QVariant HistoryModel::data(const QModelIndex &index, int role) const
         result = properties[History::FieldType];
         break;
     case ParticipantsRole:
-        if (mMatchContacts) {
+        /*if (mMatchContacts) {
             result = ContactMatcher::instance()->contactInfo(properties[History::FieldAccountId].toString(),
                                                              properties[History::FieldParticipants].toStringList());
-        } else {
+        } else {*/
+            //FIXME: handle contact changes
             result = properties[History::FieldParticipants];
-        }
+        //}
         break;
     }
     return result;
