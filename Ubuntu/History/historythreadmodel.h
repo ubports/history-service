@@ -83,13 +83,13 @@ protected Q_SLOTS:
 protected:
     History::Threads fetchNextPage();
     bool mCanFetchMore;
+    bool mGroupThreads;
 
 private:
     History::ThreadViewPtr mThreadView;
     History::Threads mThreads;
     QHash<int, QByteArray> mRoles;
     mutable QMap<History::TextEvent, QList<QVariant> > mAttachmentCache;
-    bool mGroupThreads;
 };
 
 #endif // HISTORYTHREADMODEL_H
