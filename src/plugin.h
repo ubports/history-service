@@ -49,7 +49,8 @@ public:
                                          const Filter &filter = Filter()) = 0;
     virtual QVariantMap getSingleThread(EventType type,
                                         const QString &accountId,
-                                        const QString &threadId) = 0;
+                                        const QString &threadId,
+                                        const QVariantMap &properties = QVariantMap()) = 0;
     virtual QVariantMap getSingleEvent(EventType type,
                                        const QString &accountId,
                                        const QString &threadId,

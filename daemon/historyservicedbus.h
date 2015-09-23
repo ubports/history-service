@@ -57,7 +57,7 @@ public:
     // views
     QString QueryThreads(int type, const QVariantMap &sort, const QVariantMap &filter, const QVariantMap &properties);
     QString QueryEvents(int type, const QVariantMap &sort, const QVariantMap &filter);
-    QVariantMap GetSingleThread(int type, const QString &accountId, const QString &threadId);
+    QVariantMap GetSingleThread(int type, const QString &accountId, const QString &threadId, const QVariantMap &properties);
     QVariantMap GetSingleEvent(int type, const QString &accountId, const QString &threadId, const QString &eventId);
 
 Q_SIGNALS:

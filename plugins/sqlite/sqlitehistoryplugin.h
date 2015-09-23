@@ -56,7 +56,7 @@ public:
 
     QList<QVariantMap> eventsForThread(const QVariantMap &thread);
 
-    QVariantMap getSingleThread(History::EventType type, const QString &accountId, const QString &threadId);
+    QVariantMap getSingleThread(History::EventType type, const QString &accountId, const QString &threadId, const QVariantMap &properties = QVariantMap());
     QVariantMap getSingleEvent(History::EventType type, const QString &accountId, const QString &threadId, const QString &eventId);
 
     // Writer part of the plugin
