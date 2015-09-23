@@ -165,7 +165,10 @@ QVariantMap Thread::properties() const
 {
     Q_D(const Thread);
 
-    QVariantMap map;
+    // include the properties from the last event
+    QVariantMap map = lastEvent().properties();
+
+    // and add the thread ones too
     map[FieldAccountId] = d->accountId;
     map[FieldThreadId] = d->threadId;
     map[FieldType] = d->type;
