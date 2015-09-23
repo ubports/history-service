@@ -46,7 +46,14 @@ SQLiteHistoryPlugin::SQLiteHistoryPlugin(QObject *parent) :
     // just trigger the database creation or update
     SQLiteDatabase::instance();
 
-    // TODO query only for text threads
+    generateContactCache();
+    updateGroupedThreadsCache();
+
+    mInitialised = true;
+}
+
+void SQLiteHistoryPlugin::updateGroupedThreadsCache()
+{
     History::PluginThreadView *view = queryThreads(History::EventTypeText, History::Sort("timestamp", Qt::DescendingOrder), History::Filter());
     QList<QVariantMap> threads;
     while (view->IsValid()) {
@@ -58,8 +65,6 @@ SQLiteHistoryPlugin::SQLiteHistoryPlugin(QObject *parent) :
         }
     }
     addThreadsToCache(threads);
-    generateContactCache();
-    mInitialised = true;
 }
 
 void SQLiteHistoryPlugin::addThreadsToCache(const QList<QVariantMap> &threads)
@@ -81,7 +86,7 @@ void SQLiteHistoryPlugin::addThreadsToCache(const QList<QVariantMap> &threads)
             const QString &thisThreadKey = it.key();
             History::Threads threads = it.value();
             Q_FOREACH(const History::Thread &groupedThread, threads) {
-                found = History::Utils::compareNormalizedParticipants(thread.participants().identifiers(), groupedThread.participants().identifiers(), true);
+                found = History::Utils::compareNormalizedParticipants(thread.participants().identifiers(), groupedThread.participants().identifiers(), History::MatchPhoneNumber);
                 if (found) {
                     qDebug() << "appending " << thread.accountId()  << thread.threadId() << " to " << thisThreadKey;
                     mConversationsCache[thisThreadKey] += thread;
@@ -97,6 +102,75 @@ void SQLiteHistoryPlugin::addThreadsToCache(const QList<QVariantMap> &threads)
             qDebug() << "added key" << threadKey;
             mConversationsCache[threadKey] = History::Threads() << thread;
         }
+    }
+}
+
+bool SQLiteHistoryPlugin::lessThan(const QVariantMap &left, const QVariantMap &right) const
+{
+    QVariant leftValue = left["lastEventTimestamp"];
+    QVariant rightValue = right["lastEventTimestamp"];
+
+    return leftValue < rightValue;
+}
+
+void SQLiteHistoryPlugin::updateDisplayedThread(const QString &displayedThreadKey)
+{
+    History::Threads threads = mConversationsCache[displayedThreadKey];
+    History::Thread displayedThread = threads.first();
+    QVariantMap displayedProperties = displayedThread.properties();
+    Q_FOREACH(const History::Thread &other, threads) {
+        if (lessThan(displayedProperties, other.properties())) {
+            displayedThread = other;
+            displayedProperties = displayedThread.properties();
+        }
+    }
+
+    if ((displayedThread.accountId() + displayedThread.threadId()) != displayedThreadKey) {
+        mConversationsCache.remove(displayedThreadKey);
+        mConversationsCache[displayedThread.accountId() + displayedThread.threadId()] = threads;
+    }
+}
+
+void SQLiteHistoryPlugin::updateThreadOnCache(const QVariantMap &properties)
+{
+    History::Thread thread = History::Thread::fromProperties(properties);
+    const QString &threadKey = thread.accountId() + thread.threadId();
+ 
+    if (thread.type() != History::EventTypeText) {
+         return;
+    } else if (!History::Utils::shouldGroupAccount(thread.accountId())) {
+        // never group non phone accounts
+        mConversationsCache[threadKey] = History::Threads() << thread;
+        return;
+    }
+    bool found = false;
+    QMap<QString, History::Threads>::iterator it = mConversationsCache.begin();
+    while (it != mConversationsCache.end()) {
+        const QString &thisThreadKey = it.key();
+        History::Threads threads = it.value();
+        // try to find this thread, and update its contents
+        if (threads.contains(thread)) {
+            threads.removeAll(thread);
+            threads.append(thread);
+            mConversationsCache[thisThreadKey] = threads;
+            updateDisplayedThread(thisThreadKey);
+            return;
+        }
+ 
+        Q_FOREACH(const History::Thread &groupedThread, threads) {
+            found = History::Utils::compareNormalizedParticipants(thread.participants().identifiers(), groupedThread.participants().identifiers(), History::MatchPhoneNumber);
+            if (found) {
+                qDebug() << "appending " << thread.accountId()  << thread.threadId() << " to " << thisThreadKey;
+                mConversationsCache[thisThreadKey] += thread;
+                updateDisplayedThread(thisThreadKey);
+                break;
+            }
+        }
+        it++;
+    }
+    if (!found) {
+        qDebug() << "added key" << threadKey;
+        mConversationsCache[threadKey] = History::Threads() << thread;
     }
 }
 
@@ -128,7 +202,7 @@ void SQLiteHistoryPlugin::removeThreadFromCache(const QVariantMap &properties)
             History::Threads threads = it.value();
             History::Threads::iterator it2 = threads.begin();
             while (it2 != threads.end()) {
-                 if (History::Utils::compareNormalizedParticipants(thread.participants().identifiers(), it2->participants().identifiers(), true)) {
+                 if (History::Utils::compareNormalizedParticipants(thread.participants().identifiers(), it2->participants().identifiers(), History::MatchPhoneNumber)) {
                     qDebug() << "removing " << it2->accountId()  << it2->threadId() << " from " << threadKey;
                     threads.erase(it2);
                     mConversationsCache[threadKey] = threads;
@@ -167,9 +241,9 @@ void SQLiteHistoryPlugin::generateContactCache()
 History::PluginThreadView *SQLiteHistoryPlugin::queryThreads(History::EventType type,
                                                              const History::Sort &sort,
                                                              const History::Filter &filter,
-                                                             bool grouped)
+                                                             const QVariantMap &properties)
 {
-    return new SQLiteHistoryThreadView(this, type, sort, filter, grouped);
+    return new SQLiteHistoryThreadView(this, type, sort, filter, properties);
 }
 
 History::PluginEventView *SQLiteHistoryPlugin::queryEvents(History::EventType type,
@@ -254,32 +328,7 @@ QVariantMap SQLiteHistoryPlugin::threadForParticipants(const QString &accountId,
                 continue;
             }
 
-            // and now compare the lists
-            bool found = true;
-            Q_FOREACH(const QString &participant, normalizedParticipants) {
-                if (phoneCompare) {
-                    // we need to iterate the list and call the phone number comparing function for
-                    // each participant from the given thread
-                    bool inList = false;
-                    QStringList::iterator it = threadParticipants.begin();
-                    while (it != threadParticipants.end()) {
-                        if (PhoneUtils::compareNormalizedPhoneNumbers(*it, participant)) {
-                            inList = true;
-                            threadParticipants.erase(it);
-                            break;
-                        }
-                        ++it;
-                    }
-                    if (!inList) {
-                        found = false;
-                        break;
-                    }
-                } else if (!threadParticipants.contains(participant)) {
-                    found = false;
-                    break;
-                }
-            }
-
+            bool found = History::Utils::compareNormalizedParticipants(threadParticipants, participants, matchFlags);
             if (found) {
                 existingThread = threadId;
                 break;
@@ -309,7 +358,7 @@ QList<QVariantMap> SQLiteHistoryPlugin::eventsForThread(const QVariantMap &threa
     return results;
 }
 
-QVariantMap SQLiteHistoryPlugin::getSingleThread(History::EventType type, const QString &accountId, const QString &threadId)
+QVariantMap SQLiteHistoryPlugin::getSingleThread(History::EventType type, const QString &accountId, const QString &threadId, const QVariantMap &properties)
 {
     QVariantMap result;
 
@@ -323,7 +372,10 @@ QVariantMap SQLiteHistoryPlugin::getSingleThread(History::EventType type, const 
         return result;
     }
 
-    QList<QVariantMap> results = parseThreadResults(type, query);
+    QVariantMap newProperties = properties;
+    newProperties["singleThread"] = true;
+
+    QList<QVariantMap> results = parseThreadResults(type, query, newProperties);
     query.clear();
     if (!results.isEmpty()) {
         result = results.first();
@@ -498,6 +550,15 @@ History::EventWriteResult SQLiteHistoryPlugin::writeTextEvent(const QVariantMap 
         }
     }
 
+    if (result == History::EventWriteModified || result == History::EventWriteCreated) {
+        QVariantMap existingThread = getSingleThread((History::EventType) event[History::FieldType].toInt(),
+                                                     event[History::FieldAccountId].toString(),
+                                                     event[History::FieldThreadId].toString(),
+                                                     QVariantMap());
+        addThreadsToCache(QList<QVariantMap>() << existingThread);
+
+    }
+
     return result;
 }
 
@@ -651,18 +712,53 @@ QString SQLiteHistoryPlugin::sqlQueryForThreads(History::EventType type, const Q
     return queryText;
 }
 
-QList<QVariantMap> SQLiteHistoryPlugin::parseThreadResults(History::EventType type, QSqlQuery &query, bool grouped)
+QList<QVariantMap> SQLiteHistoryPlugin::parseThreadResults(History::EventType type, QSqlQuery &query, const QVariantMap &properties)
 {
     QList<QVariantMap> threads;
     QSqlQuery attachmentsQuery(SQLiteDatabase::instance()->database());
     QList<QVariantMap> attachments;
+    bool grouped = false;
+    bool singleThread = false;
+    if (properties.contains("groupingProperty")) {
+        grouped = properties["groupingProperty"].toBool();
+    }
+    if (properties.contains("singleThread")) {
+        singleThread = properties["singleThread"].toBool();
+    }
     while (query.next()) {
         QVariantMap thread;
         QString accountId = query.value(0).toString();
         thread[History::FieldType] = (int) type;
         thread[History::FieldAccountId] = accountId;
         thread[History::FieldThreadId] = query.value(1);
-        if (grouped) {
+        if (singleThread && grouped) {
+            // we have to find which conversation this thread belongs to
+            QMap<QString, History::Threads>::iterator it = mConversationsCache.begin();
+            while (it != mConversationsCache.end()) {
+                const QString &thisThreadKey = it.key();
+                History::Threads groupedThreads = it.value();
+                Q_FOREACH(const History::Thread &groupedThread, groupedThreads) {
+                    if (groupedThread.accountId() == thread[History::FieldAccountId] &&
+                            groupedThread.threadId() == thread[History::FieldThreadId]) {
+                        // found the thread.
+                        // get the displayed thread now
+                        QVariantMap finalGroupedThread = groupedThread.properties();
+                        QVariantList finalGroupedThreads;
+                        Q_FOREACH(const History::Thread &displayedThread, groupedThreads) {
+                            finalGroupedThreads << displayedThread.properties();
+                            if ((displayedThread.accountId() + displayedThread.threadId()) == thisThreadKey) {
+                                finalGroupedThread = displayedThread.properties();
+                            }
+                        }
+                        finalGroupedThread[History::FieldGroupedThreads] = finalGroupedThreads;
+                        threads << finalGroupedThread;
+                        return threads;
+                    }
+                }
+                it++;
+            }
+            return threads;
+        } else if (grouped) {
             QString cacheKey = thread[History::FieldAccountId].toString()+thread[History::FieldThreadId].toString();
             qDebug() << mConversationsCache.keys();
             if (mInitialised && type == History::EventTypeText && 

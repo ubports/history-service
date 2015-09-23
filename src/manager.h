@@ -48,7 +48,7 @@ public:
     ThreadViewPtr queryThreads(EventType type,
                                const Sort &sort = Sort(),
                                const Filter &filter = Filter(),
-                               bool grouped = false);
+                               const QVariantMap &properties = QVariantMap());
 
     EventViewPtr queryEvents(EventType type,
                              const Sort &sort = Sort(),
@@ -61,7 +61,7 @@ public:
                                  const QStringList &participants,
                                  History::MatchFlags matchFlags = History::MatchCaseSensitive,
                                  bool create = false);
-    Thread getSingleThread(EventType type, const QString &accountId, const QString &threadId);
+    Thread getSingleThread(EventType type, const QString &accountId, const QString &threadId, const QVariantMap &properties = QVariantMap());
 
     bool writeEvents(const History::Events &events);
     bool removeThreads(const Threads &threads);

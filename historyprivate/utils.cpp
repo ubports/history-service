@@ -32,8 +32,7 @@ Utils::Utils()
 
 bool Utils::shouldGroupAccount(const QString &accountId)
 {
-    return (protocolFromAccountId(accountId) != "ofono" &&
-                 protocolFromAccountId(accountId) != "multimedia");
+    return (matchFlagsForAccount(accountId) & MatchPhoneNumber);
 }
 
 MatchFlags Utils::matchFlagsForAccount(const QString &accountId)
@@ -41,6 +40,7 @@ MatchFlags Utils::matchFlagsForAccount(const QString &accountId)
     static QMap<QString, History::MatchFlags> protocolFlags;
     if (protocolFlags.isEmpty()) {
         protocolFlags["ofono"] = MatchPhoneNumber;
+        protocolFlags["multimedia"] = MatchPhoneNumber;
     }
 
     QString protocol = protocolFromAccountId(accountId);
@@ -75,14 +75,14 @@ bool Utils::compareIds(const QString &accountId, const QString &id1, const QStri
     return id1 == id2;
 }
 
-bool Utils::compareParticipants(const QStringList &participants1, const QStringList &participants2, bool phoneComparison)
+bool Utils::compareParticipants(const QStringList &participants1, const QStringList &participants2, MatchFlags flags)
 {
     // if list size is different, just return
     if (participants1.count() != participants2.count()) {
         return false;
     }
 
-    if (phoneComparison) {
+    if (flags & MatchPhoneNumber) {
         QStringList normalizedParticipants1;
         QStringList normalizedParticipants2;
         Q_FOREACH(const QString &participant, participants1) {
@@ -91,14 +91,14 @@ bool Utils::compareParticipants(const QStringList &participants1, const QStringL
         Q_FOREACH(const QString &participant, participants2) {
             normalizedParticipants2 << PhoneUtils::normalizePhoneNumber(participant);
         }
-        return compareNormalizedParticipants(normalizedParticipants1, normalizedParticipants2, phoneComparison);
+        return compareNormalizedParticipants(normalizedParticipants1, normalizedParticipants2, flags);
 
     }
 
-    return compareNormalizedParticipants(participants1, participants2, phoneComparison);
+    return compareNormalizedParticipants(participants1, participants2, flags);
 }
 
-bool Utils::compareNormalizedParticipants(const QStringList &participants1, const QStringList &participants2, bool phoneComparison)
+bool Utils::compareNormalizedParticipants(const QStringList &participants1, const QStringList &participants2, MatchFlags flags)
 {
     QStringList mutableParticipants2 = participants2;
     // if list size is different, just return
@@ -109,7 +109,7 @@ bool Utils::compareNormalizedParticipants(const QStringList &participants1, cons
     // and now compare the lists
     bool found = true;
     Q_FOREACH(const QString &participant, participants1) {
-        if (phoneComparison) {
+        if (flags & MatchPhoneNumber) {
             // we need to iterate the list and call the phone number comparing function for
             // each participant from the given thread
             bool inList = false;

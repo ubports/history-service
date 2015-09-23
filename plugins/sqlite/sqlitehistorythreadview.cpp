@@ -31,9 +31,9 @@ SQLiteHistoryThreadView::SQLiteHistoryThreadView(SQLiteHistoryPlugin *plugin,
                                                  History::EventType type,
                                                  const History::Sort &sort,
                                                  const History::Filter &filter,
-                                                 bool grouped)
+                                                 const QVariantMap &properties)
     : History::PluginThreadView(), mPlugin(plugin), mType(type), mSort(sort),
-      mFilter(filter), mPageSize(15), mQuery(SQLiteDatabase::instance()->database()), mOffset(0), mValid(true), mGrouped(grouped)
+      mFilter(filter), mPageSize(15), mQuery(SQLiteDatabase::instance()->database()), mOffset(0), mValid(true), mQueryProperties(properties)
 {
     qDebug() << __PRETTY_FUNCTION__;
     mTemporaryTable = QString("threadview%1%2").arg(QString::number((qulonglong)this), QDateTime::currentDateTimeUtc().toString("yyyyMMddhhmmsszzz"));
@@ -97,7 +97,7 @@ QList<QVariantMap> SQLiteHistoryThreadView::NextPage()
         return threads;
     }
 
-    threads = mPlugin->parseThreadResults(mType, mQuery, mGrouped);
+    threads = mPlugin->parseThreadResults(mType, mQuery, mQueryProperties);
     mOffset += mPageSize;
     mQuery.clear();
 

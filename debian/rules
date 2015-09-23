@@ -11,4 +11,4 @@ override_dh_install:
 	dh $@ --parallel --with translations
 
 override_dh_auto_test:
-	#CTEST_OUTPUT_ON_FAILURE=1 make -C obj-$(DEB_HOST_GNU_TYPE) test
+	CTEST_OUTPUT_ON_FAILURE=1 make -C obj-$(DEB_HOST_GNU_TYPE) test
