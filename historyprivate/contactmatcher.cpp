@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Canonical, Ltd.
+ * Copyright (C) 2014-2015 Canonical, Ltd.
  *
  * Authors:
  *  Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>
@@ -84,7 +84,15 @@ ContactMatcher *ContactMatcher::instance(QContactManager *manager)
     return &self;
 }
 
-QVariantMap ContactMatcher::contactInfo(const QString &accountId, const QString &identifier)
+/**
+ * \brief Returns the contact information for the given \param identifier, taking into account
+ * the addressable fields of the given \param accountId.
+ * If \param synchronous is specified, a blocking synchronous request will be made to the contact
+ * manager to return the specified data.
+ *
+ * Note that synchronous requests should only be placed after \ref TelepathyHelper is ready.
+ */
+QVariantMap ContactMatcher::contactInfo(const QString &accountId, const QString &identifier, bool synchronous)
 {
     InternalContactMap &internalMap = mContactMap[accountId];
 
@@ -102,26 +110,41 @@ QVariantMap ContactMatcher::contactInfo(const QString &accountId, const QString 
         }
     }
 
+    QVariantMap map;
     // and if there was no match, asynchronously request the info, and return an empty map for now
     if (TelepathyHelper::instance()->ready()) {
-        requestContactInfo(accountId, identifier);
-    } else {
+        map = requestContactInfo(accountId, identifier, synchronous);
+    } else if (!synchronous) {
         RequestInfo info{accountId, identifier};
         mPendingRequests.append(info);
     }
-    QVariantMap map;
     map[History::FieldIdentifier] = identifier;
     mContactMap[accountId][identifier] = map;
     return map;
 }
 
-QVariantList ContactMatcher::contactInfo(const QString &accountId, const QStringList &identifiers)
+QVariantList ContactMatcher::contactInfo(const QString &accountId, const QStringList &identifiers, bool synchronous)
 {
     QVariantList contacts;
     Q_FOREACH(const QString &identifier, identifiers) {
-        contacts << contactInfo(accountId, identifier);
+        contacts << contactInfo(accountId, identifier, synchronous);
     }
     return contacts;
+}
+
+void ContactMatcher::watchIdentifier(const QString &accountId, const QString &identifier)
+{
+    // only add the identifier to the map of watched identifiers
+    QVariantMap map;
+    map[History::FieldIdentifier] = identifier;
+    mContactMap[accountId][identifier] = map;
+}
+
+void ContactMatcher::watchIdentifiers(const QString &accountId, const QString &identifiers)
+{
+    Q_FOREACH(const QString &identifier, identifiers) {
+        watchIdentifier(accountId, identifier);
+    }
 }
 
 void ContactMatcher::onContactsAdded(QList<QContactId> ids)
@@ -146,7 +169,8 @@ void ContactMatcher::onContactsAdded(QList<QContactId> ids)
 
             // now for each entry not populated, check if it matches one of the newly added contacts
             Q_FOREACH(const QContact &contact, contacts) {
-                if (matchAndUpdate(accountId, identifier, contact)) {
+                QVariantMap map = matchAndUpdate(accountId, identifier, contact);
+                if (!map.isEmpty()){
                     break;
                 }
             }
@@ -175,7 +199,8 @@ void ContactMatcher::onContactsChanged(QList<QContactId> ids)
 
             Q_FOREACH(const QContact &contact, contacts) {
                 bool previousMatch = (contactInfo[History::FieldContactId].toString() == contact.id().toString());
-                if (matchAndUpdate(accountId, identifier, contact)) {
+                QVariantMap map = matchAndUpdate(accountId, identifier, contact);
+                if (!map.isEmpty()){
                     break;
                 } else if (previousMatch) {
                     // if there was a previous match but it does not match anymore, try to match the phone number
@@ -277,31 +302,20 @@ void ContactMatcher::onRequestStateChanged(QContactAbstractRequest::State state)
 
 }
 
-void ContactMatcher::requestContactInfo(const QString &accountId, const QString &identifier)
+/**
+ * \brief Requests contact info, and if the preference is for a synchronous request returns the contact information in a
+ * QVariantMap. For asynchronous requests, an empty QVariantMap is returned.
+ */
+QVariantMap ContactMatcher::requestContactInfo(const QString &accountId, const QString &identifier, bool synchronous)
 {
     QStringList addressableVCardFields = addressableFields(accountId);
     if (addressableVCardFields.isEmpty()) {
         // FIXME: add support for generic accounts
-        return;
+        return QVariantMap();
     }
 
     bool phoneCompare = addressableVCardFields.contains("tel");
 
-    // check if there is a request already going on for the given contact
-    Q_FOREACH(const RequestInfo &info, mRequests.values()) {
-        if (info.accountId != accountId) {
-            // skip to the next item
-            continue;
-        }
-
-        if (info.identifier == identifier ||
-            phoneCompare && PhoneUtils::comparePhoneNumbers(info.identifier, identifier)) {
-            // if so, just wait for it to finish
-            return;
-        }
-    }
-
-    QContactFetchRequest *request = new QContactFetchRequest(this);
     QContactFetchHint hint;
     hint.setMaxCountHint(1);
     // FIXME: maybe we need to fetch the full contact?
@@ -309,7 +323,6 @@ void ContactMatcher::requestContactInfo(const QString &accountId, const QString 
                                                                 << QContactDetail::TypePhoneNumber
                                                                 << QContactDetail::TypeAvatar
                                                                 << QContactDetail::TypeExtendedDetail);
-    request->setFetchHint(hint);
 
     QContactUnionFilter topLevelFilter;
     Q_FOREACH(const QString &field, addressableVCardFields) {
@@ -336,17 +349,43 @@ void ContactMatcher::requestContactInfo(const QString &accountId, const QString 
         }
     }
 
-    request->setFilter(topLevelFilter);
-    request->setManager(mManager);
-    connect(request,
-            SIGNAL(stateChanged(QContactAbstractRequest::State)),
-            SLOT(onRequestStateChanged(QContactAbstractRequest::State)));
+    if (synchronous) {
+        QList<QContact> contacts = mManager->contacts(topLevelFilter, QList<QContactSortOrder>(), hint);
+        if (contacts.isEmpty()) {
+            return QVariantMap();
+        }
+        // for synchronous requests, return the results right away.
+        return matchAndUpdate(accountId, identifier, contacts.first());
+    } else {
+        // check if there is a request already going on for the given contact
+        Q_FOREACH(const RequestInfo &info, mRequests.values()) {
+            if (info.accountId != accountId) {
+                // skip to the next item
+                continue;
+            }
 
-    RequestInfo info;
-    info.accountId = accountId;
-    info.identifier = identifier;
-    mRequests[request] = info;
-    request->start();
+            if (info.identifier == identifier ||
+                phoneCompare && PhoneUtils::comparePhoneNumbers(info.identifier, identifier)) {
+                // if so, just wait for it to finish
+                return QVariantMap();
+            }
+        }
+
+        QContactFetchRequest *request = new QContactFetchRequest(this);
+        request->setFetchHint(hint);
+        request->setFilter(topLevelFilter);
+        request->setManager(mManager);
+        connect(request,
+                SIGNAL(stateChanged(QContactAbstractRequest::State)),
+                SLOT(onRequestStateChanged(QContactAbstractRequest::State)));
+
+        RequestInfo info;
+        info.accountId = accountId;
+        info.identifier = identifier;
+        mRequests[request] = info;
+        request->start();
+    }
+    return QVariantMap();
 }
 
 QVariantList ContactMatcher::toVariantList(const QList<int> &list)
@@ -358,14 +397,18 @@ QVariantList ContactMatcher::toVariantList(const QList<int> &list)
     return variantList;
 }
 
-bool ContactMatcher::matchAndUpdate(const QString &accountId, const QString &identifier, const QContact &contact)
+/**
+ * \brief Matches contact data against the given identifier. If the match succeeds, return the updated data in a
+ * QVariantMap, returns an empty map otherwise.
+ */
+QVariantMap ContactMatcher::matchAndUpdate(const QString &accountId, const QString &identifier, const QContact &contact)
 {
+    QVariantMap contactInfo;
     if (contact.isEmpty()) {
-        return false;
+        return contactInfo;
     }
 
     QStringList fields = addressableFields(accountId);
-    QVariantMap contactInfo;
     bool match = false;
 
     Q_FOREACH(const QString &field, fields) {
@@ -407,7 +450,7 @@ bool ContactMatcher::matchAndUpdate(const QString &accountId, const QString &ide
     }
 
 
-    return false;
+    return contactInfo;
 }
 
 QStringList ContactMatcher::addressableFields(const QString &accountId)

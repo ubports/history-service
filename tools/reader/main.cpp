@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Canonical, Ltd.
+ * Copyright (C) 2013-2015 Canonical, Ltd.
  *
  * Authors:
  *  Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>
@@ -70,7 +70,7 @@ void printThread(const History::Thread &thread)
                                                                                                 thread.threadId(),
                                                                                                 QString::number(thread.count()),
                                                                                                 QString::number(thread.unreadCount())));
-    qDebug() << qPrintable(QString("    Participants: %1").arg(thread.participants().join(", ")));
+    qDebug() << qPrintable(QString("    Participants: %1").arg(thread.participants().identifiers().join(", ")));
 
     if (!thread.lastEvent().isNull()) {
         qDebug() << "    Last event:";

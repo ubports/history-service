@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Canonical, Ltd.
+ * Copyright (C) 2013-2015 Canonical, Ltd.
  *
  * Authors:
  *  Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>
@@ -37,7 +37,7 @@ public:
     ThreadPrivate(const QString &theAccountId,
                          const QString &theThreadId,
                          EventType theType,
-                         const QStringList &theParticipants,
+                         const Participants &theParticipants,
                          const Event &theLastEvent,
                          int theCount,
                          int theUnreadCount,
@@ -46,7 +46,7 @@ public:
 
     QString accountId;
     QString threadId;
-    QStringList participants;
+    Participants participants;
     EventType type;
     Event lastEvent;
     int count;
