@@ -640,12 +640,14 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseThreadResults(History::EventType ty
                         // found the thread.
                         // get the displayed thread now
                         QVariantMap finalGroupedThread = groupedThread.properties();
+                        QVariantList finalGroupedThreads;
                         Q_FOREACH(const History::Thread &displayedThread, groupedThreads) {
+                            finalGroupedThreads << displayedThread.properties();
                             if ((displayedThread.accountId() + displayedThread.threadId()) == thisThreadKey) {
                                 finalGroupedThread = displayedThread.properties();
                             }
                         }
-                        finalGroupedThread[History::FieldGroupedThreads] = QVariant::fromValue(groupedThreads);
+                        finalGroupedThread[History::FieldGroupedThreads] = finalGroupedThreads;
                         threads << finalGroupedThread;
                         return threads;
                     }
