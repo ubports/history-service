@@ -234,7 +234,7 @@ void ThreadTest::testProperties()
     QCOMPARE(properties[History::FieldAccountId].toString(), accountId);
     QCOMPARE(properties[History::FieldThreadId].toString(), threadId);
     QCOMPARE(properties[History::FieldType].toInt(), (int)type);
-    QCOMPARE(properties[History::FieldParticipants].toStringList(), participants);
+    QCOMPARE(History::Participants::fromVariantList(properties[History::FieldParticipants].toList()).identifiers(), participants);
     QCOMPARE(properties[History::FieldCount].toInt(), count);
     QCOMPARE(properties[History::FieldUnreadCount].toInt(), unreadCount);
 }
