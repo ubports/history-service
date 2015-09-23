@@ -30,7 +30,7 @@ Q_DECLARE_METATYPE(History::TextEventAttachments)
 Q_DECLARE_METATYPE(QList<QVariantMap>)
 
 HistoryThreadModel::HistoryThreadModel(QObject *parent) :
-    HistoryModel(parent), mCanFetchMore(true), mGroupedThreads(false)
+    HistoryModel(parent), mCanFetchMore(true), mGroupThreads(false)
 {
     qRegisterMetaType<QList<QVariantMap> >();
     qDBusRegisterMetaType<QList<QVariantMap> >();
@@ -57,18 +57,18 @@ HistoryThreadModel::HistoryThreadModel(QObject *parent) :
 }
 
 
-void HistoryThreadModel::setGroupedThreads(bool grouped)
+void HistoryThreadModel::setGroupThreads(bool grouped)
 {
-    bool changed = grouped != mGroupedThreads;
-    mGroupedThreads = grouped;
+    bool changed = grouped != mGroupThreads;
+    mGroupThreads = grouped;
     if (changed) {
         updateQuery();
     }
 }
 
-bool HistoryThreadModel::groupedThreads() const
+bool HistoryThreadModel::groupThreads() const
 {
-    return mGroupedThreads;
+    return mGroupThreads;
 }
  
 int HistoryThreadModel::rowCount(const QModelIndex &parent) const
@@ -115,11 +115,11 @@ QVariant HistoryThreadModel::threadData(const History::Thread &thread, int role)
     QVariant result;
     switch (role) {
     case CountRole:
-        if (mGroupedThreads) {
+        if (mGroupThreads) {
             int groupedCount = 0;
             QVariantList threads;
-            Q_FOREACH(const QVariantMap &thread, thread.groupedThreads()) {
-                groupedCount += thread[History::FieldCount].toInt();
+            Q_FOREACH(const History::Thread &groupedThread, thread.groupedThreads()) {
+                groupedCount += groupedThread.count();
             }
             result = groupedCount;
         } else {
@@ -127,11 +127,11 @@ QVariant HistoryThreadModel::threadData(const History::Thread &thread, int role)
         }
         break;
     case UnreadCountRole:
-        if (mGroupedThreads) {
+        if (mGroupThreads) {
             int groupedCount = 0;
             QVariantList threads;
-            Q_FOREACH(const QVariantMap &thread, thread.groupedThreads()) {
-                groupedCount += thread[History::FieldUnreadCount].toInt();
+            Q_FOREACH(const History::Thread &groupedThread, thread.groupedThreads()) {
+                groupedCount += groupedThread.unreadCount();
             }
             result = groupedCount;
         } else {
@@ -141,8 +141,8 @@ QVariant HistoryThreadModel::threadData(const History::Thread &thread, int role)
     case GroupedThreadsRole:
     {
          QVariantList threads;
-         Q_FOREACH(const QVariantMap &thread, thread.groupedThreads()) {
-             threads << QVariant::fromValue(thread);
+         Q_FOREACH(const History::Thread &thread, thread.groupedThreads()) {
+             threads << thread.properties();
          }
          result = threads;
          break;
@@ -306,7 +306,12 @@ void HistoryThreadModel::updateQuery()
         querySort = mSort->sort();
     }
 
-    mThreadView = History::Manager::instance()->queryThreads((History::EventType)mType, querySort, queryFilter, mGroupedThreads);
+    QVariantMap properties;
+    if (mGroupThreads) {
+        properties["groupingProperty"] = "participants";
+    }
+
+    mThreadView = History::Manager::instance()->queryThreads((History::EventType)mType, querySort, queryFilter, properties);
     connect(mThreadView.data(),
             SIGNAL(threadsAdded(History::Threads)),
             SLOT(onThreadsAdded(History::Threads)));
@@ -340,7 +345,7 @@ void HistoryThreadModel::onThreadsAdded(const History::Threads &threads)
         return;
     }
 
-    if (mGroupedThreads) {
+    if (mGroupThreads) {
         Q_FOREACH(const History::Thread &thread, threads) {
             Q_FOREACH(const History::Thread &existingThread, mThreads) {
                 
@@ -364,7 +369,7 @@ void HistoryThreadModel::onThreadsAdded(const History::Threads &threads)
 void HistoryThreadModel::onThreadsModified(const History::Threads &threads)
 {
     History::Threads newThreads;
-    if (mGroupedThreads) {
+    if (mGroupThreads) {
         Q_FOREACH(const History::Thread &thread, threads) {
 /*            int pos = mThreads.indexOf(thread);
             if (pos != 0) {

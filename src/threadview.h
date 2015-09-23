@@ -42,7 +42,7 @@ public:
     ThreadView(History::EventType type,
                const History::Sort &sort,
                const History::Filter &filter,
-               bool grouped);
+               const QVariantMap &properties);
     ~ThreadView();
 
     Threads nextPage();

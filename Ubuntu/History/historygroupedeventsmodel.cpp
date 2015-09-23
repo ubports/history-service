@@ -20,6 +20,7 @@
  */
 
 #include "historygroupedeventsmodel.h"
+#include "utils_p.h"
 #include "phoneutils_p.h"
 #include "sort.h"
 #include "historyqmlsort.h"
@@ -201,9 +202,9 @@ bool HistoryGroupedEventsModel::areOfSameGroup(const History::Event &event1, con
 
         // now check if the values are the same
         if (property == History::FieldParticipants) {
-            if (!compareParticipants(accountId,
-                                     props1[property].toStringList(),
-                                     props2[property].toStringList())) {
+            if (!History::Utils::compareParticipants(props1[property].toStringList(),
+                                     props2[property].toStringList(),
+                                     History::Utils::matchFlagsForAccount(accountId))) {
                 return false;
             }
         } else if (props1[property] != props2[property]) {

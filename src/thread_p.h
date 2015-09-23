@@ -41,7 +41,7 @@ public:
                          const Event &theLastEvent,
                          int theCount,
                          int theUnreadCount,
-                         const QList<QVariantMap> &theGroupedThreads);
+                         const QList<Thread> &theGroupedThreads);
     virtual ~ThreadPrivate();
 
     QString accountId;
@@ -51,7 +51,7 @@ public:
     Event lastEvent;
     int count;
     int unreadCount;
-    QList<QVariantMap> groupedThreads;
+    QList<Thread> groupedThreads;
 };
 
 }
