@@ -81,8 +81,10 @@
             <arg name="type" type="i" direction="in"/>
             <arg name="accountId" type="s" direction="in"/>
             <arg name="threadId" type="s" direction="in"/>
+            <arg name="properties" type="a{sv}" direction="in"/>
             <arg type="a{sv}" direction="out"/>
             <annotation name="org.qtproject.QtDBus.QtTypeName.Out0" value="QVariantMap"/>
+            <annotation name="org.qtproject.QtDBus.QtTypeName.In3" value="QVariantMap"/>
         </method>
         <method name="GetSingleEvent">
             <dox:d><![CDATA[

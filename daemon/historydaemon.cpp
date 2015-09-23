@@ -62,6 +62,7 @@ HistoryDaemon::HistoryDaemon(QObject *parent)
 
     // FIXME: we need to do this in a better way, but for now this should do
     mProtocolFlags["ofono"] = History::MatchPhoneNumber;
+    mProtocolFlags["multimedia"] = History::MatchPhoneNumber;
 
     mDBus.connectToBus();
 }
@@ -151,13 +152,13 @@ QString HistoryDaemon::queryEvents(int type, const QVariantMap &sort, const QVar
     return view->objectPath();
 }
 
-QVariantMap HistoryDaemon::getSingleThread(int type, const QString &accountId, const QString &threadId)
+QVariantMap HistoryDaemon::getSingleThread(int type, const QString &accountId, const QString &threadId, const QVariantMap &properties)
 {
     if (!mBackend) {
         return QVariantMap();
     }
 
-    return mBackend->getSingleThread((History::EventType)type, accountId, threadId);
+    return mBackend->getSingleThread((History::EventType)type, accountId, threadId, properties);
 }
 
 QVariantMap HistoryDaemon::getSingleEvent(int type, const QString &accountId, const QString &threadId, const QString &eventId)
@@ -201,7 +202,7 @@ bool HistoryDaemon::writeEvents(const QList<QVariantMap> &events)
         }
 
         // only get the thread AFTER the event is written to make sure it is up-to-date
-        QVariantMap thread = getSingleThread(type, accountId, threadId);
+        QVariantMap thread = getSingleThread(type, accountId, threadId, QVariantMap());
         QString hash = hashThread(thread);
         threads[hash] = thread;
 
@@ -276,7 +277,7 @@ bool HistoryDaemon::removeEvents(const QList<QVariantMap> &events)
          QString accountId = event[History::FieldAccountId].toString();
          QString threadId = event[History::FieldThreadId].toString();
 
-         QVariantMap thread = mBackend->getSingleThread(type, accountId, threadId);
+         QVariantMap thread = mBackend->getSingleThread(type, accountId, threadId, QVariantMap());
          if (thread.isEmpty()) {
              continue;
          }

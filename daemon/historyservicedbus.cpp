@@ -120,10 +120,10 @@ QString HistoryServiceDBus::QueryEvents(int type, const QVariantMap &sort, const
     return HistoryDaemon::instance()->queryEvents(type, sort, filter);
 }
 
-QVariantMap HistoryServiceDBus::GetSingleThread(int type, const QString &accountId, const QString &threadId)
+QVariantMap HistoryServiceDBus::GetSingleThread(int type, const QString &accountId, const QString &threadId, const QVariantMap &properties)
 {
     qDebug() << __PRETTY_FUNCTION__;
-    return HistoryDaemon::instance()->getSingleThread(type, accountId, threadId);
+    return HistoryDaemon::instance()->getSingleThread(type, accountId, threadId, properties);
 }
 
 QVariantMap HistoryServiceDBus::GetSingleEvent(int type, const QString &accountId, const QString &threadId, const QString &eventId)

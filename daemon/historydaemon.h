@@ -45,7 +45,7 @@ public:
                                       bool create = true);
     QString queryThreads(int type, const QVariantMap &sort, const QVariantMap &filter, const QVariantMap &properties);
     QString queryEvents(int type, const QVariantMap &sort, const QVariantMap &filter);
-    QVariantMap getSingleThread(int type, const QString &accountId, const QString &threadId);
+    QVariantMap getSingleThread(int type, const QString &accountId, const QString &threadId, const QVariantMap &properties);
     QVariantMap getSingleEvent(int type, const QString &accountId, const QString &threadId, const QString &eventId);
 
     bool writeEvents(const QList<QVariantMap> &events);

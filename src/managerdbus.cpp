@@ -117,10 +117,10 @@ bool ManagerDBus::removeEvents(const Events &events)
     return reply.value();
 }
 
-Thread ManagerDBus::getSingleThread(EventType type, const QString &accountId, const QString &threadId)
+Thread ManagerDBus::getSingleThread(EventType type, const QString &accountId, const QString &threadId, const QVariantMap &properties)
 {
     Thread thread;
-    QDBusReply<QVariantMap> reply = mInterface.call("GetSingleThread", (int)type, accountId, threadId);
+    QDBusReply<QVariantMap> reply = mInterface.call("GetSingleThread", (int)type, accountId, threadId, properties);
     if (!reply.isValid()) {
         return thread;
     }

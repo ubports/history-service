@@ -116,11 +116,11 @@ Thread Manager::threadForParticipants(const QString &accountId,
     return d->dbus->threadForParticipants(accountId, type, participants, matchFlags, create);
 }
 
-Thread Manager::getSingleThread(EventType type, const QString &accountId, const QString &threadId)
+Thread Manager::getSingleThread(EventType type, const QString &accountId, const QString &threadId, const QVariantMap &properties)
 {
     Q_D(Manager);
 
-    Thread thread = d->dbus->getSingleThread(type, accountId, threadId);
+    Thread thread = d->dbus->getSingleThread(type, accountId, threadId, properties);
     return thread;
 }
 
