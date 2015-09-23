@@ -118,8 +118,8 @@ QVariant HistoryThreadModel::threadData(const History::Thread &thread, int role)
         if (mGroupThreads) {
             int groupedCount = 0;
             QVariantList threads;
-            Q_FOREACH(const QVariantMap &thread, thread.groupedThreads()) {
-                groupedCount += thread[History::FieldCount].toInt();
+            Q_FOREACH(const History::Thread &groupedThread, thread.groupedThreads()) {
+                groupedCount += groupedThread.count();
             }
             result = groupedCount;
         } else {
@@ -130,8 +130,8 @@ QVariant HistoryThreadModel::threadData(const History::Thread &thread, int role)
         if (mGroupThreads) {
             int groupedCount = 0;
             QVariantList threads;
-            Q_FOREACH(const QVariantMap &thread, thread.groupedThreads()) {
-                groupedCount += thread[History::FieldUnreadCount].toInt();
+            Q_FOREACH(const History::Thread &groupedThread, thread.groupedThreads()) {
+                groupedCount += groupedThread.unreadCount();
             }
             result = groupedCount;
         } else {
@@ -141,8 +141,8 @@ QVariant HistoryThreadModel::threadData(const History::Thread &thread, int role)
     case GroupedThreadsRole:
     {
          QVariantList threads;
-         Q_FOREACH(const QVariantMap &thread, thread.groupedThreads()) {
-             threads << QVariant::fromValue(thread);
+         Q_FOREACH(const History::Thread &thread, thread.groupedThreads()) {
+             threads << thread.properties();
          }
          result = threads;
          break;
