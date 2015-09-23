@@ -21,6 +21,7 @@
 
 #include "historygroupedthreadsmodel.h"
 #include "utils_p.h"
+#include "manager.h"
 #include "phoneutils_p.h"
 #include <QTimer>
 #include <QDebug>
@@ -28,6 +29,7 @@
 HistoryGroupedThreadsModel::HistoryGroupedThreadsModel(QObject *parent) :
     HistoryThreadModel(parent)
 {
+    mGroupThreads = true;
     mRoles = HistoryThreadModel::roleNames();
     mRoles[ThreadsRole] = "threads";
 }
@@ -109,18 +111,26 @@ QVariant HistoryGroupedThreadsModel::get(int row) const
     return data(index(row), ThreadsRole);
 }
 
-int HistoryGroupedThreadsModel::existingPositionForEntry(const QVariant &propertyValue) const
+int HistoryGroupedThreadsModel::existingPositionForEntry(const QVariantMap &properties) const
 {
     int pos = -1;
+    if (mGroupingProperty == History::FieldParticipants) {
+        for (int i = 0; i < mGroups.count(); ++i) {
+            const HistoryThreadGroup &group = mGroups[i];
+            Q_FOREACH(const History::Thread &groupedThread, group.threads) {
+                if (groupedThread.accountId() == properties[History::FieldAccountId].toString() && 
+                    groupedThread.threadId() == properties[History::FieldThreadId].toString()) {
+                    pos = i;
+                    break;
+                }
+            }
+        }
+        return pos;
+    }
+
     for (int i = 0; i < mGroups.count(); ++i) {
         const HistoryThreadGroup &group = mGroups[i];
-        if (mGroupingProperty == History::FieldParticipants) {
-            QStringList participants = propertyValue.toStringList();
-            if (History::Utils::compareParticipants(group.displayedThread.participants(), participants, History::Utils::matchFlagsForAccount(group.displayedThread.accountId()))) {
-                pos = i;
-                break;
-            }
-        } else if (propertyValue == group.displayedThread.properties()[mGroupingProperty]) {
+        if (properties[mGroupingProperty] == group.displayedThread.properties()[mGroupingProperty]) {
             pos = i;
             break;
         }
@@ -216,14 +226,17 @@ void HistoryGroupedThreadsModel::onThreadsRemoved(const History::Threads &thread
 void HistoryGroupedThreadsModel::processThreadGrouping(const History::Thread &thread)
 {
     QVariantMap properties = thread.properties();
-    int pos = existingPositionForEntry(properties[mGroupingProperty]);
+    int pos = existingPositionForEntry(properties);
+    QVariantMap queryProperties;
+    queryProperties["groupingProperty"] = mGroupingProperty;
+    History::Thread groupedThread = History::Manager::instance()->getSingleThread((History::EventType)mType, thread.accountId(), thread.threadId(), queryProperties);
 
     // if the group is empty, we need to insert it into the map
     if (pos < 0) {
         HistoryThreadGroup group;
-        int newPos = positionForItem(thread.properties());
-        group.threads.append(thread);
-        group.displayedThread = thread;
+        int newPos = positionForItem(groupedThread.properties());
+        group.threads = groupedThread.groupedThreads();
+        group.displayedThread = groupedThread;
         beginInsertRows(QModelIndex(), newPos, newPos);
         mGroups.insert(newPos, group);
         endInsertRows();
@@ -231,13 +244,7 @@ void HistoryGroupedThreadsModel::processThreadGrouping(const History::Thread &th
     }
 
     HistoryThreadGroup &group = mGroups[pos];
-    if (!group.threads.contains(thread)) {
-        group.threads.append(thread);
-    } else {
-        // save the updated copy of the thread
-        group.threads.removeAll(thread);
-        group.threads.append(thread);
-    }
+    group.threads = groupedThread.groupedThreads();
 
     updateDisplayedThread(group);
     markGroupAsChanged(group);
@@ -247,7 +254,7 @@ void HistoryGroupedThreadsModel::removeThreadFromGroup(const History::Thread &th
 {
     QVariantMap properties = thread.properties();
 
-    int pos = existingPositionForEntry(properties[mGroupingProperty]);
+    int pos = existingPositionForEntry(properties);
     if (pos < 0) {
         qWarning() << "Could not find group for property " << properties[mGroupingProperty];
         return;
