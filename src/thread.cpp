@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Canonical, Ltd.
+ * Copyright (C) 2013-2015 Canonical, Ltd.
  *
  * Authors:
  *  Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>
@@ -36,7 +36,7 @@ ThreadPrivate::ThreadPrivate()
 
 ThreadPrivate::ThreadPrivate(const QString &theAccountId,
                                            const QString &theThreadId, EventType theType,
-                                           const QStringList &theParticipants,
+                                           const Participants &theParticipants,
                                            const Event &theLastEvent,
                                            int theCount,
                                            int theUnreadCount,
@@ -59,7 +59,7 @@ Thread::Thread()
 
 Thread::Thread(const QString &accountId,
                const QString &threadId, EventType type,
-               const QStringList &participants,
+               const Participants &participants,
                const Event &lastEvent,
                int count,
                int unreadCount,
@@ -106,7 +106,7 @@ EventType Thread::type() const
     return d->type;
 }
 
-QStringList Thread::participants() const
+Participants Thread::participants() const
 {
     Q_D(const Thread);
     return d->participants;
@@ -168,11 +168,14 @@ QVariantMap Thread::properties() const
 {
     Q_D(const Thread);
 
-    QVariantMap map;
+    // include the properties from the last event
+    QVariantMap map = lastEvent().properties();
+
+    // and add the thread ones too
     map[FieldAccountId] = d->accountId;
     map[FieldThreadId] = d->threadId;
     map[FieldType] = d->type;
-    map[FieldParticipants] = d->participants;
+    map[FieldParticipants] = d->participants.toVariantList();
     map[FieldCount] = d->count;
     map[FieldUnreadCount] = d->unreadCount;
     map[FieldGroupedThreads] = QVariant::fromValue(d->groupedThreads);
@@ -193,7 +196,7 @@ Thread Thread::fromProperties(const QVariantMap &properties)
     QString accountId = properties[FieldAccountId].toString();
     QString threadId = properties[FieldThreadId].toString();
     EventType type = (EventType) properties[FieldType].toInt();
-    QStringList participants = properties[FieldParticipants].toStringList();
+    Participants participants = Participants::fromVariantList(properties[FieldParticipants].toList());
     int count = properties[FieldCount].toInt();
     int unreadCount = properties[FieldUnreadCount].toInt();
     QList<QVariantMap> groupedThreads = qdbus_cast<QList<QVariantMap> >(properties[FieldGroupedThreads]);

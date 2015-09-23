@@ -142,7 +142,7 @@ void DaemonTest::testMessageReceived()
     QCOMPARE(threads.count(), 1);
     History::Thread thread = threads.first();
     QCOMPARE(thread.participants().count(), 1);
-    QCOMPARE(thread.participants().first(), sender);
+    QCOMPARE(thread.participants().first().identifier(), sender);
 
     QTRY_COMPARE(threadsModifiedSpy.count(), 1);
     threads = threadsModifiedSpy.first().first().value<History::Threads>();
@@ -253,7 +253,7 @@ void DaemonTest::testMessageSent()
     QCOMPARE(threads.count(), 1);
     History::Thread thread = threads.first();
     QCOMPARE(thread.participants().count(), 1);
-    QCOMPARE(thread.participants().first(), recipient);
+    QCOMPARE(thread.participants().first().identifier(), recipient);
 
     QTRY_COMPARE(threadsModifiedSpy.count(), 1);
     threads = threadsModifiedSpy.first().first().value<History::Threads>();
@@ -297,7 +297,7 @@ void DaemonTest::testMissedCall()
     QCOMPARE(threads.count(), 1);
     History::Thread thread = threads.first();
     QCOMPARE(thread.participants().count(), 1);
-    QCOMPARE(thread.participants().first(), callerId);
+    QCOMPARE(thread.participants().first().identifier(), callerId);
 
     QTRY_COMPARE(threadsModifiedSpy.count(), 1);
     threads = threadsModifiedSpy.first().first().value<History::Threads>();
@@ -358,7 +358,7 @@ void DaemonTest::testOutgoingCall()
     QCOMPARE(threads.count(), 1);
     History::Thread thread = threads.first();
     QCOMPARE(thread.participants().count(), 1);
-    QCOMPARE(thread.participants().first(), phoneNumber);
+    QCOMPARE(thread.participants().first().identifier(), phoneNumber);
 
     QTRY_COMPARE(threadsModifiedSpy.count(), 1);
     threads = threadsModifiedSpy.first().first().value<History::Threads>();

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Canonical, Ltd.
+ * Copyright (C) 2013-2015 Canonical, Ltd.
  *
  * Authors:
  *  Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>
@@ -115,7 +115,7 @@ int HistoryGroupedThreadsModel::existingPositionForEntry(const QVariant &propert
         const HistoryThreadGroup &group = mGroups[i];
         if (mGroupingProperty == History::FieldParticipants) {
             QStringList participants = propertyValue.toStringList();
-            if (compareParticipants(group.displayedThread.accountId(), group.displayedThread.participants(), participants)) {
+            if (compareParticipants(group.displayedThread.accountId(), group.displayedThread.participants().identifiers(), participants)) {
                 pos = i;
                 break;
             }

@@ -87,6 +87,7 @@ public:
 private:
     void addThreadsToCache(const QList<QVariantMap> &threads);
     void removeThreadFromCache(const QVariantMap &thread);
+    void generateContactCache();
     QMap<QString, History::Threads> mConversationsCache;
     bool mInitialised;
 };
