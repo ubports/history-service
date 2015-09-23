@@ -118,10 +118,10 @@ int HistoryGroupedThreadsModel::existingPositionForEntry(const QVariantMap &prop
         for (int i = 0; i < mGroups.count(); ++i) {
             const HistoryThreadGroup &group = mGroups[i];
             Q_FOREACH(const History::Thread &groupedThread, group.threads) {
+                qDebug() << groupedThread.threadId() << properties[History::FieldThreadId].toString();
                 if (groupedThread.accountId() == properties[History::FieldAccountId].toString() && 
                     groupedThread.threadId() == properties[History::FieldThreadId].toString()) {
-                    pos = i;
-                    break;
+                    return i;
                 }
             }
         }
@@ -233,6 +233,7 @@ void HistoryGroupedThreadsModel::processThreadGrouping(const History::Thread &th
 
     // if the group is empty, we need to insert it into the map
     if (pos < 0) {
+        qDebug() << "thread not found";
         HistoryThreadGroup group;
         int newPos = positionForItem(groupedThread.properties());
         group.threads = groupedThread.groupedThreads();
@@ -242,6 +243,7 @@ void HistoryGroupedThreadsModel::processThreadGrouping(const History::Thread &th
         endInsertRows();
         return;
     }
+    qDebug() << "thread found";
 
     HistoryThreadGroup &group = mGroups[pos];
     group.threads = groupedThread.groupedThreads();
