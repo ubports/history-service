@@ -238,12 +238,12 @@ void HistoryModel::onContactInfoChanged(const QString &accountId, const QString 
         // HistoryGroupedEventsModel which is based on this model and handles the items in a different way
         QModelIndex idx = index(i);
         QVariantMap properties = idx.data(PropertiesRole).toMap();
-        QStringList participants = properties[History::FieldParticipants].toStringList();
-        Q_FOREACH(const QString &participant, participants) {
+        History::Participants participants = History::Participants::fromVariantList(properties[History::FieldParticipants].toList());
+        Q_FOREACH(const History::Participant &participant, participants) {
             // FIXME: right now we might be grouping threads from different accounts, so we are not enforcing
             // the accountId to be the same as the one from the contact info, but maybe we need to do that
             // in the future?
-            if (History::Utils::compareIds(accountId, participant, identifier)) {
+            if (History::Utils::compareIds(accountId, participant.identifier(), identifier)) {
                 changedIndexes << idx;
             }
         }
