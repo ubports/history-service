@@ -49,7 +49,7 @@ public:
            const Event &lastEvent = Event(),
            int count = 0,
            int unreadCount = 0,
-           const QList<QVariantMap> &groupedThreads = QList<QVariantMap>());
+           const QList<Thread> &groupedThreads = QList<Thread>());
     Thread(const Thread &other);
     virtual ~Thread();
     Thread& operator=(const Thread &other);
@@ -61,7 +61,7 @@ public:
     Event lastEvent() const;
     int count() const;
     int unreadCount() const;
-    QList<QVariantMap> groupedThreads() const;
+    QList<Thread> groupedThreads() const;
 
     bool isNull() const;
     bool operator==(const Thread &other) const;

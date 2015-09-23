@@ -23,7 +23,6 @@
 #include "thread_p.h"
 #include "textevent.h"
 #include "voiceevent.h"
-#include <QDBusMetaType>
 
 namespace History
 {
@@ -40,7 +39,7 @@ ThreadPrivate::ThreadPrivate(const QString &theAccountId,
                                            const Event &theLastEvent,
                                            int theCount,
                                            int theUnreadCount,
-                                           const QList<QVariantMap> &theGroupedThreads) :
+                                           const QList<Thread> &theGroupedThreads) :
     accountId(theAccountId), threadId(theThreadId), type(theType), participants(theParticipants),
     lastEvent(theLastEvent), count(theCount), unreadCount(theUnreadCount), groupedThreads(theGroupedThreads)
 {
@@ -63,11 +62,9 @@ Thread::Thread(const QString &accountId,
                const Event &lastEvent,
                int count,
                int unreadCount,
-               const QList<QVariantMap> &groupedThreads)
+               const QList<Thread> &groupedThreads)
 : d_ptr(new ThreadPrivate(accountId, threadId, type, participants, lastEvent, count, unreadCount, groupedThreads))
 {
-    qDBusRegisterMetaType<QList<QVariantMap> >();
-    qRegisterMetaType<QList<QVariantMap> >();
 }
 
 Thread::Thread(const Thread &other)
@@ -130,7 +127,7 @@ int Thread::unreadCount() const
     return d->unreadCount;
 }
 
-QList<QVariantMap> Thread::groupedThreads() const
+QList<History::Thread> Thread::groupedThreads() const
 {
     Q_D(const Thread);
     return d->groupedThreads;
@@ -175,9 +172,16 @@ QVariantMap Thread::properties() const
     map[FieldParticipants] = d->participants;
     map[FieldCount] = d->count;
     map[FieldUnreadCount] = d->unreadCount;
-    map[FieldGroupedThreads] = QVariant::fromValue(d->groupedThreads);
     map[FieldLastEventId] = lastEvent().eventId();
     map[FieldLastEventTimestamp] = lastEvent().timestamp();
+
+    QVariantList groupedThreads;
+    Q_FOREACH(const Thread &thread, d->groupedThreads) {
+        groupedThreads << thread.properties();
+    }
+    if (!groupedThreads.isEmpty()) {
+        map[FieldGroupedThreads] = groupedThreads;
+    }
 
     return map;
 }
@@ -196,7 +200,10 @@ Thread Thread::fromProperties(const QVariantMap &properties)
     QStringList participants = properties[FieldParticipants].toStringList();
     int count = properties[FieldCount].toInt();
     int unreadCount = properties[FieldUnreadCount].toInt();
-    QList<QVariantMap> groupedThreads = qdbus_cast<QList<QVariantMap> >(properties[FieldGroupedThreads]);
+    QList<Thread> groupedThreads;
+    Q_FOREACH(const QVariant &groupedThread, properties[FieldGroupedThreads].toList()) {
+        groupedThreads << fromProperties(groupedThread.toMap());
+    }
 
     Event event;
     switch (type) {
