@@ -25,10 +25,13 @@
 #include "phoneutils_p.h"
 #include <QTimer>
 #include <QDebug>
+#include <QDBusMetaType>
 
 HistoryGroupedThreadsModel::HistoryGroupedThreadsModel(QObject *parent) :
     HistoryThreadModel(parent)
 {
+    qDBusRegisterMetaType<QList<QVariantMap> >();
+    qRegisterMetaType<QList<QVariantMap> >();
     mGroupThreads = true;
     mRoles = HistoryThreadModel::roleNames();
     mRoles[ThreadsRole] = "threads";
