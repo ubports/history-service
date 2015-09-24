@@ -42,6 +42,11 @@ HistoryDaemon::HistoryDaemon(QObject *parent)
         mBackend = History::PluginManager::instance()->plugins().first();
     }
 
+    // FIXME: maybe we should only set the plugin as ready after the contact cache was generated
+    connect(TelepathyHelper::instance(), &TelepathyHelper::setupReady, [&]() {
+        mBackend->generateContactCache();
+    });
+
     connect(TelepathyHelper::instance(),
             SIGNAL(channelObserverCreated(ChannelObserver*)),
             SLOT(onObserverCreated()));

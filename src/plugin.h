@@ -75,6 +75,9 @@ public:
     virtual bool beginBatchOperation() {}
     virtual bool endBatchOperation() {}
     virtual bool rollbackBatchOperation() {}
+
+    // FIXME: this is hackish, but changing it required a broad refactory of HistoryDaemon
+    virtual void generateContactCache() {}
 };
 
 }
