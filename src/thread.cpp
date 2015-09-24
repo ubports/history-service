@@ -24,6 +24,9 @@
 #include "textevent.h"
 #include "voiceevent.h"
 #include <QDebug>
+#include <QDBusMetaType>
+
+Q_DECLARE_METATYPE(QList< QVariantMap >)
 
 namespace History
 {
@@ -66,6 +69,8 @@ Thread::Thread(const QString &accountId,
                const QList<Thread> &groupedThreads)
 : d_ptr(new ThreadPrivate(accountId, threadId, type, participants, lastEvent, count, unreadCount, groupedThreads))
 {
+    qDBusRegisterMetaType<QList<QVariantMap> >();
+    qRegisterMetaType<QList<QVariantMap> >();
 }
 
 Thread::Thread(const Thread &other)
@@ -179,12 +184,12 @@ QVariantMap Thread::properties() const
     map[FieldLastEventId] = lastEvent().eventId();
     map[FieldLastEventTimestamp] = lastEvent().timestamp();
 
-    QVariantList groupedThreads;
+    QList<QVariantMap> groupedThreads;
     Q_FOREACH(const Thread &thread, d->groupedThreads) {
         groupedThreads << thread.properties();
     }
     if (!groupedThreads.isEmpty()) {
-        map[FieldGroupedThreads] = groupedThreads;
+        map[FieldGroupedThreads] = QVariant::fromValue(groupedThreads);
     }
 
     return map;
@@ -204,9 +209,20 @@ Thread Thread::fromProperties(const QVariantMap &properties)
     Participants participants = Participants::fromVariantList(properties[FieldParticipants].toList());
     int count = properties[FieldCount].toInt();
     int unreadCount = properties[FieldUnreadCount].toInt();
-    QList<Thread> groupedThreads;
-    Q_FOREACH(const QVariant &groupedThread, properties[FieldGroupedThreads].toList()) {
-        groupedThreads << fromProperties(groupedThread.toMap());
+
+    QList<QVariantMap> groupedThreadsProperties = qdbus_cast<QList<QVariantMap> >(properties[FieldGroupedThreads]);
+    if (groupedThreadsProperties.isEmpty()) {
+        QVariantList propertyList = properties[FieldGroupedThreads].toList();
+        Q_FOREACH(const QVariant &map, propertyList) {
+            groupedThreadsProperties << map.toMap();
+        }
+    }
+    QList<Thread> groupedThreads; 
+    Q_FOREACH(const QVariantMap &map, groupedThreadsProperties) {
+        History::Thread groupedThread = History::Thread::fromProperties(map);
+        if (!groupedThread.isNull()) {
+            groupedThreads << groupedThread;
+        }
     }
 
     Event event;
