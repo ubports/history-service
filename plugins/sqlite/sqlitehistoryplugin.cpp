@@ -46,7 +46,6 @@ SQLiteHistoryPlugin::SQLiteHistoryPlugin(QObject *parent) :
     // just trigger the database creation or update
     SQLiteDatabase::instance();
 
-    generateContactCache();
     updateGroupedThreadsCache();
 
     mInitialised = true;
@@ -225,6 +224,7 @@ void SQLiteHistoryPlugin::generateContactCache()
 {
     QSqlQuery query(SQLiteDatabase::instance()->database());
     if (!query.exec("SELECT accountId, normalizedId FROM thread_participants")) {
+        qWarning() << "Failed to generate contact cache:" << query.lastError().text();
         return;
     }
 

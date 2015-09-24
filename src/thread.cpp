@@ -23,6 +23,7 @@
 #include "thread_p.h"
 #include "textevent.h"
 #include "voiceevent.h"
+#include <QDebug>
 
 namespace History
 {

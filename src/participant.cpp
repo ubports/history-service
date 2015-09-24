@@ -1,6 +1,7 @@
 #include "participant.h"
 #include "participant_p.h"
 #include "types.h"
+#include <QDebug>
 
 namespace History
 {

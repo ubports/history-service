@@ -84,6 +84,9 @@ public:
 
     QString filterToString(const History::Filter &filter, QVariantMap &bindValues, const QString &propertyPrefix = QString::null) const;
     QString escapeFilterValue(const QString &value) const;
+
+    void generateContactCache();
+
 private:
     bool lessThan(const QVariantMap &left, const QVariantMap &right) const;
     void updateGroupedThreadsCache();
@@ -91,7 +94,6 @@ private:
     void addThreadsToCache(const QList<QVariantMap> &threads);
     void updateThreadOnCache(const QVariantMap &thread);
     void removeThreadFromCache(const QVariantMap &thread);
-    void generateContactCache();
     QMap<QString, History::Threads> mConversationsCache;
     bool mInitialised;
 };
