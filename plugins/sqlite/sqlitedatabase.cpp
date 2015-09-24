@@ -230,10 +230,9 @@ bool SQLiteDatabase::createOrUpdateDatabase()
         }
     }
 
-    // if at this point needsUpdate is still false, it means the database is up-to-date
     beginTransation();
 
-    if (!runMultipleStatements(statements, false)) {
+    if (!statements.isEmpty() && !runMultipleStatements(statements, false)) {
         rollbackTransaction();
         return false;
     }
