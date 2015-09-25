@@ -22,6 +22,7 @@
 #ifndef HISTORY_PARTICIPANT_H
 #define HISTORY_PARTICIPANT_H
 
+#include <QDBusArgument>
 #include <QList>
 #include <QSharedPointer>
 #include <QString>
@@ -74,6 +75,8 @@ public:
     QVariantList toVariantList() const;
 
 };
+
+const QDBusArgument &operator>>(const QDBusArgument &argument, Participants &participants);
 
 }
 

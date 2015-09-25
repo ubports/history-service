@@ -159,4 +159,16 @@ QVariantList Participants::toVariantList() const
     return list;
 }
 
+const QDBusArgument &operator>>(const QDBusArgument &argument, Participants &participants)
+{
+    argument.beginArray();
+    while (!argument.atEnd()) {
+        QVariantMap props;
+        argument >> props;
+        participants << Participant::fromProperties(props);
+    }
+    argument.endArray();
+    return argument;
+}
+
 }
