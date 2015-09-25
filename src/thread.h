@@ -22,6 +22,7 @@
 #ifndef HISTORY_THREAD_H
 #define HISTORY_THREAD_H
 
+#include <QDBusArgument>
 #include <QDateTime>
 #include <QScopedPointer>
 #include <QStringList>
@@ -76,6 +77,8 @@ protected:
 };
 
 typedef QList<Thread> Threads;
+
+const QDBusArgument &operator>>(const QDBusArgument &argument, QList<Thread> &threads);
 
 }
 

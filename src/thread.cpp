@@ -210,19 +210,15 @@ Thread Thread::fromProperties(const QVariantMap &properties)
     int count = properties[FieldCount].toInt();
     int unreadCount = properties[FieldUnreadCount].toInt();
 
-    QList<QVariantMap> groupedThreadsProperties = qdbus_cast<QList<QVariantMap> >(properties[FieldGroupedThreads]);
-    if (groupedThreadsProperties.isEmpty()) {
-        QVariantList propertyList = properties[FieldGroupedThreads].toList();
-        Q_FOREACH(const QVariant &map, propertyList) {
-            groupedThreadsProperties << map.toMap();
+    QList<Thread> groupedThreads;
+    QVariant variant = properties[FieldParticipants];
+    if (variant.canConvert<QVariantList>()) {
+        Q_FOREACH(const QVariant& entry, variant.toList()) {
+            groupedThreads << Thread::fromProperties(entry.toMap());
         }
-    }
-    QList<Thread> groupedThreads; 
-    Q_FOREACH(const QVariantMap &map, groupedThreadsProperties) {
-        History::Thread groupedThread = History::Thread::fromProperties(map);
-        if (!groupedThread.isNull()) {
-            groupedThreads << groupedThread;
-        }
+    } else if (variant.canConvert<QDBusArgument>()) {
+        QDBusArgument argument = variant.value<QDBusArgument>();
+        argument >> groupedThreads;
     }
 
     Event event;
@@ -235,6 +231,23 @@ Thread Thread::fromProperties(const QVariantMap &properties)
             break;
     }
     return Thread(accountId, threadId, type, participants, event, count, unreadCount, groupedThreads);
+}
+
+const QDBusArgument &operator>>(const QDBusArgument &argument, QList<Thread> &threads)
+{
+    argument.beginArray();
+    while (!argument.atEnd()) {
+        QVariantMap props;
+        QVariant variant;
+        argument >> variant;
+        QDBusArgument innerArgument = variant.value<QDBusArgument>();
+        if (!innerArgument.atEnd()) {
+            innerArgument >> props;
+        }
+        threads << Thread::fromProperties(props);
+    }
+    argument.endArray();
+    return argument;
 }
 
 }
