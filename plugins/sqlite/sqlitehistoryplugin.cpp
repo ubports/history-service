@@ -45,10 +45,6 @@ SQLiteHistoryPlugin::SQLiteHistoryPlugin(QObject *parent) :
     qRegisterMetaType<History::Threads>();
     // just trigger the database creation or update
     SQLiteDatabase::instance();
-
-    updateGroupedThreadsCache();
-
-    mInitialised = true;
 }
 
 void SQLiteHistoryPlugin::updateGroupedThreadsCache()
@@ -223,7 +219,7 @@ void SQLiteHistoryPlugin::removeThreadFromCache(const QVariantMap &properties)
 void SQLiteHistoryPlugin::generateContactCache()
 {
     QSqlQuery query(SQLiteDatabase::instance()->database());
-    if (!query.exec("SELECT accountId, normalizedId FROM thread_participants")) {
+    if (!query.exec("SELECT DISTINCT accountId, normalizedId FROM thread_participants")) {
         qWarning() << "Failed to generate contact cache:" << query.lastError().text();
         return;
     }
@@ -235,6 +231,10 @@ void SQLiteHistoryPlugin::generateContactCache()
         // future usage.
         ContactMatcher::instance()->contactInfo(accountId, participantId, true);
     }
+
+    updateGroupedThreadsCache();
+
+    mInitialised = true;
 }
 
 // Reader
