@@ -164,7 +164,15 @@ const QDBusArgument &operator>>(const QDBusArgument &argument, Participants &par
     argument.beginArray();
     while (!argument.atEnd()) {
         QVariantMap props;
-        argument >> props;
+
+        // we are casting from a QVariantList, so the inner argument is a QVariant and not the map directly
+        // that's why this intermediate QVariant cast is needed
+        QVariant variant;
+        argument >> variant;
+        QDBusArgument innerArgument = variant.value<QDBusArgument>();
+        if (!innerArgument.atEnd()) {
+            innerArgument >> props;
+        }
         participants << Participant::fromProperties(props);
     }
     argument.endArray();
