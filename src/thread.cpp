@@ -206,7 +206,15 @@ Thread Thread::fromProperties(const QVariantMap &properties)
     QString accountId = properties[FieldAccountId].toString();
     QString threadId = properties[FieldThreadId].toString();
     EventType type = (EventType) properties[FieldType].toInt();
-    Participants participants = Participants::fromVariantList(properties[FieldParticipants].toList());
+
+    Participants participants;
+    QVariant variant = properties[FieldParticipants];
+    if (variant.canConvert<QVariantList>()) {
+        participants = Participants::fromVariantList(variant.toList());
+    } else if (variant.canConvert<QDBusArgument>()) {
+        QDBusArgument argument = variant.value<QDBusArgument>();
+        argument >> participants;
+    }
     int count = properties[FieldCount].toInt();
     int unreadCount = properties[FieldUnreadCount].toInt();
 
