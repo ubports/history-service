@@ -172,6 +172,18 @@ QStringList Participants::identifiers() const
     return result;
 }
 
+Participants Participants::fromVariant(const QVariant &variant)
+{
+    Participants participants;
+    if (variant.canConvert<QVariantList>()) {
+        participants = Participants::fromVariantList(variant.toList());
+    } else if (variant.canConvert<QDBusArgument>()) {
+        QDBusArgument argument = variant.value<QDBusArgument>();
+        argument >> participants;
+    }
+    return participants;
+}
+
 Participants Participants::fromVariantList(const QVariantList &list)
 {
     Participants participants;

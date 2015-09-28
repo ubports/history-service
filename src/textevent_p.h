@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Canonical, Ltd.
+ * Copyright (C) 2013-2015 Canonical, Ltd.
  *
  * Authors:
  *  Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>
@@ -46,7 +46,7 @@ public:
                     const QDateTime &theReadTimestamp,
                     const QString &theSubject,
                     const TextEventAttachments &theAttachments,
-                    const QStringList &theParticipants);
+                    const Participants &theParticipants);
     ~TextEventPrivate();
     QString message;
     MessageType messageType;
