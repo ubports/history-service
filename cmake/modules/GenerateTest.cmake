@@ -123,7 +123,7 @@ function(generate_telepathy_test TESTNAME)
               ${ARG_TASKS})
 
     if (NOT DEFINED ARG_LIBRARIES)
-        set(ARG_LIBRARIES ${TP_QT5_LIBRARIES} historyservice historyprivate mockcontroller telepathytest)
+        set(ARG_LIBRARIES ${TP_QT5_LIBRARIES} historyservice mockcontroller telepathytest)
     endif(NOT DEFINED ARG_LIBRARIES)
 
     if (NOT DEFINED ARG_QT5_MODULES)
