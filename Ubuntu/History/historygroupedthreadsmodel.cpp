@@ -91,6 +91,11 @@ void HistoryGroupedThreadsModel::fetchMore(const QModelIndex &parent)
     const History::Threads &threads = fetchNextPage();
     Q_FOREACH(const History::Thread &thread, threads) {
         processThreadGrouping(thread);
+
+        // insert the identifiers in the contact map
+        Q_FOREACH(const History::Participant &participant, thread.participants()) {
+            watchContactInfo(thread.accountId(), participant.identifier(), participant.properties());
+        }
     }
     notifyDataChanged();
 
