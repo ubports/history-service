@@ -36,8 +36,10 @@ ParticipantPrivate::ParticipantPrivate(const QString &theAccountId,
                                        const QString &theIdentifier,
                                        const QString &theContactId,
                                        const QString &theAlias,
-                                       const QString &theAvatar) :
-    accountId(theAccountId), identifier(theIdentifier), contactId(theContactId), alias(theAlias), avatar(theAvatar)
+                                       const QString &theAvatar,
+                                       const QVariantMap &theDetailProperties) :
+    accountId(theAccountId), identifier(theIdentifier), contactId(theContactId),
+    alias(theAlias), avatar(theAvatar), detailProperties(theDetailProperties)
 {
 }
 
@@ -50,8 +52,8 @@ Participant::Participant()
 {
 }
 
-Participant::Participant(const QString &accountId, const QString &identifier, const QString &contactId, const QString &alias, const QString &avatar)
-    : d_ptr(new ParticipantPrivate(accountId, identifier, contactId, alias, avatar))
+Participant::Participant(const QString &accountId, const QString &identifier, const QString &contactId, const QString &alias, const QString &avatar, const QVariantMap &detailProperties)
+    : d_ptr(new ParticipantPrivate(accountId, identifier, contactId, alias, avatar, detailProperties))
 {
 }
 
@@ -103,6 +105,12 @@ QString Participant::avatar() const
     return d->avatar;
 }
 
+QVariantMap Participant::detailProperties() const
+{
+    Q_D(const Participant);
+    return d->detailProperties;
+}
+
 bool Participant::isNull() const
 {
     Q_D(const Participant);
@@ -133,6 +141,7 @@ QVariantMap Participant::properties() const
     map[FieldContactId] = d->contactId;
     map[FieldAlias] = d->alias;
     map[FieldAvatar] = d->avatar;
+    map[FieldDetailProperties] = d->detailProperties;
 
     return map;
 }
@@ -149,8 +158,9 @@ Participant Participant::fromProperties(const QVariantMap &properties)
     QString contactId = properties[FieldContactId].toString();
     QString alias = properties[FieldAlias].toString();
     QString avatar = properties[FieldAvatar].toString();
+    QVariantMap detailProperties = properties[FieldDetailProperties].toMap();
 
-    return Participant(accountId, identifier, contactId, alias, avatar);
+    return Participant(accountId, identifier, contactId, alias, avatar, detailProperties);
 }
 
 QStringList Participants::identifiers() const

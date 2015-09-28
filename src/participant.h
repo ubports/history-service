@@ -43,7 +43,8 @@ public:
                 const QString &identifier,
                 const QString &contactId = QString::null,
                 const QString &alias = QString::null,
-                const QString &avatar = QString::null);
+                const QString &avatar = QString::null,
+                const QVariantMap &detailProperties = QVariantMap());
     Participant(const Participant &other);
     Participant& operator=(const Participant &other);
     virtual ~Participant();
@@ -53,6 +54,7 @@ public:
     QString contactId() const;
     QString alias() const;
     QString avatar() const;
+    QVariantMap detailProperties() const;
 
     bool isNull() const;
     bool operator==(const Participant &other) const;
