@@ -101,15 +101,6 @@ QVariantMap ContactMatcher::contactInfo(const QString &accountId, const QString 
         return internalMap[identifier];
     }
 
-    // now if there was no string match, try phone number matching if the account supports phone numbers
-    if (addressableFields(accountId).contains("tel")) {
-        Q_FOREACH(const QString &key, internalMap.keys()) {
-            if (PhoneUtils::comparePhoneNumbers(key, identifier)) {
-                return internalMap[key];
-            }
-        }
-    }
-
     QVariantMap map;
     // and if there was no match, asynchronously request the info, and return an empty map for now
     if (TelepathyHelper::instance()->ready()) {
@@ -364,8 +355,7 @@ QVariantMap ContactMatcher::requestContactInfo(const QString &accountId, const Q
                 continue;
             }
 
-            if (info.identifier == identifier ||
-                phoneCompare && PhoneUtils::comparePhoneNumbers(info.identifier, identifier)) {
+            if (info.identifier == identifier) {
                 // if so, just wait for it to finish
                 return QVariantMap();
             }
