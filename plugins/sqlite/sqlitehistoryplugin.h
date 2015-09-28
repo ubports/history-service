@@ -92,6 +92,7 @@ private:
     void updateThreadOnCache(const QVariantMap &thread);
     void removeThreadFromCache(const QVariantMap &thread);
     QMap<QString, History::Threads> mConversationsCache;
+    QMap<QString, QString> mConversationsCacheKeys;
     bool mInitialised;
 };
 
