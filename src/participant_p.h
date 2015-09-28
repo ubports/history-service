@@ -38,7 +38,8 @@ public:
                        const QString &theIdentifier,
                        const QString &theContactId = QString::null,
                        const QString &theAlias = QString::null,
-                       const QString &theAvatar = QString::null);
+                       const QString &theAvatar = QString::null,
+                       const QVariantMap &theDetailProperties = QVariantMap());
     virtual ~ParticipantPrivate();
 
     QString accountId;
@@ -46,6 +47,7 @@ public:
     QString contactId;
     QString alias;
     QString avatar;
+    QVariantMap detailProperties;
 };
 
 }

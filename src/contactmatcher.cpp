@@ -101,15 +101,6 @@ QVariantMap ContactMatcher::contactInfo(const QString &accountId, const QString 
         return internalMap[identifier];
     }
 
-    // now if there was no string match, try phone number matching if the account supports phone numbers
-    if (addressableFields(accountId).contains("tel")) {
-        Q_FOREACH(const QString &key, internalMap.keys()) {
-            if (PhoneUtils::comparePhoneNumbers(key, identifier)) {
-                return internalMap[key];
-            }
-        }
-    }
-
     QVariantMap map;
     // and if there was no match, asynchronously request the info, and return an empty map for now
     if (TelepathyHelper::instance()->ready()) {
@@ -364,8 +355,7 @@ QVariantMap ContactMatcher::requestContactInfo(const QString &accountId, const Q
                 continue;
             }
 
-            if (info.identifier == identifier ||
-                phoneCompare && PhoneUtils::comparePhoneNumbers(info.identifier, identifier)) {
+            if (info.identifier == identifier) {
                 // if so, just wait for it to finish
                 return QVariantMap();
             }
@@ -411,9 +401,24 @@ QVariantMap ContactMatcher::matchAndUpdate(const QString &accountId, const QStri
     QStringList fields = addressableFields(accountId);
     bool match = false;
 
+    int fieldsCount = fields.count();
     Q_FOREACH(const QString &field, fields) {
         if (field == "tel") {
-            Q_FOREACH(const QContactPhoneNumber number, contact.details(QContactDetail::TypePhoneNumber)) {
+            QList<QContactDetail> details = contact.details(QContactDetail::TypePhoneNumber);
+            // if we are only matching phone numbers and if the contact has just one phone number,
+            // assume there was a match and return
+            if (fieldsCount == 1 && details.count() == 1) {
+                QContactPhoneNumber number = details.first();
+                QVariantMap detailProperties;
+                detailProperties["phoneSubTypes"] = toVariantList(number.subTypes());
+                detailProperties["phoneContexts"] = toVariantList(number.contexts());
+                contactInfo[History::FieldDetailProperties] = detailProperties;
+                match = true;
+                break;
+            }
+
+            // if not, try to find the phone number that matches, if any
+            Q_FOREACH(const QContactPhoneNumber number, details) {
                 if (PhoneUtils::comparePhoneNumbers(number.number(), identifier)) {
                     QVariantMap detailProperties;
                     detailProperties["phoneSubTypes"] = toVariantList(number.subTypes());
