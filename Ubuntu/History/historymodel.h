@@ -140,6 +140,7 @@ protected Q_SLOTS:
     void triggerQueryUpdate();
     virtual void updateQuery() = 0;
     void onContactInfoChanged(const QString &accountId, const QString &identifier, const QVariantMap &contactInfo);
+    void watchContactInfo(const QString &accountId, const QString &identifier, const QVariantMap &currentInfo);
 
 protected:
     virtual void timerEvent(QTimerEvent *event);
