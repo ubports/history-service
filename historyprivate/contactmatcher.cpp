@@ -418,6 +418,7 @@ QVariantMap ContactMatcher::matchAndUpdate(const QString &accountId, const QStri
             // if we are only matching phone numbers and if the contact has just one phone number,
             // assume there was a match and return
             if (fieldsCount == 1 && details.count() == 1) {
+                QContactPhoneNumber number = details.first();
                 QVariantMap detailProperties;
                 detailProperties["phoneSubTypes"] = toVariantList(number.subTypes());
                 detailProperties["phoneContexts"] = toVariantList(number.contexts());
@@ -427,7 +428,7 @@ QVariantMap ContactMatcher::matchAndUpdate(const QString &accountId, const QStri
             }
 
             // if not, try to find the phone number that matches, if any
-            Q_FOREACH(const QContactPhoneNumber number, ) {
+            Q_FOREACH(const QContactPhoneNumber number, details) {
                 if (PhoneUtils::comparePhoneNumbers(number.number(), identifier)) {
                     QVariantMap detailProperties;
                     detailProperties["phoneSubTypes"] = toVariantList(number.subTypes());
