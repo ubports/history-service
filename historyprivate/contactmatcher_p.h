@@ -46,8 +46,7 @@ public:
     QVariantList contactInfo(const QString &accountId, const QStringList &identifiers, bool synchronous = false);
 
     // this will only watch for contact changes affecting the identifier, but won't fetch contact info
-    void watchIdentifier(const QString &accountId, const QString &identifier);
-    void watchIdentifiers(const QString &accountId, const QString &identifiers);
+    void watchIdentifier(const QString &accountId, const QString &identifier, const QVariantMap &currentInfo = QVariantMap());
 
 Q_SIGNALS:
     void contactInfoChanged(const QString &acountId, const QString &identifier, const QVariantMap &contactInfo);
