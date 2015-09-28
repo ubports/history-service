@@ -39,6 +39,8 @@ class Plugin
 public:
     virtual ~Plugin() {}
 
+    virtual bool initialised() { return true; }
+
     // Reader part of the plugin
     virtual PluginThreadView* queryThreads(EventType type,
                                        const Sort &sort = Sort(),

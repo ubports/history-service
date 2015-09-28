@@ -86,13 +86,13 @@ QVariant HistoryModel::data(const QModelIndex &index, int role) const
         result = properties[History::FieldType];
         break;
     case ParticipantsRole:
-        /*if (mMatchContacts) {
+        if (mMatchContacts) {
             result = ContactMatcher::instance()->contactInfo(properties[History::FieldAccountId].toString(),
-                                                             properties[History::FieldParticipants].toStringList());
-        } else {*/
+                                                             History::Participants::fromVariantList(properties[History::FieldParticipants].toList()).identifiers());
+        } else {
             //FIXME: handle contact changes
             result = properties[History::FieldParticipants];
-        //}
+        }
         break;
     }
     return result;
@@ -252,6 +252,13 @@ void HistoryModel::onContactInfoChanged(const QString &accountId, const QString 
     // now emit the dataChanged signal to all changed indexes
     Q_FOREACH(const QModelIndex &idx, changedIndexes) {
         Q_EMIT dataChanged(idx, idx);
+    }
+}
+
+void HistoryModel::watchContactInfo(const QString &accountId, const QString &identifier, const QVariantMap &currentInfo)
+{
+    if (mMatchContacts) {
+        ContactMatcher::instance()->watchIdentifier(accountId, identifier, currentInfo);
     }
 }
 
