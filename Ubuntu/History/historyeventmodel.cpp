@@ -185,6 +185,13 @@ void HistoryEventModel::fetchMore(const QModelIndex &parent)
         mCanFetchMore = false;
         Q_EMIT canFetchMoreChanged();
     } else {
+        Q_FOREACH(const History::Event &event, events) {
+            // watch for contact changes for the given identifiers
+            Q_FOREACH(const History::Participant &participant, event.participants()) {
+                watchContactInfo(event.accountId(), participant.identifier(), participant.properties());
+            }
+        }
+
         beginInsertRows(QModelIndex(), mEvents.count(), mEvents.count() + events.count() - 1);
         mEvents << events;
         endInsertRows();

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Canonical, Ltd.
+ * Copyright (C) 2013-2015 Canonical, Ltd.
  *
  * Authors:
  *  Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>
@@ -47,7 +47,7 @@ TextEventPrivate::TextEventPrivate(const QString &theAccountId,
                                  MessageStatus theMessageStatus,
                                  const QDateTime &theReadTimestamp,
                                  const QString &theSubject,
-                                 const TextEventAttachments &theAttachments, const QStringList &theParticipants) :
+                                 const TextEventAttachments &theAttachments, const Participants &theParticipants) :
     EventPrivate(theAccountId, theThreadId, theEventId, theSender, theTimestamp, theNewEvent, theParticipants),
     message(theMessage), messageType(theMessageType), messageStatus(theMessageStatus),
     readTimestamp(theReadTimestamp), subject(theSubject), attachments(theAttachments)
@@ -102,9 +102,11 @@ TextEvent::TextEvent(const QString &accountId,
                    MessageStatus messageStatus,
                    const QDateTime &readTimestamp,
                    const QString &subject,
-                   const TextEventAttachments &attachments, const QStringList &participants)
+                   const TextEventAttachments &attachments,
+                   const Participants &participants)
     : Event(*new TextEventPrivate(accountId, threadId, eventId, sender, timestamp, newEvent,
-                                  message, messageType, messageStatus, readTimestamp, subject, attachments, participants))
+                                  message, messageType, messageStatus, readTimestamp, subject,
+                                  attachments, participants))
 {
     qDBusRegisterMetaType<QList<QVariantMap> >();
     qRegisterMetaType<QList<QVariantMap> >();
@@ -175,7 +177,7 @@ Event TextEvent::fromProperties(const QVariantMap &properties)
     QString senderId = properties[FieldSenderId].toString();
     QDateTime timestamp = QDateTime::fromString(properties[FieldTimestamp].toString(), Qt::ISODate);
     bool newEvent = properties[FieldNewEvent].toBool();
-    QStringList participants = properties[FieldParticipants].toStringList();
+    Participants participants = Participants::fromVariant(properties[FieldParticipants]);
     QString message = properties[FieldMessage].toString();
     QString subject = properties[FieldSubject].toString();
     MessageType messageType = (MessageType) properties[FieldMessageType].toInt();

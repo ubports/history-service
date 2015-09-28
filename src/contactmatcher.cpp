@@ -123,19 +123,12 @@ QVariantList ContactMatcher::contactInfo(const QString &accountId, const QString
     return contacts;
 }
 
-void ContactMatcher::watchIdentifier(const QString &accountId, const QString &identifier)
+void ContactMatcher::watchIdentifier(const QString &accountId, const QString &identifier, const QVariantMap &currentInfo)
 {
     // only add the identifier to the map of watched identifiers
-    QVariantMap map;
+    QVariantMap map = currentInfo;
     map[History::FieldIdentifier] = identifier;
     mContactMap[accountId][identifier] = map;
-}
-
-void ContactMatcher::watchIdentifiers(const QString &accountId, const QString &identifiers)
-{
-    Q_FOREACH(const QString &identifier, identifiers) {
-        watchIdentifier(accountId, identifier);
-    }
 }
 
 void ContactMatcher::onContactsAdded(QList<QContactId> ids)

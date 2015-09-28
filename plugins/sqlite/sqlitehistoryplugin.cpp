@@ -52,6 +52,11 @@ SQLiteHistoryPlugin::SQLiteHistoryPlugin(QObject *parent) :
     SQLiteDatabase::instance();
 }
 
+bool SQLiteHistoryPlugin::initialised()
+{
+    return mInitialised;
+}
+
 void SQLiteHistoryPlugin::updateGroupedThreadsCache()
 {
     History::PluginThreadView *view = queryThreads(History::EventTypeText, History::Sort("timestamp", Qt::DescendingOrder), History::Filter());
