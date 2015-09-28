@@ -41,6 +41,8 @@ class SQLiteHistoryPlugin : public QObject, History::Plugin
 public:
     explicit SQLiteHistoryPlugin(QObject *parent = 0);
 
+    bool initialised();
+
     // Reader part of the plugin
     History::PluginThreadView* queryThreads(History::EventType type,
                                             const History::Sort &sort = History::Sort(),
