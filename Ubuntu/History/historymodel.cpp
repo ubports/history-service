@@ -257,7 +257,9 @@ void HistoryModel::onContactInfoChanged(const QString &accountId, const QString 
 
 void HistoryModel::watchContactInfo(const QString &accountId, const QString &identifier, const QVariantMap &currentInfo)
 {
-    ContactMatcher::instance()->watchIdentifier(accountId, identifier, currentInfo);
+    if (mMatchContacts) {
+        ContactMatcher::instance()->watchIdentifier(accountId, identifier, currentInfo);
+    }
 }
 
 void HistoryModel::timerEvent(QTimerEvent *event)

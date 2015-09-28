@@ -34,6 +34,9 @@ private Q_SLOTS:
     void testFromNullProperties();
     void testProperties_data();
     void testProperties();
+
+private:
+    History::Participants participantsFromIdentifiers(const QString &accountId, const QStringList &identifiers);
 };
 
 void VoiceEventTest::testCreateNewEvent_data()
@@ -76,7 +79,7 @@ void VoiceEventTest::testCreateNewEvent()
     QFETCH(QString, remoteParticipant);
     QFETCH(QStringList, participants);
     History::VoiceEvent event(accountId, threadId, eventId, senderId, timestamp, newEvent,
-                              missed, duration, remoteParticipant, participants);
+                              missed, duration, remoteParticipant, participantsFromIdentifiers(accountId, participants));
 
     // check that the values are properly set
     QCOMPARE(event.accountId(), accountId);
@@ -88,13 +91,15 @@ void VoiceEventTest::testCreateNewEvent()
     QCOMPARE(event.missed(), missed);
     QCOMPARE(event.duration(), duration);
     QCOMPARE(event.remoteParticipant(), remoteParticipant);
-    QCOMPARE(event.participants(), participants);
+    QCOMPARE(event.participants().identifiers(), participants);
 }
 
 void VoiceEventTest::testCastToEventAndBack()
 {
-    History::VoiceEvent voiceEvent("oneAccountId", "oneThreadId", "oneEventId", "oneSender", QDateTime::currentDateTime(),
-                                   true, true, QTime(1,2,3), "remoteParticipant", QStringList() << "oneParticipant");
+    QString accountId("oneAccountId");
+    History::VoiceEvent voiceEvent(accountId, "oneThreadId", "oneEventId", "oneSender", QDateTime::currentDateTime(),
+                                   true, true, QTime(1,2,3), "remoteParticipant",
+                                   participantsFromIdentifiers(accountId, QStringList() << "oneParticipant"));
 
     // test the copy constructor
     History::Event historyEvent(voiceEvent);
@@ -166,7 +171,7 @@ void VoiceEventTest::testFromProperties()
     QCOMPARE(voiceEvent.newEvent(), newEvent);
     QCOMPARE(voiceEvent.missed(), missed);
     QCOMPARE(voiceEvent.duration(), duration);
-    QCOMPARE(voiceEvent.participants(), participants);
+    QCOMPARE(voiceEvent.participants().identifiers(), participants);
 }
 
 void VoiceEventTest::testFromNullProperties()
@@ -217,7 +222,7 @@ void VoiceEventTest::testProperties()
     QFETCH(QString, remoteParticipant);
     QFETCH(QStringList, participants);
     History::VoiceEvent event(accountId, threadId, eventId, senderId, timestamp, newEvent,
-                              missed, duration, remoteParticipant, participants);
+                              missed, duration, remoteParticipant, participantsFromIdentifiers(accountId, participants));
 
     // check that the values are properly set
     QVariantMap properties = event.properties();
@@ -231,6 +236,15 @@ void VoiceEventTest::testProperties()
     QCOMPARE(QTime(0,0).addSecs(properties[History::FieldDuration].toInt()), duration);
     QCOMPARE(properties[History::FieldRemoteParticipant].toString(), remoteParticipant);
     QCOMPARE(properties[History::FieldParticipants].toStringList(), participants);
+}
+
+History::Participants VoiceEventTest::participantsFromIdentifiers(const QString &accountId, const QStringList &identifiers)
+{
+    History::Participants participants;
+    Q_FOREACH(const QString &identifier, identifiers) {
+        participants << History::Participant(accountId, identifier);
+    }
+    return participants;
 }
 
 QTEST_MAIN(VoiceEventTest)

@@ -73,6 +73,7 @@ class Participants : public QList<Participant>
 {
 public:
     QStringList identifiers() const;
+    static Participants fromVariant(const QVariant &variant);
     static Participants fromVariantList(const QVariantList &list);
     QVariantList toVariantList() const;
 

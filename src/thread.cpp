@@ -207,19 +207,12 @@ Thread Thread::fromProperties(const QVariantMap &properties)
     QString threadId = properties[FieldThreadId].toString();
     EventType type = (EventType) properties[FieldType].toInt();
 
-    Participants participants;
-    QVariant variant = properties[FieldParticipants];
-    if (variant.canConvert<QVariantList>()) {
-        participants = Participants::fromVariantList(variant.toList());
-    } else if (variant.canConvert<QDBusArgument>()) {
-        QDBusArgument argument = variant.value<QDBusArgument>();
-        argument >> participants;
-    }
+    Participants participants = Participants::fromVariant(properties[FieldParticipants]);
     int count = properties[FieldCount].toInt();
     int unreadCount = properties[FieldUnreadCount].toInt();
 
     QList<Thread> groupedThreads;
-    variant = properties[FieldGroupedThreads];
+    QVariant variant = properties[FieldGroupedThreads];
     if (variant.canConvert<QVariantList>()) {
         Q_FOREACH(const QVariant& entry, variant.toList()) {
             groupedThreads << Thread::fromProperties(entry.toMap());

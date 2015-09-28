@@ -86,6 +86,10 @@ void HistoryGroupedEventsModel::fetchMore(const QModelIndex &parent)
     // than to do a binary search for each event, as it is very likely that the entries
     // belong to the bottom part of the model.
     Q_FOREACH(const History::Event event, events) {
+        // watch for contact changes for the given identifiers
+        Q_FOREACH(const History::Participant &participant, event.participants()) {
+            watchContactInfo(event.accountId(), participant.identifier(), participant.properties());
+        }
         bool found = false;
         int pos = mEventGroups.count() -1;
         for (; pos >= 0; pos--) {

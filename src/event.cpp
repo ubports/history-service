@@ -36,9 +36,11 @@ EventPrivate::EventPrivate(const QString &theAccountId,
                                        const QString &theEventId,
                                        const QString &theSenderId,
                                        const QDateTime &theTimestamp,
-                                       bool theNewEvent, const QStringList &theParticipants) :
+                                       bool theNewEvent,
+                                       const Participants &theParticipants) :
     accountId(theAccountId), threadId(theThreadId), eventId(theEventId),
-    senderId(theSenderId), timestamp(theTimestamp), newEvent(theNewEvent), participants(theParticipants)
+    senderId(theSenderId), timestamp(theTimestamp), newEvent(theNewEvent),
+    participants(theParticipants)
 {
 }
 
@@ -58,7 +60,7 @@ QVariantMap EventPrivate::properties() const
     map[FieldDate] = timestamp.date().toString(Qt::ISODate);
     map[FieldNewEvent] = newEvent;
     map[FieldType] = type();
-    map[FieldParticipants] = participants;
+    map[FieldParticipants] = participants.toVariantList();
 
     return map;
 }
@@ -198,7 +200,7 @@ EventType Event::type() const
     return d->type();
 }
 
-QStringList Event::participants() const
+Participants Event::participants() const
 {
     Q_D(const Event);
     return d->participants;
