@@ -38,7 +38,6 @@ HistoryThreadModel::HistoryThreadModel(QObject *parent) :
     mRoles = HistoryModel::roleNames();
     mRoles[CountRole] = "count";
     mRoles[UnreadCountRole] = "unreadCount";
-    mRoles[GroupedThreadsRole] = "groupedThreads";
 
     // roles related to the thread´s last event
     mRoles[LastEventIdRole] = "eventId";
@@ -56,21 +55,6 @@ HistoryThreadModel::HistoryThreadModel(QObject *parent) :
     mRoles[LastEventCallDurationRole] = "eventCallDuration";
 }
 
-
-void HistoryThreadModel::setGroupThreads(bool grouped)
-{
-    bool changed = grouped != mGroupThreads;
-    mGroupThreads = grouped;
-    if (changed) {
-        updateQuery();
-    }
-}
-
-bool HistoryThreadModel::groupThreads() const
-{
-    return mGroupThreads;
-}
- 
 int HistoryThreadModel::rowCount(const QModelIndex &parent) const
 {
     if (parent.isValid()) {
@@ -115,38 +99,11 @@ QVariant HistoryThreadModel::threadData(const History::Thread &thread, int role)
     QVariant result;
     switch (role) {
     case CountRole:
-        if (mGroupThreads) {
-            int groupedCount = 0;
-            QVariantList threads;
-            Q_FOREACH(const History::Thread &groupedThread, thread.groupedThreads()) {
-                groupedCount += groupedThread.count();
-            }
-            result = groupedCount;
-        } else {
-            result = thread.count();
-        }
+        result = thread.count();
         break;
     case UnreadCountRole:
-        if (mGroupThreads) {
-            int groupedCount = 0;
-            QVariantList threads;
-            Q_FOREACH(const History::Thread &groupedThread, thread.groupedThreads()) {
-                groupedCount += groupedThread.unreadCount();
-            }
-            result = groupedCount;
-        } else {
-            result = thread.unreadCount();
-        }
+        result = thread.unreadCount();
         break;
-    case GroupedThreadsRole:
-    {
-         QVariantList threads;
-         Q_FOREACH(const History::Thread &thread, thread.groupedThreads()) {
-             threads << thread.properties();
-         }
-         result = threads;
-         break;
-    }
     case PropertiesRole:
         result = thread.properties();
         break;
@@ -352,54 +309,23 @@ void HistoryThreadModel::onThreadsAdded(const History::Threads &threads)
         return;
     }
 
-    if (mGroupThreads) {
-        Q_FOREACH(const History::Thread &thread, threads) {
-            Q_FOREACH(const History::Thread &existingThread, mThreads) {
-                
-            }
+    Q_FOREACH(const History::Thread &thread, threads) {
+        // if the thread is already inserted, skip it
+        if (mThreads.contains(thread)) {
+            continue;
         }
-    } else {
-        Q_FOREACH(const History::Thread &thread, threads) {
-            // if the thread is already inserted, skip it
-            if (mThreads.contains(thread)) {
-                continue;
-            }
 
-            int pos = positionForItem(thread.properties());
-            beginInsertRows(QModelIndex(), pos, pos);
-            mThreads.insert(pos, thread);
-            endInsertRows();
-        }
+        int pos = positionForItem(thread.properties());
+        beginInsertRows(QModelIndex(), pos, pos);
+        mThreads.insert(pos, thread);
+        endInsertRows();
     }
 }
 
 void HistoryThreadModel::onThreadsModified(const History::Threads &threads)
 {
     History::Threads newThreads;
-    if (mGroupThreads) {
-        Q_FOREACH(const History::Thread &thread, threads) {
-/*            int pos = mThreads.indexOf(thread);
-            if (pos != 0) {
-                QVariantMap copyThread = thread.properties();
-                // update main thread
-                History::Threads groupedThreads = thread.groupedThreads();
-                groupedThreads.replace(0, thread);
-                thread.setGroupedThreads(groupedThreads);
-                mThreads[pos] = thread;
-                QModelIndex idx = index(pos);
-                Q_EMIT dataChanged(idx, idx);
-                return;
-            }
-            Q_FOREACH(const History::Thread &existingThread, mThreads) {
-                History::Threads groupedThreads = existingThread.groupedThreads()
-                History::Threads::iterator it = groupedThreads.begin();
-                while (it != groupedThreads.end()) {
-                    if (
-                }
-            }*/
-        }
-        return;
-    }
+
     Q_FOREACH(const History::Thread &thread, threads) {
         int pos = mThreads.indexOf(thread);
         if (pos >= 0) {
