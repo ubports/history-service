@@ -160,6 +160,7 @@ void SQLiteHistoryPlugin::removeThreadFromCache(const QVariantMap &properties)
  
     if (thread.type() != History::EventTypeText || !History::Utils::shouldGroupAccount(thread.accountId())) {
         mConversationsCache.remove(threadKey);
+        mConversationsCacheKeys.remove(threadKey);
         return;
     }
  
@@ -169,9 +170,16 @@ void SQLiteHistoryPlugin::removeThreadFromCache(const QVariantMap &properties)
         History::Threads threads = mConversationsCache[threadKey];
         threads.removeAll(thread);
         mConversationsCache.remove(threadKey);
+        mConversationsCacheKeys.remove(threadKey);
+        // remove all threads from reverse map. they will be readded
+        // in updateDisplayedThread() if needed
+        Q_FOREACH (const History::Thread &thread, threads) {
+            mConversationsCacheKeys.remove(generateThreadMapKey(thread));
+        }
         if (!threads.isEmpty()) {
-            threadKey = threads.first().accountId()+threads.first().threadId();
+            threadKey = generateThreadMapKey(threads.first());
             mConversationsCache[threadKey] = threads;
+            updateDisplayedThread(threadKey);
         }
     } else {
         // check if it belongs to an existing grouped thread;
@@ -179,14 +187,20 @@ void SQLiteHistoryPlugin::removeThreadFromCache(const QVariantMap &properties)
         while (it != mConversationsCache.end()) {
             const QString &threadKey = it.key();
             History::Threads threads = it.value();
-            History::Threads::iterator it2 = threads.begin();
-            while (it2 != threads.end()) {
-                 if (History::Utils::compareNormalizedParticipants(thread.participants(), it2->participants(), History::MatchPhoneNumber)) {
-                    threads.erase(it2);
-                    mConversationsCache[threadKey] = threads;
+            int pos = threads.indexOf(thread);
+            if (pos != -1) {
+                const QString &threadKey = generateThreadMapKey(thread);
+                mConversationsCache.remove(threadKey);
+                mConversationsCacheKeys.remove(threadKey);
+                if (threads.size() == 1) {
+                   return;
+                } else {
+                    threads.removeAll(thread);
+                    const QString &newThreadKey = generateThreadMapKey(threads.first());
+                    mConversationsCache[newThreadKey] = threads;
+                    updateDisplayedThread(newThreadKey);
                     return;
                 }
-                it2++;
             }
             it++;
         }
