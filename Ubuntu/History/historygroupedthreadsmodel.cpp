@@ -123,11 +123,13 @@ int HistoryGroupedThreadsModel::existingPositionForEntry(const QVariantMap &prop
 {
     int pos = -1;
     if (mGroupingProperty == History::FieldParticipants) {
+        const QString &accountId = properties[History::FieldAccountId].toString();
+        const QString &threadId = properties[History::FieldThreadId].toString();
         for (int i = 0; i < mGroups.count(); ++i) {
             const HistoryThreadGroup &group = mGroups[i];
             Q_FOREACH(const History::Thread &groupedThread, group.threads) {
-                if (groupedThread.accountId() == properties[History::FieldAccountId].toString() && 
-                    groupedThread.threadId() == properties[History::FieldThreadId].toString()) {
+                if (groupedThread.accountId() == accountId && 
+                    groupedThread.threadId() == threadId) {
                     return i;
                 }
             }
