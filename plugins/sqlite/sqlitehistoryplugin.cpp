@@ -323,11 +323,11 @@ QVariantMap SQLiteHistoryPlugin::threadForParticipants(const QString &accountId,
             }
 
             // we can't use query.size() as it always return -1
-            if (threadParticipants.count() != participants.count()) {
+            if (threadParticipants.count() != normalizedParticipants.count()) {
                 continue;
             }
 
-            bool found = History::Utils::compareNormalizedParticipants(threadParticipants, participants, matchFlags);
+            bool found = History::Utils::compareNormalizedParticipants(threadParticipants, normalizedParticipants, matchFlags);
             if (found) {
                 existingThread = threadId;
                 break;
