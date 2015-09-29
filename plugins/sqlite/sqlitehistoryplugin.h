@@ -94,7 +94,6 @@ private:
     void updateGroupedThreadsCache();
     void updateDisplayedThread(const QString &displayedThreadKey);
     void addThreadsToCache(const QList<QVariantMap> &threads);
-    void updateThreadOnCache(const QVariantMap &thread);
     void removeThreadFromCache(const QVariantMap &thread);
     QMap<QString, History::Threads> mConversationsCache;
     QMap<QString, QString> mConversationsCacheKeys;

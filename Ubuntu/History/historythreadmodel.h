@@ -34,14 +34,12 @@ class HistoryThreadModel : public HistoryModel
 {
     Q_OBJECT
     Q_ENUMS(ThreadRole)
-    Q_PROPERTY(bool groupThreads READ groupThreads WRITE setGroupThreads)
 
 public:
 
     enum ThreadRole {
         CountRole = HistoryModel::LastRole,
         UnreadCountRole,
-        GroupedThreadsRole,
         LastEventIdRole,
         LastEventSenderIdRole,
         LastEventTimestampRole,
@@ -70,9 +68,6 @@ public:
     virtual QHash<int, QByteArray> roleNames() const;
 
     Q_INVOKABLE bool removeThreads(const QVariantList &threadsProperties);
-
-    void setGroupThreads(bool grouped);
-    bool groupThreads() const;
 
 protected Q_SLOTS:
     virtual void updateQuery();
