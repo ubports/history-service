@@ -468,7 +468,7 @@ QVariantMap SQLiteHistoryPlugin::createThreadForParticipants(const QString &acco
     thread[History::FieldAccountId] = accountId;
     thread[History::FieldThreadId] = threadId;
     thread[History::FieldType] = (int) type;
-    thread[History::FieldParticipants] = participants;
+    thread[History::FieldParticipants] = ContactMatcher::instance()->contactInfo(accountId, participants, true);
     thread[History::FieldCount] = 0;
     thread[History::FieldUnreadCount] = 0;
 
