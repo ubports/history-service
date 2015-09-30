@@ -238,7 +238,6 @@ void HistoryGroupedThreadsModel::onThreadsRemoved(const History::Threads &thread
 
 void HistoryGroupedThreadsModel::processThreadGrouping(const History::Thread &thread)
 {
-    QVariantMap properties = thread.properties();
     QVariantMap queryProperties;
     queryProperties["groupingProperty"] = mGroupingProperty;
     History::Thread groupedThread = History::Manager::instance()->getSingleThread((History::EventType)mType, thread.accountId(), thread.threadId(), queryProperties);
