@@ -292,46 +292,42 @@ QVariantMap SQLiteHistoryPlugin::threadForParticipants(const QString &accountId,
     }
 
     QString existingThread;
-    if (participants.count() == 1 && !threadIds.isEmpty()) {
-         existingThread = threadIds.first();
+    QStringList normalizedParticipants;
+    if (phoneCompare) {
+        Q_FOREACH(const QString &participant, participants) {
+            normalizedParticipants << PhoneUtils::normalizePhoneNumber(participant);
+        }
     } else {
-        QStringList normalizedParticipants;
-        if (phoneCompare) {
-            Q_FOREACH(const QString &participant, participants) {
-                normalizedParticipants << PhoneUtils::normalizePhoneNumber(participant);
-            }
-        } else {
-            normalizedParticipants = participants;
+        normalizedParticipants = participants;
+    }
+
+    // now for each threadId, check if all the other participants are listed
+    Q_FOREACH(const QString &threadId, threadIds) {
+        queryString = "SELECT %1 FROM thread_participants WHERE "
+                      "threadId=:threadId AND type=:type AND accountId=:accountId";
+        query.prepare(queryString.arg(phoneCompare ? "normalizedId" : "participantId"));
+        query.bindValue(":threadId", threadId);
+        query.bindValue(":type", type);
+        query.bindValue(":accountId", accountId);
+        if (!query.exec()) {
+            qCritical() << "Error:" << query.lastError() << query.lastQuery();
+            return QVariantMap();
         }
 
-        // now for each threadId, check if all the other participants are listed
-        Q_FOREACH(const QString &threadId, threadIds) {
-            queryString = "SELECT %1 FROM thread_participants WHERE "
-                          "threadId=:threadId AND type=:type AND accountId=:accountId";
-            query.prepare(queryString.arg(phoneCompare ? "normalizedId" : "participantId"));
-            query.bindValue(":threadId", threadId);
-            query.bindValue(":type", type);
-            query.bindValue(":accountId", accountId);
-            if (!query.exec()) {
-                qCritical() << "Error:" << query.lastError() << query.lastQuery();
-                return QVariantMap();
-            }
+        QStringList threadParticipants;
+        while (query.next()) {
+            threadParticipants << query.value(0).toString();
+        }
 
-            QStringList threadParticipants;
-            while (query.next()) {
-                threadParticipants << query.value(0).toString();
-            }
+        // we can't use query.size() as it always return -1
+        if (threadParticipants.count() != normalizedParticipants.count()) {
+            continue;
+        }
 
-            // we can't use query.size() as it always return -1
-            if (threadParticipants.count() != normalizedParticipants.count()) {
-                continue;
-            }
-
-            bool found = History::Utils::compareNormalizedParticipants(threadParticipants, normalizedParticipants, matchFlags);
-            if (found) {
-                existingThread = threadId;
-                break;
-            }
+        bool found = History::Utils::compareNormalizedParticipants(threadParticipants, normalizedParticipants, matchFlags);
+        if (found) {
+            existingThread = threadId;
+            break;
         }
     }
 
