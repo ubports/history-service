@@ -217,6 +217,9 @@ void SQLiteHistoryPlugin::removeThreadFromCache(const QVariantMap &properties)
  */
 void SQLiteHistoryPlugin::generateContactCache()
 {
+    QTime time;
+    time.start();
+    qDebug() << "---- HistoryService: start generating cached content";
     QSqlQuery query(SQLiteDatabase::instance()->database());
     if (!query.exec("SELECT DISTINCT accountId, normalizedId FROM thread_participants")) {
         qWarning() << "Failed to generate contact cache:" << query.lastError().text();
@@ -232,6 +235,8 @@ void SQLiteHistoryPlugin::generateContactCache()
     }
 
     updateGroupedThreadsCache();
+
+    qDebug() << "---- HistoryService: finished generating contact cache. elapsed time:" << time.elapsed() << "ms";
 
     mInitialised = true;
 }
