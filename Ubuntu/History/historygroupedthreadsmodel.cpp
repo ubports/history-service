@@ -119,18 +119,22 @@ QVariant HistoryGroupedThreadsModel::get(int row) const
     return data(index(row), ThreadsRole);
 }
 
-int HistoryGroupedThreadsModel::existingPositionForEntry(const QVariantMap &properties) const
+int HistoryGroupedThreadsModel::existingPositionForEntry(const History::Thread &thread) const
 {
     int pos = -1;
     if (mGroupingProperty == History::FieldParticipants) {
-        const QString &accountId = properties[History::FieldAccountId].toString();
-        const QString &threadId = properties[History::FieldThreadId].toString();
         for (int i = 0; i < mGroups.count(); ++i) {
             const HistoryThreadGroup &group = mGroups[i];
             Q_FOREACH(const History::Thread &groupedThread, group.threads) {
-                if (groupedThread.accountId() == accountId && 
-                    groupedThread.threadId() == threadId) {
-                    return i;
+                History::Threads threads = thread.groupedThreads();
+                // when removing threads, we cant get the grouped threads from history
+                if (threads.size() == 0) {
+                    threads << thread;
+                }
+                Q_FOREACH(const History::Thread &groupedThread2, threads) {
+                    if (groupedThread == groupedThread2) {
+                        return i;
+                    }
                 }
             }
         }
@@ -139,7 +143,7 @@ int HistoryGroupedThreadsModel::existingPositionForEntry(const QVariantMap &prop
 
     for (int i = 0; i < mGroups.count(); ++i) {
         const HistoryThreadGroup &group = mGroups[i];
-        if (properties[mGroupingProperty] == group.displayedThread.properties()[mGroupingProperty]) {
+        if (thread.properties()[mGroupingProperty] == group.displayedThread.properties()[mGroupingProperty]) {
             pos = i;
             break;
         }
@@ -235,10 +239,10 @@ void HistoryGroupedThreadsModel::onThreadsRemoved(const History::Threads &thread
 void HistoryGroupedThreadsModel::processThreadGrouping(const History::Thread &thread)
 {
     QVariantMap properties = thread.properties();
-    int pos = existingPositionForEntry(properties);
     QVariantMap queryProperties;
     queryProperties["groupingProperty"] = mGroupingProperty;
     History::Thread groupedThread = History::Manager::instance()->getSingleThread((History::EventType)mType, thread.accountId(), thread.threadId(), queryProperties);
+    int pos = existingPositionForEntry(groupedThread);
 
     // if the group is empty, we need to insert it into the map
     if (pos < 0) {
@@ -263,7 +267,7 @@ void HistoryGroupedThreadsModel::removeThreadFromGroup(const History::Thread &th
 {
     QVariantMap properties = thread.properties();
 
-    int pos = existingPositionForEntry(properties);
+    int pos = existingPositionForEntry(thread);
     if (pos < 0) {
         qWarning() << "Could not find group for property " << properties[mGroupingProperty];
         return;

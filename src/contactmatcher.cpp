@@ -254,6 +254,7 @@ void ContactMatcher::onDataChanged()
             QVariantMap info;
             info[History::FieldIdentifier] = identifier;
             Q_EMIT contactInfoChanged(accountId, identifier, info);
+            requestContactInfo(accountId, identifier);
         }
     }
 }
@@ -387,6 +388,9 @@ QVariantList ContactMatcher::toVariantList(const QList<int> &list)
 QVariantMap ContactMatcher::matchAndUpdate(const QString &accountId, const QString &identifier, const QContact &contact)
 {
     QVariantMap contactInfo;
+    contactInfo[History::FieldIdentifier] = identifier;
+    contactInfo[History::FieldAccountId] = accountId;
+
     if (contact.isEmpty()) {
         return contactInfo;
     }
@@ -438,7 +442,6 @@ QVariantMap ContactMatcher::matchAndUpdate(const QString &accountId, const QStri
     }
 
     if (match) {
-        contactInfo[History::FieldIdentifier] = identifier;
         contactInfo[History::FieldContactId] = contact.id().toString();
         contactInfo[History::FieldAlias] = QContactDisplayLabel(contact.detail(QContactDetail::TypeDisplayLabel)).label();
         contactInfo[History::FieldAvatar] = QContactAvatar(contact.detail(QContactDetail::TypeAvatar)).imageUrl().toString();

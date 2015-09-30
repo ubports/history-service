@@ -64,7 +64,7 @@ Q_SIGNALS:
     void groupingPropertyChanged();
 
 protected:
-    int existingPositionForEntry(const QVariantMap &properties) const;
+    int existingPositionForEntry(const History::Thread &thread) const;
     void removeGroup(const HistoryThreadGroup &group);
     void updateDisplayedThread(HistoryThreadGroup &group);
 
