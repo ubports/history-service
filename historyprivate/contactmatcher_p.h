@@ -64,6 +64,7 @@ protected:
     QVariantList toVariantList(const QList<int> &list);
     QVariantMap matchAndUpdate(const QString &accountId, const QString &identifier, const QContact &contact);
     QStringList addressableFields(const QString &accountId);
+    bool hasMatch(const QVariantMap &map) const;
 
 private:
     explicit ContactMatcher(QContactManager *manager = 0, QObject *parent = 0);

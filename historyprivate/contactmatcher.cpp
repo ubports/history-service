@@ -147,14 +147,14 @@ void ContactMatcher::onContactsAdded(QList<QContactId> ids)
         for (; it2 != end2; ++it2) {
             QString identifier = it2.key();
             // skip entries that already have a match
-            if (it2.value().contains(History::FieldContactId)) {
+            if (hasMatch(it2.value())) {
                 continue;
             }
 
             // now for each entry not populated, check if it matches one of the newly added contacts
             Q_FOREACH(const QContact &contact, contacts) {
                 QVariantMap map = matchAndUpdate(accountId, identifier, contact);
-                if (!map.isEmpty()){
+                if (hasMatch(map)){
                     break;
                 }
             }
@@ -184,7 +184,7 @@ void ContactMatcher::onContactsChanged(QList<QContactId> ids)
             Q_FOREACH(const QContact &contact, contacts) {
                 bool previousMatch = (contactInfo[History::FieldContactId].toString() == contact.id().toString());
                 QVariantMap map = matchAndUpdate(accountId, identifier, contact);
-                if (!map.isEmpty()){
+                if (hasMatch(map)){
                     break;
                 } else if (previousMatch) {
                     // if there was a previous match but it does not match anymore, try to match the phone number
@@ -468,4 +468,9 @@ QStringList ContactMatcher::addressableFields(const QString &accountId)
     }
 
     return fields;
+}
+
+bool ContactMatcher::hasMatch(const QVariantMap &map) const
+{
+    return !map[History::FieldContactId].toString().isEmpty();
 }
