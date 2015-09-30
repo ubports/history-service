@@ -48,3 +48,6 @@ install(FILES
         )
 install(FILES HistoryDaemonObserver.client DESTINATION share/telepathy/clients)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/history-daemon.desktop DESTINATION ${CMAKE_INSTALL_DATADIR}/applications)
+
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/history-daemon.conf
+        DESTINATION ${CMAKE_INSTALL_FULL_DATADIR}/upstart/sessions/)
