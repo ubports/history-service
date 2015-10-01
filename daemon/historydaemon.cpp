@@ -45,6 +45,7 @@ HistoryDaemon::HistoryDaemon(QObject *parent)
     // FIXME: maybe we should only set the plugin as ready after the contact cache was generated
     connect(TelepathyHelper::instance(), &TelepathyHelper::setupReady, [&]() {
         mBackend->generateContactCache();
+        mDBus.connectToBus();
     });
 
     connect(TelepathyHelper::instance(),
@@ -68,8 +69,6 @@ HistoryDaemon::HistoryDaemon(QObject *parent)
     // FIXME: we need to do this in a better way, but for now this should do
     mProtocolFlags["ofono"] = History::MatchPhoneNumber;
     mProtocolFlags["multimedia"] = History::MatchPhoneNumber;
-
-    mDBus.connectToBus();
 }
 
 HistoryDaemon::~HistoryDaemon()
@@ -106,8 +105,6 @@ QVariantMap HistoryDaemon::threadForParticipants(const QString &accountId,
         return QVariantMap();
     }
 
-    waitForBackendInitialised();
-
     QVariantMap thread = mBackend->threadForParticipants(accountId,
                                                          type,
                                                          participants,
@@ -126,8 +123,6 @@ QString HistoryDaemon::queryThreads(int type, const QVariantMap &sort, const QVa
     if (!mBackend) {
         return QString::null;
     }
-
-    waitForBackendInitialised();
 
     History::Sort theSort = History::Sort::fromProperties(sort);
     History::Filter theFilter = History::Filter::fromProperties(filter);
@@ -148,8 +143,6 @@ QString HistoryDaemon::queryEvents(int type, const QVariantMap &sort, const QVar
         return QString::null;
     }
 
-    waitForBackendInitialised();
-
     History::Sort theSort = History::Sort::fromProperties(sort);
     History::Filter theFilter = History::Filter::fromProperties(filter);
     History::PluginEventView *view = mBackend->queryEvents((History::EventType)type, theSort, theFilter);
@@ -169,8 +162,6 @@ QVariantMap HistoryDaemon::getSingleThread(int type, const QString &accountId, c
         return QVariantMap();
     }
 
-    waitForBackendInitialised();
-
     return mBackend->getSingleThread((History::EventType)type, accountId, threadId, properties);
 }
 
@@ -180,8 +171,6 @@ QVariantMap HistoryDaemon::getSingleEvent(int type, const QString &accountId, co
         return QVariantMap();
     }
 
-    waitForBackendInitialised();
-
     return mBackend->getSingleEvent((History::EventType)type, accountId, threadId, eventId);
 }
 
@@ -190,8 +179,6 @@ bool HistoryDaemon::writeEvents(const QList<QVariantMap> &events)
     if (!mBackend) {
         return false;
     }
-
-    waitForBackendInitialised();
 
     QList<QVariantMap> newEvents;
     QList<QVariantMap> modifiedEvents;
@@ -262,8 +249,6 @@ bool HistoryDaemon::removeEvents(const QList<QVariantMap> &events)
     if (!mBackend) {
         return false;
     }
-
-    waitForBackendInitialised();
 
     mBackend->beginBatchOperation();
 
@@ -338,8 +323,6 @@ bool HistoryDaemon::removeThreads(const QList<QVariantMap> &threads)
     if (!mBackend) {
         return false;
     }
-
-    waitForBackendInitialised();
 
     // In order to remove a thread all we have to do is to remove all its items
     // then it is going to be removed by removeEvents() once it detects the thread is

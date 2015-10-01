@@ -919,7 +919,7 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseEventResults(History::EventType typ
         case History::EventTypeVoice:
             event[History::FieldDuration] = query.value(7).toInt();
             event[History::FieldMissed] = query.value(8);
-            event[History::FieldRemoteParticipant] = ContactMatcher::instance()->contactInfo(accountId, query.value(9).toString(), true);
+            event[History::FieldRemoteParticipant] = query.value(9).toString();
             break;
         }
 

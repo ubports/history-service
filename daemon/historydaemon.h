@@ -64,12 +64,6 @@ private Q_SLOTS:
 protected:
     History::MatchFlags matchFlagsForChannel(const Tp::ChannelPtr &channel);
     QString hashThread(const QVariantMap &thread);
-    inline void waitForBackendInitialised()
-    {
-        while (!mBackend->initialised()) {
-            QCoreApplication::processEvents();
-        }
-    }
 
 private:
     HistoryDaemon(QObject *parent = 0);
