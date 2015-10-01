@@ -23,6 +23,7 @@
 #include "eventview.h"
 #include "historyqmltexteventattachment.h"
 #include "manager.h"
+#include "contactmatcher_p.h"
 #include <QDBusMetaType>
 #include <QDebug>
 #include <QTimerEvent>
@@ -91,7 +92,7 @@ QVariant HistoryEventModel::eventData(const History::Event &event, int role) con
         result = event.eventId();
         break;
     case SenderIdRole:
-        result = event.senderId();
+        result = ContactMatcher::instance()->contactInfo(event.accountId(), event.senderId());
         break;
     case TimestampRole:
         result = event.timestamp();
