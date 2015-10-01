@@ -35,6 +35,7 @@ public:
     enum EventRole {
         EventIdRole = HistoryModel::LastRole,
         SenderIdRole,
+        SenderRole,
         TimestampRole,
         DateRole,
         NewEventRole,

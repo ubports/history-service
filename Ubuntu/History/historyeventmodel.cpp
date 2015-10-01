@@ -35,6 +35,7 @@ HistoryEventModel::HistoryEventModel(QObject *parent) :
     mRoles = HistoryModel::roleNames();
     mRoles[EventIdRole] = "eventId";
     mRoles[SenderIdRole] = "senderId";
+    mRoles[SenderRole] = "sender";
     mRoles[TimestampRole] = "timestamp";
     mRoles[DateRole] = "date";
     mRoles[NewEventRole] = "newEvent";
@@ -92,6 +93,9 @@ QVariant HistoryEventModel::eventData(const History::Event &event, int role) con
         result = event.eventId();
         break;
     case SenderIdRole:
+        result = event.senderId();
+        break;
+    case SenderRole:
         result = ContactMatcher::instance()->contactInfo(event.accountId(), event.senderId());
         break;
     case TimestampRole:
