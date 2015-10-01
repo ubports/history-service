@@ -30,7 +30,6 @@ HistoryServiceDBus::HistoryServiceDBus(QObject *parent) :
     QObject(parent), mAdaptor(0)
 {
     qDBusRegisterMetaType<QList<QVariantMap> >();
-    connectToBus();
 }
 
 bool HistoryServiceDBus::connectToBus()

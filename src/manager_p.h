@@ -23,6 +23,7 @@
 #define HISTORY_MANAGER_P_H
 
 #include <QDBusInterface>
+#include <QDBusServiceWatcher>
 #include <QString>
 #include "types.h"
 
@@ -39,6 +40,8 @@ public:
     ~ManagerPrivate();
 
     QScopedPointer<ManagerDBus> dbus;
+    bool serviceRunning;
+    QDBusServiceWatcher serviceWatcher;
 };
 
 }
