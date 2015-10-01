@@ -99,6 +99,12 @@ ThreadView::ThreadView(History::EventType type,
 {
     d_ptr->q_ptr = this;
 
+    if (!Manager::instance()->isServiceRunning()) {
+        Q_EMIT invalidated();
+        d_ptr->valid = false;
+        return;
+    }
+
     QDBusInterface interface(History::DBusService, History::DBusObjectPath, History::DBusInterface);
 
     QDBusReply<QString> reply = interface.call("QueryThreads",

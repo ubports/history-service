@@ -97,6 +97,12 @@ EventView::EventView(EventType type, const History::Sort &sort, const History::F
 {
     d_ptr->q_ptr = this;
 
+    if (!Manager::instance()->isServiceRunning()) {
+        Q_EMIT invalidated();
+        d_ptr->valid = false;
+        return;
+    }
+
     QDBusInterface interface(History::DBusService, History::DBusObjectPath, History::DBusInterface);
 
     QDBusReply<QString> reply = interface.call("QueryEvents",
