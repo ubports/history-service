@@ -47,6 +47,10 @@ HistoryModel::HistoryModel(QObject *parent) :
     connect(this, SIGNAL(rowsRemoved(QModelIndex,int,int)), this, SIGNAL(countChanged()));
     connect(this, SIGNAL(modelReset()), this, SIGNAL(countChanged()));
 
+    // reset the view when the service is stopped or started
+    connect(History::Manager::instance(), SIGNAL(serviceRunningChanged()),
+            this, SLOT(triggerQueryUpdate()));
+
     // create the view and get some objects
     triggerQueryUpdate();
 }
@@ -348,6 +352,7 @@ void HistoryModel::triggerQueryUpdate()
     if (mUpdateTimer) {
         killTimer(mUpdateTimer);
     }
+
     // delay the loading of the model data until the settings settle down
     mUpdateTimer = startTimer(100);
 }
