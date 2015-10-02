@@ -21,6 +21,7 @@
 
 #include "utils_p.h"
 #include "phoneutils_p.h"
+#include <QDebug>
 #include <QStringList>
 #include <QMap>
 
@@ -132,6 +133,20 @@ bool Utils::compareNormalizedParticipants(const QStringList &participants1, cons
         }
     }
     return found;
+}
+
+QString Utils::normalizeId(const QString &accountId, const QString &id)
+{
+    QString normalizedId = id;
+    // for now we only normalize phone number IDs
+    if (matchFlagsForAccount(accountId) & History::MatchPhoneNumber) {
+        normalizedId = PhoneUtils::normalizePhoneNumber(id);
+    }
+    if (normalizedId.isEmpty()) {
+        qWarning() << "Normalized phone number is empty:" << accountId << id;
+        normalizedId = id;
+    }
+    return normalizedId;
 }
 
 }
