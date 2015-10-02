@@ -874,6 +874,12 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseEventResults(History::EventType typ
         QString accountId = query.value(0).toString();
         QString threadId = query.value(1).toString();
         QString eventId = query.value(2).toString();
+
+        // ignore events that don't have a threadId or an eventId
+        if (threadId.trimmed().isEmpty() || eventId.trimmed().isEmpty()) {
+            continue;
+        }
+
         event[History::FieldType] = (int) type;
         event[History::FieldAccountId] = accountId;
         event[History::FieldThreadId] = threadId;
