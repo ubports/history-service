@@ -163,7 +163,7 @@ void ThreadTest::testFromProperties()
     properties[History::FieldAccountId] = accountId;
     properties[History::FieldThreadId] = threadId;
     properties[History::FieldType] = (int) type;
-    properties[History::FieldParticipants] = participants;
+    properties[History::FieldParticipants] = participantsFromIdentifiers(accountId, participants).toVariantList();
     properties[History::FieldCount] = count;
     properties[History::FieldUnreadCount] = unreadCount;
 
