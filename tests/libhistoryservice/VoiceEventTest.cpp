@@ -160,7 +160,7 @@ void VoiceEventTest::testFromProperties()
     properties[History::FieldNewEvent] = newEvent;
     properties[History::FieldMissed] = missed;
     properties[History::FieldDuration] = QTime(0,0,0,0).secsTo(duration);
-    properties[History::FieldParticipants] = participants;
+    properties[History::FieldParticipants] = participantsFromIdentifiers(accountId, participants).toVariantList();
 
     History::VoiceEvent voiceEvent = History::VoiceEvent::fromProperties(properties);
     QCOMPARE(voiceEvent.accountId(), accountId);
@@ -235,7 +235,7 @@ void VoiceEventTest::testProperties()
     QCOMPARE(properties[History::FieldMissed].toBool(), missed);
     QCOMPARE(QTime(0,0).addSecs(properties[History::FieldDuration].toInt()), duration);
     QCOMPARE(properties[History::FieldRemoteParticipant].toString(), remoteParticipant);
-    QCOMPARE(properties[History::FieldParticipants].toStringList(), participants);
+    QCOMPARE(History::Participants::fromVariant(properties[History::FieldParticipants]).identifiers(), participants);
 }
 
 History::Participants VoiceEventTest::participantsFromIdentifiers(const QString &accountId, const QStringList &identifiers)
