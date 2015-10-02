@@ -35,6 +35,7 @@ public:
     static bool compareParticipants(const QStringList &participants1, const QStringList &participants2, MatchFlags flags);
     static bool compareNormalizedParticipants(const QStringList &participants1, const QStringList &participants2, MatchFlags flags);
     static bool shouldGroupAccount(const QString &accountId);
+    static QString normalizeId(const QString &accountId, const QString &id);
 
 private:
     Utils();

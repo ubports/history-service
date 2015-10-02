@@ -55,11 +55,7 @@ void normalizeId(sqlite3_context *context, int argc, sqlite3_value **argv)
 {
     QString accountId((const char*)sqlite3_value_text(argv[0]));
     QString id((const char*)sqlite3_value_text(argv[1]));
-    QString normalizedId = id;
-    // for now we only normalize phone number IDs
-    if (History::Utils::matchFlagsForAccount(accountId) & History::MatchPhoneNumber) {
-        normalizedId = PhoneUtils::normalizePhoneNumber(id);
-    }
+    QString normalizedId = History::Utils::normalizeId(accountId, id);
     sqlite3_result_text(context, strdup(normalizedId.toUtf8().data()), -1, &free);
 }
 
@@ -230,10 +226,9 @@ bool SQLiteDatabase::createOrUpdateDatabase()
         }
     }
 
-    // if at this point needsUpdate is still false, it means the database is up-to-date
     beginTransation();
 
-    if (!runMultipleStatements(statements, false)) {
+    if (!statements.isEmpty() && !runMultipleStatements(statements, false)) {
         rollbackTransaction();
         return false;
     }
