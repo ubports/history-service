@@ -88,7 +88,7 @@ void SQLiteHistoryPlugin::addThreadsToCache(const QList<QVariantMap> &threads)
         }
         // find conversation grouping this thread
         if (mConversationsCacheKeys.contains(threadKey)) {
-            const QString &conversationKey = mConversationsCacheKeys[threadKey];
+            QString conversationKey = mConversationsCacheKeys[threadKey];
             History::Threads groupedThreads = mConversationsCache[conversationKey];
             Q_FOREACH(const History::Thread &groupedThread, groupedThreads) {
                 mConversationsCacheKeys.remove(generateThreadMapKey(groupedThread));
@@ -760,6 +760,9 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseThreadResults(History::EventType ty
         QVariantMap thread;
         QString accountId = query.value(0).toString();
         QString threadId = query.value(1).toString();
+        if (threadId.trimmed().isEmpty()) {
+            continue;
+        }
         thread[History::FieldType] = (int) type;
         thread[History::FieldAccountId] = accountId;
         thread[History::FieldThreadId] = threadId;
@@ -871,6 +874,12 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseEventResults(History::EventType typ
         QString accountId = query.value(0).toString();
         QString threadId = query.value(1).toString();
         QString eventId = query.value(2).toString();
+
+        // ignore events that don't have a threadId or an eventId
+        if (threadId.trimmed().isEmpty() || eventId.trimmed().isEmpty()) {
+            continue;
+        }
+
         event[History::FieldType] = (int) type;
         event[History::FieldAccountId] = accountId;
         event[History::FieldThreadId] = threadId;
