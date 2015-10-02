@@ -110,6 +110,7 @@ QVariantMap ContactMatcher::contactInfo(const QString &accountId, const QString 
         mPendingRequests.append(info);
     }
     map[History::FieldIdentifier] = identifier;
+    map[History::FieldAccountId] = accountId;
     mContactMap[accountId][identifier] = map;
     return map;
 }
