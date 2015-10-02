@@ -26,6 +26,7 @@
 #include "sqlitehistorythreadview.h"
 #include "intersectionfilter.h"
 #include "unionfilter.h"
+#include "utils_p.h"
 #include <QDateTime>
 #include <QDebug>
 #include <QStringList>
@@ -257,11 +258,12 @@ QVariantMap SQLiteHistoryPlugin::createThreadForParticipants(const QString &acco
     // and insert the participants
     Q_FOREACH(const QString &participant, participants) {
         query.prepare("INSERT INTO thread_participants (accountId, threadId, type, participantId, normalizedId)"
-                      "VALUES (:accountId, :threadId, :type, :participantId, normalizeId(:accountId, :participantId))");
+                      "VALUES (:accountId, :threadId, :type, :participantId, :normalizedId)");
         query.bindValue(":accountId", accountId);
         query.bindValue(":threadId", threadId);
         query.bindValue(":type", type);
         query.bindValue(":participantId", participant);
+        query.bindValue(":normalizedId", History::Utils::normalizeId(accountId, participant));
         if (!query.exec()) {
             qCritical() << "Error:" << query.lastError() << query.lastQuery();
             return QVariantMap();

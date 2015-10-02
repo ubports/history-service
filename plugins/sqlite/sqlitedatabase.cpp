@@ -55,11 +55,7 @@ void normalizeId(sqlite3_context *context, int argc, sqlite3_value **argv)
 {
     QString accountId((const char*)sqlite3_value_text(argv[0]));
     QString id((const char*)sqlite3_value_text(argv[1]));
-    QString normalizedId = id;
-    // for now we only normalize phone number IDs
-    if (History::Utils::matchFlagsForAccount(accountId) & History::MatchPhoneNumber) {
-        normalizedId = PhoneUtils::normalizePhoneNumber(id);
-    }
+    QString normalizedId = History::Utils::normalizeId(accountId, id);
     sqlite3_result_text(context, strdup(normalizedId.toUtf8().data()), -1, &free);
 }
 
