@@ -39,6 +39,10 @@ int main(int argc, char** argv)
     // and store the target file too
     QString targetFile = schemaFiles.takeLast();
 
+    qDebug() << "**************************************************************";
+    qDebug() << "Starting the schema file generation process";
+    qDebug() << "Note: the failures seen below are known, expected and harmless";
+    qDebug() << "in this context.";
     QStringList statements;
     Q_FOREACH(const QString &file, schemaFiles) {
         statements << SQLiteDatabase::instance()->parseSchemaFile(file);
@@ -51,6 +55,7 @@ int main(int argc, char** argv)
         }
         file.write(SQLiteDatabase::instance()->dumpSchema().toUtf8().data());
         file.close();
+        qDebug() << "**************************************************************";
         return 0;
     }
     return 1;
