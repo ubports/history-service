@@ -567,7 +567,7 @@ bool SQLiteHistoryPlugin::removeTextEvent(const QVariantMap &event)
     query.bindValue(":eventId", event[History::FieldEventId]);
 
     if (!query.exec()) {
-        qCritical() << "Failed to save the voice event: Error:" << query.lastError() << query.lastQuery();
+        qCritical() << "Failed to save the remove the text event: Error:" << query.lastError() << query.lastQuery();
         return false;
     }
 

@@ -171,6 +171,10 @@ QVariantMap Thread::properties() const
 {
     Q_D(const Thread);
 
+    if (d->accountId.isEmpty() || d->threadId.isEmpty()) {
+        return QVariantMap();
+    }
+
     // include the properties from the last event
     QVariantMap map = lastEvent().properties();
 
