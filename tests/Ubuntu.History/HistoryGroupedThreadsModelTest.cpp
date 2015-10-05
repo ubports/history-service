@@ -44,7 +44,7 @@ void HistoryGroupedThreadsModelTest::testCanFetchMore()
     QSignalSpy fetchMoreChanged(&model, SIGNAL(canFetchMoreChanged()));
 
     // create a temporary thread to populate the model
-    History::Thread textThread = mManager->threadForParticipants("accountId",
+    History::Thread textThread = mManager->threadForParticipants("accountId0",
                                                              History::EventTypeText,
                                                              QStringList() << QString("textParticipant"),
                                                              History::MatchCaseSensitive, true);
@@ -53,10 +53,14 @@ void HistoryGroupedThreadsModelTest::testCanFetchMore()
     QVERIFY(!model.canFetchMore());
 
     HistoryQmlFilter *filter = new HistoryQmlFilter(this);
-    filter->setFilterProperty(History::FieldAccountId);
-    filter->setFilterValue("accountId");
-
     model.setFilter(filter);
+    model.setGroupingProperty(History::FieldParticipants);
+
+    HistoryQmlSort *sort = new HistoryQmlSort(this);
+    sort->setSortOrder(HistoryQmlSort::DescendingOrder);
+    sort->setSortField("lastEventTimestamp");
+    model.setSort(sort);
+
     // force updateQuery() to be called
     model.componentComplete();
 
@@ -64,12 +68,17 @@ void HistoryGroupedThreadsModelTest::testCanFetchMore()
     model.fetchMore();
     QTRY_VERIFY(fetchMoreChanged.count() >= 1);
     QVERIFY(!model.canFetchMore());
+
+    QTRY_COMPARE(model.rowCount(), 1);
+    mManager->removeThreads(History::Threads() << textThread);
+    QTRY_COMPARE(model.rowCount(), 0);
 }
 
 void HistoryGroupedThreadsModelTest::testThreadsUpdated()
 {
     HistoryGroupedThreadsModel model;
     QSignalSpy dataChanged(&model, SIGNAL(dataChanged(QModelIndex, QModelIndex)));
+    QSignalSpy rowsRemoved(&model, SIGNAL(rowsRemoved(QModelIndex, int, int)));
 
     HistoryQmlFilter *filter = new HistoryQmlFilter(this);
     model.setFilter(filter);
@@ -88,14 +97,12 @@ void HistoryGroupedThreadsModelTest::testThreadsUpdated()
                                                              History::EventTypeText,
                                                              QStringList() << QString("1234567"),
                                                              History::MatchPhoneNumber, true);
-    QTRY_COMPARE(dataChanged.count(), 1);
-    dataChanged.clear();
 
     // insert one event
-    History::TextEvent event = History::TextEvent(textThread.accountId(), textThread.threadId(), QString("eventId1%1").arg(QString::number(qrand() % 1024)),
+    History::TextEvent firstEvent = History::TextEvent(textThread.accountId(), textThread.threadId(), QString("eventId1%1").arg(QString::number(qrand() % 1024)),
                                    QString("1234567"), QDateTime::currentDateTime(), false, "Random Message",
                                    History::MessageTypeText);
-    mManager->writeEvents(History::Events() << event);
+    mManager->writeEvents(History::Events() << firstEvent);
     QTRY_COMPARE(dataChanged.count(), 1);
 
     QModelIndex firstIndex = dataChanged.first().first().value<QModelIndex>();
@@ -103,7 +110,7 @@ void HistoryGroupedThreadsModelTest::testThreadsUpdated()
     QCOMPARE(QString("Random Message"), lastEventMessage);
     dataChanged.clear();
  
-    // create another thread to be grouped
+    // create another thread to be grouped, but using another kind of account
     textThread = mManager->threadForParticipants("multimedia/multimedia/account1",
                                                  History::EventTypeText,
                                                  QStringList() << QString("1234567"),
@@ -115,10 +122,10 @@ void HistoryGroupedThreadsModelTest::testThreadsUpdated()
     dataChanged.clear();
 
     // insert another event in second thread
-    event = History::TextEvent(textThread.accountId(), textThread.threadId(), QString("eventId2%1").arg(QString::number(qrand() % 1024)),
+    History::TextEvent secondEvent = History::TextEvent(textThread.accountId(), textThread.threadId(), QString("eventId2%1").arg(QString::number(qrand() % 1024)),
                                QString("1234567"), QDateTime::currentDateTime(), false, "Random Message2",
                                History::MessageTypeText);
-    mManager->writeEvents(History::Events() << event);
+    mManager->writeEvents(History::Events() << secondEvent);
     QTRY_COMPARE(dataChanged.count(), 1);
 
     // make sure the index is the same, meaning both threads are grouped
@@ -134,15 +141,19 @@ void HistoryGroupedThreadsModelTest::testThreadsUpdated()
     dataChanged.clear();
 
     // delete latest event and make sure the text displayed is from the first thread again
-    mManager->removeEvents(History::Events() << event);
+    mManager->removeEvents(History::Events() << secondEvent);
     QTRY_COMPARE(dataChanged.count(), 1);
     index = dataChanged.first().first().value<QModelIndex>();
     QCOMPARE(firstIndex, index);
     lastEventMessage = model.data(index, HistoryThreadModel::LastEventTextMessageRole).toString();
     QCOMPARE(QString("Random Message"), lastEventMessage);
-    // check if count is correct given that we have two threads grouped with one message in each
+    // check if count is correct given that we have only one thread now
     QCOMPARE(model.data(index, HistoryThreadModel::CountRole).toInt(), 1);
  
+    // delete first event and make sure the model is cleared
+    mManager->removeEvents(History::Events() << firstEvent);
+    QTRY_COMPARE(rowsRemoved.count(), 1);
+    QTRY_COMPARE(model.rowCount(), 0);
 }
 
 QTEST_MAIN(HistoryGroupedThreadsModelTest)

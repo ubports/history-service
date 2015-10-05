@@ -325,10 +325,26 @@ bool HistoryDaemon::removeThreads(const QList<QVariantMap> &threads)
     // empty.
     QList<QVariantMap> events;
     Q_FOREACH(const QVariantMap &thread, threads) {
-        events += mBackend->eventsForThread(thread);
+        QList<QVariantMap> thisEvents = mBackend->eventsForThread(thread);
+        if (thisEvents.isEmpty()) {
+            mBackend->beginBatchOperation();
+            if (mBackend->removeThread(thread)) {
+                mBackend->rollbackBatchOperation();
+                return false;
+            }
+            mBackend->endBatchOperation();
+            continue;
+        }
+        events += thisEvents;
     }
 
-    return removeEvents(events);
+    if (events.size() > 0) {
+        if(removeEvents(events)) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 void HistoryDaemon::onObserverCreated()
