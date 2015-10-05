@@ -243,6 +243,10 @@ void HistoryGroupedThreadsModel::processThreadGrouping(const History::Thread &th
     QVariantMap queryProperties;
     queryProperties["groupingProperty"] = mGroupingProperty;
     History::Thread groupedThread = History::Manager::instance()->getSingleThread((History::EventType)mType, thread.accountId(), thread.threadId(), queryProperties);
+    if (groupedThread.properties().isEmpty()) {
+        removeThreadFromGroup(thread);
+        return;
+    }
     int pos = existingPositionForEntry(groupedThread);
 
     // if the group is empty, we need to insert it into the map
