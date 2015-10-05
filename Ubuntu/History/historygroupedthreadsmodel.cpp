@@ -121,10 +121,12 @@ int HistoryGroupedThreadsModel::existingPositionForEntry(const History::Thread &
         for (int i = 0; i < mGroups.count(); ++i) {
             const HistoryThreadGroup &group = mGroups[i];
             Q_FOREACH(const History::Thread &groupedThread, group.threads) {
-                History::Threads threads = thread.groupedThreads();
+                History::Threads threads;
                 // when removing threads, we cant get the grouped threads from history
-                if (threads.size() == 0) {
+                if (thread.groupedThreads().size() == 0) {
                     threads << thread;
+                } else {
+                    threads = thread.groupedThreads();
                 }
                 Q_FOREACH(const History::Thread &groupedThread2, threads) {
                     if (groupedThread == groupedThread2) {
@@ -269,10 +271,9 @@ void HistoryGroupedThreadsModel::removeThreadFromGroup(const History::Thread &th
 
     HistoryThreadGroup &group = mGroups[pos];
     group.threads.removeAll(thread);
-
     if (group.threads.isEmpty()) {
         removeGroup(group);
-    } else if (group.displayedThread == thread) {
+    } else {
         updateDisplayedThread(group);
         markGroupAsChanged(group);
     }
