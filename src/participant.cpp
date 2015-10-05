@@ -114,7 +114,7 @@ QVariantMap Participant::detailProperties() const
 bool Participant::isNull() const
 {
     Q_D(const Participant);
-    return d->accountId.isNull() && d->identifier.isNull();
+    return d->accountId.isNull() || d->identifier.isNull();
 }
 
 bool Participant::operator==(const Participant &other) const
