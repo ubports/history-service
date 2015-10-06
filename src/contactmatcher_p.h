@@ -29,6 +29,9 @@
 
 using namespace QtContacts;
 
+namespace History
+{
+
 typedef QMap<QString, QVariantMap> InternalContactMap;
 typedef QMap<QString, InternalContactMap> ContactMap;
 
@@ -76,5 +79,7 @@ private:
     QList<RequestInfo> mPendingRequests;
     QContactManager *mManager;
 };
+
+}
 
 #endif // CONTACTMATCHER_P_H

@@ -91,8 +91,8 @@ QVariant HistoryModel::data(const QModelIndex &index, int role) const
         break;
     case ParticipantsRole:
         if (mMatchContacts) {
-            result = ContactMatcher::instance()->contactInfo(properties[History::FieldAccountId].toString(),
-                                                             History::Participants::fromVariantList(properties[History::FieldParticipants].toList()).identifiers());
+            result = History::ContactMatcher::instance()->contactInfo(properties[History::FieldAccountId].toString(),
+                                                                      History::Participants::fromVariantList(properties[History::FieldParticipants].toList()).identifiers());
         } else {
             //FIXME: handle contact changes
             result = properties[History::FieldParticipants];
@@ -174,11 +174,11 @@ void HistoryModel::setMatchContacts(bool value)
     Q_EMIT matchContactsChanged();
 
     if (mMatchContacts) {
-        connect(ContactMatcher::instance(),
+        connect(History::ContactMatcher::instance(),
                 SIGNAL(contactInfoChanged(QString,QString,QVariantMap)),
                 SLOT(onContactInfoChanged(QString,QString,QVariantMap)));
     } else {
-        ContactMatcher::instance()->disconnect(this);
+        History::ContactMatcher::instance()->disconnect(this);
     }
 
     // mark all indexes as changed
@@ -262,7 +262,7 @@ void HistoryModel::onContactInfoChanged(const QString &accountId, const QString 
 void HistoryModel::watchContactInfo(const QString &accountId, const QString &identifier, const QVariantMap &currentInfo)
 {
     if (mMatchContacts) {
-        ContactMatcher::instance()->watchIdentifier(accountId, identifier, currentInfo);
+        History::ContactMatcher::instance()->watchIdentifier(accountId, identifier, currentInfo);
     }
 }
 
