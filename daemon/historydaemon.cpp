@@ -354,7 +354,7 @@ bool HistoryDaemon::removeThreads(const QList<QVariantMap> &threads)
 void HistoryDaemon::onObserverCreated()
 {
     qDebug() << __PRETTY_FUNCTION__;
-    ChannelObserver *observer = History::TelepathyHelper::instance()->channelObserver();
+    History::ChannelObserver *observer = History::TelepathyHelper::instance()->channelObserver();
 
     connect(observer, SIGNAL(callChannelAvailable(Tp::CallChannelPtr)),
             &mCallObserver, SLOT(onCallChannelAvailable(Tp::CallChannelPtr)));
