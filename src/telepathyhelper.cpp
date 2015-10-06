@@ -24,6 +24,9 @@
 
 #include <TelepathyQt/ClientRegistrar>
 
+namespace History
+{
+
 TelepathyHelper::TelepathyHelper(QObject *parent)
     : QObject(parent),
       mChannelObserver(0),
@@ -175,4 +178,6 @@ bool TelepathyHelper::connected() const
     }
 
     return false;
+}
+
 }

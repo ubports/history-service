@@ -44,7 +44,7 @@ ContactMatcher::ContactMatcher(QContactManager *manager, QObject *parent) :
     }
 
     // just trigger the creation of TelepathyHelper
-    connect(TelepathyHelper::instance(), SIGNAL(setupReady()), SLOT(onSetupReady()));
+    connect(History::TelepathyHelper::instance(), SIGNAL(setupReady()), SLOT(onSetupReady()));
 
     connect(mManager,
             SIGNAL(contactsAdded(QList<QContactId>)),
@@ -103,7 +103,7 @@ QVariantMap ContactMatcher::contactInfo(const QString &accountId, const QString 
 
     QVariantMap map;
     // and if there was no match, asynchronously request the info, and return an empty map for now
-    if (TelepathyHelper::instance()->ready()) {
+    if (History::TelepathyHelper::instance()->ready()) {
         map = requestContactInfo(accountId, identifier, synchronous);
     } else if (!synchronous) {
         RequestInfo info{accountId, identifier};
@@ -448,7 +448,7 @@ QStringList ContactMatcher::addressableFields(const QString &accountId)
         return mAddressableFields[accountId];
     }
 
-    Tp::AccountPtr account = TelepathyHelper::instance()->accountForId(accountId);
+    Tp::AccountPtr account = History::TelepathyHelper::instance()->accountForId(accountId);
     QStringList fields;
     if (!account.isNull()) {
         fields = account->protocolInfo().addressableVCardFields();
