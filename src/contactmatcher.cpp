@@ -404,7 +404,7 @@ QVariantMap ContactMatcher::matchAndUpdate(const QString &accountId, const QStri
         if (field == "tel") {
             QList<QContactDetail> details = contact.details(QContactDetail::TypePhoneNumber);
             Q_FOREACH(const QContactPhoneNumber number, details) {
-                if (PhoneUtils::comparePhoneNumbers(number.number(), identifier)) {
+                if (History::PhoneUtils::comparePhoneNumbers(number.number(), identifier)) {
                     QVariantMap detailProperties;
                     detailProperties["phoneSubTypes"] = toVariantList(number.subTypes());
                     detailProperties["phoneContexts"] = toVariantList(number.contexts());

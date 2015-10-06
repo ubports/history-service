@@ -283,7 +283,7 @@ QVariantMap SQLiteHistoryPlugin::threadForParticipants(const QString &accountId,
     QString firstParticipant = participants.first();
     if (phoneCompare) {
         queryString = queryString.arg("compareNormalizedPhoneNumbers(normalizedId, :participantId)");
-        firstParticipant = PhoneUtils::normalizePhoneNumber(firstParticipant);
+        firstParticipant = History::PhoneUtils::normalizePhoneNumber(firstParticipant);
     } else {
         queryString = queryString.arg("participantId=:participantId");
     }
@@ -305,7 +305,7 @@ QVariantMap SQLiteHistoryPlugin::threadForParticipants(const QString &accountId,
     QStringList normalizedParticipants;
     if (phoneCompare) {
         Q_FOREACH(const QString &participant, participants) {
-            normalizedParticipants << PhoneUtils::normalizePhoneNumber(participant);
+            normalizedParticipants << History::PhoneUtils::normalizePhoneNumber(participant);
         }
     } else {
         normalizedParticipants = participants;

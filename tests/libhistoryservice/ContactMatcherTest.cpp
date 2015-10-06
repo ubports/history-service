@@ -100,7 +100,7 @@ void ContactMatcherTest::testMatchExistingContact()
     QSignalSpy contactInfoSpy(ContactMatcher::instance(), SIGNAL(contactInfoChanged(QString,QString,QVariantMap)));
     QVariantMap info = ContactMatcher::instance()->contactInfo(accountId, identifier);
     if (phoneNumberCompare) {
-        QVERIFY(PhoneUtils::comparePhoneNumbers(info[History::FieldIdentifier].toString(), identifier));
+        QVERIFY(History::PhoneUtils::comparePhoneNumbers(info[History::FieldIdentifier].toString(), identifier));
     } else {
         QCOMPARE(info[History::FieldIdentifier].toString(), identifier);
     }
@@ -111,7 +111,7 @@ void ContactMatcherTest::testMatchExistingContact()
     info = contactInfoSpy.first()[2].toMap();
     QCOMPARE(info[History::FieldContactId].toString(), contactId);
     if (phoneNumberCompare) {
-        QVERIFY(PhoneUtils::comparePhoneNumbers(info[History::FieldIdentifier].toString(), identifier));
+        QVERIFY(History::PhoneUtils::comparePhoneNumbers(info[History::FieldIdentifier].toString(), identifier));
     } else {
         QCOMPARE(info[History::FieldIdentifier].toString(), identifier);
     }
