@@ -30,6 +30,9 @@
 #include <QLocale>
 #include <QDebug>
 
+namespace History
+{
+
 PhoneUtils::PhoneUtils(QObject *parent) :
     QObject(parent)
 {
@@ -111,5 +114,7 @@ bool PhoneUtils::isPhoneNumber(const QString &phoneNumber)
         break;
     }
     return true;
+}
+
 }
 
