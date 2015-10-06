@@ -36,6 +36,9 @@
 
 using namespace QtContacts;
 
+namespace History
+{
+
 ContactMatcher::ContactMatcher(QContactManager *manager, QObject *parent) :
     QObject(parent), mManager(manager)
 {
@@ -461,4 +464,6 @@ QStringList ContactMatcher::addressableFields(const QString &accountId)
 bool ContactMatcher::hasMatch(const QVariantMap &map) const
 {
     return !map[History::FieldContactId].toString().isEmpty();
+}
+
 }

@@ -96,7 +96,7 @@ QVariant HistoryEventModel::eventData(const History::Event &event, int role) con
         result = event.senderId();
         break;
     case SenderRole:
-        result = ContactMatcher::instance()->contactInfo(event.accountId(), event.senderId());
+        result = History::ContactMatcher::instance()->contactInfo(event.accountId(), event.senderId());
         break;
     case TimestampRole:
         result = event.timestamp();
