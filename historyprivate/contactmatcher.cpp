@@ -183,7 +183,8 @@ void ContactMatcher::onContactsChanged(QList<QContactId> ids)
             QString identifier = it2.key();
 
             Q_FOREACH(const QContact &contact, contacts) {
-                bool previousMatch = (contactInfo[History::FieldContactId].toString() == contact.id().toString());
+                bool previousMatch = (contactInfo.contains(History::FieldContactId) &&
+                                      contactInfo[History::FieldContactId].toString() == contact.id().toString());
                 QVariantMap map = matchAndUpdate(accountId, identifier, contact);
                 if (hasMatch(map)){
                     break;
@@ -217,13 +218,14 @@ void ContactMatcher::onContactsRemoved(QList<QContactId> ids)
         QStringList identifiersToMatch;
 
         for (; it2 != end2; ++it2) {
+            QVariantMap &info = it2.value();
             // skip entries that didn't have a match
-            if (!it2.value().contains(History::FieldContactId)) {
+            if (!hasMatch(info)) {
                 continue;
             }
 
             Q_FOREACH(const QContactId &id, ids) {
-                if (id.toString() == it2.value()[History::FieldContactId].toString()) {
+                if (id.toString() == info[History::FieldContactId].toString()) {
                     identifiersToMatch << it2.key();
                     break;
                 }
@@ -460,5 +462,5 @@ QStringList ContactMatcher::addressableFields(const QString &accountId)
 
 bool ContactMatcher::hasMatch(const QVariantMap &map) const
 {
-    return !map[History::FieldContactId].toString().isEmpty();
+    return (map.contains(History::FieldContactId) && !map[History::FieldContactId].toString().isEmpty());
 }
