@@ -353,7 +353,7 @@ QVariantMap SQLiteHistoryPlugin::getSingleThread(History::EventType type, const 
                     result = displayedThread.properties();
                 }
             }
-            result[History::FieldGroupedThreads] = finalGroupedThreads;
+            result[History::FieldGroupedThreads] = QVariant::fromValue(finalGroupedThreads);
             return result;
         }
         return result;
@@ -740,7 +740,7 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseThreadResults(History::EventType ty
                 !mConversationsCache.contains(threadKey)) {
                 continue;
             }
-            QList<QVariantMap> groupedThreads;
+            QVariantList groupedThreads;
             if (mConversationsCache.contains(threadKey)) {
                 Q_FOREACH (const History::Thread &thread, mConversationsCache[threadKey]) {
                     groupedThreads << thread.properties();
