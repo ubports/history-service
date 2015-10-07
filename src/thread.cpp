@@ -215,14 +215,16 @@ Thread Thread::fromProperties(const QVariantMap &properties)
     int unreadCount = properties[FieldUnreadCount].toInt();
 
     QList<Thread> groupedThreads;
-    QVariant variant = properties[FieldGroupedThreads];
-    if (variant.canConvert<QVariantList>()) {
-        Q_FOREACH(const QVariant& entry, variant.toList()) {
-            groupedThreads << Thread::fromProperties(entry.toMap());
+    if (properties.contains(FieldGroupedThreads)) { 
+        QVariant variant = properties[FieldGroupedThreads];
+        if (variant.canConvert<QVariantList>()) {
+            Q_FOREACH(const QVariant& entry, variant.toList()) {
+                groupedThreads << Thread::fromProperties(entry.toMap());
+            }
+        } else if (variant.canConvert<QDBusArgument>()) {
+            QDBusArgument argument = variant.value<QDBusArgument>();
+            argument >> groupedThreads;
         }
-    } else if (variant.canConvert<QDBusArgument>()) {
-        QDBusArgument argument = variant.value<QDBusArgument>();
-        argument >> groupedThreads;
     }
 
     Event event;
