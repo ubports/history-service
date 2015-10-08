@@ -336,8 +336,8 @@ QVariantMap SQLiteHistoryPlugin::getSingleThread(History::EventType type, const 
     if (accountId.isEmpty() || threadId.isEmpty()) {
         return result;
     }
-    if (properties.contains("groupingProperty")) {
-        grouped = properties["groupingProperty"].toString() == History::FieldParticipants;
+    if (properties.contains(History::FieldGroupingProperty)) {
+        grouped = properties[History::FieldGroupingProperty].toString() == History::FieldParticipants;
     }
     if (grouped) {
         const QString &threadKey = accountId+threadId;
@@ -721,8 +721,8 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseThreadResults(History::EventType ty
     QSqlQuery attachmentsQuery(SQLiteDatabase::instance()->database());
     QList<QVariantMap> attachments;
     bool grouped = false;
-    if (properties.contains("groupingProperty")) {
-        grouped = properties["groupingProperty"].toBool();
+    if (properties.contains(History::FieldGroupingProperty)) {
+        grouped = properties[History::FieldGroupingProperty].toString() == History::FieldParticipants;
     }
     while (query.next()) {
         QVariantMap thread;
