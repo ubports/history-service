@@ -35,19 +35,19 @@
 #include <QSqlError>
 #include <QDBusMetaType>
 
-Q_DECLARE_METATYPE(History::Thread)
-Q_DECLARE_METATYPE(History::Threads)
-
 QString generateThreadMapKey(const History::Thread &thread)
 {
     return thread.accountId() + thread.threadId();
 }
 
+QString generateThreadMapKey(const QString &accountId, const QString &threadId)
+{
+    return accountId + threadId;
+}
+
 SQLiteHistoryPlugin::SQLiteHistoryPlugin(QObject *parent) :
     QObject(parent), mInitialised(false)
 {
-    qRegisterMetaType<History::Thread>();
-    qRegisterMetaType<History::Threads>();
     // just trigger the database creation or update
     SQLiteDatabase::instance();
 
@@ -340,7 +340,7 @@ QVariantMap SQLiteHistoryPlugin::getSingleThread(History::EventType type, const 
         grouped = properties[History::FieldGroupingProperty].toString() == History::FieldParticipants;
     }
     if (grouped) {
-        const QString &threadKey = accountId+threadId;
+        const QString &threadKey = generateThreadMapKey(accountId, threadId);
         // we have to find which conversation this thread belongs to
         if (mConversationsCacheKeys.contains(threadKey)) {
             // found the thread.
@@ -735,7 +735,7 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseThreadResults(History::EventType ty
         thread[History::FieldAccountId] = accountId;
         thread[History::FieldThreadId] = threadId;
         if (grouped) {
-            const QString &threadKey = accountId+threadId;
+            const QString &threadKey = generateThreadMapKey(accountId, threadId);
             if (mInitialised && type == History::EventTypeText && 
                 !mConversationsCache.contains(threadKey)) {
                 continue;
