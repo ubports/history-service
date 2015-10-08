@@ -187,6 +187,24 @@ void HistoryModel::setMatchContacts(bool value)
     }
 }
 
+QVariant HistoryModel::threadForParticipants(const QString &accountId, int eventType, const QStringList &participants, int matchFlags, bool create)
+{
+    if (participants.isEmpty()) {
+        return QVariant();
+    }
+
+    History::Thread thread = History::Manager::instance()->threadForParticipants(accountId,
+                                                                                 (History::EventType)eventType,
+                                                                                 participants,
+                                                                                 (History::MatchFlags)matchFlags,
+                                                                                 create);
+    if (!thread.isNull()) {
+        return thread.properties();
+    }
+
+    return QVariant();
+}
+
 QString HistoryModel::threadIdForParticipants(const QString &accountId, int eventType, const QStringList &participants, int matchFlags, bool create)
 {
     if (participants.isEmpty()) {
