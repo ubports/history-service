@@ -43,7 +43,7 @@ ThreadPrivate::ThreadPrivate(const QString &theAccountId,
                                            const Event &theLastEvent,
                                            int theCount,
                                            int theUnreadCount,
-                                           const QList<Thread> &theGroupedThreads) :
+                                           const Threads &theGroupedThreads) :
     accountId(theAccountId), threadId(theThreadId), type(theType), participants(theParticipants),
     lastEvent(theLastEvent), count(theCount), unreadCount(theUnreadCount), groupedThreads(theGroupedThreads)
 {
@@ -66,7 +66,7 @@ Thread::Thread(const QString &accountId,
                const Event &lastEvent,
                int count,
                int unreadCount,
-               const QList<Thread> &groupedThreads)
+               const Threads &groupedThreads)
 : d_ptr(new ThreadPrivate(accountId, threadId, type, participants, lastEvent, count, unreadCount, groupedThreads))
 {
     qDBusRegisterMetaType<QList<QVariantMap> >();
@@ -133,7 +133,7 @@ int Thread::unreadCount() const
     return d->unreadCount;
 }
 
-QList<History::Thread> Thread::groupedThreads() const
+History::Threads Thread::groupedThreads() const
 {
     Q_D(const Thread);
     return d->groupedThreads;
@@ -214,7 +214,7 @@ Thread Thread::fromProperties(const QVariantMap &properties)
     int count = properties[FieldCount].toInt();
     int unreadCount = properties[FieldUnreadCount].toInt();
 
-    QList<Thread> groupedThreads;
+    Threads groupedThreads;
     if (properties.contains(FieldGroupedThreads)) { 
         QVariant variant = properties[FieldGroupedThreads];
         if (variant.canConvert<QVariantList>()) {
@@ -239,7 +239,7 @@ Thread Thread::fromProperties(const QVariantMap &properties)
     return Thread(accountId, threadId, type, participants, event, count, unreadCount, groupedThreads);
 }
 
-const QDBusArgument &operator>>(const QDBusArgument &argument, QList<Thread> &threads)
+const QDBusArgument &operator>>(const QDBusArgument &argument, Threads &threads)
 {
     argument.beginArray();
     while (!argument.atEnd()) {
