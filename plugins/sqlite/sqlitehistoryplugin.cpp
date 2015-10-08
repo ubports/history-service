@@ -130,8 +130,8 @@ void SQLiteHistoryPlugin::addThreadsToCache(const QList<QVariantMap> &threads)
 
 bool SQLiteHistoryPlugin::lessThan(const QVariantMap &left, const QVariantMap &right) const
 {
-    QVariant leftValue = left["lastEventTimestamp"];
-    QVariant rightValue = right["lastEventTimestamp"];
+    QVariant leftValue = left[History::FieldLastEventTimestamp];
+    QVariant rightValue = right[History::FieldLastEventTimestamp];
 
     return leftValue < rightValue;
 }
