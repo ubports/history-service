@@ -35,6 +35,9 @@ namespace History
 
 class ThreadPrivate;
 class ItemFactory;
+class Thread;
+
+typedef QList<Thread> Threads;
 
 class Thread
 {
@@ -50,7 +53,7 @@ public:
            const Event &lastEvent = Event(),
            int count = 0,
            int unreadCount = 0,
-           const QList<Thread> &groupedThreads = QList<Thread>());
+           const Threads &groupedThreads = Threads());
     Thread(const Thread &other);
     virtual ~Thread();
     Thread& operator=(const Thread &other);
@@ -62,7 +65,7 @@ public:
     Event lastEvent() const;
     int count() const;
     int unreadCount() const;
-    QList<Thread> groupedThreads() const;
+    Threads groupedThreads() const;
 
     bool isNull() const;
     bool operator==(const Thread &other) const;
@@ -76,9 +79,7 @@ protected:
     QSharedPointer<ThreadPrivate> d_ptr;
 };
 
-typedef QList<Thread> Threads;
-
-const QDBusArgument &operator>>(const QDBusArgument &argument, QList<Thread> &threads);
+const QDBusArgument &operator>>(const QDBusArgument &argument, Threads &threads);
 
 }
 
