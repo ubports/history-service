@@ -272,7 +272,7 @@ void HistoryThreadModel::updateQuery()
 
     QVariantMap properties;
     if (mGroupThreads) {
-        properties["groupingProperty"] = "participants";
+        properties[History::FieldGroupingProperty] = History::FieldParticipants;
     }
 
     mThreadView = History::Manager::instance()->queryThreads((History::EventType)mType, querySort, queryFilter, properties);
