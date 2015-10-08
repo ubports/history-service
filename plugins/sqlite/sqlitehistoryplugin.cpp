@@ -36,19 +36,19 @@
 #include <QSqlError>
 #include <QDBusMetaType>
 
-Q_DECLARE_METATYPE(History::Thread)
-Q_DECLARE_METATYPE(History::Threads)
-
 QString generateThreadMapKey(const History::Thread &thread)
 {
     return thread.accountId() + thread.threadId();
 }
 
+QString generateThreadMapKey(const QString &accountId, const QString &threadId)
+{
+    return accountId + threadId;
+}
+
 SQLiteHistoryPlugin::SQLiteHistoryPlugin(QObject *parent) :
     QObject(parent), mInitialised(false)
 {
-    qRegisterMetaType<History::Thread>();
-    qRegisterMetaType<History::Threads>();
     // just trigger the database creation or update
     SQLiteDatabase::instance();
 }
@@ -132,8 +132,8 @@ void SQLiteHistoryPlugin::addThreadsToCache(const QList<QVariantMap> &threads)
 
 bool SQLiteHistoryPlugin::lessThan(const QVariantMap &left, const QVariantMap &right) const
 {
-    QVariant leftValue = left["lastEventTimestamp"];
-    QVariant rightValue = right["lastEventTimestamp"];
+    QVariant leftValue = left[History::FieldLastEventTimestamp];
+    QVariant rightValue = right[History::FieldLastEventTimestamp];
 
     return leftValue < rightValue;
 }
@@ -370,11 +370,11 @@ QVariantMap SQLiteHistoryPlugin::getSingleThread(History::EventType type, const 
     if (accountId.isEmpty() || threadId.isEmpty()) {
         return result;
     }
-    if (properties.contains("groupingProperty")) {
-        grouped = properties["groupingProperty"].toString() == History::FieldParticipants;
+    if (properties.contains(History::FieldGroupingProperty)) {
+        grouped = properties[History::FieldGroupingProperty].toString() == History::FieldParticipants;
     }
     if (grouped) {
-        const QString &threadKey = accountId+threadId;
+        const QString &threadKey = generateThreadMapKey(accountId, threadId);
         // we have to find which conversation this thread belongs to
         if (mConversationsCacheKeys.contains(threadKey)) {
             // found the thread.
@@ -755,8 +755,8 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseThreadResults(History::EventType ty
     QSqlQuery attachmentsQuery(SQLiteDatabase::instance()->database());
     QList<QVariantMap> attachments;
     bool grouped = false;
-    if (properties.contains("groupingProperty")) {
-        grouped = properties["groupingProperty"].toBool();
+    if (properties.contains(History::FieldGroupingProperty)) {
+        grouped = properties[History::FieldGroupingProperty].toString() == History::FieldParticipants;
     }
     while (query.next()) {
         QVariantMap thread;
@@ -769,7 +769,7 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseThreadResults(History::EventType ty
         thread[History::FieldAccountId] = accountId;
         thread[History::FieldThreadId] = threadId;
         if (grouped) {
-            const QString &threadKey = accountId+threadId;
+            const QString &threadKey = generateThreadMapKey(accountId, threadId);
             if (mInitialised && type == History::EventTypeText && 
                 !mConversationsCache.contains(threadKey)) {
                 continue;
