@@ -31,6 +31,7 @@ Utils::Utils()
 {
 }
 
+// FIXME: find a better way to determine when accounts should be grouped
 bool Utils::shouldGroupAccount(const QString &accountId)
 {
     return (matchFlagsForAccount(accountId) & MatchPhoneNumber);
