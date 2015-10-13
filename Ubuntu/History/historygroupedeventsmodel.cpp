@@ -24,6 +24,7 @@
 #include "phoneutils_p.h"
 #include "sort.h"
 #include "historyqmlsort.h"
+#include "participant.h"
 
 HistoryGroupedEventsModel::HistoryGroupedEventsModel(QObject *parent) :
     HistoryEventModel(parent)
@@ -206,9 +207,9 @@ bool HistoryGroupedEventsModel::areOfSameGroup(const History::Event &event1, con
 
         // now check if the values are the same
         if (property == History::FieldParticipants) {
-            if (!History::Utils::compareParticipants(props1[property].toStringList(),
-                                     props2[property].toStringList(),
-                                     History::Utils::matchFlagsForAccount(accountId))) {
+            if (!History::Utils::compareParticipants(event1.participants().identifiers(),
+                                                     event2.participants().identifiers(),
+                                                     History::Utils::matchFlagsForAccount(accountId))) {
                 return false;
             }
         } else if (props1[property] != props2[property]) {
