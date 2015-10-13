@@ -13,18 +13,34 @@ include(CheckIncludeFile)
 set(CMAKE_AUTOMOC ON)
 
 find_package(Qt5Contacts)
-find_package(Qt5Core)
 find_package(Qt5DBus)
 find_package(Qt5Qml)
 find_package(Qt5Quick)
 find_package(Qt5Test)
 find_package(LibPhoneNumber REQUIRED)
 
-execute_process(
-    COMMAND qmake -query QT_INSTALL_QML
-    OUTPUT_VARIABLE QT_INSTALL_QML
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-)
+include(qt5)
+
+if(NOT CMAKE_CROSSCOMPILING)
+    find_program(QMAKE_EXECUTABLE qmake)
+    if(QMAKE_EXECUTABLE STREQUAL "QMAKE_EXECUTABLE-NOTFOUND")
+        message(FATAL_ERROR "qmake not found")
+    endif()
+    execute_process(
+        COMMAND ${QMAKE_EXECUTABLE} -query QT_INSTALL_QML
+        RESULT_VARIABLE RESULT
+        OUTPUT_VARIABLE QT_INSTALL_QML
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    if(NOT RESULT EQUAL 0)
+        message(FATAL_ERROR "Failed to determine QT_INSTALL_QML from qmake")
+    endif()
+else()
+    # qmake isn't multi-arch aware as it installs arch-specific mkspec files
+    # in to /usr/share, so we can't use it here (we'd need a qmake binary
+    # for the host arch using data for the target arch)
+    set(QT_INSTALL_QML "/usr/lib/${CMAKE_LIBRARY_ARCHITECTURE}/qt5/qml")
+endif()
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(TP_QT5 REQUIRED TelepathyQt5)
