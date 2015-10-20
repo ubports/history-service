@@ -23,6 +23,7 @@
 #define SQLITEHISTORYPLUGIN_H
 
 #include "plugin.h"
+#include "thread.h"
 #include <QObject>
 #include <QSqlQuery>
 
@@ -43,7 +44,8 @@ public:
     // Reader part of the plugin
     History::PluginThreadView* queryThreads(History::EventType type,
                                             const History::Sort &sort = History::Sort(),
-                                            const History::Filter &filter = History::Filter());
+                                            const History::Filter &filter = History::Filter(),
+                                            const QVariantMap &properties = QVariantMap());
     History::PluginEventView* queryEvents(History::EventType type,
                                           const History::Sort &sort = History::Sort(),
                                           const History::Filter &filter = History::Filter());
@@ -54,7 +56,7 @@ public:
 
     QList<QVariantMap> eventsForThread(const QVariantMap &thread);
 
-    QVariantMap getSingleThread(History::EventType type, const QString &accountId, const QString &threadId);
+    QVariantMap getSingleThread(History::EventType type, const QString &accountId, const QString &threadId, const QVariantMap &properties = QVariantMap());
     QVariantMap getSingleEvent(History::EventType type, const QString &accountId, const QString &threadId, const QString &eventId);
 
     // Writer part of the plugin
@@ -73,7 +75,7 @@ public:
 
     // functions to be used internally
     QString sqlQueryForThreads(History::EventType type, const QString &condition, const QString &order);
-    QList<QVariantMap> parseThreadResults(History::EventType type, QSqlQuery &query);
+    QList<QVariantMap> parseThreadResults(History::EventType type, QSqlQuery &query, const QVariantMap &properties = QVariantMap());
 
     QString sqlQueryForEvents(History::EventType type, const QString &condition, const QString &order);
     QList<QVariantMap> parseEventResults(History::EventType type, QSqlQuery &query);
@@ -82,6 +84,15 @@ public:
 
     QString filterToString(const History::Filter &filter, QVariantMap &bindValues, const QString &propertyPrefix = QString::null) const;
     QString escapeFilterValue(const QString &value) const;
+private:
+    bool lessThan(const QVariantMap &left, const QVariantMap &right) const;
+    void updateGroupedThreadsCache();
+    void updateDisplayedThread(const QString &displayedThreadKey);
+    void addThreadsToCache(const QList<QVariantMap> &threads);
+    void removeThreadFromCache(const QVariantMap &thread);
+    QMap<QString, History::Threads> mConversationsCache;
+    QMap<QString, QString> mConversationsCacheKeys;
+    bool mInitialised;
 };
 
 #endif // SQLITEHISTORYPLUGIN_H

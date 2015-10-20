@@ -31,12 +31,18 @@ Utils::Utils()
 {
 }
 
+// FIXME: find a better way to determine when accounts should be grouped
+bool Utils::shouldGroupAccount(const QString &accountId)
+{
+    return (matchFlagsForAccount(accountId) & MatchPhoneNumber);
+}
 
 MatchFlags Utils::matchFlagsForAccount(const QString &accountId)
 {
     static QMap<QString, History::MatchFlags> protocolFlags;
     if (protocolFlags.isEmpty()) {
         protocolFlags["ofono"] = MatchPhoneNumber;
+        protocolFlags["multimedia"] = MatchPhoneNumber;
     }
 
     QString protocol = protocolFromAccountId(accountId);
@@ -69,6 +75,65 @@ bool Utils::compareIds(const QString &accountId, const QString &id1, const QStri
     }
 
     return id1 == id2;
+}
+
+bool Utils::compareParticipants(const QStringList &participants1, const QStringList &participants2, MatchFlags flags)
+{
+    // if list size is different, just return
+    if (participants1.count() != participants2.count()) {
+        return false;
+    }
+
+    if (flags & MatchPhoneNumber) {
+        QStringList normalizedParticipants1;
+        QStringList normalizedParticipants2;
+        Q_FOREACH(const QString &participant, participants1) {
+            normalizedParticipants1 << PhoneUtils::normalizePhoneNumber(participant);
+        }
+        Q_FOREACH(const QString &participant, participants2) {
+            normalizedParticipants2 << PhoneUtils::normalizePhoneNumber(participant);
+        }
+        return compareNormalizedParticipants(normalizedParticipants1, normalizedParticipants2, flags);
+
+    }
+
+    return compareNormalizedParticipants(participants1, participants2, flags);
+}
+
+bool Utils::compareNormalizedParticipants(const QStringList &participants1, const QStringList &participants2, MatchFlags flags)
+{
+    QStringList mutableParticipants2 = participants2;
+    // if list size is different, just return
+    if (participants1.count() != participants2.count()) {
+        return false;
+    }
+
+    // and now compare the lists
+    bool found = true;
+    Q_FOREACH(const QString &participant, participants1) {
+        if (flags & MatchPhoneNumber) {
+            // we need to iterate the list and call the phone number comparing function for
+            // each participant from the given thread
+            bool inList = false;
+            QStringList::iterator it = mutableParticipants2.begin();
+            while (it != mutableParticipants2.end()) {
+                if (PhoneUtils::compareNormalizedPhoneNumbers(*it, participant)) {
+                    inList = true;
+                    mutableParticipants2.erase(it);
+                    break;
+                }
+                ++it;
+            }
+            if (!inList) {
+                found = false;
+                break;
+            }
+        } else if (!mutableParticipants2.contains(participant)) {
+            found = false;
+            break;
+        }
+    }
+    return found;
 }
 
 QString Utils::normalizeId(const QString &accountId, const QString &id)

@@ -24,12 +24,16 @@
 #include "manager.h"
 #include "threadview.h"
 #include "voiceevent.h"
+#include <QDBusMetaType>
 
 Q_DECLARE_METATYPE(History::TextEventAttachments)
+Q_DECLARE_METATYPE(QList<QVariantMap>)
 
 HistoryThreadModel::HistoryThreadModel(QObject *parent) :
-    HistoryModel(parent), mCanFetchMore(true)
+    HistoryModel(parent), mCanFetchMore(true), mGroupThreads(false)
 {
+    qRegisterMetaType<QList<QVariantMap> >();
+    qDBusRegisterMetaType<QList<QVariantMap> >();
     // configure the roles
     mRoles = HistoryModel::roleNames();
     mRoles[CountRole] = "count";
@@ -259,7 +263,12 @@ void HistoryThreadModel::updateQuery()
         querySort = mSort->sort();
     }
 
-    mThreadView = History::Manager::instance()->queryThreads((History::EventType)mType, querySort, queryFilter);
+    QVariantMap properties;
+    if (mGroupThreads) {
+        properties[History::FieldGroupingProperty] = History::FieldParticipants;
+    }
+
+    mThreadView = History::Manager::instance()->queryThreads((History::EventType)mType, querySort, queryFilter, properties);
     connect(mThreadView.data(),
             SIGNAL(threadsAdded(History::Threads)),
             SLOT(onThreadsAdded(History::Threads)));
@@ -309,6 +318,7 @@ void HistoryThreadModel::onThreadsAdded(const History::Threads &threads)
 void HistoryThreadModel::onThreadsModified(const History::Threads &threads)
 {
     History::Threads newThreads;
+
     Q_FOREACH(const History::Thread &thread, threads) {
         int pos = mThreads.indexOf(thread);
         if (pos >= 0) {

@@ -116,6 +116,7 @@ static const char* FieldNewEvent = "newEvent";
 // thread fields
 static const char* FieldLastEventId = "lastEventId";
 static const char* FieldLastEventTimestamp = "lastEventTimestamp";
+static const char* FieldGroupedThreads = "groupedThreads";
 
 // text event fields
 static const char* FieldMessage = "message";
@@ -148,6 +149,7 @@ static const char* FieldFilterProperty = "filterProperty";
 static const char* FieldFilterValue = "filterValue";
 static const char* FieldMatchFlags = "matchFlags";
 static const char* FieldFilters = "filters";
+static const char* FieldGroupingProperty = "groupingProperty";
 
 // contact matching stuff
 static const char* FieldContactId = "contactId";
