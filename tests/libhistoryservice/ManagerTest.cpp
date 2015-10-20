@@ -76,9 +76,9 @@ void ManagerTest::testThreadForParticipants_data()
                                                       << (QStringList() << "oneParticipant");
     QTest::newRow("voice thread using phone match") << "anotherAccountId"
                                                     << History::EventTypeVoice
-                                                    << (QStringList() << "+1234567890")
+                                                    << (QStringList() << "+554198765432")
                                                     << History::MatchFlags(History::MatchPhoneNumber)
-                                                    << (QStringList() << "4567890");
+                                                    << (QStringList() << "98765432");
 }
 
 void ManagerTest::testThreadForParticipants()
@@ -100,7 +100,8 @@ void ManagerTest::testThreadForParticipants()
 
     // now try to get the thread again to see if it is returned correctly
     History::Thread sameThread = mManager->threadForParticipants(accountId, type, participantsToMatch, matchFlags, false);
-    QVERIFY(sameThread == thread);
+    QVERIFY(!sameThread.isNull());
+    QCOMPARE(sameThread, thread);
 }
 
 void ManagerTest::testQueryEvents()

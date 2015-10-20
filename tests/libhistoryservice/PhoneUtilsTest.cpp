@@ -64,7 +64,7 @@ void PhoneUtilsTest::testComparePhoneNumbers_data()
     QTest::newRow("string equal") << "12345678" << "12345678" << true;
     QTest::newRow("number with dash") << "1234-5678" << "12345678" << true;
     QTest::newRow("number with area code") << "12312345678" << "12345678" << true;
-    QTest::newRow("number with extension") << "12345678#123" << "12345678" << true;
+    QTest::newRow("number with extension") << "12345678#123" << "12345678" << false;
     QTest::newRow("both numbers with extension") << "(123)12345678#1" << "12345678#1" << true;
     QTest::newRow("numbers with different extension") << "1234567#1" << "1234567#2" << false;
     QTest::newRow("short/emergency numbers") << "190" << "190" << true;
