@@ -16,6 +16,7 @@ set (plugin_HDRS
 
 include_directories(
     ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/historyprivate
     ${SQLITE3_INCLUDE_DIRS}
     )
 
@@ -36,7 +37,7 @@ add_custom_command(
 add_custom_target(qrc_update DEPENDS ${QRC_FILE} schema_update)
 
 add_dependencies(sqlitehistoryplugin schema_update qrc_update)
-target_link_libraries(sqlitehistoryplugin historyservice ${SQLITE3_LIBRARIES})
+target_link_libraries(sqlitehistoryplugin historyservice historyprivate ${SQLITE3_LIBRARIES})
 install(TARGETS sqlitehistoryplugin DESTINATION ${HISTORY_PLUGIN_PATH})
 
 add_subdirectory(schema)

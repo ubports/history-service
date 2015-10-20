@@ -59,29 +59,38 @@ QString PhoneUtils::normalizePhoneNumber(const QString &phoneNumber)
 
 bool PhoneUtils::comparePhoneNumbers(const QString &phoneNumberA, const QString &phoneNumberB)
 {
-    static i18n::phonenumbers::PhoneNumberUtil *phonenumberUtil = i18n::phonenumbers::PhoneNumberUtil::GetInstance();
+    // just do a simple string comparison first
+    if (phoneNumberA == phoneNumberB) {
+        return true;
+    }
+
     QString normalizedPhoneNumberA = normalizePhoneNumber(phoneNumberA);
     QString normalizedPhoneNumberB = normalizePhoneNumber(phoneNumberB);
 
-    // just do a simple string comparison if we are dealing with non phone numbers
-    if (!isPhoneNumber(phoneNumberA) || !isPhoneNumber(phoneNumberB)) {
-        return phoneNumberA == phoneNumberB;
+    return compareNormalizedPhoneNumbers(normalizedPhoneNumberA, normalizedPhoneNumberB);
+}
+
+bool PhoneUtils::compareNormalizedPhoneNumbers(const QString &numberA, const QString &numberB)
+{
+    if (numberA == numberB) {
+        return true;
     }
 
-    if (normalizedPhoneNumberA.size() < 7 || normalizedPhoneNumberB.size() < 7) {
-        return normalizedPhoneNumberA == normalizedPhoneNumberB;
+    static i18n::phonenumbers::PhoneNumberUtil *phonenumberUtil = i18n::phonenumbers::PhoneNumberUtil::GetInstance();
+
+    if (numberA.size() < 7 || numberB.size() < 7) {
+        return false;
     }
 
     i18n::phonenumbers::PhoneNumberUtil::MatchType match = phonenumberUtil->
-            IsNumberMatchWithTwoStrings(phoneNumberA.toStdString(),
-                                        phoneNumberB.toStdString());
+            IsNumberMatchWithTwoStrings(numberA.toStdString(),
+                                        numberB.toStdString());
     return (match > i18n::phonenumbers::PhoneNumberUtil::NO_MATCH);
 }
 
 bool PhoneUtils::isPhoneNumber(const QString &phoneNumber)
 {
     static i18n::phonenumbers::PhoneNumberUtil *phonenumberUtil = i18n::phonenumbers::PhoneNumberUtil::GetInstance();
-    std::string formattedNumber;
     i18n::phonenumbers::PhoneNumber number;
     i18n::phonenumbers::PhoneNumberUtil::ErrorType error;
     error = phonenumberUtil->Parse(phoneNumber.toStdString(), region().toStdString(), &number);
