@@ -27,6 +27,9 @@
 #include <TelepathyQt/MethodInvocationContext>
 #include <TelepathyQt/TextChannel>
 
+namespace History
+{
+
 ChannelObserver::ChannelObserver(QObject *parent) :
     QObject(parent), Tp::AbstractClientObserver(channelFilters(), true)
 {
@@ -180,4 +183,6 @@ void ChannelObserver::checkContextFinished(Tp::Channel *channel)
     }
 
     context->setFinished();
+}
+
 }

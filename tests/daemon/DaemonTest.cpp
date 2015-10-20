@@ -90,12 +90,12 @@ void DaemonTest::initTestCase()
 
     // register the handler
     mHandler = new Handler(this);
-    TelepathyHelper::instance()->registerClient(mHandler, "HistoryTestHandler");
+    History::TelepathyHelper::instance()->registerClient(mHandler, "HistoryTestHandler");
     QTRY_VERIFY(mHandler->isRegistered());
 
     // register the approver
     mApprover = new Approver(this);
-    TelepathyHelper::instance()->registerClient(mApprover, "HistoryTestApprover");
+    History::TelepathyHelper::instance()->registerClient(mApprover, "HistoryTestApprover");
     // Tp-qt does not set registered status to approvers
     QTRY_VERIFY(QDBusConnection::sessionBus().interface()->isServiceRegistered(TELEPHONY_SERVICE_APPROVER));
 
@@ -109,7 +109,7 @@ void DaemonTest::init()
     QVERIFY(!mAccount.isNull());
     QTRY_VERIFY(mAccount->isReady(Tp::Account::FeatureCore));
     QTRY_VERIFY(!mAccount->connection().isNull());
-    QTRY_VERIFY(TelepathyHelper::instance()->connected());
+    QTRY_VERIFY(History::TelepathyHelper::instance()->connected());
 
     mMockController = new MockController("mock", this);
 }

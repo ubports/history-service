@@ -1,6 +1,8 @@
 include_directories(
     ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/tests/common
     ${CMAKE_CURRENT_BINARY_DIR}
+    ${TP_QT5_INCLUDE_DIRS}
 )
 
 generate_test(FilterTest SOURCES FilterTest.cpp LIBRARIES historyservice)
@@ -33,3 +35,8 @@ generate_test(EventViewTest
               USE_DBUS
               TASKS --task ${CMAKE_BINARY_DIR}/daemon/history-daemon --ignore-return --task-name history-daemon
               WAIT_FOR com.canonical.HistoryService)
+
+# Telepathy-based tests
+generate_telepathy_test(ContactMatcherTest
+                        SOURCES ContactMatcherTest.cpp
+                        QT5_MODULES Core DBus Test Qml Contacts)

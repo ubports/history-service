@@ -51,7 +51,7 @@ void PhoneUtilsTest::testIsPhoneNumber()
     QFETCH(QString, number);
     QFETCH(bool, expectedResult);
 
-    bool result = PhoneUtils::isPhoneNumber(number);
+    bool result = History::PhoneUtils::isPhoneNumber(number);
     QCOMPARE(result, expectedResult);
 }
 
@@ -81,7 +81,7 @@ void PhoneUtilsTest::testComparePhoneNumbers()
     QFETCH(QString, number2);
     QFETCH(bool, expectedResult);
 
-    bool result = PhoneUtils::comparePhoneNumbers(number1, number2);
+    bool result = History::PhoneUtils::comparePhoneNumbers(number1, number2);
     QCOMPARE(result, expectedResult);
 }
 

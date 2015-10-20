@@ -28,12 +28,12 @@ void TelepathyTest::initialize()
 {
     Tp::registerTypes();
 
-    QSignalSpy spy(TelepathyHelper::instance(), SIGNAL(setupReady()));
+    QSignalSpy spy(History::TelepathyHelper::instance(), SIGNAL(setupReady()));
     QTRY_COMPARE_WITH_TIMEOUT(spy.count(), 1, DEFAULT_TIMEOUT);
 
     // just in case, remove any existing account that might be a leftover from
     // previous test runs
-    Q_FOREACH(const Tp::AccountPtr &account, TelepathyHelper::instance()->accounts()) {
+    Q_FOREACH(const Tp::AccountPtr &account, History::TelepathyHelper::instance()->accounts()) {
         QVERIFY(removeAccount(account));
     }
 

@@ -26,6 +26,9 @@
 
 #include <QObject>
 
+namespace History
+{
+
 class PhoneUtils : public QObject
 {
     Q_OBJECT
@@ -38,5 +41,7 @@ public:
 private:
     static QString region();
 };
+
+}
 
 #endif // PHONEUTILS_H
