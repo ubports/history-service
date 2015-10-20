@@ -43,15 +43,15 @@ HistoryDaemon::HistoryDaemon(QObject *parent)
     }
 
     // FIXME: maybe we should only set the plugin as ready after the contact cache was generated
-    connect(TelepathyHelper::instance(), &TelepathyHelper::setupReady, [&]() {
+    connect(History::TelepathyHelper::instance(), &History::TelepathyHelper::setupReady, [&]() {
         mBackend->generateContactCache();
         mDBus.connectToBus();
     });
 
-    connect(TelepathyHelper::instance(),
+    connect(History::TelepathyHelper::instance(),
             SIGNAL(channelObserverCreated(ChannelObserver*)),
             SLOT(onObserverCreated()));
-    TelepathyHelper::instance()->registerChannelObserver();
+    History::TelepathyHelper::instance()->registerChannelObserver();
 
     connect(&mCallObserver,
             SIGNAL(callEnded(Tp::CallChannelPtr)),
@@ -354,7 +354,7 @@ bool HistoryDaemon::removeThreads(const QList<QVariantMap> &threads)
 void HistoryDaemon::onObserverCreated()
 {
     qDebug() << __PRETTY_FUNCTION__;
-    ChannelObserver *observer = TelepathyHelper::instance()->channelObserver();
+    History::ChannelObserver *observer = History::TelepathyHelper::instance()->channelObserver();
 
     connect(observer, SIGNAL(callChannelAvailable(Tp::CallChannelPtr)),
             &mCallObserver, SLOT(onCallChannelAvailable(Tp::CallChannelPtr)));

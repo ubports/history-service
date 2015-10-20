@@ -59,7 +59,7 @@ void ContactMatcherTest::initTestCase()
 {
     initialize();
     mContactManager = new QContactManager("memory");
-    ContactMatcher::instance(mContactManager);
+    History::ContactMatcher::instance(mContactManager);
 
     // create two contacts to test
     mPhoneContact = createContact("Phone", "Contact", QStringList() << "123456789" << "7654321");
@@ -97,10 +97,10 @@ void ContactMatcherTest::testMatchExistingContact()
     QFETCH(QString, contactId);
     QFETCH(bool, phoneNumberCompare);
 
-    QSignalSpy contactInfoSpy(ContactMatcher::instance(), SIGNAL(contactInfoChanged(QString,QString,QVariantMap)));
-    QVariantMap info = ContactMatcher::instance()->contactInfo(accountId, identifier);
+    QSignalSpy contactInfoSpy(History::ContactMatcher::instance(), SIGNAL(contactInfoChanged(QString,QString,QVariantMap)));
+    QVariantMap info = History::ContactMatcher::instance()->contactInfo(accountId, identifier);
     if (phoneNumberCompare) {
-        QVERIFY(PhoneUtils::comparePhoneNumbers(info[History::FieldIdentifier].toString(), identifier));
+        QVERIFY(History::PhoneUtils::comparePhoneNumbers(info[History::FieldIdentifier].toString(), identifier));
     } else {
         QCOMPARE(info[History::FieldIdentifier].toString(), identifier);
     }
@@ -111,7 +111,7 @@ void ContactMatcherTest::testMatchExistingContact()
     info = contactInfoSpy.first()[2].toMap();
     QCOMPARE(info[History::FieldContactId].toString(), contactId);
     if (phoneNumberCompare) {
-        QVERIFY(PhoneUtils::comparePhoneNumbers(info[History::FieldIdentifier].toString(), identifier));
+        QVERIFY(History::PhoneUtils::comparePhoneNumbers(info[History::FieldIdentifier].toString(), identifier));
     } else {
         QCOMPARE(info[History::FieldIdentifier].toString(), identifier);
     }
@@ -119,10 +119,10 @@ void ContactMatcherTest::testMatchExistingContact()
 
 void ContactMatcherTest::testContactAdded()
 {
-    QSignalSpy contactInfoSpy(ContactMatcher::instance(), SIGNAL(contactInfoChanged(QString,QString,QVariantMap)));
+    QSignalSpy contactInfoSpy(History::ContactMatcher::instance(), SIGNAL(contactInfoChanged(QString,QString,QVariantMap)));
     QString identifier("5555555");
     QString accountId("mock/ofono/account0");
-    QVariantMap info = ContactMatcher::instance()->contactInfo(accountId, identifier);
+    QVariantMap info = History::ContactMatcher::instance()->contactInfo(accountId, identifier);
     QCOMPARE(info[History::FieldIdentifier].toString(), identifier);
     QVERIFY(!info.contains(History::FieldContactId));
 
@@ -136,10 +136,10 @@ void ContactMatcherTest::testContactAdded()
 
 void ContactMatcherTest::testContactRemoved()
 {
-    QSignalSpy contactInfoSpy(ContactMatcher::instance(), SIGNAL(contactInfoChanged(QString,QString,QVariantMap)));
+    QSignalSpy contactInfoSpy(History::ContactMatcher::instance(), SIGNAL(contactInfoChanged(QString,QString,QVariantMap)));
     QString identifier("6666666");
     QString accountId("mock/ofono/account0");
-    QVariantMap info = ContactMatcher::instance()->contactInfo(accountId, identifier);
+    QVariantMap info = History::ContactMatcher::instance()->contactInfo(accountId, identifier);
     QCOMPARE(info[History::FieldIdentifier].toString(), identifier);
 
     // now add a contact that matches this item
@@ -164,7 +164,7 @@ void ContactMatcherTest::testSynchronousContactInfoRequest()
     QContact contact = createContact("Synchronous", "Contact", QStringList() << identifier);
 
     // now that the contact info is filled, remove the contact
-    QVariantMap info = ContactMatcher::instance()->contactInfo(accountId, identifier, true);
+    QVariantMap info = History::ContactMatcher::instance()->contactInfo(accountId, identifier, true);
     QCOMPARE(info[History::FieldIdentifier].toString(), identifier);
     QCOMPARE(info[History::FieldAccountId].toString(), accountId);
     QVERIFY(!info[History::FieldContactId].toString().isEmpty());
@@ -178,10 +178,10 @@ void ContactMatcherTest::testWatchIdentifier()
     QString identifier("88888888");
     QString accountId("mock/ofono/account0");
 
-    ContactMatcher::instance()->watchIdentifier(accountId, identifier);
+    History::ContactMatcher::instance()->watchIdentifier(accountId, identifier);
 
     // now add a contact and make sure we get the contactInfoChanged signal
-    QSignalSpy contactInfoSpy(ContactMatcher::instance(), SIGNAL(contactInfoChanged(QString,QString,QVariantMap)));
+    QSignalSpy contactInfoSpy(History::ContactMatcher::instance(), SIGNAL(contactInfoChanged(QString,QString,QVariantMap)));
     QContact contact = createContact("Contact", "Watched", QStringList() << identifier);
     QTRY_COMPARE(contactInfoSpy.count(), 1);
     QCOMPARE(contactInfoSpy.first()[0].toString(), accountId);

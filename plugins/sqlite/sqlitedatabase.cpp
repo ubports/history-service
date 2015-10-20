@@ -41,14 +41,14 @@ void comparePhoneNumbers(sqlite3_context *context, int argc, sqlite3_value **arg
 {
     QString arg1((const char*)sqlite3_value_text(argv[0]));
     QString arg2((const char*)sqlite3_value_text(argv[1]));
-    sqlite3_result_int(context, (int)PhoneUtils::comparePhoneNumbers(arg1, arg2));
+    sqlite3_result_int(context, (int)History::PhoneUtils::comparePhoneNumbers(arg1, arg2));
 }
 
 void compareNormalizedPhoneNumbers(sqlite3_context *context, int argc, sqlite3_value **argv)
 {
     QString arg1((const char*)sqlite3_value_text(argv[0]));
     QString arg2((const char*)sqlite3_value_text(argv[1]));
-    sqlite3_result_int(context, (int)PhoneUtils::compareNormalizedPhoneNumbers(arg1, arg2));
+    sqlite3_result_int(context, (int)History::PhoneUtils::compareNormalizedPhoneNumbers(arg1, arg2));
 }
 
 void normalizeId(sqlite3_context *context, int argc, sqlite3_value **argv)

@@ -27,6 +27,9 @@
 #include <TelepathyQt/PendingReady>
 #include <TelepathyQt/Channel>
 
+namespace History
+{
+
 class ChannelObserver : public QObject, public Tp::AbstractClientObserver
 {
     Q_OBJECT
@@ -61,5 +64,7 @@ private:
     QList<Tp::ChannelPtr> mChannels;
 
 };
+
+}
 
 #endif // CHANNELOBSERVER_H

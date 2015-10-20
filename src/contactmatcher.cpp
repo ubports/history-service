@@ -36,6 +36,9 @@
 
 using namespace QtContacts;
 
+namespace History
+{
+
 ContactMatcher::ContactMatcher(QContactManager *manager, QObject *parent) :
     QObject(parent), mManager(manager)
 {
@@ -44,7 +47,7 @@ ContactMatcher::ContactMatcher(QContactManager *manager, QObject *parent) :
     }
 
     // just trigger the creation of TelepathyHelper
-    connect(TelepathyHelper::instance(), SIGNAL(setupReady()), SLOT(onSetupReady()));
+    connect(History::TelepathyHelper::instance(), SIGNAL(setupReady()), SLOT(onSetupReady()));
 
     connect(mManager,
             SIGNAL(contactsAdded(QList<QContactId>)),
@@ -103,7 +106,7 @@ QVariantMap ContactMatcher::contactInfo(const QString &accountId, const QString 
 
     QVariantMap map;
     // and if there was no match, asynchronously request the info, and return an empty map for now
-    if (TelepathyHelper::instance()->ready()) {
+    if (History::TelepathyHelper::instance()->ready()) {
         map = requestContactInfo(accountId, identifier, synchronous);
     } else if (!synchronous) {
         RequestInfo info{accountId, identifier};
@@ -406,7 +409,7 @@ QVariantMap ContactMatcher::matchAndUpdate(const QString &accountId, const QStri
         if (field == "tel") {
             QList<QContactDetail> details = contact.details(QContactDetail::TypePhoneNumber);
             Q_FOREACH(const QContactPhoneNumber number, details) {
-                if (PhoneUtils::comparePhoneNumbers(number.number(), identifier)) {
+                if (History::PhoneUtils::comparePhoneNumbers(number.number(), identifier)) {
                     QVariantMap detailProperties;
                     detailProperties["phoneSubTypes"] = toVariantList(number.subTypes());
                     detailProperties["phoneContexts"] = toVariantList(number.contexts());
@@ -450,7 +453,7 @@ QStringList ContactMatcher::addressableFields(const QString &accountId)
         return mAddressableFields[accountId];
     }
 
-    Tp::AccountPtr account = TelepathyHelper::instance()->accountForId(accountId);
+    Tp::AccountPtr account = History::TelepathyHelper::instance()->accountForId(accountId);
     QStringList fields;
     if (!account.isNull()) {
         fields = account->protocolInfo().addressableVCardFields();
@@ -463,4 +466,6 @@ QStringList ContactMatcher::addressableFields(const QString &accountId)
 bool ContactMatcher::hasMatch(const QVariantMap &map) const
 {
     return (map.contains(History::FieldContactId) && !map[History::FieldContactId].toString().isEmpty());
+}
+
 }

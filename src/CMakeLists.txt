@@ -1,4 +1,6 @@
 set(library_SRCS
+    channelobserver.cpp
+    contactmatcher.cpp
     event.cpp
     eventview.cpp
     filter.cpp
@@ -10,11 +12,13 @@ set(library_SRCS
     pluginthreadview.cpp
     plugineventview.cpp
     sort.cpp
+    telepathyhelper.cpp
     textevent.cpp
     texteventattachment.cpp
     thread.cpp
     threadview.cpp
     unionfilter.cpp
+    utils.cpp
     voiceevent.cpp
     )
 
@@ -31,7 +35,6 @@ set(library_HDRS
     manager.h
     Participant
     participant.h
-    phoneutils_p.h
     Plugin
     plugin.h
     PluginThreadView
@@ -57,6 +60,8 @@ set(library_HDRS
 )
 
 set(library_PRIV_HDRS
+    channelobserver_p.h
+    contactmatcher_p.h
     event_p.h
     eventview_p.h
     filter_p.h
@@ -68,11 +73,13 @@ set(library_PRIV_HDRS
     pluginthreadview_p.h
     plugineventview_p.h
     sort_p.h
+    telepathyhelper_p.h
     textevent_p.h
     texteventattachment_p.h
     thread_p.h
     threadview_p.h
     unionfilter_p.h
+    utils_p.h
     voiceevent_p.h
 )
 
@@ -81,7 +88,8 @@ qt5_add_dbus_adaptor(library_SRCS PluginEventView.xml plugineventview.h History:
 
 include_directories(${CMAKE_SOURCE_DIR}/src
                     ${CMAKE_CURRENT_BINARY_DIR}
-                    ${LibPhoneNumber_INCLUDE_DIRS})
+                    ${LibPhoneNumber_INCLUDE_DIRS}
+                    ${TP_QT5_INCLUDE_DIRS})
 
 add_library(historyservice SHARED ${library_SRCS} ${library_HDRS} ${library_PRIV_HDRS})
 
@@ -90,8 +98,8 @@ set_target_properties(historyservice PROPERTIES
                       SOVERSION ${HISTORY_VERSION_MAJOR}
                       VERSION ${HISTORY_VERSION_MAJOR}.${HISTORY_VERSION_MINOR}.${HISTORY_VERSION_PATCH})
 
-target_link_libraries(historyservice ${LibPhoneNumber_LIBRARIES})
-qt5_use_modules(historyservice Core DBus)
+target_link_libraries(historyservice ${LibPhoneNumber_LIBRARIES} ${TP_QT5_LIBRARIES})
+qt5_use_modules(historyservice Contacts Core DBus)
 
 install(TARGETS historyservice DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
