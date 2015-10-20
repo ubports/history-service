@@ -39,6 +39,8 @@ class Plugin
 public:
     virtual ~Plugin() {}
 
+    virtual bool initialised() { return true; }
+
     // Reader part of the plugin
     virtual PluginThreadView* queryThreads(EventType type,
                                        const Sort &sort = Sort(),
@@ -75,6 +77,9 @@ public:
     virtual bool beginBatchOperation() {}
     virtual bool endBatchOperation() {}
     virtual bool rollbackBatchOperation() {}
+
+    // FIXME: this is hackish, but changing it required a broad refactory of HistoryDaemon
+    virtual void generateContactCache() {}
 };
 
 }

@@ -28,6 +28,7 @@
 #include <QStringList>
 #include <QVariantMap>
 #include "types.h"
+#include "participant.h"
 
 namespace History
 {
@@ -52,7 +53,7 @@ public:
     bool newEvent() const;
     void setNewEvent(bool value);
     EventType type() const;
-    QStringList participants() const;
+    Participants participants() const;
     QVariantMap properties() const;
     bool isNull() const;
     bool operator==(const Event &other) const;

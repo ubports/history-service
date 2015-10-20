@@ -43,6 +43,11 @@ private Q_SLOTS:
     void testMatchExistingContact();
     void testContactAdded();
     void testContactRemoved();
+    void testSynchronousContactInfoRequest();
+    void testWatchIdentifier();
+
+protected:
+    QContact createContact(const QString &firstName, const QString &lastName, const QStringList &phoneNumbers = QStringList(), const QStringList &extendedDetails = QStringList());
 
 private:
     QContactManager *mContactManager;
@@ -57,26 +62,8 @@ void ContactMatcherTest::initTestCase()
     ContactMatcher::instance(mContactManager);
 
     // create two contacts to test
-    QContactPhoneNumber phoneNumber;
-    phoneNumber.setNumber("123456789");
-    QVERIFY(mPhoneContact.saveDetail(&phoneNumber));
-    QContactPhoneNumber phoneNumber2;
-    phoneNumber2.setNumber("7654321");
-    QVERIFY(mPhoneContact.saveDetail(&phoneNumber2));
-    QContactName name;
-    name.setFirstName("Phone");
-    name.setLastName("Contact");
-    QVERIFY(mPhoneContact.saveDetail(&name));
-    QVERIFY(mContactManager->saveContact(&mPhoneContact));
-
-    QContactExtendedDetail extendedDetail;
-    extendedDetail.setName("x-mock-im");
-    extendedDetail.setData("123456789");
-    QVERIFY(mExtendedContact.saveDetail(&extendedDetail));
-    name.setFirstName("Extended");
-    name.setLastName("Generic Contact");
-    QVERIFY(mExtendedContact.saveDetail(&name));
-    QVERIFY(mContactManager->saveContact(&mExtendedContact));
+    mPhoneContact = createContact("Phone", "Contact", QStringList() << "123456789" << "7654321");
+    mExtendedContact = createContact("Extended", "Generic Contact", QStringList(), QStringList() << "123456789");
 }
 
 void ContactMatcherTest::init()
@@ -140,12 +127,7 @@ void ContactMatcherTest::testContactAdded()
     QVERIFY(!info.contains(History::FieldContactId));
 
     // now add a contact that matches this item
-    QContact contact;
-    QContactPhoneNumber phoneNumber;
-    phoneNumber.setNumber(identifier);
-    QVERIFY(contact.saveDetail(&phoneNumber));
-    QVERIFY(mContactManager->saveContact(&contact));
-
+    QContact contact = createContact("Added", "Contact", QStringList() << identifier);
     QTRY_COMPARE(contactInfoSpy.count(), 1);
     QCOMPARE(contactInfoSpy.first()[0].toString(), accountId);
     QCOMPARE(contactInfoSpy.first()[1].toString(), identifier);
@@ -161,11 +143,7 @@ void ContactMatcherTest::testContactRemoved()
     QCOMPARE(info[History::FieldIdentifier].toString(), identifier);
 
     // now add a contact that matches this item
-    QContact contact;
-    QContactPhoneNumber phoneNumber;
-    phoneNumber.setNumber(identifier);
-    QVERIFY(contact.saveDetail(&phoneNumber));
-    QVERIFY(mContactManager->saveContact(&contact));
+    QContact contact = createContact("Removed", "Contact", QStringList() << identifier);
     QTRY_COMPARE(contactInfoSpy.count(), 1);
 
     // now that the contact info is filled, remove the contact
@@ -175,6 +153,76 @@ void ContactMatcherTest::testContactRemoved()
     QCOMPARE(contactInfoSpy.first()[0].toString(), accountId);
     QCOMPARE(contactInfoSpy.first()[1].toString(), identifier);
     QVERIFY(!contactInfoSpy.first()[2].toMap().contains(History::FieldContactId));
+}
+
+void ContactMatcherTest::testSynchronousContactInfoRequest()
+{
+    QString identifier("77777777");
+    QString accountId("mock/ofono/account0");
+
+    // now add a contact that matches this item
+    QContact contact = createContact("Synchronous", "Contact", QStringList() << identifier);
+
+    // now that the contact info is filled, remove the contact
+    QVariantMap info = ContactMatcher::instance()->contactInfo(accountId, identifier, true);
+    QCOMPARE(info[History::FieldIdentifier].toString(), identifier);
+    QCOMPARE(info[History::FieldAccountId].toString(), accountId);
+    QVERIFY(!info[History::FieldContactId].toString().isEmpty());
+
+    // and remove this contact to not interfere in the other tests
+    QVERIFY(mContactManager->removeContact(contact.id()));
+}
+
+void ContactMatcherTest::testWatchIdentifier()
+{
+    QString identifier("88888888");
+    QString accountId("mock/ofono/account0");
+
+    ContactMatcher::instance()->watchIdentifier(accountId, identifier);
+
+    // now add a contact and make sure we get the contactInfoChanged signal
+    QSignalSpy contactInfoSpy(ContactMatcher::instance(), SIGNAL(contactInfoChanged(QString,QString,QVariantMap)));
+    QContact contact = createContact("Contact", "Watched", QStringList() << identifier);
+    QTRY_COMPARE(contactInfoSpy.count(), 1);
+    QCOMPARE(contactInfoSpy.first()[0].toString(), accountId);
+    QCOMPARE(contactInfoSpy.first()[1].toString(), identifier);
+    QVariantMap info = contactInfoSpy.first()[2].toMap();
+    QCOMPARE(info[History::FieldContactId].toString(), contact.id().toString());
+
+    QVERIFY(mContactManager->removeContact(contact.id()));
+}
+
+QContact ContactMatcherTest::createContact(const QString &firstName, const QString &lastName, const QStringList &phoneNumbers, const QStringList &extendedDetails)
+{
+    QContact contact;
+
+    QContactName name;
+    name.setFirstName(firstName);
+    name.setLastName(lastName);
+
+    if (!contact.saveDetail(&name)) {
+        return contact;
+    }
+
+    Q_FOREACH(const QString &number, phoneNumbers) {
+        QContactPhoneNumber phoneNumber;
+        phoneNumber.setNumber(number);
+        if (!contact.saveDetail(&phoneNumber)) {
+            return contact;
+        }
+    }
+
+    Q_FOREACH(const QString &extended, extendedDetails) {
+        QContactExtendedDetail extendedDetail;
+        extendedDetail.setName("x-mock-im");
+        extendedDetail.setData(extended);
+        if (!contact.saveDetail(&extendedDetail)) {
+            return contact;
+        }
+    }
+
+    mContactManager->saveContact(&contact);
+    return contact;
 }
 
 QTEST_MAIN(ContactMatcherTest)

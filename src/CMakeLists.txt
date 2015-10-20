@@ -5,6 +5,7 @@ set(library_SRCS
     intersectionfilter.cpp
     manager.cpp
     managerdbus.cpp
+    participant.cpp
     phoneutils.cpp
     pluginthreadview.cpp
     plugineventview.cpp
@@ -28,6 +29,8 @@ set(library_HDRS
     intersectionfilter.h
     Manager
     manager.h
+    Participant
+    participant.h
     phoneutils_p.h
     Plugin
     plugin.h
@@ -60,6 +63,7 @@ set(library_PRIV_HDRS
     intersectionfilter_p.h
     manager_p.h
     managerdbus_p.h
+    participant_p.h
     phoneutils_p.h
     pluginthreadview_p.h
     plugineventview_p.h

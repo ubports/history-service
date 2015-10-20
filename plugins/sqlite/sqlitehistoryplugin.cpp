@@ -28,6 +28,7 @@
 #include "intersectionfilter.h"
 #include "unionfilter.h"
 #include "thread.h"
+#include "contactmatcher_p.h"
 #include "utils_p.h"
 #include <QDateTime>
 #include <QDebug>
@@ -50,10 +51,11 @@ SQLiteHistoryPlugin::SQLiteHistoryPlugin(QObject *parent) :
 {
     // just trigger the database creation or update
     SQLiteDatabase::instance();
+}
 
-    updateGroupedThreadsCache();
-
-    mInitialised = true;
+bool SQLiteHistoryPlugin::initialised()
+{
+    return mInitialised;
 }
 
 void SQLiteHistoryPlugin::updateGroupedThreadsCache()
@@ -106,7 +108,7 @@ void SQLiteHistoryPlugin::addThreadsToCache(const QList<QVariantMap> &threads)
             const QString &conversationKey = it.key();
             History::Threads groupedThreads = it.value();
             Q_FOREACH(const History::Thread &groupedThread, groupedThreads) {
-                found = History::Utils::compareNormalizedParticipants(thread.participants(), groupedThread.participants(), History::MatchPhoneNumber);
+                found = History::Utils::compareNormalizedParticipants(thread.participants().identifiers(), groupedThread.participants().identifiers(), History::MatchPhoneNumber);
                 if (found) {
                     Q_FOREACH(const History::Thread &groupedThread, groupedThreads) {
                         mConversationsCacheKeys.remove(generateThreadMapKey(groupedThread));
@@ -210,6 +212,38 @@ void SQLiteHistoryPlugin::removeThreadFromCache(const QVariantMap &properties)
             it++;
         }
     }
+}
+
+/**
+ * @brief Generates the cache containing contact data for all known participants.
+ *
+ * FIXME: this should probably be done outside of the plugin, but it requires a
+ * refactory of \ref HistoryDaemon itself.
+ */
+void SQLiteHistoryPlugin::generateContactCache()
+{
+    QTime time;
+    time.start();
+    qDebug() << "---- HistoryService: start generating cached content";
+    QSqlQuery query(SQLiteDatabase::instance()->database());
+    if (!query.exec("SELECT DISTINCT accountId, normalizedId FROM thread_participants")) {
+        qWarning() << "Failed to generate contact cache:" << query.lastError().text();
+        return;
+    }
+
+    while (query.next()) {
+        QString accountId = query.value(0).toString();
+        QString participantId = query.value(1).toString();
+        // we don't care about the results, as long as the contact data is present in the cache for
+        // future usage.
+        ContactMatcher::instance()->contactInfo(accountId, participantId, true);
+    }
+
+    updateGroupedThreadsCache();
+
+    qDebug() << "---- HistoryService: finished generating contact cache. elapsed time:" << time.elapsed() << "ms";
+
+    mInitialised = true;
 }
 
 // Reader
@@ -444,7 +478,7 @@ QVariantMap SQLiteHistoryPlugin::createThreadForParticipants(const QString &acco
     thread[History::FieldAccountId] = accountId;
     thread[History::FieldThreadId] = threadId;
     thread[History::FieldType] = (int) type;
-    thread[History::FieldParticipants] = participants;
+    thread[History::FieldParticipants] = ContactMatcher::instance()->contactInfo(accountId, participants, true);
     thread[History::FieldCount] = 0;
     thread[History::FieldUnreadCount] = 0;
 
@@ -726,7 +760,7 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseThreadResults(History::EventType ty
     }
     while (query.next()) {
         QVariantMap thread;
-        QString accountId = query.value(0).toString();                   
+        QString accountId = query.value(0).toString();
         QString threadId = query.value(1).toString();
         if (threadId.trimmed().isEmpty()) {
             continue;
@@ -746,13 +780,14 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseThreadResults(History::EventType ty
                     groupedThreads << thread.properties();
                 }
             }
-	    thread[History::FieldGroupedThreads] = QVariant::fromValue(groupedThreads);
+            thread[History::FieldGroupedThreads] = QVariant::fromValue(groupedThreads);
         }
 
         thread[History::FieldEventId] = query.value(2);
         thread[History::FieldCount] = query.value(3);
         thread[History::FieldUnreadCount] = query.value(4);
-        thread[History::FieldParticipants] = query.value(5).toString().split("|,|");
+        QStringList participants = query.value(5).toString().split("|,|");
+        thread[History::FieldParticipants] = ContactMatcher::instance()->contactInfo(accountId, participants, true);
 
         // the generic event fields
         thread[History::FieldSenderId] = query.value(6);
@@ -796,7 +831,7 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseThreadResults(History::EventType ty
         case History::EventTypeVoice:
             thread[History::FieldMissed] = query.value(10);
             thread[History::FieldDuration] = query.value(9);
-            thread[History::FieldRemoteParticipant] = query.value(11);
+            thread[History::FieldRemoteParticipant] = ContactMatcher::instance()->contactInfo(accountId, query.value(11).toString(), true);
             break;
         }
         threads << thread;
@@ -841,6 +876,12 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseEventResults(History::EventType typ
         QString accountId = query.value(0).toString();
         QString threadId = query.value(1).toString();
         QString eventId = query.value(2).toString();
+
+        // ignore events that don't have a threadId or an eventId
+        if (threadId.trimmed().isEmpty() || eventId.trimmed().isEmpty()) {
+            continue;
+        }
+
         event[History::FieldType] = (int) type;
         event[History::FieldAccountId] = accountId;
         event[History::FieldThreadId] = threadId;
@@ -848,8 +889,8 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseEventResults(History::EventType typ
         event[History::FieldSenderId] = query.value(3);
         event[History::FieldTimestamp] = toLocalTimeString(query.value(4).toDateTime());
         event[History::FieldNewEvent] = query.value(5);
-        event[History::FieldParticipants] = query.value(6).toString().split("|,|");
-
+        QStringList participants = query.value(6).toString().split("|,|");
+        event[History::FieldParticipants] = ContactMatcher::instance()->contactInfo(accountId, participants, true);
 
         switch (type) {
         case History::EventTypeText:
@@ -889,7 +930,7 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseEventResults(History::EventType typ
         case History::EventTypeVoice:
             event[History::FieldDuration] = query.value(7).toInt();
             event[History::FieldMissed] = query.value(8);
-            event[History::FieldRemoteParticipant] = query.value(9);
+            event[History::FieldRemoteParticipant] = query.value(9).toString();
             break;
         }
 

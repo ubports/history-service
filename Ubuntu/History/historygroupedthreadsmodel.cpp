@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Canonical, Ltd.
+ * Copyright (C) 2013-2015 Canonical, Ltd.
  *
  * Authors:
  *  Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>
@@ -91,6 +91,11 @@ void HistoryGroupedThreadsModel::fetchMore(const QModelIndex &parent)
     const History::Threads &threads = fetchNextPage();
     Q_FOREACH(const History::Thread &thread, threads) {
         processThreadGrouping(thread);
+
+        // insert the identifiers in the contact map
+        Q_FOREACH(const History::Participant &participant, thread.participants()) {
+            watchContactInfo(thread.accountId(), participant.identifier(), participant.properties());
+        }
     }
     notifyDataChanged();
 

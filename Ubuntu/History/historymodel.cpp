@@ -47,6 +47,10 @@ HistoryModel::HistoryModel(QObject *parent) :
     connect(this, SIGNAL(rowsRemoved(QModelIndex,int,int)), this, SIGNAL(countChanged()));
     connect(this, SIGNAL(modelReset()), this, SIGNAL(countChanged()));
 
+    // reset the view when the service is stopped or started
+    connect(History::Manager::instance(), SIGNAL(serviceRunningChanged()),
+            this, SLOT(triggerQueryUpdate()));
+
     // create the view and get some objects
     triggerQueryUpdate();
 }
@@ -88,8 +92,9 @@ QVariant HistoryModel::data(const QModelIndex &index, int role) const
     case ParticipantsRole:
         if (mMatchContacts) {
             result = ContactMatcher::instance()->contactInfo(properties[History::FieldAccountId].toString(),
-                                                             properties[History::FieldParticipants].toStringList());
+                                                             History::Participants::fromVariantList(properties[History::FieldParticipants].toList()).identifiers());
         } else {
+            //FIXME: handle contact changes
             result = properties[History::FieldParticipants];
         }
         break;
@@ -182,6 +187,24 @@ void HistoryModel::setMatchContacts(bool value)
     }
 }
 
+QVariantMap HistoryModel::threadForParticipants(const QString &accountId, int eventType, const QStringList &participants, int matchFlags, bool create)
+{
+    if (participants.isEmpty()) {
+        return QVariantMap();
+    }
+
+    History::Thread thread = History::Manager::instance()->threadForParticipants(accountId,
+                                                                                 (History::EventType)eventType,
+                                                                                 participants,
+                                                                                 (History::MatchFlags)matchFlags,
+                                                                                 create);
+    if (!thread.isNull()) {
+        return thread.properties();
+    }
+
+    return QVariantMap();
+}
+
 QString HistoryModel::threadIdForParticipants(const QString &accountId, int eventType, const QStringList &participants, int matchFlags, bool create)
 {
     if (participants.isEmpty()) {
@@ -237,12 +260,12 @@ void HistoryModel::onContactInfoChanged(const QString &accountId, const QString 
         // HistoryGroupedEventsModel which is based on this model and handles the items in a different way
         QModelIndex idx = index(i);
         QVariantMap properties = idx.data(PropertiesRole).toMap();
-        QStringList participants = properties[History::FieldParticipants].toStringList();
-        Q_FOREACH(const QString &participant, participants) {
+        History::Participants participants = History::Participants::fromVariantList(properties[History::FieldParticipants].toList());
+        Q_FOREACH(const History::Participant &participant, participants) {
             // FIXME: right now we might be grouping threads from different accounts, so we are not enforcing
             // the accountId to be the same as the one from the contact info, but maybe we need to do that
             // in the future?
-            if (History::Utils::compareIds(accountId, participant, identifier)) {
+            if (History::Utils::compareIds(accountId, participant.identifier(), identifier)) {
                 changedIndexes << idx;
             }
         }
@@ -251,6 +274,13 @@ void HistoryModel::onContactInfoChanged(const QString &accountId, const QString 
     // now emit the dataChanged signal to all changed indexes
     Q_FOREACH(const QModelIndex &idx, changedIndexes) {
         Q_EMIT dataChanged(idx, idx);
+    }
+}
+
+void HistoryModel::watchContactInfo(const QString &accountId, const QString &identifier, const QVariantMap &currentInfo)
+{
+    if (mMatchContacts) {
+        ContactMatcher::instance()->watchIdentifier(accountId, identifier, currentInfo);
     }
 }
 
@@ -340,6 +370,7 @@ void HistoryModel::triggerQueryUpdate()
     if (mUpdateTimer) {
         killTimer(mUpdateTimer);
     }
+
     // delay the loading of the model data until the settings settle down
     mUpdateTimer = startTimer(100);
 }

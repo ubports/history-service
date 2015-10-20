@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 Canonical, Ltd.
+ * Copyright (C) 2015 Canonical, Ltd.
  *
  * Authors:
  *  Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>
@@ -19,41 +19,37 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef HISTORY_THREAD_P_H
-#define HISTORY_THREAD_P_H
+#ifndef HISTORY_PARTICIPANT_P_H
+#define HISTORY_PARTICIPANT_P_H
 
 #include <QString>
-#include "types.h"
+#include <QVariantMap>
 
 namespace History
 {
 
-class Thread;
+class Participant;
 
-class ThreadPrivate
+class ParticipantPrivate
 {
 public:
-    explicit ThreadPrivate();
-    ThreadPrivate(const QString &theAccountId,
-                         const QString &theThreadId,
-                         EventType theType,
-                         const Participants &theParticipants,
-                         const Event &theLastEvent,
-                         int theCount,
-                         int theUnreadCount,
-                         const Threads &theGroupedThreads);
-    virtual ~ThreadPrivate();
+    explicit ParticipantPrivate();
+    ParticipantPrivate(const QString &theAccountId,
+                       const QString &theIdentifier,
+                       const QString &theContactId = QString::null,
+                       const QString &theAlias = QString::null,
+                       const QString &theAvatar = QString::null,
+                       const QVariantMap &theDetailProperties = QVariantMap());
+    virtual ~ParticipantPrivate();
 
     QString accountId;
-    QString threadId;
-    Participants participants;
-    EventType type;
-    Event lastEvent;
-    int count;
-    int unreadCount;
-    Threads groupedThreads;
+    QString identifier;
+    QString contactId;
+    QString alias;
+    QString avatar;
+    QVariantMap detailProperties;
 };
 
 }
 
-#endif // HISTORY_THREAD_P_H
+#endif // HISTORY_PARTICIPANT_P_H

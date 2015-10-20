@@ -67,6 +67,8 @@ public:
     bool removeThreads(const Threads &threads);
     bool removeEvents(const Events &events);
 
+    bool isServiceRunning() const;
+
 Q_SIGNALS:
     void threadsAdded(const History::Threads &threads);
     void threadsModified(const History::Threads &threads);
@@ -75,6 +77,8 @@ Q_SIGNALS:
     void eventsAdded(const History::Events &events);
     void eventsModified(const History::Events &events);
     void eventsRemoved(const History::Events &events);
+
+    void serviceRunningChanged();
 
 private:
     Manager();

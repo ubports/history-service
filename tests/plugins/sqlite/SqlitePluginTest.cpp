@@ -100,7 +100,7 @@ void SqlitePluginTest::testCreateThread()
     // check that the variant map is properly filled
     QCOMPARE(thread[History::FieldAccountId].toString(), accountId);
     QCOMPARE(thread[History::FieldType].toInt(), (int) eventType);
-    QCOMPARE(thread[History::FieldParticipants].toStringList(), participants);
+    QCOMPARE(History::Participants::fromVariantList(thread[History::FieldParticipants].toList()).identifiers(), participants);
     QVERIFY(!thread[History::FieldThreadId].toString().isEmpty());
 
     // now check that the thread is properly saved in the database

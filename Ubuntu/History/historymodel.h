@@ -112,6 +112,11 @@ public:
     bool matchContacts() const;
     void setMatchContacts(bool value);
 
+    Q_INVOKABLE QVariantMap threadForParticipants(const QString &accountId,
+                                                  int eventType,
+                                                  const QStringList &participants,
+                                                  int matchFlags = (int)History::MatchCaseSensitive,
+                                                  bool create = false);
     Q_INVOKABLE QString threadIdForParticipants(const QString &accountId,
                                                 int eventType,
                                                 const QStringList &participants,
@@ -140,6 +145,7 @@ protected Q_SLOTS:
     void triggerQueryUpdate();
     virtual void updateQuery() = 0;
     void onContactInfoChanged(const QString &accountId, const QString &identifier, const QVariantMap &contactInfo);
+    void watchContactInfo(const QString &accountId, const QString &identifier, const QVariantMap &currentInfo);
 
 protected:
     virtual void timerEvent(QTimerEvent *event);

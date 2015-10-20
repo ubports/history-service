@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Canonical, Ltd.
+ * Copyright (C) 2013-2015 Canonical, Ltd.
  *
  * This file is part of history-service.
  *
@@ -45,6 +45,9 @@ private Q_SLOTS:
     void testEqualsOperator();
     void testCopyConstructor();
     void testAssignmentOperator();
+
+private:
+    History::Participants participantsFromIdentifiers(const QString &accountId, const QStringList &identifiers);
 };
 
 void ThreadTest::initTestCase()
@@ -99,11 +102,11 @@ void ThreadTest::testCreateNewThread()
         break;
     }
 
-    History::Thread threadItem(accountId, threadId, type, participants, event, count, unreadCount);
+    History::Thread threadItem(accountId, threadId, type, participantsFromIdentifiers(accountId, participants), event, count, unreadCount);
     QCOMPARE(threadItem.accountId(), accountId);
     QCOMPARE(threadItem.threadId(), threadId);
     QCOMPARE(threadItem.type(), type);
-    QCOMPARE(threadItem.participants(), participants);
+    QCOMPARE(threadItem.participants().identifiers(), participants);
     QCOMPARE(threadItem.lastEvent(), event);
     QCOMPARE(threadItem.count(), count);
     QCOMPARE(threadItem.unreadCount(), unreadCount);
@@ -160,7 +163,7 @@ void ThreadTest::testFromProperties()
     properties[History::FieldAccountId] = accountId;
     properties[History::FieldThreadId] = threadId;
     properties[History::FieldType] = (int) type;
-    properties[History::FieldParticipants] = participants;
+    properties[History::FieldParticipants] = participantsFromIdentifiers(accountId, participants).toVariantList();
     properties[History::FieldCount] = count;
     properties[History::FieldUnreadCount] = unreadCount;
 
@@ -168,7 +171,7 @@ void ThreadTest::testFromProperties()
     QCOMPARE(thread.accountId(), accountId);
     QCOMPARE(thread.threadId(), threadId);
     QCOMPARE(thread.type(), type);
-    QCOMPARE(thread.participants(), participants);
+    QCOMPARE(thread.participants().identifiers(), participants);
     QCOMPARE(thread.count(), count);
     QCOMPARE(thread.unreadCount(), unreadCount);
     QVERIFY(thread.lastEvent() == event);
@@ -226,12 +229,12 @@ void ThreadTest::testProperties()
         break;
     }
 
-    History::Thread threadItem(accountId, threadId, type, participants, event, count, unreadCount);
+    History::Thread threadItem(accountId, threadId, type, participantsFromIdentifiers(accountId, participants), event, count, unreadCount);
     QVariantMap properties = threadItem.properties();
     QCOMPARE(properties[History::FieldAccountId].toString(), accountId);
     QCOMPARE(properties[History::FieldThreadId].toString(), threadId);
     QCOMPARE(properties[History::FieldType].toInt(), (int)type);
-    QCOMPARE(properties[History::FieldParticipants].toStringList(), participants);
+    QCOMPARE(History::Participants::fromVariantList(properties[History::FieldParticipants].toList()).identifiers(), participants);
     QCOMPARE(properties[History::FieldCount].toInt(), count);
     QCOMPARE(properties[History::FieldUnreadCount].toInt(), unreadCount);
 }
@@ -241,11 +244,14 @@ void ThreadTest::testIsNull_data()
     QTest::addColumn<History::Thread>("thread");
     QTest::addColumn<bool>("isNull");
 
+    History::Participants participants;
+    participants << History::Participant("AccountId","Foo") << History::Participant("AccountId","Bar");
+
     QTest::newRow("empty thread") << History::Thread() << true;
-    QTest::newRow("empty accountId") << History::Thread(QString(), "threadId" , History::EventTypeText, QStringList() << "Foo" << "Bar") << false;
-    QTest::newRow("empty threadId") << History::Thread("AccountId", QString(), History::EventTypeVoice, QStringList() << "Foo" << "Bar") << false;
-    QTest::newRow("empty participants") << History::Thread("AccountId", "ThreadId", History::EventTypeText, QStringList()) << false;
-    QTest::newRow("construct empty thread") << History::Thread(QString(), QString(), History::EventTypeNull, QStringList()) << true;
+    QTest::newRow("empty accountId") << History::Thread(QString(), "threadId" , History::EventTypeText, participants) << false;
+    QTest::newRow("empty threadId") << History::Thread("AccountId", QString(), History::EventTypeVoice, participants) << false;
+    QTest::newRow("empty participants") << History::Thread("AccountId", "ThreadId", History::EventTypeText, History::Participants()) << false;
+    QTest::newRow("construct empty thread") << History::Thread(QString(), QString(), History::EventTypeNull, History::Participants()) << true;
 }
 
 void ThreadTest::testIsNull()
@@ -286,24 +292,33 @@ void ThreadTest::testEqualsOperator()
     QFETCH(History::EventType, secondType);
     QFETCH(bool, result);
 
-    History::Thread firstThread(firstAccountId, firstThreadId, firstType, QStringList());
-    History::Thread secondThread(secondAccountId, secondThreadId, secondType, QStringList());
+    History::Thread firstThread(firstAccountId, firstThreadId, firstType, History::Participants());
+    History::Thread secondThread(secondAccountId, secondThreadId, secondType, History::Participants());
     QVERIFY((firstThread == secondThread) == result);
 }
 
 void ThreadTest::testCopyConstructor()
 {
-    History::Thread thread("OneAccountId", "OneThreadId", History::EventTypeText, QStringList() << "Foo" << "Bar");
+    History::Thread thread("OneAccountId", "OneThreadId", History::EventTypeText, participantsFromIdentifiers("OneAccountId", QStringList() << "Foo" << "Bar"));
     History::Thread copy(thread);
     QVERIFY(thread == copy);
 }
 
 void ThreadTest::testAssignmentOperator()
 {
-    History::Thread thread("OneAccountId", "OneThreadId", History::EventTypeText, QStringList() << "Foo" << "Bar");
+    History::Thread thread("OneAccountId", "OneThreadId", History::EventTypeText, participantsFromIdentifiers("OneAccountId", QStringList() << "Foo" << "Bar"));
     History::Thread other;
     other = thread;
     QVERIFY(other == thread);
+}
+
+History::Participants ThreadTest::participantsFromIdentifiers(const QString &accountId, const QStringList &identifiers)
+{
+    History::Participants participants;
+    Q_FOREACH(const QString &identifier, identifiers) {
+        participants << History::Participant(accountId, identifier);
+    }
+    return participants;
 }
 
 QTEST_MAIN(ThreadTest)

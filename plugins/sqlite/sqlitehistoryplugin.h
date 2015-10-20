@@ -41,6 +41,8 @@ class SQLiteHistoryPlugin : public QObject, History::Plugin
 public:
     explicit SQLiteHistoryPlugin(QObject *parent = 0);
 
+    bool initialised();
+
     // Reader part of the plugin
     History::PluginThreadView* queryThreads(History::EventType type,
                                             const History::Sort &sort = History::Sort(),
@@ -84,6 +86,9 @@ public:
 
     QString filterToString(const History::Filter &filter, QVariantMap &bindValues, const QString &propertyPrefix = QString::null) const;
     QString escapeFilterValue(const QString &value) const;
+
+    void generateContactCache();
+
 private:
     bool lessThan(const QVariantMap &left, const QVariantMap &right) const;
     void updateGroupedThreadsCache();
