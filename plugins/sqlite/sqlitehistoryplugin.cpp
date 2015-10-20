@@ -75,7 +75,18 @@ void SQLiteHistoryPlugin::updateGroupedThreadsCache()
 
 void SQLiteHistoryPlugin::addThreadsToCache(const QList<QVariantMap> &threads)
 {
-    Q_FOREACH (const QVariantMap &properties, threads) {
+    Q_FOREACH (QVariantMap properties, threads) {
+        // FIXME: it would be better to just use UTC all the way through the client,
+        // but that requires a lot of changes
+        // so instead we just convert to UTC here on the cache and convert back to local time
+        // when returning
+        QDateTime timestamp = QDateTime::fromString(properties[History::FieldTimestamp].toString(), Qt::ISODate);
+        properties[History::FieldTimestamp] = timestamp.toUTC().toString("yyyy-MM-ddTHH:mm:ss.zzz");
+
+        // the same for readTimestamp
+        timestamp = QDateTime::fromString(properties[History::FieldReadTimestamp].toString(), Qt::ISODate);
+        properties[History::FieldReadTimestamp] = timestamp.toUTC().toString("yyyy-MM-ddTHH:mm:ss.zzz");
+
         History::Thread thread = History::Thread::fromProperties(properties);
         const QString &threadKey = generateThreadMapKey(thread);
 
@@ -212,6 +223,28 @@ void SQLiteHistoryPlugin::removeThreadFromCache(const QVariantMap &properties)
             it++;
         }
     }
+}
+
+/**
+ * @brief Parses the cached thread properties, change fields that might be necessary and return the data
+ * @param thread the thread to extract properties from
+ * @return the thread properties
+ */
+QVariantMap SQLiteHistoryPlugin::cachedThreadProperties(const History::Thread &thread) const
+{
+    QVariantMap properties = thread.properties();
+
+    // FIXME: now we need to convert the timestamp back to local time
+    // remove this once we change the flow to use UTC for everything
+    QDateTime timestamp = QDateTime::fromString(properties[History::FieldTimestamp].toString(), Qt::ISODate);
+    timestamp.setTimeSpec(Qt::UTC);
+    properties[History::FieldTimestamp] = toLocalTimeString(timestamp);
+
+    // and the readTimestamp too
+    timestamp = QDateTime::fromString(properties[History::FieldReadTimestamp].toString(), Qt::ISODate);
+    timestamp.setTimeSpec(Qt::UTC);
+    properties[History::FieldReadTimestamp] = toLocalTimeString(timestamp);
+    return properties;
 }
 
 /**
@@ -382,9 +415,10 @@ QVariantMap SQLiteHistoryPlugin::getSingleThread(History::EventType type, const 
             const History::Threads &groupedThreads = mConversationsCache[mConversationsCacheKeys[threadKey]];
             QVariantList finalGroupedThreads;
             Q_FOREACH(const History::Thread &displayedThread, groupedThreads) {
-                finalGroupedThreads << displayedThread.properties();
+                QVariantMap properties = cachedThreadProperties(displayedThread);
+                finalGroupedThreads << properties;
                 if (generateThreadMapKey(displayedThread) == threadKey) {
-                    result = displayedThread.properties();
+                    result = properties;
                 }
             }
             result[History::FieldGroupedThreads] = QVariant::fromValue(finalGroupedThreads);
@@ -777,7 +811,7 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseThreadResults(History::EventType ty
             QVariantList groupedThreads;
             if (mConversationsCache.contains(threadKey)) {
                 Q_FOREACH (const History::Thread &thread, mConversationsCache[threadKey]) {
-                    groupedThreads << thread.properties();
+                    groupedThreads << cachedThreadProperties(thread);
                 }
             }
             thread[History::FieldGroupedThreads] = QVariant::fromValue(groupedThreads);
