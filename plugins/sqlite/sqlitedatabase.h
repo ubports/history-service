@@ -40,9 +40,12 @@ public:
 
     bool reopen();
 
+    QString dumpSchema() const;
+    QStringList parseSchemaFile(const QString &fileName);
+    bool runMultipleStatements(const QStringList &statements, bool useTransaction = true);
+
 protected:
     bool createOrUpdateDatabase();
-    QStringList parseSchemaFile(const QString &fileName);
     void parseVersionInfo();
 
     // data upgrade functions
