@@ -23,6 +23,7 @@
 #include "eventview.h"
 #include "historyqmltexteventattachment.h"
 #include "manager.h"
+#include "contactmatcher_p.h"
 #include <QDBusMetaType>
 #include <QDebug>
 #include <QTimerEvent>
@@ -34,6 +35,7 @@ HistoryEventModel::HistoryEventModel(QObject *parent) :
     mRoles = HistoryModel::roleNames();
     mRoles[EventIdRole] = "eventId";
     mRoles[SenderIdRole] = "senderId";
+    mRoles[SenderRole] = "sender";
     mRoles[TimestampRole] = "timestamp";
     mRoles[DateRole] = "date";
     mRoles[NewEventRole] = "newEvent";
@@ -92,6 +94,9 @@ QVariant HistoryEventModel::eventData(const History::Event &event, int role) con
         break;
     case SenderIdRole:
         result = event.senderId();
+        break;
+    case SenderRole:
+        result = ContactMatcher::instance()->contactInfo(event.accountId(), event.senderId());
         break;
     case TimestampRole:
         result = event.timestamp();
@@ -185,6 +190,13 @@ void HistoryEventModel::fetchMore(const QModelIndex &parent)
         mCanFetchMore = false;
         Q_EMIT canFetchMoreChanged();
     } else {
+        Q_FOREACH(const History::Event &event, events) {
+            // watch for contact changes for the given identifiers
+            Q_FOREACH(const History::Participant &participant, event.participants()) {
+                watchContactInfo(event.accountId(), participant.identifier(), participant.properties());
+            }
+        }
+
         beginInsertRows(QModelIndex(), mEvents.count(), mEvents.count() + events.count() - 1);
         mEvents << events;
         endInsertRows();

@@ -22,12 +22,14 @@
 #ifndef HISTORYDAEMON_H
 #define HISTORYDAEMON_H
 
+#include <QCoreApplication>
 #include <QObject>
 #include <QSharedPointer>
 #include "types.h"
 #include "textchannelobserver.h"
 #include "callchannelobserver.h"
 #include "historyservicedbus.h"
+#include "plugin.h"
 
 class HistoryDaemon : public QObject
 {

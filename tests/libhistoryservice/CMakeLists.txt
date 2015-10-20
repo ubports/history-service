@@ -5,6 +5,7 @@ include_directories(
 
 generate_test(FilterTest SOURCES FilterTest.cpp LIBRARIES historyservice)
 generate_test(IntersectionFilterTest SOURCES IntersectionFilterTest.cpp LIBRARIES historyservice)
+generate_test(ParticipantTest SOURCES ParticipantTest.cpp LIBRARIES historyservice)
 generate_test(PhoneUtilsTest SOURCES PhoneUtilsTest.cpp LIBRARIES historyservice)
 generate_test(SortTest SOURCES SortTest.cpp LIBRARIES historyservice)
 generate_test(ThreadTest SOURCES ThreadTest.cpp LIBRARIES historyservice)

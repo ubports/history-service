@@ -26,6 +26,7 @@
 #include <QString>
 #include <QStringList>
 #include "types.h"
+#include "participant.h"
 
 #define HISTORY_EVENT_DECLARE_CLONE(Class) \
     virtual EventPrivate *clone() { return new Class##Private(*this); }
@@ -53,7 +54,7 @@ public:
                        const QString &theSenderId,
                        const QDateTime &theTimestamp,
                        bool theNewEvent,
-                       const QStringList &theParticipants);
+                       const Participants &theParticipants);
     virtual ~EventPrivate();
 
     virtual EventType type() const { return EventTypeNull; }
@@ -66,7 +67,7 @@ public:
     QString receiver;
     QDateTime timestamp;
     bool newEvent;
-    QStringList participants;
+    Participants participants;
 
     static const QSharedPointer<EventPrivate>& getD(const Event& other) { return other.d_ptr; }
 

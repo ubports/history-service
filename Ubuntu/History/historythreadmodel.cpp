@@ -206,6 +206,13 @@ void HistoryThreadModel::fetchMore(const QModelIndex &parent)
         mCanFetchMore = false;
         Q_EMIT canFetchMoreChanged();
     } else {
+        Q_FOREACH(const History::Thread &thread, threads) {
+            // insert the identifiers in the contact map
+            Q_FOREACH(const History::Participant &participant, thread.participants()) {
+                watchContactInfo(thread.accountId(), participant.identifier(), participant.properties());
+            }
+        }
+
         beginInsertRows(QModelIndex(), mThreads.count(), mThreads.count() + threads.count() - 1);
         mThreads << threads;
         endInsertRows();

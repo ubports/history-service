@@ -42,6 +42,12 @@ HistoryDaemon::HistoryDaemon(QObject *parent)
         mBackend = History::PluginManager::instance()->plugins().first();
     }
 
+    // FIXME: maybe we should only set the plugin as ready after the contact cache was generated
+    connect(TelepathyHelper::instance(), &TelepathyHelper::setupReady, [&]() {
+        mBackend->generateContactCache();
+        mDBus.connectToBus();
+    });
+
     connect(TelepathyHelper::instance(),
             SIGNAL(channelObserverCreated(ChannelObserver*)),
             SLOT(onObserverCreated()));
@@ -63,8 +69,6 @@ HistoryDaemon::HistoryDaemon(QObject *parent)
     // FIXME: we need to do this in a better way, but for now this should do
     mProtocolFlags["ofono"] = History::MatchPhoneNumber;
     mProtocolFlags["multimedia"] = History::MatchPhoneNumber;
-
-    mDBus.connectToBus();
 }
 
 HistoryDaemon::~HistoryDaemon()
