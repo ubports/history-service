@@ -42,13 +42,15 @@ public:
     // Reader part of the plugin
     virtual PluginThreadView* queryThreads(EventType type,
                                        const Sort &sort = Sort(),
-                                       const Filter &filter = Filter()) = 0;
+                                       const Filter &filter = Filter(),
+                                       const QVariantMap &properties = QVariantMap()) = 0;
     virtual PluginEventView* queryEvents(EventType type,
                                          const Sort &sort = Sort(),
                                          const Filter &filter = Filter()) = 0;
     virtual QVariantMap getSingleThread(EventType type,
                                         const QString &accountId,
-                                        const QString &threadId) = 0;
+                                        const QString &threadId,
+                                        const QVariantMap &properties = QVariantMap()) = 0;
     virtual QVariantMap getSingleEvent(EventType type,
                                        const QString &accountId,
                                        const QString &threadId,

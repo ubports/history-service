@@ -40,7 +40,8 @@ public:
                          const QStringList &theParticipants,
                          const Event &theLastEvent,
                          int theCount,
-                         int theUnreadCount);
+                         int theUnreadCount,
+                         const Threads &theGroupedThreads);
     virtual ~ThreadPrivate();
 
     QString accountId;
@@ -50,6 +51,7 @@ public:
     Event lastEvent;
     int count;
     int unreadCount;
+    Threads groupedThreads;
 };
 
 }

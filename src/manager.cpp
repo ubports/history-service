@@ -84,9 +84,10 @@ Manager *Manager::instance()
 
 ThreadViewPtr Manager::queryThreads(EventType type,
                                     const Sort &sort,
-                                    const Filter &filter)
+                                    const Filter &filter,
+                                    const QVariantMap &properties)
 {
-    return ThreadViewPtr(new ThreadView(type, sort, filter));
+    return ThreadViewPtr(new ThreadView(type, sort, filter, properties));
 }
 
 EventViewPtr Manager::queryEvents(EventType type,
@@ -115,11 +116,11 @@ Thread Manager::threadForParticipants(const QString &accountId,
     return d->dbus->threadForParticipants(accountId, type, participants, matchFlags, create);
 }
 
-Thread Manager::getSingleThread(EventType type, const QString &accountId, const QString &threadId)
+Thread Manager::getSingleThread(EventType type, const QString &accountId, const QString &threadId, const QVariantMap &properties)
 {
     Q_D(Manager);
 
-    Thread thread = d->dbus->getSingleThread(type, accountId, threadId);
+    Thread thread = d->dbus->getSingleThread(type, accountId, threadId, properties);
     return thread;
 }
 

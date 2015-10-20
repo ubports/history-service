@@ -23,6 +23,10 @@
 #include "thread_p.h"
 #include "textevent.h"
 #include "voiceevent.h"
+#include <QDebug>
+#include <QDBusMetaType>
+
+Q_DECLARE_METATYPE(QList< QVariantMap >)
 
 namespace History
 {
@@ -38,9 +42,10 @@ ThreadPrivate::ThreadPrivate(const QString &theAccountId,
                                            const QStringList &theParticipants,
                                            const Event &theLastEvent,
                                            int theCount,
-                                           int theUnreadCount) :
+                                           int theUnreadCount,
+                                           const Threads &theGroupedThreads) :
     accountId(theAccountId), threadId(theThreadId), type(theType), participants(theParticipants),
-    lastEvent(theLastEvent), count(theCount), unreadCount(theUnreadCount)
+    lastEvent(theLastEvent), count(theCount), unreadCount(theUnreadCount), groupedThreads(theGroupedThreads)
 {
 }
 
@@ -60,9 +65,12 @@ Thread::Thread(const QString &accountId,
                const QStringList &participants,
                const Event &lastEvent,
                int count,
-               int unreadCount)
-: d_ptr(new ThreadPrivate(accountId, threadId, type, participants, lastEvent, count, unreadCount))
+               int unreadCount,
+               const Threads &groupedThreads)
+: d_ptr(new ThreadPrivate(accountId, threadId, type, participants, lastEvent, count, unreadCount, groupedThreads))
 {
+    qDBusRegisterMetaType<QList<QVariantMap> >();
+    qRegisterMetaType<QList<QVariantMap> >();
 }
 
 Thread::Thread(const Thread &other)
@@ -125,6 +133,12 @@ int Thread::unreadCount() const
     return d->unreadCount;
 }
 
+History::Threads Thread::groupedThreads() const
+{
+    Q_D(const Thread);
+    return d->groupedThreads;
+}
+
 bool Thread::isNull() const
 {
     Q_D(const Thread);
@@ -157,7 +171,14 @@ QVariantMap Thread::properties() const
 {
     Q_D(const Thread);
 
-    QVariantMap map;
+    if (d->accountId.isEmpty() || d->threadId.isEmpty()) {
+        return QVariantMap();
+    }
+
+    // include the properties from the last event
+    QVariantMap map = lastEvent().properties();
+
+    // and add the thread ones too
     map[FieldAccountId] = d->accountId;
     map[FieldThreadId] = d->threadId;
     map[FieldType] = d->type;
@@ -166,6 +187,14 @@ QVariantMap Thread::properties() const
     map[FieldUnreadCount] = d->unreadCount;
     map[FieldLastEventId] = lastEvent().eventId();
     map[FieldLastEventTimestamp] = lastEvent().timestamp();
+
+    QList<QVariantMap> groupedThreads;
+    Q_FOREACH(const Thread &thread, d->groupedThreads) {
+        groupedThreads << thread.properties();
+    }
+    if (!groupedThreads.isEmpty()) {
+        map[FieldGroupedThreads] = QVariant::fromValue(groupedThreads);
+    }
 
     return map;
 }
@@ -185,6 +214,19 @@ Thread Thread::fromProperties(const QVariantMap &properties)
     int count = properties[FieldCount].toInt();
     int unreadCount = properties[FieldUnreadCount].toInt();
 
+    Threads groupedThreads;
+    if (properties.contains(FieldGroupedThreads)) { 
+        QVariant variant = properties[FieldGroupedThreads];
+        if (variant.canConvert<QVariantList>()) {
+            Q_FOREACH(const QVariant& entry, variant.toList()) {
+                groupedThreads << Thread::fromProperties(entry.toMap());
+            }
+        } else if (variant.canConvert<QDBusArgument>()) {
+            QDBusArgument argument = variant.value<QDBusArgument>();
+            argument >> groupedThreads;
+        }
+    }
+
     Event event;
     switch (type) {
         case EventTypeText:
@@ -194,7 +236,24 @@ Thread Thread::fromProperties(const QVariantMap &properties)
             event = VoiceEvent::fromProperties(properties);
             break;
     }
-    return Thread(accountId, threadId, type, participants, event, count, unreadCount);
+    return Thread(accountId, threadId, type, participants, event, count, unreadCount, groupedThreads);
+}
+
+const QDBusArgument &operator>>(const QDBusArgument &argument, Threads &threads)
+{
+    argument.beginArray();
+    while (!argument.atEnd()) {
+        QVariantMap props;
+        QVariant variant;
+        argument >> variant;
+        QDBusArgument innerArgument = variant.value<QDBusArgument>();
+        if (!innerArgument.atEnd()) {
+            innerArgument >> props;
+        }
+        threads << Thread::fromProperties(props);
+    }
+    argument.endArray();
+    return argument;
 }
 
 }
