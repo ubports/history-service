@@ -1,3 +1,10 @@
+history-service (0.1+16.04.20151103-0ubuntu1) xenial; urgency=medium
+
+  [ Tiago Salem Herrmann ]
+  * Enable cross compiling.
+
+ -- Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>  Tue, 03 Nov 2015 14:26:16 +0000
+
 history-service (0.1+15.10.20151020.1-0ubuntu1) wily; urgency=medium
 
   [ Gustavo Pichorim Boiko ]
