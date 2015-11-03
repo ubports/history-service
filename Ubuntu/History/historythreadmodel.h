@@ -78,6 +78,7 @@ protected Q_SLOTS:
 protected:
     History::Threads fetchNextPage();
     bool mCanFetchMore;
+    bool mGroupThreads;
 
 private:
     History::ThreadViewPtr mThreadView;

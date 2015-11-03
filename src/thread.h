@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Canonical, Ltd.
+ * Copyright (C) 2013-2015 Canonical, Ltd.
  *
  * Authors:
  *  Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>
@@ -22,18 +22,23 @@
 #ifndef HISTORY_THREAD_H
 #define HISTORY_THREAD_H
 
+#include <QDBusArgument>
 #include <QDateTime>
 #include <QScopedPointer>
 #include <QStringList>
 #include <QVariantMap>
 #include "types.h"
 #include "event.h"
+#include "participant.h"
 
 namespace History
 {
 
 class ThreadPrivate;
 class ItemFactory;
+class Thread;
+
+typedef QList<Thread> Threads;
 
 class Thread
 {
@@ -45,10 +50,11 @@ public:
     Thread(const QString &accountId,
            const QString &threadId,
            EventType type,
-           const QStringList &participants,
+           const Participants &participants,
            const Event &lastEvent = Event(),
            int count = 0,
-           int unreadCount = 0);
+           int unreadCount = 0,
+           const Threads &groupedThreads = Threads());
     Thread(const Thread &other);
     virtual ~Thread();
     Thread& operator=(const Thread &other);
@@ -56,10 +62,11 @@ public:
     QString accountId() const;
     QString threadId() const;
     EventType type() const;
-    QStringList participants() const;
+    Participants participants() const;
     Event lastEvent() const;
     int count() const;
     int unreadCount() const;
+    Threads groupedThreads() const;
 
     bool isNull() const;
     bool operator==(const Thread &other) const;
@@ -73,7 +80,7 @@ protected:
     QSharedPointer<ThreadPrivate> d_ptr;
 };
 
-typedef QList<Thread> Threads;
+const QDBusArgument &operator>>(const QDBusArgument &argument, Threads &threads);
 
 }
 

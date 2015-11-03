@@ -1,5 +1,5 @@
 include_directories(${TP_QT5_INCLUDE_DIRS}
-                    ${CMAKE_SOURCE_DIR}/historyprivate)
+                    ${CMAKE_SOURCE_DIR}/src)
 
 configure_file(dbus-session.conf.in ${CMAKE_CURRENT_BINARY_DIR}/dbus-session.conf)
 
@@ -8,7 +8,7 @@ qt5_use_modules(mockcontroller Core DBus)
 
 add_library(telepathytest STATIC telepathytest.cpp telepathytest.h)
 qt5_use_modules(telepathytest Core DBus)
-target_link_libraries(telepathytest historyprivate ${TP_QT5_LIBRARIES})
+target_link_libraries(telepathytest ${TP_QT5_LIBRARIES})
 
 add_subdirectory(mock)
 add_subdirectory(dbus-services)

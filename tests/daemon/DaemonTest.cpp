@@ -90,12 +90,12 @@ void DaemonTest::initTestCase()
 
     // register the handler
     mHandler = new Handler(this);
-    TelepathyHelper::instance()->registerClient(mHandler, "HistoryTestHandler");
+    History::TelepathyHelper::instance()->registerClient(mHandler, "HistoryTestHandler");
     QTRY_VERIFY(mHandler->isRegistered());
 
     // register the approver
     mApprover = new Approver(this);
-    TelepathyHelper::instance()->registerClient(mApprover, "HistoryTestApprover");
+    History::TelepathyHelper::instance()->registerClient(mApprover, "HistoryTestApprover");
     // Tp-qt does not set registered status to approvers
     QTRY_VERIFY(QDBusConnection::sessionBus().interface()->isServiceRegistered(TELEPHONY_SERVICE_APPROVER));
 
@@ -109,7 +109,7 @@ void DaemonTest::init()
     QVERIFY(!mAccount.isNull());
     QTRY_VERIFY(mAccount->isReady(Tp::Account::FeatureCore));
     QTRY_VERIFY(!mAccount->connection().isNull());
-    QTRY_VERIFY(TelepathyHelper::instance()->connected());
+    QTRY_VERIFY(History::TelepathyHelper::instance()->connected());
 
     mMockController = new MockController("mock", this);
 }
@@ -142,7 +142,7 @@ void DaemonTest::testMessageReceived()
     QCOMPARE(threads.count(), 1);
     History::Thread thread = threads.first();
     QCOMPARE(thread.participants().count(), 1);
-    QCOMPARE(thread.participants().first(), sender);
+    QCOMPARE(thread.participants().first().identifier(), sender);
 
     QTRY_COMPARE(threadsModifiedSpy.count(), 1);
     threads = threadsModifiedSpy.first().first().value<History::Threads>();
@@ -253,7 +253,7 @@ void DaemonTest::testMessageSent()
     QCOMPARE(threads.count(), 1);
     History::Thread thread = threads.first();
     QCOMPARE(thread.participants().count(), 1);
-    QCOMPARE(thread.participants().first(), recipient);
+    QCOMPARE(thread.participants().first().identifier(), recipient);
 
     QTRY_COMPARE(threadsModifiedSpy.count(), 1);
     threads = threadsModifiedSpy.first().first().value<History::Threads>();
@@ -297,7 +297,7 @@ void DaemonTest::testMissedCall()
     QCOMPARE(threads.count(), 1);
     History::Thread thread = threads.first();
     QCOMPARE(thread.participants().count(), 1);
-    QCOMPARE(thread.participants().first(), callerId);
+    QCOMPARE(thread.participants().first().identifier(), callerId);
 
     QTRY_COMPARE(threadsModifiedSpy.count(), 1);
     threads = threadsModifiedSpy.first().first().value<History::Threads>();
@@ -358,7 +358,7 @@ void DaemonTest::testOutgoingCall()
     QCOMPARE(threads.count(), 1);
     History::Thread thread = threads.first();
     QCOMPARE(thread.participants().count(), 1);
-    QCOMPARE(thread.participants().first(), phoneNumber);
+    QCOMPARE(thread.participants().first().identifier(), phoneNumber);
 
     QTRY_COMPARE(threadsModifiedSpy.count(), 1);
     threads = threadsModifiedSpy.first().first().value<History::Threads>();

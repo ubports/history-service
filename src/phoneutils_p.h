@@ -26,16 +26,22 @@
 
 #include <QObject>
 
+namespace History
+{
+
 class PhoneUtils : public QObject
 {
     Q_OBJECT
 public:
     explicit PhoneUtils(QObject *parent = 0);
-    Q_INVOKABLE static bool comparePhoneNumbers(const QString &number1, const QString &number2);
+    Q_INVOKABLE static bool comparePhoneNumbers(const QString &numberA, const QString &numberB);
+    Q_INVOKABLE static bool compareNormalizedPhoneNumbers(const QString &numberA, const QString &numberB);
     Q_INVOKABLE static bool isPhoneNumber(const QString &identifier);
     Q_INVOKABLE static QString normalizePhoneNumber(const QString &identifier);
 private:
     static QString region();
 };
+
+}
 
 #endif // PHONEUTILS_H

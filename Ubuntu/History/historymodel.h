@@ -112,6 +112,11 @@ public:
     bool matchContacts() const;
     void setMatchContacts(bool value);
 
+    Q_INVOKABLE QVariantMap threadForParticipants(const QString &accountId,
+                                                  int eventType,
+                                                  const QStringList &participants,
+                                                  int matchFlags = (int)History::MatchCaseSensitive,
+                                                  bool create = false);
     Q_INVOKABLE QString threadIdForParticipants(const QString &accountId,
                                                 int eventType,
                                                 const QStringList &participants,
@@ -140,10 +145,10 @@ protected Q_SLOTS:
     void triggerQueryUpdate();
     virtual void updateQuery() = 0;
     void onContactInfoChanged(const QString &accountId, const QString &identifier, const QVariantMap &contactInfo);
+    void watchContactInfo(const QString &accountId, const QString &identifier, const QVariantMap &currentInfo);
 
 protected:
     virtual void timerEvent(QTimerEvent *event);
-    bool compareParticipants(const QString &accountId, const QStringList &list1, const QStringList &list2) const;
     bool lessThan(const QVariantMap &left, const QVariantMap &right) const;
     int positionForItem(const QVariantMap &item) const;
     bool isAscending() const;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Canonical, Ltd.
+ * Copyright (C) 2013-2015 Canonical, Ltd.
  *
  * Authors:
  *  Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>
@@ -40,7 +40,7 @@ VoiceEventPrivate::VoiceEventPrivate(const QString &theAccountId,
                                    bool theMissed,
                                    const QTime &theDuration,
                                    const QString &theRemoteParticipant,
-                                   const QStringList &theParticipants)
+                                   const Participants &theParticipants)
     : EventPrivate(theAccountId, theThreadId, theEventId, theSender, theTimestamp, theNewEvent, theParticipants),
       missed(theMissed), duration(theDuration), remoteParticipant(theRemoteParticipant)
 {
@@ -86,7 +86,7 @@ VoiceEvent::VoiceEvent(const QString &accountId,
                      bool missed,
                      const QTime &duration,
                      const QString &remoteParticipant,
-                     const QStringList &participants)
+                     const Participants &participants)
     : Event(*new VoiceEventPrivate(accountId, threadId, eventId, sender, timestamp, newEvent, missed, duration, remoteParticipant, participants))
 {
 }
@@ -125,7 +125,7 @@ Event VoiceEvent::fromProperties(const QVariantMap &properties)
     QString senderId = properties[FieldSenderId].toString();
     QDateTime timestamp = QDateTime::fromString(properties[FieldTimestamp].toString(), Qt::ISODate);
     bool newEvent = properties[FieldNewEvent].toBool();
-    QStringList participants = properties[FieldParticipants].toStringList();
+    Participants participants = Participants::fromVariant(properties[FieldParticipants]);
     bool missed = properties[FieldMissed].toBool();
     QTime duration = QTime(0,0,0).addSecs(properties[FieldDuration].toInt());
     QString remoteParticipant = properties[FieldRemoteParticipant].toString();

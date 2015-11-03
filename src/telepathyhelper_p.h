@@ -31,6 +31,9 @@
 #include <TelepathyQt/Types>
 #include "channelobserver_p.h"
 
+namespace History
+{
+
 class TelepathyHelper : public QObject
 {
     Q_OBJECT
@@ -73,5 +76,7 @@ private:
     QList<Tp::AccountPtr> mAccounts;
     bool mReady;
 };
+
+}
 
 #endif // TELEPATHYHELPER_H

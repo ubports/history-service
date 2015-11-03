@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
         bool newEvent = true;
         const QTime duration = QTime(0,10,20);
 
-        VoiceEvent ev(accountId, thread.threadId(), eventId, sender, datetime, newEvent, missed, duration, number, QStringList() << number);
+        VoiceEvent ev(accountId, thread.threadId(), eventId, sender, datetime, newEvent, missed, duration, number, thread.participants());
         QList<Event> events;
         events.append(ev);
 

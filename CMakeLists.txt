@@ -78,7 +78,6 @@ set(HISTORY_VERSION_PATCH 0)
 set(PACKAGE_VERSION ${HISTORY_VERSION_MAJOR}.${HISTORY_VERSION_MINOR}.${HISTORY_VERSION_PATCH})
 
 add_subdirectory(src)
-add_subdirectory(historyprivate)
 add_subdirectory(daemon)
 add_subdirectory(plugins)
 add_subdirectory(tools)
