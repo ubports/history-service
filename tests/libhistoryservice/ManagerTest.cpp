@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Canonical, Ltd.
+ * Copyright (C) 2013-2015 Canonical, Ltd.
  *
  * This file is part of history-service.
  *
@@ -76,9 +76,9 @@ void ManagerTest::testThreadForParticipants_data()
                                                       << (QStringList() << "oneParticipant");
     QTest::newRow("voice thread using phone match") << "anotherAccountId"
                                                     << History::EventTypeVoice
-                                                    << (QStringList() << "+1234567890")
+                                                    << (QStringList() << "+554198765432")
                                                     << History::MatchFlags(History::MatchPhoneNumber)
-                                                    << (QStringList() << "4567890");
+                                                    << (QStringList() << "98765432");
 }
 
 void ManagerTest::testThreadForParticipants()
@@ -96,11 +96,12 @@ void ManagerTest::testThreadForParticipants()
 
     QCOMPARE(thread.accountId(), accountId);
     QCOMPARE(thread.type(), type);
-    QCOMPARE(thread.participants(), participants);
+    QCOMPARE(thread.participants().identifiers(), participants);
 
     // now try to get the thread again to see if it is returned correctly
     History::Thread sameThread = mManager->threadForParticipants(accountId, type, participantsToMatch, matchFlags, false);
-    QVERIFY(sameThread == thread);
+    QVERIFY(!sameThread.isNull());
+    QCOMPARE(sameThread, thread);
 }
 
 void ManagerTest::testQueryEvents()
@@ -151,7 +152,7 @@ void ManagerTest::testWriteEvents()
         History::TextEvent textEvent(textThread.accountId(),
                                      textThread.threadId(),
                                      QString("eventId%1").arg(i),
-                                     textThread.participants().first(),
+                                     textThread.participants().first().identifier(),
                                      QDateTime::currentDateTime(),
                                      true,
                                      QString("Hello world %1").arg(i),
@@ -162,7 +163,7 @@ void ManagerTest::testWriteEvents()
         History::VoiceEvent voiceEvent(voiceThread.accountId(),
                                        voiceThread.threadId(),
                                        QString("eventId%1").arg(i),
-                                       voiceThread.participants().first(),
+                                       voiceThread.participants().first().identifier(),
                                        QDateTime::currentDateTime(),
                                        true,
                                        true);
@@ -228,7 +229,7 @@ void ManagerTest::testRemoveEvents()
         History::TextEvent textEvent(textThread.accountId(),
                                      textThread.threadId(),
                                      QString("eventToBeRemoved%1").arg(i),
-                                     textThread.participants().first(),
+                                     textThread.participants().first().identifier(),
                                      QDateTime::currentDateTime(),
                                      true,
                                      QString("Hello world %1").arg(i),
@@ -238,7 +239,7 @@ void ManagerTest::testRemoveEvents()
         History::VoiceEvent voiceEvent(voiceThread.accountId(),
                                        voiceThread.threadId(),
                                        QString("eventToBeRemoved%1").arg(i),
-                                       voiceThread.participants().first(),
+                                       voiceThread.participants().first().identifier(),
                                        QDateTime::currentDateTime(),
                                        true,
                                        true);
@@ -353,7 +354,7 @@ void ManagerTest::testRemoveThreads()
         History::TextEvent textEvent(textThread.accountId(),
                                      textThread.threadId(),
                                      QString("eventToBeRemoved%1").arg(i),
-                                     textThread.participants().first(),
+                                     textThread.participants().first().identifier(),
                                      QDateTime::currentDateTime(),
                                      true,
                                      QString("Hello world %1").arg(i),
@@ -363,7 +364,7 @@ void ManagerTest::testRemoveThreads()
         History::VoiceEvent voiceEvent(voiceThread.accountId(),
                                        voiceThread.threadId(),
                                        QString("eventToBeRemoved%1").arg(i),
-                                       voiceThread.participants().first(),
+                                       voiceThread.participants().first().identifier(),
                                        QDateTime::currentDateTime(),
                                        true,
                                        true);

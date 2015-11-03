@@ -32,6 +32,10 @@ public:
     static MatchFlags matchFlagsForAccount(const QString &accountId);
     static QString protocolFromAccountId(const QString &accountId);
     static bool compareIds(const QString &accountId, const QString &id1, const QString & id2);
+    static bool compareParticipants(const QStringList &participants1, const QStringList &participants2, MatchFlags flags);
+    static bool compareNormalizedParticipants(const QStringList &participants1, const QStringList &participants2, MatchFlags flags);
+    static bool shouldGroupAccount(const QString &accountId);
+    static QString normalizeId(const QString &accountId, const QString &id);
 
 private:
     Utils();

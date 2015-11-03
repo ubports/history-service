@@ -47,6 +47,10 @@ HistoryModel::HistoryModel(QObject *parent) :
     connect(this, SIGNAL(rowsRemoved(QModelIndex,int,int)), this, SIGNAL(countChanged()));
     connect(this, SIGNAL(modelReset()), this, SIGNAL(countChanged()));
 
+    // reset the view when the service is stopped or started
+    connect(History::Manager::instance(), SIGNAL(serviceRunningChanged()),
+            this, SLOT(triggerQueryUpdate()));
+
     // create the view and get some objects
     triggerQueryUpdate();
 }
@@ -87,9 +91,10 @@ QVariant HistoryModel::data(const QModelIndex &index, int role) const
         break;
     case ParticipantsRole:
         if (mMatchContacts) {
-            result = ContactMatcher::instance()->contactInfo(properties[History::FieldAccountId].toString(),
-                                                             properties[History::FieldParticipants].toStringList());
+            result = History::ContactMatcher::instance()->contactInfo(properties[History::FieldAccountId].toString(),
+                                                                      History::Participants::fromVariantList(properties[History::FieldParticipants].toList()).identifiers());
         } else {
+            //FIXME: handle contact changes
             result = properties[History::FieldParticipants];
         }
         break;
@@ -169,17 +174,35 @@ void HistoryModel::setMatchContacts(bool value)
     Q_EMIT matchContactsChanged();
 
     if (mMatchContacts) {
-        connect(ContactMatcher::instance(),
+        connect(History::ContactMatcher::instance(),
                 SIGNAL(contactInfoChanged(QString,QString,QVariantMap)),
                 SLOT(onContactInfoChanged(QString,QString,QVariantMap)));
     } else {
-        ContactMatcher::instance()->disconnect(this);
+        History::ContactMatcher::instance()->disconnect(this);
     }
 
     // mark all indexes as changed
     if (rowCount() > 0) {
         Q_EMIT dataChanged(index(0), index(rowCount()-1));
     }
+}
+
+QVariantMap HistoryModel::threadForParticipants(const QString &accountId, int eventType, const QStringList &participants, int matchFlags, bool create)
+{
+    if (participants.isEmpty()) {
+        return QVariantMap();
+    }
+
+    History::Thread thread = History::Manager::instance()->threadForParticipants(accountId,
+                                                                                 (History::EventType)eventType,
+                                                                                 participants,
+                                                                                 (History::MatchFlags)matchFlags,
+                                                                                 create);
+    if (!thread.isNull()) {
+        return thread.properties();
+    }
+
+    return QVariantMap();
 }
 
 QString HistoryModel::threadIdForParticipants(const QString &accountId, int eventType, const QStringList &participants, int matchFlags, bool create)
@@ -237,12 +260,12 @@ void HistoryModel::onContactInfoChanged(const QString &accountId, const QString 
         // HistoryGroupedEventsModel which is based on this model and handles the items in a different way
         QModelIndex idx = index(i);
         QVariantMap properties = idx.data(PropertiesRole).toMap();
-        QStringList participants = properties[History::FieldParticipants].toStringList();
-        Q_FOREACH(const QString &participant, participants) {
+        History::Participants participants = History::Participants::fromVariantList(properties[History::FieldParticipants].toList());
+        Q_FOREACH(const History::Participant &participant, participants) {
             // FIXME: right now we might be grouping threads from different accounts, so we are not enforcing
             // the accountId to be the same as the one from the contact info, but maybe we need to do that
             // in the future?
-            if (History::Utils::compareIds(accountId, participant, identifier)) {
+            if (History::Utils::compareIds(accountId, participant.identifier(), identifier)) {
                 changedIndexes << idx;
             }
         }
@@ -254,6 +277,13 @@ void HistoryModel::onContactInfoChanged(const QString &accountId, const QString 
     }
 }
 
+void HistoryModel::watchContactInfo(const QString &accountId, const QString &identifier, const QVariantMap &currentInfo)
+{
+    if (mMatchContacts) {
+        History::ContactMatcher::instance()->watchIdentifier(accountId, identifier, currentInfo);
+    }
+}
+
 void HistoryModel::timerEvent(QTimerEvent *event)
 {
     if (event->timerId() == mUpdateTimer && !mWaitingForQml) {
@@ -261,26 +291,6 @@ void HistoryModel::timerEvent(QTimerEvent *event)
         mUpdateTimer = 0;
         updateQuery();
     }
-}
-
-
-bool HistoryModel::compareParticipants(const QString &accountId, const QStringList &list1, const QStringList &list2) const
-{
-    if (list1.count() != list2.count()) {
-        return false;
-    }
-
-    int found = 0;
-    Q_FOREACH(const QString &participant, list1) {
-        Q_FOREACH(const QString &item, list2) {
-            if (History::Utils::compareIds(accountId, participant, item)) {
-                found++;
-                break;
-            }
-        }
-    }
-
-    return found == list1.count();
 }
 
 bool HistoryModel::lessThan(const QVariantMap &left, const QVariantMap &right) const
@@ -360,6 +370,7 @@ void HistoryModel::triggerQueryUpdate()
     if (mUpdateTimer) {
         killTimer(mUpdateTimer);
     }
+
     // delay the loading of the model data until the settings settle down
     mUpdateTimer = startTimer(100);
 }

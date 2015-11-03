@@ -22,12 +22,14 @@
 #ifndef HISTORYDAEMON_H
 #define HISTORYDAEMON_H
 
+#include <QCoreApplication>
 #include <QObject>
 #include <QSharedPointer>
 #include "types.h"
 #include "textchannelobserver.h"
 #include "callchannelobserver.h"
 #include "historyservicedbus.h"
+#include "plugin.h"
 
 class HistoryDaemon : public QObject
 {
@@ -43,9 +45,9 @@ public:
                                       const QStringList &participants,
                                       History::MatchFlags matchFlags = History::MatchCaseSensitive,
                                       bool create = true);
-    QString queryThreads(int type, const QVariantMap &sort, const QVariantMap &filter);
+    QString queryThreads(int type, const QVariantMap &sort, const QVariantMap &filter, const QVariantMap &properties);
     QString queryEvents(int type, const QVariantMap &sort, const QVariantMap &filter);
-    QVariantMap getSingleThread(int type, const QString &accountId, const QString &threadId);
+    QVariantMap getSingleThread(int type, const QString &accountId, const QString &threadId, const QVariantMap &properties);
     QVariantMap getSingleEvent(int type, const QString &accountId, const QString &threadId, const QString &eventId);
 
     bool writeEvents(const QList<QVariantMap> &events);

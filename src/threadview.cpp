@@ -93,17 +93,25 @@ void ThreadViewPrivate::_d_threadsRemoved(const Threads &threads)
 
 ThreadView::ThreadView(History::EventType type,
                        const History::Sort &sort,
-                       const Filter &filter)
+                       const Filter &filter,
+                       const QVariantMap &properties)
     : d_ptr(new ThreadViewPrivate(type, sort, filter))
 {
     d_ptr->q_ptr = this;
+
+    if (!Manager::instance()->isServiceRunning()) {
+        Q_EMIT invalidated();
+        d_ptr->valid = false;
+        return;
+    }
 
     QDBusInterface interface(History::DBusService, History::DBusObjectPath, History::DBusInterface);
 
     QDBusReply<QString> reply = interface.call("QueryThreads",
                                                (int) type,
                                                sort.properties(),
-                                               filter.properties());
+                                               filter.properties(),
+                                               properties);
     if (!reply.isValid()) {
         Q_EMIT invalidated();
         d_ptr->valid = false;

@@ -12,7 +12,6 @@ set(daemon_SRCS main.cpp ${qt_SRCS})
 include_directories(
     ${TP_QT5_INCLUDE_DIRS}
     ${CMAKE_SOURCE_DIR}/src
-    ${CMAKE_SOURCE_DIR}/historyprivate
     ${CMAKE_CURRENT_BINARY_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}
     )
@@ -25,7 +24,6 @@ qt5_use_modules(history-daemon Core DBus)
 target_link_libraries(history-daemon
     ${TP_QT5_LIBRARIES}
     historyservice
-    historyprivate
     )
 
 # Handle i18n in desktop files
@@ -50,3 +48,6 @@ install(FILES
         )
 install(FILES HistoryDaemonObserver.client DESTINATION share/telepathy/clients)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/history-daemon.desktop DESTINATION ${CMAKE_INSTALL_DATADIR}/applications)
+
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/history-daemon.conf
+        DESTINATION ${CMAKE_INSTALL_FULL_DATADIR}/upstart/sessions/)

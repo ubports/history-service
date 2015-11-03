@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Canonical, Ltd.
+ * Copyright (C) 2013-2015 Canonical, Ltd.
  *
  * Authors:
  *  Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>
@@ -46,7 +46,7 @@ public:
                bool missed,
                const QTime &duration = QTime(),
                const QString &remoteParticipant = QString::null,
-               const QStringList &participants = QStringList());
+               const Participants &participants = Participants());
     ~VoiceEvent();
 
     // copy related members

@@ -48,7 +48,7 @@ public:
     bool writeEvents(const History::Events &events);
     bool removeThreads(const Threads &threads);
     bool removeEvents(const Events &events);
-    Thread getSingleThread(EventType type, const QString &accountId, const QString &threadId);
+    Thread getSingleThread(EventType type, const QString &accountId, const QString &threadId, const QVariantMap &properties = QVariantMap());
     Event getSingleEvent(EventType type, const QString &accountId, const QString &threadId, const QString &eventId);
 
 Q_SIGNALS:

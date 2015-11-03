@@ -29,6 +29,9 @@
 #include "threadview.h"
 #include "voiceevent.h"
 #include <QDebug>
+#include <QDBusConnection>
+#include <QDBusConnectionInterface>
+#include <QDBusReply>
 
 namespace History
 {
@@ -36,7 +39,7 @@ namespace History
 // ------------- ManagerPrivate ------------------------------------------------
 
 ManagerPrivate::ManagerPrivate()
-    : dbus(new ManagerDBus())
+    : dbus(new ManagerDBus()), serviceWatcher(DBusService, QDBusConnection::sessionBus())
 {
 }
 
@@ -70,6 +73,25 @@ Manager::Manager()
     connect(d->dbus.data(),
             SIGNAL(eventsRemoved(History::Events)),
             SIGNAL(eventsRemoved(History::Events)));
+
+    // watch for the service going up and down
+    connect(&d->serviceWatcher, &QDBusServiceWatcher::serviceRegistered, [&](const QString &serviceName) {
+        qDebug() << "HistoryService: service registered:" << serviceName;
+        this->d_ptr->serviceRunning = true;
+        Q_EMIT this->serviceRunningChanged();
+    });
+    connect(&d->serviceWatcher, &QDBusServiceWatcher::serviceUnregistered, [&](const QString &serviceName) {
+        qDebug() << "HistoryService: service unregistered:" << serviceName;
+        this->d_ptr->serviceRunning = false;
+        Q_EMIT this->serviceRunningChanged();
+    });
+
+    // and fetch the current status
+    d->serviceRunning = false;
+    QDBusReply<bool> reply = QDBusConnection::sessionBus().interface()->isServiceRegistered(DBusService);
+    if (reply.isValid()) {
+        d->serviceRunning = reply.value();
+    }
 }
 
 Manager::~Manager()
@@ -84,9 +106,10 @@ Manager *Manager::instance()
 
 ThreadViewPtr Manager::queryThreads(EventType type,
                                     const Sort &sort,
-                                    const Filter &filter)
+                                    const Filter &filter,
+                                    const QVariantMap &properties)
 {
-    return ThreadViewPtr(new ThreadView(type, sort, filter));
+    return ThreadViewPtr(new ThreadView(type, sort, filter, properties));
 }
 
 EventViewPtr Manager::queryEvents(EventType type,
@@ -115,11 +138,11 @@ Thread Manager::threadForParticipants(const QString &accountId,
     return d->dbus->threadForParticipants(accountId, type, participants, matchFlags, create);
 }
 
-Thread Manager::getSingleThread(EventType type, const QString &accountId, const QString &threadId)
+Thread Manager::getSingleThread(EventType type, const QString &accountId, const QString &threadId, const QVariantMap &properties)
 {
     Q_D(Manager);
 
-    Thread thread = d->dbus->getSingleThread(type, accountId, threadId);
+    Thread thread = d->dbus->getSingleThread(type, accountId, threadId, properties);
     return thread;
 }
 
@@ -139,6 +162,12 @@ bool Manager::removeEvents(const Events &events)
 {
     Q_D(Manager);
     return d->dbus->removeEvents(events);
+}
+
+bool Manager::isServiceRunning() const
+{
+    Q_D(const Manager);
+    return d->serviceRunning;
 }
 
 }

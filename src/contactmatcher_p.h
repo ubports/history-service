@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Canonical, Ltd.
+ * Copyright (C) 2014-2015 Canonical, Ltd.
  *
  * Authors:
  *  Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>
@@ -29,6 +29,9 @@
 
 using namespace QtContacts;
 
+namespace History
+{
+
 typedef QMap<QString, QVariantMap> InternalContactMap;
 typedef QMap<QString, InternalContactMap> ContactMap;
 
@@ -42,8 +45,11 @@ class ContactMatcher : public QObject
     Q_OBJECT
 public:
     static ContactMatcher *instance(QContactManager *manager = 0);
-    QVariantMap contactInfo(const QString &accountId, const QString &identifier);
-    QVariantList contactInfo(const QString &accountId, const QStringList &identifiers);
+    QVariantMap contactInfo(const QString &accountId, const QString &identifier, bool synchronous = false);
+    QVariantList contactInfo(const QString &accountId, const QStringList &identifiers, bool synchronous = false);
+
+    // this will only watch for contact changes affecting the identifier, but won't fetch contact info
+    void watchIdentifier(const QString &accountId, const QString &identifier, const QVariantMap &currentInfo = QVariantMap());
 
 Q_SIGNALS:
     void contactInfoChanged(const QString &acountId, const QString &identifier, const QVariantMap &contactInfo);
@@ -57,10 +63,11 @@ protected Q_SLOTS:
     void onSetupReady();
 
 protected:
-    void requestContactInfo(const QString &accountId, const QString &identifier);
+    QVariantMap requestContactInfo(const QString &accountId, const QString &identifier, bool synchronous = false);
     QVariantList toVariantList(const QList<int> &list);
-    bool matchAndUpdate(const QString &accountId, const QString &identifier, const QContact &contact);
+    QVariantMap matchAndUpdate(const QString &accountId, const QString &identifier, const QContact &contact);
     QStringList addressableFields(const QString &accountId);
+    bool hasMatch(const QVariantMap &map) const;
 
 private:
     explicit ContactMatcher(QContactManager *manager = 0, QObject *parent = 0);
@@ -72,5 +79,7 @@ private:
     QList<RequestInfo> mPendingRequests;
     QContactManager *mManager;
 };
+
+}
 
 #endif // CONTACTMATCHER_P_H

@@ -1,3 +1,26 @@
+history-service (0.1+15.10.20151020.1-0ubuntu1) wily; urgency=medium
+
+  [ Gustavo Pichorim Boiko ]
+  * Make it possible to use the custom functions defined by the sqlite
+    plugin in the schema files themselves.
+  * Move the classes from historyprivate static library to
+    libhistoryservice itself and just keep their header files private.
+  * Optimize the thread matching by avoiding some phone number
+    formatting and validating. (LP: #1488988)
+  * Request contact information for all known participants on history-
+    daemon initialization, and use this cached information on the
+    models.
+  * Store threads' timestamps in UTC in the cache, and convert only when
+    returning to the client, so that it has the most up-to-date local
+    time.
+
+  [ Tiago Salem Herrmann ]
+  * Initial cache implementation for grouped conversations.
+  * Set max count hint Don't use fallback to tel to avoid queries to the
+    address-book-service with null filters
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Tue, 20 Oct 2015 20:22:05 +0000
+
 history-service (0.1+15.10.20150828.1-0ubuntu1) wily; urgency=medium
 
   [ Gustavo Pichorim Boiko ]
