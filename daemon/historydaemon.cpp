@@ -328,18 +328,25 @@ bool HistoryDaemon::removeThreads(const QList<QVariantMap> &threads)
     // then it is going to be removed by removeEvents() once it detects the thread is
     // empty.
     QList<QVariantMap> events;
+    QMap<QString, QVariantMap> removedEmptyThreads;
     Q_FOREACH(const QVariantMap &thread, threads) {
         QList<QVariantMap> thisEvents = mBackend->eventsForThread(thread);
         if (thisEvents.isEmpty()) {
             mBackend->beginBatchOperation();
-            if (mBackend->removeThread(thread)) {
+            if (!mBackend->removeThread(thread)) {
                 mBackend->rollbackBatchOperation();
                 return false;
             }
             mBackend->endBatchOperation();
+            QString hash = hashThread(thread);
+            removedEmptyThreads[hash] = thread;
             continue;
         }
         events += thisEvents;
+    }
+
+    if (!removedEmptyThreads.isEmpty()) {
+        mDBus.notifyThreadsRemoved(removedEmptyThreads.values());
     }
 
     if (events.size() > 0) {
