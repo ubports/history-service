@@ -439,22 +439,7 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
     if (message.isDeliveryReport() && message.deliveryDetails().hasOriginalToken()) {
         // at this point we assume the delivery report is for a message that was already
         // sent and properly saved at our database, so we can safely get it here to update
-        QStringList participants = participantsFromChannel(textChannel);
-
-        QVariantMap thread = threadForParticipants(textChannel->property(History::FieldAccountId).toString(),
-                                                                         History::EventTypeText,
-                                                                         participants,
-                                                                         matchFlagsForChannel(textChannel),
-                                                                         false);
-        if (thread.isEmpty()) {
-            qWarning() << "Cound not find the thread related to this delivery report.";
-            return;
-        }
-
-        QVariantMap textEvent = getSingleEvent((int)History::EventTypeText,
-                                               textChannel->property(History::FieldAccountId).toString(),
-                                               thread[History::FieldThreadId].toString(),
-                                               message.deliveryDetails().originalToken());
+        QVariantMap textEvent = getSingleEventFromTextChannel(textChannel, message.deliveryDetails().originalToken());
         if (textEvent.isEmpty()) {
             qWarning() << "Cound not find the original event to update with delivery details.";
             return;
@@ -569,10 +554,44 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
     writeEvents(QList<QVariantMap>() << event);
 }
 
+QVariantMap HistoryDaemon::getSingleEventFromTextChannel(const Tp::TextChannelPtr textChannel, const QString &messageId)
+{
+    QStringList participants = participantsFromChannel(textChannel);
+
+    QVariantMap thread = threadForParticipants(textChannel->property(History::FieldAccountId).toString(),
+                                                                     History::EventTypeText,
+                                                                     participants,
+                                                                     matchFlagsForChannel(textChannel),
+                                                                     false);
+    if (thread.isEmpty()) {
+        qWarning() << "Cound not find the thread related to this eventId.";
+        return QVariantMap();
+    }
+
+    QVariantMap textEvent = getSingleEvent((int)History::EventTypeText,
+                                           textChannel->property(History::FieldAccountId).toString(),
+                                           thread[History::FieldThreadId].toString(),
+                                           messageId);
+
+    return textEvent;
+
+}
+
 void HistoryDaemon::onMessageRead(const Tp::TextChannelPtr textChannel, const Tp::ReceivedMessage &message)
 {
     qDebug() << __PRETTY_FUNCTION__;
-    // FIXME: implement
+
+    QVariantMap textEvent = getSingleEventFromTextChannel(textChannel, message.deliveryDetails().originalToken());
+
+    if (textEvent.isEmpty()) {
+        qWarning() << "Cound not find the original event to update with newEvent = false.";
+        return;
+    }
+
+    textEvent[History::FieldNewEvent] = false;
+    if (!writeEvents(QList<QVariantMap>() << textEvent)) {
+        qWarning() << "Failed to save the new message status!";
+    }
 }
 
 void HistoryDaemon::onMessageSent(const Tp::TextChannelPtr textChannel, const Tp::Message &message, const QString &messageToken)
