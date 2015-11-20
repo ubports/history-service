@@ -579,9 +579,7 @@ QVariantMap HistoryDaemon::getSingleEventFromTextChannel(const Tp::TextChannelPt
 
 void HistoryDaemon::onMessageRead(const Tp::TextChannelPtr textChannel, const Tp::ReceivedMessage &message)
 {
-    qDebug() << __PRETTY_FUNCTION__;
-
-    QVariantMap textEvent = getSingleEventFromTextChannel(textChannel, message.deliveryDetails().originalToken());
+    QVariantMap textEvent = getSingleEventFromTextChannel(textChannel, message.messageToken());
 
     if (textEvent.isEmpty()) {
         qWarning() << "Cound not find the original event to update with newEvent = false.";
