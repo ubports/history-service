@@ -826,7 +826,7 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseThreadResults(History::EventType ty
         // the generic event fields
         thread[History::FieldSenderId] = query.value(6);
         thread[History::FieldTimestamp] = toLocalTimeString(query.value(7).toDateTime());
-        thread[History::FieldNewEvent] = query.value(8);
+        thread[History::FieldNewEvent] = query.value(8).toBool();
 
         // the next step is to get the last event
         switch (type) {
@@ -922,7 +922,7 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseEventResults(History::EventType typ
         event[History::FieldEventId] = eventId;
         event[History::FieldSenderId] = query.value(3);
         event[History::FieldTimestamp] = toLocalTimeString(query.value(4).toDateTime());
-        event[History::FieldNewEvent] = query.value(5);
+        event[History::FieldNewEvent] = query.value(5).toBool();
         QStringList participants = query.value(6).toString().split("|,|");
         event[History::FieldParticipants] = History::ContactMatcher::instance()->contactInfo(accountId, participants, true);
 
