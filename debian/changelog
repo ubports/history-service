@@ -1,3 +1,15 @@
+history-service (0.1+16.04.20151207-0ubuntu1) xenial; urgency=medium
+
+  [ CI Train Bot ]
+  * New rebuild forced.
+
+  [ Tiago Salem Herrmann ]
+  * Allow removing empty threads (LP: #1517602)
+  * Fix build with new qt on xenial-proposed.
+  * Mark messages as read on onMessageRead(). (LP: #1373059)
+
+ -- Tiago Salem Herrmann <tiago.herrmann@canonical.com>  Mon, 07 Dec 2015 17:55:02 +0000
+
 history-service (0.1+16.04.20151103-0ubuntu1) xenial; urgency=medium
 
   [ Tiago Salem Herrmann ]
