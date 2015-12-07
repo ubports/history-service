@@ -33,7 +33,7 @@ class HistoryQmlSort : public QObject
     Q_ENUMS(CaseSensitivity)
     Q_PROPERTY(QString sortField READ sortField WRITE setSortField NOTIFY sortFieldChanged)
     Q_PROPERTY(SortOrder sortOrder READ sortOrder WRITE setSortOrder NOTIFY sortOrderChanged)
-    Q_PROPERTY(CaseSensitivity caseSensitivity READ CaseSensitivity WRITE setCaseSensitivity NOTIFY caseSensitivityChanged)
+    Q_PROPERTY(CaseSensitivity caseSensitivity READ caseSensitivity WRITE setCaseSensitivity NOTIFY caseSensitivityChanged)
 
 public:
     enum SortOrder {
