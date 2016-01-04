@@ -1,3 +1,10 @@
+history-service (0.1+16.04.20160104-0ubuntu1) xenial; urgency=medium
+
+  [ Tiago Salem Herrmann ]
+  * Do proper dbus demarshalling of detailProperties. (LP: #1510655)
+
+ -- Bill Filler <ci-train-bot@canonical.com>  Mon, 04 Jan 2016 20:22:09 +0000
+
 history-service (0.1+16.04.20151207-0ubuntu1) xenial; urgency=medium
 
   [ CI Train Bot ]
