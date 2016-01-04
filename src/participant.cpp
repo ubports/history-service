@@ -157,7 +157,17 @@ Participant Participant::fromProperties(const QVariantMap &properties)
     QString contactId = properties[FieldContactId].toString();
     QString alias = properties[FieldAlias].toString();
     QString avatar = properties[FieldAvatar].toString();
-    QVariantMap detailProperties = properties[FieldDetailProperties].toMap();
+    QVariantMap detailProperties;
+    QVariant detailPropertiesVariant = properties[FieldDetailProperties];
+    if (detailPropertiesVariant.canConvert<QVariantMap>()) {
+        detailProperties = detailPropertiesVariant.toMap();
+    } else if (detailPropertiesVariant.canConvert<QDBusArgument>()) {
+        detailProperties = qdbus_cast<QVariantMap>(detailPropertiesVariant);
+        Q_FOREACH(const QString &key, detailProperties.keys()) {
+            QList<QVariant> list = qdbus_cast<QList<QVariant> >(detailProperties[key]);
+            detailProperties[key] = QVariant::fromValue(list);
+        }
+    }
 
     return Participant(accountId, identifier, contactId, alias, avatar, detailProperties);
 }
