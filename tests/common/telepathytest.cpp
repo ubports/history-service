@@ -24,10 +24,8 @@
 #include "telepathytest.h"
 #include "telepathyhelper_p.h"
 
-void TelepathyTest::initialize()
+void TelepathyTest::initialize(int waitTime)
 {
-    Tp::registerTypes();
-
     QSignalSpy spy(History::TelepathyHelper::instance(), SIGNAL(setupReady()));
     QTRY_COMPARE_WITH_TIMEOUT(spy.count(), 1, DEFAULT_TIMEOUT);
 
@@ -70,7 +68,7 @@ void TelepathyTest::initialize()
     QTRY_VERIFY(mReady);
 
     // give some time for telepathy stuff to settle
-    QTest::qWait(1000);
+    QTest::qWait(waitTime);
 }
 
 void TelepathyTest::doCleanup()
