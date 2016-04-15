@@ -41,7 +41,9 @@ public:
                          const Event &theLastEvent,
                          int theCount,
                          int theUnreadCount,
-                         const Threads &theGroupedThreads);
+                         const Threads &theGroupedThreads,
+                         ChatType chatType,
+                         const QVariantMap &chatRoomInfo);
     virtual ~ThreadPrivate();
 
     QString accountId;
@@ -52,6 +54,8 @@ public:
     int count;
     int unreadCount;
     Threads groupedThreads;
+    ChatType chatType;
+    QVariantMap chatRoomInfo;
 };
 
 }

@@ -43,9 +43,12 @@ ThreadPrivate::ThreadPrivate(const QString &theAccountId,
                                            const Event &theLastEvent,
                                            int theCount,
                                            int theUnreadCount,
-                                           const Threads &theGroupedThreads) :
+                                           const Threads &theGroupedThreads,
+                                           ChatType theChatType,
+                                           const QVariantMap &theChatRoomInfo) :
     accountId(theAccountId), threadId(theThreadId), type(theType), participants(theParticipants),
-    lastEvent(theLastEvent), count(theCount), unreadCount(theUnreadCount), groupedThreads(theGroupedThreads)
+    lastEvent(theLastEvent), count(theCount), unreadCount(theUnreadCount), groupedThreads(theGroupedThreads),
+    chatType(theChatType), chatRoomInfo(theChatRoomInfo)
 {
 }
 
@@ -66,8 +69,10 @@ Thread::Thread(const QString &accountId,
                const Event &lastEvent,
                int count,
                int unreadCount,
-               const Threads &groupedThreads)
-: d_ptr(new ThreadPrivate(accountId, threadId, type, participants, lastEvent, count, unreadCount, groupedThreads))
+               const Threads &groupedThreads,
+               ChatType chatType,
+               const QVariantMap &chatRoomInfo)
+: d_ptr(new ThreadPrivate(accountId, threadId, type, participants, lastEvent, count, unreadCount, groupedThreads, chatType, chatRoomInfo))
 {
     qDBusRegisterMetaType<QList<QVariantMap> >();
     qRegisterMetaType<QList<QVariantMap> >();
@@ -139,6 +144,18 @@ History::Threads Thread::groupedThreads() const
     return d->groupedThreads;
 }
 
+ChatType Thread::chatType() const
+{
+    Q_D(const Thread);
+    return d->chatType;
+}
+
+QVariantMap Thread::chatRoomInfo() const
+{
+    Q_D(const Thread);
+    return d->chatRoomInfo;
+}
+
 bool Thread::isNull() const
 {
     Q_D(const Thread);
@@ -182,11 +199,13 @@ QVariantMap Thread::properties() const
     map[FieldAccountId] = d->accountId;
     map[FieldThreadId] = d->threadId;
     map[FieldType] = d->type;
+    map[FieldChatType] = d->chatType;
     map[FieldParticipants] = d->participants.toVariantList();
     map[FieldCount] = d->count;
     map[FieldUnreadCount] = d->unreadCount;
     map[FieldLastEventId] = lastEvent().eventId();
     map[FieldLastEventTimestamp] = lastEvent().timestamp();
+    map[FieldChatRoomInfo] = d->chatRoomInfo;
 
     QList<QVariantMap> groupedThreads;
     Q_FOREACH(const Thread &thread, d->groupedThreads) {
@@ -210,6 +229,8 @@ Thread Thread::fromProperties(const QVariantMap &properties)
     QString accountId = properties[FieldAccountId].toString();
     QString threadId = properties[FieldThreadId].toString();
     EventType type = (EventType) properties[FieldType].toInt();
+    ChatType chatType = (ChatType) properties[FieldChatType].toInt();
+    QVariantMap chatRoomInfo = properties[FieldChatRoomInfo].toMap();
 
     Participants participants = Participants::fromVariant(properties[FieldParticipants]);
     int count = properties[FieldCount].toInt();
@@ -237,7 +258,7 @@ Thread Thread::fromProperties(const QVariantMap &properties)
             event = VoiceEvent::fromProperties(properties);
             break;
     }
-    return Thread(accountId, threadId, type, participants, event, count, unreadCount, groupedThreads);
+    return Thread(accountId, threadId, type, participants, event, count, unreadCount, groupedThreads, chatType, chatRoomInfo);
 }
 
 const QDBusArgument &operator>>(const QDBusArgument &argument, Threads &threads)

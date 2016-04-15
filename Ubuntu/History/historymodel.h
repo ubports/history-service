@@ -112,6 +112,18 @@ public:
     bool matchContacts() const;
     void setMatchContacts(bool value);
 
+    Q_INVOKABLE QVariantMap threadForProperties(const QString &accountId,
+                                                int eventType,
+                                                const QVariantMap &properties,
+                                                int matchFlags = (int)History::MatchCaseSensitive,
+                                                bool create = false);
+
+    Q_INVOKABLE QString threadIdForProperties(const QString &accountId,
+                                                int eventType,
+                                                const QVariantMap &properties,
+                                                int matchFlags = (int)History::MatchCaseSensitive,
+                                                bool create = false);
+
     Q_INVOKABLE QVariantMap threadForParticipants(const QString &accountId,
                                                   int eventType,
                                                   const QStringList &participants,

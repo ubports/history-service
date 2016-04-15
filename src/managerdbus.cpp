@@ -64,9 +64,21 @@ Thread ManagerDBus::threadForParticipants(const QString &accountId,
                                           MatchFlags matchFlags,
                                           bool create)
 {
+    QVariantMap properties;
+    properties[History::FieldParticipants] = participants;
+
+    return threadForProperties(accountId, type, properties, matchFlags, create);
+}
+
+Thread ManagerDBus::threadForProperties(const QString &accountId,
+                                        EventType type,
+                                        const QVariantMap &properties,
+                                        MatchFlags matchFlags,
+                                        bool create)
+{
     Thread thread;
     // FIXME: move to async call if possible
-    QDBusReply<QVariantMap> reply = mInterface.call("ThreadForParticipants", accountId, (int) type, participants, (int)matchFlags, create);
+    QDBusReply<QVariantMap> reply = mInterface.call("ThreadForProperties", accountId, (int) type, properties, (int)matchFlags, create);
     if (reply.isValid()) {
         QVariantMap properties = reply.value();
         thread = Thread::fromProperties(properties);

@@ -76,15 +76,31 @@ void HistoryServiceDBus::notifyEventsRemoved(const QList<QVariantMap> &events)
     Q_EMIT EventsRemoved(events);
 }
 
+QVariantMap HistoryServiceDBus::ThreadForProperties(const QString &accountId,
+                                                    int type,
+                                                    const QVariantMap &properties,
+                                                    int matchFlags,
+                                                    bool create)
+{
+    return HistoryDaemon::instance()->threadForProperties(accountId,
+                                                            (History::EventType) type,
+                                                            properties,
+                                                            (History::MatchFlags) matchFlags,
+                                                            create);
+}
+
 QVariantMap HistoryServiceDBus::ThreadForParticipants(const QString &accountId,
                                                       int type,
                                                       const QStringList &participants,
                                                       int matchFlags,
                                                       bool create)
 {
-    return HistoryDaemon::instance()->threadForParticipants(accountId,
+    QVariantMap properties;
+    properties[History::FieldParticipants] = participants;
+
+    return HistoryDaemon::instance()->threadForProperties(accountId,
                                                             (History::EventType) type,
-                                                            participants,
+                                                            properties,
                                                             (History::MatchFlags) matchFlags,
                                                             create);
 }

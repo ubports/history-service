@@ -54,7 +54,9 @@ public:
            const Event &lastEvent = Event(),
            int count = 0,
            int unreadCount = 0,
-           const Threads &groupedThreads = Threads());
+           const Threads &groupedThreads = Threads(),
+           ChatType chatType = ChatTypeNone,
+           const QVariantMap &chatRoomInfo = QVariantMap());
     Thread(const Thread &other);
     virtual ~Thread();
     Thread& operator=(const Thread &other);
@@ -66,7 +68,9 @@ public:
     Event lastEvent() const;
     int count() const;
     int unreadCount() const;
+    ChatType chatType() const;
     Threads groupedThreads() const;
+    QVariantMap chatRoomInfo() const;
 
     bool isNull() const;
     bool operator==(const Thread &other) const;

@@ -61,11 +61,17 @@ public:
                                               EventType type,
                                               const QStringList &participants,
                                               History::MatchFlags matchFlags = History::MatchCaseSensitive) = 0;
+    virtual QVariantMap threadForProperties(const QString &accountId,
+                                              EventType type,
+                                              const QVariantMap &properties,
+                                              History::MatchFlags matchFlags = History::MatchCaseSensitive) = 0;
 
     virtual QList<QVariantMap> eventsForThread(const QVariantMap &thread) = 0;
 
     // Writer part of the plugin
     virtual QVariantMap createThreadForParticipants(const QString &accountId, EventType type, const QStringList &participants) { return QVariantMap(); }
+    virtual QVariantMap createThreadForProperties(const QString &accountId, EventType type, const QVariantMap &properties) { return QVariantMap(); }
+    virtual bool updateRoomInfo(const QString &accountId, const QString &threadId, EventType type, const QVariantMap &properties, const QStringList &invalidated = QStringList()) { return false; };
     virtual bool removeThread(const QVariantMap &thread) { return false; }
 
     virtual EventWriteResult writeTextEvent(const QVariantMap &event) { return EventWriteError; }
