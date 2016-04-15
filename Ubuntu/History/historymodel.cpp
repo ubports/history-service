@@ -187,17 +187,56 @@ void HistoryModel::setMatchContacts(bool value)
     }
 }
 
+QVariantMap HistoryModel::threadForProperties(const QString &accountId, int eventType, const QVariantMap &properties, int matchFlags, bool create)
+{
+    if (properties.isEmpty()) {
+        return QVariantMap();
+    }
+
+    History::Thread thread = History::Manager::instance()->threadForProperties(accountId,
+                                                                               (History::EventType)eventType,
+                                                                               properties,
+                                                                               (History::MatchFlags)matchFlags,
+                                                                               create);
+    if (!thread.isNull()) {
+        return thread.properties();
+    }
+
+    return QVariantMap();
+}
+
+QString HistoryModel::threadIdForProperties(const QString &accountId, int eventType, const QVariantMap &properties, int matchFlags, bool create)
+{
+    if (properties.isEmpty()) {
+        return QString::null;
+    }
+
+    History::Thread thread = History::Manager::instance()->threadForProperties(accountId,
+                                                                               (History::EventType)eventType,
+                                                                               properties,
+                                                                               (History::MatchFlags)matchFlags,
+                                                                               create);
+    if (!thread.isNull()) {
+        return thread.threadId();
+    }
+
+    return QString::null;
+}
+
 QVariantMap HistoryModel::threadForParticipants(const QString &accountId, int eventType, const QStringList &participants, int matchFlags, bool create)
 {
     if (participants.isEmpty()) {
         return QVariantMap();
     }
 
-    History::Thread thread = History::Manager::instance()->threadForParticipants(accountId,
-                                                                                 (History::EventType)eventType,
-                                                                                 participants,
-                                                                                 (History::MatchFlags)matchFlags,
-                                                                                 create);
+    QVariantMap properties;
+    properties[History::FieldParticipants] = participants;
+
+    History::Thread thread = History::Manager::instance()->threadForProperties(accountId,
+                                                                               (History::EventType)eventType,
+                                                                               properties,
+                                                                               (History::MatchFlags)matchFlags,
+                                                                               create);
     if (!thread.isNull()) {
         return thread.properties();
     }
@@ -211,11 +250,14 @@ QString HistoryModel::threadIdForParticipants(const QString &accountId, int even
         return QString::null;
     }
 
-    History::Thread thread = History::Manager::instance()->threadForParticipants(accountId,
-                                                                                 (History::EventType)eventType,
-                                                                                 participants,
-                                                                                 (History::MatchFlags)matchFlags,
-                                                                                 create);
+    QVariantMap properties;
+    properties[History::FieldParticipants] = participants;
+
+    History::Thread thread = History::Manager::instance()->threadForProperties(accountId,
+                                                                               (History::EventType)eventType,
+                                                                               properties,
+                                                                               (History::MatchFlags)matchFlags,
+                                                                               create);
     if (!thread.isNull()) {
         return thread.threadId();
     }

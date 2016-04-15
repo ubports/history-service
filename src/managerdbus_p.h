@@ -45,6 +45,12 @@ public:
                                  History::MatchFlags matchFlags,
                                  bool create);
 
+    Thread threadForProperties(const QString &accountId,
+                               EventType type,
+                               const QVariantMap &properties,
+                               History::MatchFlags matchFlags,
+                               bool create);
+
     bool writeEvents(const History::Events &events);
     bool removeThreads(const Threads &threads);
     bool removeEvents(const Events &events);

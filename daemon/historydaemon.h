@@ -39,12 +39,13 @@ public:
 
     static HistoryDaemon *instance();
 
-    static QStringList participantsFromChannel(const Tp::TextChannelPtr &textChannel);
-    QVariantMap threadForParticipants(const QString &accountId,
-                                      History::EventType type,
-                                      const QStringList &participants,
-                                      History::MatchFlags matchFlags = History::MatchCaseSensitive,
-                                      bool create = true);
+    static QStringList participantsFromChannel(const Tp::ChannelPtr &textChannel);
+    static QVariantMap propertiesFromChannel(const Tp::ChannelPtr &textChannel);
+    QVariantMap threadForProperties(const QString &accountId,
+                                    History::EventType type,
+                                    const QVariantMap &properties,
+                                    History::MatchFlags matchFlags = History::MatchCaseSensitive,
+                                    bool create = true);
     QString queryThreads(int type, const QVariantMap &sort, const QVariantMap &filter, const QVariantMap &properties);
     QString queryEvents(int type, const QVariantMap &sort, const QVariantMap &filter);
     QVariantMap getSingleThread(int type, const QString &accountId, const QString &threadId, const QVariantMap &properties);
@@ -61,6 +62,8 @@ private Q_SLOTS:
     void onMessageReceived(const Tp::TextChannelPtr textChannel, const Tp::ReceivedMessage &message);
     void onMessageRead(const Tp::TextChannelPtr textChannel, const Tp::ReceivedMessage &message);
     void onMessageSent(const Tp::TextChannelPtr textChannel, const Tp::Message &message, const QString &messageToken);
+    void onTextChannelAvailable(const Tp::TextChannelPtr channel);
+    void onRoomPropertiesChanged(const QVariantMap &properties,const QStringList &invalidated);
 
 protected:
     History::MatchFlags matchFlagsForChannel(const Tp::ChannelPtr &channel);

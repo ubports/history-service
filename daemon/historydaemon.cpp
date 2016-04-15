@@ -65,6 +65,9 @@ HistoryDaemon::HistoryDaemon(QObject *parent)
     connect(&mTextObserver,
             SIGNAL(messageRead(Tp::TextChannelPtr,Tp::ReceivedMessage)),
             SLOT(onMessageRead(Tp::TextChannelPtr,Tp::ReceivedMessage)));
+    connect(&mTextObserver,
+            SIGNAL(channelAvailable(Tp::TextChannelPtr)),
+            SLOT(onTextChannelAvailable(Tp::TextChannelPtr)));
 
     // FIXME: we need to do this in a better way, but for now this should do
     mProtocolFlags["ofono"] = History::MatchPhoneNumber;
@@ -81,36 +84,101 @@ HistoryDaemon *HistoryDaemon::instance()
     return self;
 }
 
-QStringList HistoryDaemon::participantsFromChannel(const Tp::TextChannelPtr &textChannel)
+QVariantMap HistoryDaemon::propertiesFromChannel(const Tp::ChannelPtr &textChannel)
 {
+    QVariantMap properties;
+
     QStringList participants;
     Q_FOREACH(const Tp::ContactPtr contact, textChannel->groupContacts(false)) {
         participants << contact->id();
     }
 
     if (participants.isEmpty() && textChannel->targetHandleType() == Tp::HandleTypeContact &&
-           textChannel->targetContact() == textChannel->connection()->selfContact()) {
+            textChannel->targetContact() == textChannel->connection()->selfContact()) {
         participants << textChannel->targetContact()->id();
     }
-    return participants;
+
+    // We map chatType directly from telepathy targetHandleType: None, Contact, Room
+    properties[History::FieldChatType] = textChannel->targetHandleType();
+
+    QVariantMap roomProperties;
+    switch(textChannel->targetHandleType()) {
+    case Tp::HandleTypeRoom:
+        if (textChannel->hasInterface(TP_QT_IFACE_CHANNEL_INTERFACE_ROOM)) {
+            auto room_interface = textChannel->optionalInterface<Tp::Client::ChannelInterfaceRoomInterface>();
+            QDBusMessage msg = QDBusMessage::createMethodCall(room_interface->service(), room_interface->path(), 
+                TP_QT_IFACE_PROPERTIES, QLatin1String("GetAll"));
+            msg << TP_QT_IFACE_CHANNEL_INTERFACE_ROOM;
+            QDBusReply<QVariantMap> reply = room_interface->connection().call(msg);
+            if (reply.isValid()) {
+                roomProperties = reply.value();
+            }
+        }
+        if (textChannel->hasInterface(TP_QT_IFACE_CHANNEL_INTERFACE_ROOM_CONFIG)) {
+            auto room_config_interface = textChannel->optionalInterface<Tp::Client::ChannelInterfaceRoomConfigInterface>();
+            QDBusMessage msg = QDBusMessage::createMethodCall(room_config_interface->service(), room_config_interface->path(), 
+                TP_QT_IFACE_PROPERTIES, QLatin1String("GetAll"));
+            msg << TP_QT_IFACE_CHANNEL_INTERFACE_ROOM_CONFIG;
+            QDBusReply<QVariantMap> reply = room_config_interface->connection().call(msg);
+            if (reply.isValid()) {
+                QVariantMap map = reply.value();
+                for(QVariantMap::const_iterator iter = map.begin(); iter != map.end(); ++iter) {
+                     roomProperties[iter.key()] = iter.value();
+                }
+            }
+        }
+        if (textChannel->hasInterface(TP_QT_IFACE_CHANNEL_INTERFACE_SUBJECT)) {
+            auto subject_interface = textChannel->optionalInterface<Tp::Client::ChannelInterfaceSubjectInterface>();
+            QDBusMessage msg = QDBusMessage::createMethodCall(subject_interface->service(), subject_interface->path(), 
+                TP_QT_IFACE_PROPERTIES, QLatin1String("GetAll"));
+            msg << TP_QT_IFACE_CHANNEL_INTERFACE_SUBJECT;
+            QDBusReply<QVariantMap> reply = subject_interface->connection().call(msg);
+            if (reply.isValid()) {
+                QVariantMap map = reply.value();
+                for(QVariantMap::const_iterator iter = map.begin(); iter != map.end(); ++iter) {
+                     roomProperties[iter.key()] = iter.value();
+                }
+            }
+        }
+
+        // TODO: Add more properties like name, creator, subject, server, etc..
+        if (participants.size() > 0) {
+            properties[History::FieldParticipants] = participants;
+        }
+        properties[History::FieldChatRoomInfo] = roomProperties;
+        properties[History::FieldThreadId] = textChannel->targetId();
+        break;
+    case Tp::HandleTypeContact:
+    case Tp::HandleTypeNone:
+        properties[History::FieldParticipants] = participants;
+        break; 
+    }
+
+    return properties;
 }
 
-QVariantMap HistoryDaemon::threadForParticipants(const QString &accountId,
-                                                 History::EventType type,
-                                                 const QStringList &participants,
-                                                 History::MatchFlags matchFlags,
-                                                 bool create)
+QStringList HistoryDaemon::participantsFromChannel(const Tp::ChannelPtr &textChannel)
+{
+    QVariantMap properties = propertiesFromChannel(textChannel);
+    return properties[History::FieldParticipants].toStringList();
+}
+
+QVariantMap HistoryDaemon::threadForProperties(const QString &accountId,
+                                               History::EventType type,
+                                               const QVariantMap &properties,
+                                               History::MatchFlags matchFlags,
+                                               bool create)
 {
     if (!mBackend) {
         return QVariantMap();
     }
 
-    QVariantMap thread = mBackend->threadForParticipants(accountId,
-                                                         type,
-                                                         participants,
-                                                         matchFlags);
+    QVariantMap thread = mBackend->threadForProperties(accountId,
+                                                       type,
+                                                       properties,
+                                                       matchFlags);
     if (thread.isEmpty() && create) {
-        thread = mBackend->createThreadForParticipants(accountId, type, participants);
+        thread = mBackend->createThreadForProperties(accountId, type, properties);
         if (!thread.isEmpty()) {
             mDBus.notifyThreadsAdded(QList<QVariantMap>() << thread);
         }
@@ -372,6 +440,7 @@ void HistoryDaemon::onObserverCreated()
 void HistoryDaemon::onCallEnded(const Tp::CallChannelPtr &channel)
 {
     qDebug() << __PRETTY_FUNCTION__;
+    QVariantMap properties = propertiesFromChannel(channel);
     QStringList participants;
     Q_FOREACH(const Tp::ContactPtr contact, channel->remoteMembers()) {
         participants << contact->id();
@@ -384,11 +453,11 @@ void HistoryDaemon::onCallEnded(const Tp::CallChannelPtr &channel)
     }
 
     QString accountId = channel->property(History::FieldAccountId).toString();
-    QVariantMap thread = threadForParticipants(accountId,
-                                               History::EventTypeVoice,
-                                               participants,
-                                               matchFlagsForChannel(channel),
-                                               true);
+    QVariantMap thread = threadForProperties(accountId,
+                                             History::EventTypeVoice,
+                                             properties,
+                                             matchFlagsForChannel(channel),
+                                             true);
     // fill the call info
     QDateTime timestamp = channel->property(History::FieldTimestamp).toDateTime();
 
@@ -418,6 +487,60 @@ void HistoryDaemon::onCallEnded(const Tp::CallChannelPtr &channel)
     writeEvents(QList<QVariantMap>() << event);
 }
 
+void HistoryDaemon::onTextChannelAvailable(const Tp::TextChannelPtr channel)
+{
+    if (channel->targetHandleType() == Tp::HandleTypeRoom) {
+        QString accountId = channel->property(History::FieldAccountId).toString();
+        QVariantMap properties = propertiesFromChannel(channel);
+        QVariantMap thread = threadForProperties(accountId,
+                                                 History::EventTypeText,
+                                                 properties,
+                                                 matchFlagsForChannel(channel),
+                                                 true);
+
+        auto room_interface = channel->optionalInterface<Tp::Client::ChannelInterfaceRoomInterface>();
+        auto room_config_interface = channel->optionalInterface<Tp::Client::ChannelInterfaceRoomConfigInterface>();
+        auto subject_interface = channel->optionalInterface<Tp::Client::ChannelInterfaceSubjectInterface>();
+
+        room_interface->setMonitorProperties(true);
+        room_config_interface->setMonitorProperties(true);
+        subject_interface->setMonitorProperties(true);
+
+        room_interface->setProperty(History::FieldAccountId, accountId);
+        room_interface->setProperty(History::FieldThreadId, thread[History::FieldThreadId].toString());
+        room_interface->setProperty(History::FieldType, thread[History::FieldType].toInt());
+
+        room_config_interface->setProperty(History::FieldAccountId, accountId);
+        room_config_interface->setProperty(History::FieldThreadId, thread[History::FieldThreadId].toString());
+        room_config_interface->setProperty(History::FieldType, thread[History::FieldType].toInt());
+
+        subject_interface->setProperty(History::FieldAccountId, accountId);
+        subject_interface->setProperty(History::FieldThreadId, thread[History::FieldThreadId].toString());
+        subject_interface->setProperty(History::FieldType, thread[History::FieldType].toInt());
+
+        connect(room_interface, SIGNAL(propertiesChanged(const QVariantMap &,const QStringList &)),
+                                SLOT(onRoomPropertiesChanged(const QVariantMap &,const QStringList &)));
+        connect(room_config_interface, SIGNAL(propertiesChanged(const QVariantMap &,const QStringList &)),
+                                SLOT(onRoomPropertiesChanged(const QVariantMap &,const QStringList &)));
+        connect(subject_interface, SIGNAL(propertiesChanged(const QVariantMap &,const QStringList &)),
+                                   SLOT(onRoomPropertiesChanged(const QVariantMap &,const QStringList &)));
+    }
+}
+
+void HistoryDaemon::onRoomPropertiesChanged(const QVariantMap &properties,const QStringList &invalidated)
+{
+    QString accountId = sender()->property(History::FieldAccountId).toString();
+    QString threadId = sender()->property(History::FieldThreadId).toString();
+    int type = sender()->property(History::FieldType).toInt();
+
+    bool success = mBackend->updateRoomInfo(accountId, threadId, (History::EventType)type, properties, invalidated);
+
+    if (success) {
+        QVariantMap thread = getSingleThread(type, accountId, threadId, QVariantMap());
+        mDBus.notifyThreadsModified(QList<QVariantMap>() << thread);
+    }
+}
+
 void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, const Tp::ReceivedMessage &message)
 {
     qDebug() << __PRETTY_FUNCTION__;
@@ -425,7 +548,7 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
     Tp::MessagePart header = message.header();
     QString senderId;
     History::MessageStatus status = History::MessageStatusUnknown;
-    if (message.sender()->handle().at(0) == textChannel->connection()->selfHandle()) {
+    if (!message.sender() || message.sender()->handle().at(0) == textChannel->connection()->selfHandle()) {
         senderId = "self";
         status = History::MessageStatusDelivered;
     } else {
@@ -485,13 +608,13 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
         return;
     }
 
-    QStringList participants = participantsFromChannel(textChannel);
+    QVariantMap properties = propertiesFromChannel(textChannel);
 
-    QVariantMap thread = threadForParticipants(textChannel->property(History::FieldAccountId).toString(),
-                                                                     History::EventTypeText,
-                                                                     participants,
-                                                                     matchFlagsForChannel(textChannel),
-                                                                     true);
+    QVariantMap thread = threadForProperties(textChannel->property(History::FieldAccountId).toString(),
+                                                                   History::EventTypeText,
+                                                                   properties,
+                                                                   matchFlagsForChannel(textChannel),
+                                                                   true);
     int count = 1;
     QList<QVariantMap> attachments;
     History::MessageType type = History::MessageTypeText;
@@ -563,11 +686,11 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
 
 QVariantMap HistoryDaemon::getSingleEventFromTextChannel(const Tp::TextChannelPtr textChannel, const QString &messageId)
 {
-    QStringList participants = participantsFromChannel(textChannel);
+    QVariantMap properties = propertiesFromChannel(textChannel);
 
-    QVariantMap thread = threadForParticipants(textChannel->property(History::FieldAccountId).toString(),
+    QVariantMap thread = threadForProperties(textChannel->property(History::FieldAccountId).toString(),
                                                                      History::EventTypeText,
-                                                                     participants,
+                                                                     properties,
                                                                      matchFlagsForChannel(textChannel),
                                                                      false);
     if (thread.isEmpty()) {
@@ -602,7 +725,8 @@ void HistoryDaemon::onMessageRead(const Tp::TextChannelPtr textChannel, const Tp
 void HistoryDaemon::onMessageSent(const Tp::TextChannelPtr textChannel, const Tp::Message &message, const QString &messageToken)
 {
     qDebug() << __PRETTY_FUNCTION__;
-    QStringList participants = participantsFromChannel(textChannel);
+    QVariantMap properties = propertiesFromChannel(textChannel);
+    qDebug() << __PRETTY_FUNCTION__ << properties;
     QList<QVariantMap> attachments;
     History::MessageType type = History::MessageTypeText;
     int count = 1;
@@ -615,9 +739,9 @@ void HistoryDaemon::onMessageSent(const Tp::TextChannelPtr textChannel, const Tp
         eventId = messageToken;
     }
  
-    QVariantMap thread = threadForParticipants(textChannel->property(History::FieldAccountId).toString(),
+    QVariantMap thread = threadForProperties(textChannel->property(History::FieldAccountId).toString(),
                                               History::EventTypeText,
-                                              participants,
+                                              properties,
                                               matchFlagsForChannel(textChannel),
                                               true);
     if (message.hasNonTextContent()) {
@@ -665,7 +789,6 @@ void HistoryDaemon::onMessageSent(const Tp::TextChannelPtr textChannel, const Tp
             attachments << attachment;
         }
     }
-
 
     QVariantMap event;
     event[History::FieldType] = History::EventTypeText;

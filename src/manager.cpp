@@ -135,7 +135,20 @@ Thread Manager::threadForParticipants(const QString &accountId,
 {
     Q_D(Manager);
 
-    return d->dbus->threadForParticipants(accountId, type, participants, matchFlags, create);
+    QVariantMap properties;
+    properties[History::FieldParticipants] = participants;
+    return d->dbus->threadForProperties(accountId, type, properties, matchFlags, create);
+}
+
+Thread Manager::threadForProperties(const QString &accountId,
+                                    EventType type,
+                                    const QVariantMap &properties,
+                                    MatchFlags matchFlags,
+                                    bool create)
+{
+    Q_D(Manager);
+
+    return d->dbus->threadForProperties(accountId, type, properties, matchFlags, create);
 }
 
 Thread Manager::getSingleThread(EventType type, const QString &accountId, const QString &threadId, const QVariantMap &properties)
