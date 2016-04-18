@@ -38,6 +38,7 @@ HistoryThreadModel::HistoryThreadModel(QObject *parent) :
     mRoles = HistoryModel::roleNames();
     mRoles[CountRole] = "count";
     mRoles[UnreadCountRole] = "unreadCount";
+    mRoles[ChatType] = "chatType";
 
     // roles related to the thread´s last event
     mRoles[LastEventIdRole] = "eventId";
@@ -104,6 +105,9 @@ QVariant HistoryThreadModel::threadData(const History::Thread &thread, int role)
     case UnreadCountRole:
         result = thread.unreadCount();
         break;
+    case ChatType:
+         result = thread.chatType();
+         break;
     case PropertiesRole:
         result = thread.properties();
         break;
