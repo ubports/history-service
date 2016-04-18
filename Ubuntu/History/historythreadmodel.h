@@ -40,6 +40,7 @@ public:
     enum ThreadRole {
         CountRole = HistoryModel::LastRole,
         UnreadCountRole,
+        ChatType,
         LastEventIdRole,
         LastEventSenderIdRole,
         LastEventTimestampRole,
