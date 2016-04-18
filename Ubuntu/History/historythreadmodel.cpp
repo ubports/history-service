@@ -111,7 +111,6 @@ QVariant HistoryThreadModel::threadData(const History::Thread &thread, int role)
          break;
     case ChatRoomInfo:
           result = thread.chatRoomInfo();
-          qDebug() << result;
          break;
     case PropertiesRole:
         result = thread.properties();
