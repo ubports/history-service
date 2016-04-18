@@ -502,28 +502,34 @@ void HistoryDaemon::onTextChannelAvailable(const Tp::TextChannelPtr channel)
         auto room_config_interface = channel->optionalInterface<Tp::Client::ChannelInterfaceRoomConfigInterface>();
         auto subject_interface = channel->optionalInterface<Tp::Client::ChannelInterfaceSubjectInterface>();
 
-        room_interface->setMonitorProperties(true);
-        room_config_interface->setMonitorProperties(true);
-        subject_interface->setMonitorProperties(true);
+        if (room_interface) {
+            room_interface->setMonitorProperties(true);
+            room_interface->setProperty(History::FieldAccountId, accountId);
+            room_interface->setProperty(History::FieldThreadId, thread[History::FieldThreadId].toString());
+            room_interface->setProperty(History::FieldType, thread[History::FieldType].toInt());
+            connect(room_interface, SIGNAL(propertiesChanged(const QVariantMap &,const QStringList &)),
+                                    SLOT(onRoomPropertiesChanged(const QVariantMap &,const QStringList &)));
 
-        room_interface->setProperty(History::FieldAccountId, accountId);
-        room_interface->setProperty(History::FieldThreadId, thread[History::FieldThreadId].toString());
-        room_interface->setProperty(History::FieldType, thread[History::FieldType].toInt());
+        }
 
-        room_config_interface->setProperty(History::FieldAccountId, accountId);
-        room_config_interface->setProperty(History::FieldThreadId, thread[History::FieldThreadId].toString());
-        room_config_interface->setProperty(History::FieldType, thread[History::FieldType].toInt());
+        if (room_config_interface) {
+            room_config_interface->setMonitorProperties(true);
+            room_config_interface->setProperty(History::FieldAccountId, accountId);
+            room_config_interface->setProperty(History::FieldThreadId, thread[History::FieldThreadId].toString());
+            room_config_interface->setProperty(History::FieldType, thread[History::FieldType].toInt());
+            connect(room_config_interface, SIGNAL(propertiesChanged(const QVariantMap &,const QStringList &)),
+                                           SLOT(onRoomPropertiesChanged(const QVariantMap &,const QStringList &)));
+        }
 
-        subject_interface->setProperty(History::FieldAccountId, accountId);
-        subject_interface->setProperty(History::FieldThreadId, thread[History::FieldThreadId].toString());
-        subject_interface->setProperty(History::FieldType, thread[History::FieldType].toInt());
+        if (subject_interface) {
+            subject_interface->setMonitorProperties(true);
+            subject_interface->setProperty(History::FieldAccountId, accountId);
+            subject_interface->setProperty(History::FieldThreadId, thread[History::FieldThreadId].toString());
+            subject_interface->setProperty(History::FieldType, thread[History::FieldType].toInt());
 
-        connect(room_interface, SIGNAL(propertiesChanged(const QVariantMap &,const QStringList &)),
-                                SLOT(onRoomPropertiesChanged(const QVariantMap &,const QStringList &)));
-        connect(room_config_interface, SIGNAL(propertiesChanged(const QVariantMap &,const QStringList &)),
-                                SLOT(onRoomPropertiesChanged(const QVariantMap &,const QStringList &)));
-        connect(subject_interface, SIGNAL(propertiesChanged(const QVariantMap &,const QStringList &)),
-                                   SLOT(onRoomPropertiesChanged(const QVariantMap &,const QStringList &)));
+            connect(subject_interface, SIGNAL(propertiesChanged(const QVariantMap &,const QStringList &)),
+                                       SLOT(onRoomPropertiesChanged(const QVariantMap &,const QStringList &)));
+        }
     }
 }
 
