@@ -41,6 +41,7 @@ public:
         CountRole = HistoryModel::LastRole,
         UnreadCountRole,
         ChatType,
+        ChatRoomInfo,
         LastEventIdRole,
         LastEventSenderIdRole,
         LastEventTimestampRole,
