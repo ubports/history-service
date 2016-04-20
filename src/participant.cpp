@@ -184,11 +184,24 @@ QStringList Participants::identifiers() const
 Participants Participants::fromVariant(const QVariant &variant)
 {
     Participants participants;
-    if (variant.canConvert<QVariantList>()) {
+    if (variant.type() == QVariant::StringList) {
+        participants = Participants::fromStringList(variant.toStringList());
+    } else if (variant.canConvert<QVariantList>()) {
         participants = Participants::fromVariantList(variant.toList());
     } else if (variant.canConvert<QDBusArgument>()) {
         QDBusArgument argument = variant.value<QDBusArgument>();
         argument >> participants;
+    }
+    return participants;
+}
+
+Participants Participants::fromStringList(const QStringList &list)
+{
+    Participants participants;
+    Q_FOREACH(const QString& participantId, list) {
+        QVariantMap properties;
+        properties[FieldIdentifier] = participantId;
+        participants << Participant::fromProperties(properties);
     }
     return participants;
 }

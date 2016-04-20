@@ -39,7 +39,6 @@ public:
 
     static HistoryDaemon *instance();
 
-    static QStringList participantsFromChannel(const Tp::ChannelPtr &textChannel);
     static QVariantMap propertiesFromChannel(const Tp::ChannelPtr &textChannel);
     QVariantMap threadForProperties(const QString &accountId,
                                     History::EventType type,
@@ -52,7 +51,7 @@ public:
     QVariantMap getSingleEvent(int type, const QString &accountId, const QString &threadId, const QString &eventId);
     QVariantMap getSingleEventFromTextChannel(const Tp::TextChannelPtr textChannel, const QString &messageId);
 
-    bool writeEvents(const QList<QVariantMap> &events);
+    bool writeEvents(const QList<QVariantMap> &events, const QVariantMap &properties);
     bool removeEvents(const QList<QVariantMap> &events);
     bool removeThreads(const QList<QVariantMap> &threads);
 
