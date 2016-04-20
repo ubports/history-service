@@ -259,7 +259,7 @@ void SQLiteHistoryPlugin::generateContactCache()
     time.start();
     qDebug() << "---- HistoryService: start generating cached content";
     QSqlQuery query(SQLiteDatabase::instance()->database());
-    if (!query.exec("SELECT DISTINCT accountId, normalizedId FROM thread_participants")) {
+    if (!query.exec("SELECT DISTINCT accountId, normalizedId, alias FROM thread_participants")) {
         qWarning() << "Failed to generate contact cache:" << query.lastError().text();
         return;
     }
@@ -267,9 +267,14 @@ void SQLiteHistoryPlugin::generateContactCache()
     while (query.next()) {
         QString accountId = query.value(0).toString();
         QString participantId = query.value(1).toString();
+        QString alias = query.value(2).toString();
+        QVariantMap properties;
+        if (!alias.isEmpty()) {
+            properties[History::FieldAlias] = alias;
+        }
         // we don't care about the results, as long as the contact data is present in the cache for
         // future usage.
-        History::ContactMatcher::instance()->contactInfo(accountId, participantId, true);
+        History::ContactMatcher::instance()->contactInfo(accountId, participantId, true, properties);
     }
 
     updateGroupedThreadsCache();
@@ -307,7 +312,6 @@ QVariantMap SQLiteHistoryPlugin::threadForProperties(const QString &accountId,
     QSqlQuery query(SQLiteDatabase::instance()->database());
 
     History::ChatType chatType = (History::ChatType)properties[History::FieldChatType].toUInt();
-    QStringList participants = properties[History::FieldParticipants].toStringList();
 
     if (chatType == History::ChatTypeRoom) {
         QString threadId = properties[History::FieldThreadId].toString();
@@ -317,8 +321,9 @@ QVariantMap SQLiteHistoryPlugin::threadForProperties(const QString &accountId,
         return getSingleThread(type, accountId, threadId);
     }
 
+    History::Participants participants = History::Participants::fromVariant(properties[History::FieldParticipants]);
     // if chatType != Room, then we select the thread based on the participant list.
-    return threadForParticipants(accountId, type, participants, matchFlags);
+    return threadForParticipants(accountId, type, participants.identifiers(), matchFlags);
 }
 
 QVariantMap SQLiteHistoryPlugin::threadForParticipants(const QString &accountId,
@@ -568,13 +573,12 @@ QVariantMap SQLiteHistoryPlugin::createThreadForProperties(const QString &accoun
     // WARNING: this function does NOT test to check if the thread is already created, you should check using HistoryReader::threadForParticipants()
 
     QVariantMap thread;
-    QStringList participants = properties[History::FieldParticipants].toStringList();
+    History::Participants participants = History::Participants::fromVariant(properties[History::FieldParticipants]);
 
     // Create a new thread
     // FIXME: define what the threadId will be
     QString threadId;
     History::ChatType chatType = (History::ChatType)properties[History::FieldChatType].toInt();
-    QString chatTitle;
     QVariantMap chatRoomInfo;
 
     if (chatType == History::ChatTypeRoom) {
@@ -615,9 +619,8 @@ QVariantMap SQLiteHistoryPlugin::createThreadForProperties(const QString &accoun
             return QVariantMap();
         }
     } else {
-        threadId = participants.join("%");
+        threadId = participants.identifiers().join("%");
     }
-    qDebug() << "SQLiteHistoryPlugin::createThreadForProperties" << chatType << chatRoomInfo;
 
     QSqlQuery query(SQLiteDatabase::instance()->database());
     query.prepare("INSERT INTO threads (accountId, threadId, type, count, unreadCount, chatType)"
@@ -634,14 +637,15 @@ QVariantMap SQLiteHistoryPlugin::createThreadForProperties(const QString &accoun
     }
 
     // and insert the participants
-    Q_FOREACH(const QString &participant, participants) {
-        query.prepare("INSERT INTO thread_participants (accountId, threadId, type, participantId, normalizedId)"
-                      "VALUES (:accountId, :threadId, :type, :participantId, :normalizedId)");
+    Q_FOREACH(const History::Participant &participant, participants) {
+        query.prepare("INSERT INTO thread_participants (accountId, threadId, type, participantId, normalizedId, alias)"
+                      "VALUES (:accountId, :threadId, :type, :participantId, :normalizedId, :alias)");
         query.bindValue(":accountId", accountId);
         query.bindValue(":threadId", threadId);
         query.bindValue(":type", type);
-        query.bindValue(":participantId", participant);
-        query.bindValue(":normalizedId", History::Utils::normalizeId(accountId, participant));
+        query.bindValue(":participantId", participant.identifier());
+        query.bindValue(":normalizedId", History::Utils::normalizeId(accountId, participant.identifier()));
+        query.bindValue(":alias", participant.alias());
         if (!query.exec()) {
             qCritical() << "Error:" << query.lastError() << query.lastQuery();
             return QVariantMap();
@@ -652,7 +656,7 @@ QVariantMap SQLiteHistoryPlugin::createThreadForProperties(const QString &accoun
     thread[History::FieldAccountId] = accountId;
     thread[History::FieldThreadId] = threadId;
     thread[History::FieldType] = (int) type;
-    thread[History::FieldParticipants] = History::ContactMatcher::instance()->contactInfo(accountId, participants, true);
+    thread[History::FieldParticipants] = History::ContactMatcher::instance()->contactInfo(accountId, participants.identifiers(), true);
     thread[History::FieldCount] = 0;
     thread[History::FieldUnreadCount] = 0;
     thread[History::FieldChatType] = (int)chatType;

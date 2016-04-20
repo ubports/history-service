@@ -1,4 +1,5 @@
 ALTER TABLE threads ADD COLUMN chatType tinyint;
+ALTER TABLE thread_participants ADD COLUMN alias varchar(255);
 CREATE TABLE chat_room_info (
     accountId varchar(255),
     type tinyint,

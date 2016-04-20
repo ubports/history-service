@@ -87,26 +87,35 @@ HistoryDaemon *HistoryDaemon::instance()
 QVariantMap HistoryDaemon::propertiesFromChannel(const Tp::ChannelPtr &textChannel)
 {
     QVariantMap properties;
+    QVariantList participants;
 
-    QStringList participants;
     Q_FOREACH(const Tp::ContactPtr contact, textChannel->groupContacts(false)) {
-        participants << contact->id();
+        QVariantMap contactProperties;
+        contactProperties[History::FieldAlias] = contact->alias();
+        contactProperties[History::FieldAccountId] = textChannel->property(History::FieldAccountId).toString();
+        contactProperties[History::FieldIdentifier] = contact->id();
+        participants << contactProperties;
     }
 
     if (participants.isEmpty() && textChannel->targetHandleType() == Tp::HandleTypeContact &&
             textChannel->targetContact() == textChannel->connection()->selfContact()) {
-        participants << textChannel->targetContact()->id();
+        QVariantMap contactProperties;
+        contactProperties[History::FieldAlias] = textChannel->targetContact()->alias();
+        contactProperties[History::FieldAccountId] = textChannel->property(History::FieldAccountId).toString();
+        contactProperties[History::FieldIdentifier] = textChannel->targetContact()->id();
+        participants << contactProperties;
     }
 
     // We map chatType directly from telepathy targetHandleType: None, Contact, Room
     properties[History::FieldChatType] = textChannel->targetHandleType();
+    properties[History::FieldParticipants] = participants;
 
     QVariantMap roomProperties;
     switch(textChannel->targetHandleType()) {
     case Tp::HandleTypeRoom:
         if (textChannel->hasInterface(TP_QT_IFACE_CHANNEL_INTERFACE_ROOM)) {
             auto room_interface = textChannel->optionalInterface<Tp::Client::ChannelInterfaceRoomInterface>();
-            QDBusMessage msg = QDBusMessage::createMethodCall(room_interface->service(), room_interface->path(), 
+            QDBusMessage msg = QDBusMessage::createMethodCall(room_interface->service(), room_interface->path(),
                 TP_QT_IFACE_PROPERTIES, QLatin1String("GetAll"));
             msg << TP_QT_IFACE_CHANNEL_INTERFACE_ROOM;
             QDBusReply<QVariantMap> reply = room_interface->connection().call(msg);
@@ -116,7 +125,7 @@ QVariantMap HistoryDaemon::propertiesFromChannel(const Tp::ChannelPtr &textChann
         }
         if (textChannel->hasInterface(TP_QT_IFACE_CHANNEL_INTERFACE_ROOM_CONFIG)) {
             auto room_config_interface = textChannel->optionalInterface<Tp::Client::ChannelInterfaceRoomConfigInterface>();
-            QDBusMessage msg = QDBusMessage::createMethodCall(room_config_interface->service(), room_config_interface->path(), 
+            QDBusMessage msg = QDBusMessage::createMethodCall(room_config_interface->service(), room_config_interface->path(),
                 TP_QT_IFACE_PROPERTIES, QLatin1String("GetAll"));
             msg << TP_QT_IFACE_CHANNEL_INTERFACE_ROOM_CONFIG;
             QDBusReply<QVariantMap> reply = room_config_interface->connection().call(msg);
@@ -129,7 +138,7 @@ QVariantMap HistoryDaemon::propertiesFromChannel(const Tp::ChannelPtr &textChann
         }
         if (textChannel->hasInterface(TP_QT_IFACE_CHANNEL_INTERFACE_SUBJECT)) {
             auto subject_interface = textChannel->optionalInterface<Tp::Client::ChannelInterfaceSubjectInterface>();
-            QDBusMessage msg = QDBusMessage::createMethodCall(subject_interface->service(), subject_interface->path(), 
+            QDBusMessage msg = QDBusMessage::createMethodCall(subject_interface->service(), subject_interface->path(),
                 TP_QT_IFACE_PROPERTIES, QLatin1String("GetAll"));
             msg << TP_QT_IFACE_CHANNEL_INTERFACE_SUBJECT;
             QDBusReply<QVariantMap> reply = subject_interface->connection().call(msg);
@@ -141,26 +150,16 @@ QVariantMap HistoryDaemon::propertiesFromChannel(const Tp::ChannelPtr &textChann
             }
         }
 
-        // TODO: Add more properties like name, creator, subject, server, etc..
-        if (participants.size() > 0) {
-            properties[History::FieldParticipants] = participants;
-        }
         properties[History::FieldChatRoomInfo] = roomProperties;
         properties[History::FieldThreadId] = textChannel->targetId();
         break;
     case Tp::HandleTypeContact:
     case Tp::HandleTypeNone:
-        properties[History::FieldParticipants] = participants;
+    default:
         break; 
     }
 
     return properties;
-}
-
-QStringList HistoryDaemon::participantsFromChannel(const Tp::ChannelPtr &textChannel)
-{
-    QVariantMap properties = propertiesFromChannel(textChannel);
-    return properties[History::FieldParticipants].toStringList();
 }
 
 QVariantMap HistoryDaemon::threadForProperties(const QString &accountId,
@@ -242,7 +241,7 @@ QVariantMap HistoryDaemon::getSingleEvent(int type, const QString &accountId, co
     return mBackend->getSingleEvent((History::EventType)type, accountId, threadId, eventId);
 }
 
-bool HistoryDaemon::writeEvents(const QList<QVariantMap> &events)
+bool HistoryDaemon::writeEvents(const QList<QVariantMap> &events, const QVariantMap &properties)
 {
     if (!mBackend) {
         return false;
@@ -274,7 +273,7 @@ bool HistoryDaemon::writeEvents(const QList<QVariantMap> &events)
         }
 
         // only get the thread AFTER the event is written to make sure it is up-to-date
-        QVariantMap thread = getSingleThread(type, accountId, threadId, QVariantMap());
+        QVariantMap thread = getSingleThread(type, accountId, threadId, properties);
         QString hash = hashThread(thread);
         threads[hash] = thread;
 
@@ -441,9 +440,13 @@ void HistoryDaemon::onCallEnded(const Tp::CallChannelPtr &channel)
 {
     qDebug() << __PRETTY_FUNCTION__;
     QVariantMap properties = propertiesFromChannel(channel);
-    QStringList participants;
+    QVariantList participants;
     Q_FOREACH(const Tp::ContactPtr contact, channel->remoteMembers()) {
-        participants << contact->id();
+        QVariantMap contactProperties;
+        contactProperties[History::FieldAlias] = contact->alias();
+        contactProperties[History::FieldIdentifier] = contact->id();
+        contactProperties[History::FieldAccountId] = channel->property(History::FieldAccountId).toString();
+        participants << contactProperties;
     }
 
     // it shouldn't happen, but in case it does, we won't crash
@@ -483,8 +486,8 @@ void HistoryDaemon::onCallEnded(const Tp::CallChannelPtr &channel)
     event[History::FieldMissed] = missed;
     event[History::FieldDuration] = duration;
     // FIXME: check what to do when there are more than just one remote participant
-    event[History::FieldRemoteParticipant] = participants[0];
-    writeEvents(QList<QVariantMap>() << event);
+    event[History::FieldRemoteParticipant] = participants[0].toMap()[History::FieldIdentifier];
+    writeEvents(QList<QVariantMap>() << event, properties);
 }
 
 void HistoryDaemon::onTextChannelAvailable(const Tp::TextChannelPtr channel)
@@ -553,6 +556,7 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
     QString eventId;
     Tp::MessagePart header = message.header();
     QString senderId;
+    QVariantMap properties = propertiesFromChannel(textChannel);
     History::MessageStatus status = History::MessageStatusUnknown;
     if (!message.sender() || message.sender()->handle().at(0) == textChannel->connection()->selfHandle()) {
         senderId = "self";
@@ -607,14 +611,12 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
         }
 
         textEvent[History::FieldMessageStatus] = (int) status;
-        if (!writeEvents(QList<QVariantMap>() << textEvent)) {
+        if (!writeEvents(QList<QVariantMap>() << textEvent, properties)) {
             qWarning() << "Failed to save the new message status!";
         }
 
         return;
     }
-
-    QVariantMap properties = propertiesFromChannel(textChannel);
 
     QVariantMap thread = threadForProperties(textChannel->property(History::FieldAccountId).toString(),
                                                                    History::EventTypeText,
@@ -687,7 +689,7 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
     event[History::FieldSubject] = subject;
     event[History::FieldAttachments] = QVariant::fromValue(attachments);
 
-    writeEvents(QList<QVariantMap>() << event);
+    writeEvents(QList<QVariantMap>() << event, properties);
 }
 
 QVariantMap HistoryDaemon::getSingleEventFromTextChannel(const Tp::TextChannelPtr textChannel, const QString &messageId)
@@ -716,6 +718,7 @@ QVariantMap HistoryDaemon::getSingleEventFromTextChannel(const Tp::TextChannelPt
 void HistoryDaemon::onMessageRead(const Tp::TextChannelPtr textChannel, const Tp::ReceivedMessage &message)
 {
     QVariantMap textEvent = getSingleEventFromTextChannel(textChannel, message.messageToken());
+    QVariantMap properties = propertiesFromChannel(textChannel);
 
     if (textEvent.isEmpty()) {
         qWarning() << "Cound not find the original event to update with newEvent = false.";
@@ -723,7 +726,7 @@ void HistoryDaemon::onMessageRead(const Tp::TextChannelPtr textChannel, const Tp
     }
 
     textEvent[History::FieldNewEvent] = false;
-    if (!writeEvents(QList<QVariantMap>() << textEvent)) {
+    if (!writeEvents(QList<QVariantMap>() << textEvent, properties)) {
         qWarning() << "Failed to save the new message status!";
     }
 }
@@ -732,7 +735,6 @@ void HistoryDaemon::onMessageSent(const Tp::TextChannelPtr textChannel, const Tp
 {
     qDebug() << __PRETTY_FUNCTION__;
     QVariantMap properties = propertiesFromChannel(textChannel);
-    qDebug() << __PRETTY_FUNCTION__ << properties;
     QList<QVariantMap> attachments;
     History::MessageType type = History::MessageTypeText;
     int count = 1;
@@ -815,7 +817,7 @@ void HistoryDaemon::onMessageSent(const Tp::TextChannelPtr textChannel, const Tp
     event[History::FieldSubject] = "";
     event[History::FieldAttachments] = QVariant::fromValue(attachments);
 
-    writeEvents(QList<QVariantMap>() << event);
+    writeEvents(QList<QVariantMap>() << event, properties);
 }
 
 History::MatchFlags HistoryDaemon::matchFlagsForChannel(const Tp::ChannelPtr &channel)
