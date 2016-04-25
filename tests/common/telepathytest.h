@@ -30,7 +30,7 @@ class TelepathyTest : public QObject
     Q_OBJECT
 
 protected:
-    void initialize();
+    void initialize(int waitTime = 1000);
     void doCleanup();
 
     // helper slots
