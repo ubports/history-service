@@ -20,8 +20,6 @@
  */
 
 #include "historydaemon.h"
-#include <TelepathyQt/Types>
-#include <TelepathyQt/Debug>
 
 bool checkApplicationRunning()
 {
@@ -35,9 +33,6 @@ bool checkApplicationRunning()
 }
 int main(int argc, char **argv)
 {
-    Tp::registerTypes();
-    Tp::enableWarnings(true);
-
     QCoreApplication app(argc, argv);
 
     if (checkApplicationRunning()) {
