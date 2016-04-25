@@ -1,3 +1,9 @@
+history-service (0.1+16.04.20160425-0ubuntu1) xenial; urgency=medium
+
+  * Make sure Telepathy types are always initialized. (LP: #1563050)
+
+ -- Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>  Mon, 25 Apr 2016 21:03:28 +0000
+
 history-service (0.1+16.04.20160104-0ubuntu1) xenial; urgency=medium
 
   [ Tiago Salem Herrmann ]
