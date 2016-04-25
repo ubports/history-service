@@ -189,13 +189,18 @@ void HistoryModel::setMatchContacts(bool value)
 
 QVariantMap HistoryModel::threadForProperties(const QString &accountId, int eventType, const QVariantMap &properties, int matchFlags, bool create)
 {
+    QVariantMap newProperties = properties;
     if (properties.isEmpty()) {
         return QVariantMap();
     }
 
+    if (newProperties.contains(History::FieldParticipants)) {
+        newProperties[History::FieldParticipants] = newProperties[History::FieldParticipants].toStringList();
+    }
+ 
     History::Thread thread = History::Manager::instance()->threadForProperties(accountId,
                                                                                (History::EventType)eventType,
-                                                                               properties,
+                                                                               newProperties,
                                                                                (History::MatchFlags)matchFlags,
                                                                                create);
     if (!thread.isNull()) {
@@ -207,13 +212,18 @@ QVariantMap HistoryModel::threadForProperties(const QString &accountId, int even
 
 QString HistoryModel::threadIdForProperties(const QString &accountId, int eventType, const QVariantMap &properties, int matchFlags, bool create)
 {
+    QVariantMap newProperties = properties;
     if (properties.isEmpty()) {
         return QString::null;
     }
 
+    if (newProperties.contains(History::FieldParticipants)) {
+        newProperties[History::FieldParticipants] = newProperties[History::FieldParticipants].toStringList();
+    }
+
     History::Thread thread = History::Manager::instance()->threadForProperties(accountId,
                                                                                (History::EventType)eventType,
-                                                                               properties,
+                                                                               newProperties,
                                                                                (History::MatchFlags)matchFlags,
                                                                                create);
     if (!thread.isNull()) {
