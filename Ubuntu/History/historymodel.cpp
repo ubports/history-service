@@ -194,8 +194,8 @@ QVariantMap HistoryModel::threadForProperties(const QString &accountId, int even
         return QVariantMap();
     }
 
-    if (newProperties.contains(History::FieldParticipants)) {
-        newProperties[History::FieldParticipants] = newProperties[History::FieldParticipants].toStringList();
+    if (newProperties.contains(History::FieldParticipantIds)) {
+        newProperties[History::FieldParticipants] = newProperties[History::FieldParticipantIds].toStringList();
     }
  
     History::Thread thread = History::Manager::instance()->threadForProperties(accountId,
@@ -217,8 +217,8 @@ QString HistoryModel::threadIdForProperties(const QString &accountId, int eventT
         return QString::null;
     }
 
-    if (newProperties.contains(History::FieldParticipants)) {
-        newProperties[History::FieldParticipants] = newProperties[History::FieldParticipants].toStringList();
+    if (newProperties.contains(History::FieldParticipantIds)) {
+        newProperties[History::FieldParticipants] = newProperties[History::FieldParticipantIds].toStringList();
     }
 
     History::Thread thread = History::Manager::instance()->threadForProperties(accountId,
@@ -240,7 +240,7 @@ QVariantMap HistoryModel::threadForParticipants(const QString &accountId, int ev
     }
 
     QVariantMap properties;
-    properties[History::FieldParticipants] = participants;
+    properties[History::FieldParticipantIds] = participants;
 
     History::Thread thread = History::Manager::instance()->threadForProperties(accountId,
                                                                                (History::EventType)eventType,
@@ -261,7 +261,7 @@ QString HistoryModel::threadIdForParticipants(const QString &accountId, int even
     }
 
     QVariantMap properties;
-    properties[History::FieldParticipants] = participants;
+    properties[History::FieldParticipantIds] = participants;
 
     History::Thread thread = History::Manager::instance()->threadForProperties(accountId,
                                                                                (History::EventType)eventType,
