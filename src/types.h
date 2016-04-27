@@ -113,6 +113,7 @@ static const char* FieldThreadId = "threadId";
 static const char* FieldEventId = "eventId";
 static const char* FieldType = "type";
 static const char* FieldParticipants = "participants";
+static const char* FieldParticipantIds = "participantIds";
 static const char* FieldCount = "count";
 static const char* FieldUnreadCount = "unreadCount";
 static const char* FieldSenderId = "senderId";
