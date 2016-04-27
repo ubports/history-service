@@ -88,6 +88,7 @@ public:
         AccountIdRole = Qt::UserRole,
         ThreadIdRole,
         ParticipantsRole,
+        ParticipantIdsRole,
         TypeRole,
         PropertiesRole,
         LastRole

@@ -88,12 +88,14 @@ QVariantMap HistoryDaemon::propertiesFromChannel(const Tp::ChannelPtr &textChann
 {
     QVariantMap properties;
     QVariantList participants;
+    QStringList participantIds;
 
     Q_FOREACH(const Tp::ContactPtr contact, textChannel->groupContacts(false)) {
         QVariantMap contactProperties;
         contactProperties[History::FieldAlias] = contact->alias();
         contactProperties[History::FieldAccountId] = textChannel->property(History::FieldAccountId).toString();
         contactProperties[History::FieldIdentifier] = contact->id();
+        participantIds << contact->id();
         participants << contactProperties;
     }
 
@@ -103,12 +105,14 @@ QVariantMap HistoryDaemon::propertiesFromChannel(const Tp::ChannelPtr &textChann
         contactProperties[History::FieldAlias] = textChannel->targetContact()->alias();
         contactProperties[History::FieldAccountId] = textChannel->property(History::FieldAccountId).toString();
         contactProperties[History::FieldIdentifier] = textChannel->targetContact()->id();
+        participantIds << textChannel->targetContact()->id();
         participants << contactProperties;
     }
 
     // We map chatType directly from telepathy targetHandleType: None, Contact, Room
     properties[History::FieldChatType] = textChannel->targetHandleType();
     properties[History::FieldParticipants] = participants;
+    properties[History::FieldParticipantIds] = participantIds;
 
     QVariantMap roomProperties;
     switch(textChannel->targetHandleType()) {
