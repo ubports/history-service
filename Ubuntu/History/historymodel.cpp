@@ -98,6 +98,10 @@ QVariant HistoryModel::data(const QModelIndex &index, int role) const
             result = properties[History::FieldParticipants];
         }
         break;
+    case ParticipantIdsRole:
+        result = History::Participants::fromVariantList(properties[History::FieldParticipants].toList()).identifiers();
+        break;
+
     }
     return result;
 }
@@ -195,7 +199,7 @@ QVariantMap HistoryModel::threadForProperties(const QString &accountId, int even
     }
 
     if (newProperties.contains(History::FieldParticipantIds)) {
-        newProperties[History::FieldParticipants] = newProperties[History::FieldParticipantIds].toStringList();
+        newProperties[History::FieldParticipantIds] = newProperties[History::FieldParticipantIds].toStringList();
     }
  
     History::Thread thread = History::Manager::instance()->threadForProperties(accountId,
@@ -218,7 +222,7 @@ QString HistoryModel::threadIdForProperties(const QString &accountId, int eventT
     }
 
     if (newProperties.contains(History::FieldParticipantIds)) {
-        newProperties[History::FieldParticipants] = newProperties[History::FieldParticipantIds].toStringList();
+        newProperties[History::FieldParticipantIds] = newProperties[History::FieldParticipantIds].toStringList();
     }
 
     History::Thread thread = History::Manager::instance()->threadForProperties(accountId,

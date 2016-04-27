@@ -65,7 +65,7 @@ Thread ManagerDBus::threadForParticipants(const QString &accountId,
                                           bool create)
 {
     QVariantMap properties;
-    properties[History::FieldParticipants] = participants;
+    properties[History::FieldParticipantIds] = participants;
 
     return threadForProperties(accountId, type, properties, matchFlags, create);
 }

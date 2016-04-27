@@ -321,7 +321,7 @@ QVariantMap SQLiteHistoryPlugin::threadForProperties(const QString &accountId,
         return getSingleThread(type, accountId, threadId);
     }
 
-    History::Participants participants = History::Participants::fromVariant(properties[History::FieldParticipants]);
+    History::Participants participants = History::Participants::fromVariant(properties[History::FieldParticipantIds]);
     // if chatType != Room, then we select the thread based on the participant list.
     return threadForParticipants(accountId, type, participants.identifiers(), matchFlags);
 }
@@ -573,7 +573,7 @@ QVariantMap SQLiteHistoryPlugin::createThreadForProperties(const QString &accoun
     // WARNING: this function does NOT test to check if the thread is already created, you should check using HistoryReader::threadForParticipants()
 
     QVariantMap thread;
-    History::Participants participants = History::Participants::fromVariant(properties[History::FieldParticipants]);
+    History::Participants participants = History::Participants::fromVariant(properties[History::FieldParticipantIds]);
 
     // Create a new thread
     // FIXME: define what the threadId will be
@@ -670,7 +670,7 @@ QVariantMap SQLiteHistoryPlugin::createThreadForProperties(const QString &accoun
 QVariantMap SQLiteHistoryPlugin::createThreadForParticipants(const QString &accountId, History::EventType type, const QStringList &participants)
 {
     QVariantMap properties;
-    properties[History::FieldParticipants] = participants;
+    properties[History::FieldParticipantIds] = participants;
     return createThreadForProperties(accountId, type, properties);
 }
 

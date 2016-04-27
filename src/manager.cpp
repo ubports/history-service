@@ -136,7 +136,7 @@ Thread Manager::threadForParticipants(const QString &accountId,
     Q_D(Manager);
 
     QVariantMap properties;
-    properties[History::FieldParticipants] = participants;
+    properties[History::FieldParticipantIds] = participants;
     return d->dbus->threadForProperties(accountId, type, properties, matchFlags, create);
 }
 
