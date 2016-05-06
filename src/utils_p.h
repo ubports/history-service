@@ -23,6 +23,7 @@
 #define UTILS_P_H
 
 #include "types.h"
+#include "thread.h"
 
 namespace History {
 
@@ -34,7 +35,7 @@ public:
     static bool compareIds(const QString &accountId, const QString &id1, const QString & id2);
     static bool compareParticipants(const QStringList &participants1, const QStringList &participants2, MatchFlags flags);
     static bool compareNormalizedParticipants(const QStringList &participants1, const QStringList &participants2, MatchFlags flags);
-    static bool shouldGroupAccount(const QString &accountId);
+    static bool shouldGroupThread(const Thread &thread);
     static QString normalizeId(const QString &accountId, const QString &id);
 
 private:

@@ -32,9 +32,12 @@ Utils::Utils()
 }
 
 // FIXME: find a better way to determine when accounts should be grouped
-bool Utils::shouldGroupAccount(const QString &accountId)
+bool Utils::shouldGroupThread(const Thread &thread)
 {
-    return (matchFlagsForAccount(accountId) & MatchPhoneNumber);
+    if (protocolFromAccountId(thread.accountId()) == "multimedia") {
+       return thread.participants().size() == 1;
+    }
+    return (matchFlagsForAccount(thread.accountId()) & MatchPhoneNumber);
 }
 
 MatchFlags Utils::matchFlagsForAccount(const QString &accountId)
