@@ -504,6 +504,10 @@ bool SQLiteHistoryPlugin::updateRoomInfo(const QString &accountId, const QString
 {
     QSqlQuery query(SQLiteDatabase::instance()->database());
 
+    if (threadId.isEmpty() || accountId.isEmpty()) {
+        return false;
+    }
+
     QDateTime creationTimestamp = QDateTime::fromTime_t(properties["CreationTimestamp"].toUInt());
     QDateTime timestamp = QDateTime::fromTime_t(properties["Timestamp"].toUInt());
 
