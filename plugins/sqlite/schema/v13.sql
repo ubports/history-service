@@ -25,3 +25,17 @@ CREATE TABLE chat_room_info (
     timestamp datetime
 );
 UPDATE threads SET chatType = 0;
+
+DROP TRIGGER threads_delete_trigger;
+CREATE TRIGGER threads_delete_trigger AFTER DELETE ON threads
+FOR EACH ROW
+BEGIN
+    DELETE FROM thread_participants WHERE
+        accountId=old.accountId AND
+        threadId=old.threadId AND
+        type=old.type;
+    DELETE FROM chat_room_info WHERE
+        accountId=old.accountId AND
+        threadId=old.threadId AND
+        type=old.type;
+END;
