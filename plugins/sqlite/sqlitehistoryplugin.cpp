@@ -587,6 +587,10 @@ QVariantMap SQLiteHistoryPlugin::createThreadForProperties(const QString &accoun
 
     if (chatType == History::ChatTypeRoom) {
         threadId = properties[History::FieldThreadId].toString();
+        // we cannot save chat room without threadId
+        if (accountId.isEmpty() || threadId.isEmpty()) {
+            return thread;
+        }
         chatRoomInfo = properties[History::FieldChatRoomInfo].toMap();
         QSqlQuery query(SQLiteDatabase::instance()->database());
 
