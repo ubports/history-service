@@ -63,9 +63,11 @@ private Q_SLOTS:
     void onMessageSent(const Tp::TextChannelPtr textChannel, const Tp::Message &message, const QString &messageToken);
     void onTextChannelAvailable(const Tp::TextChannelPtr channel);
     void onRoomPropertiesChanged(const QVariantMap &properties,const QStringList &invalidated);
+    void onUpdateRoomParticipants();
 
 protected:
     History::MatchFlags matchFlagsForChannel(const Tp::ChannelPtr &channel);
+    void updateRoomParticipants(const Tp::TextChannelPtr channel);
     QString hashThread(const QVariantMap &thread);
 
 private:
