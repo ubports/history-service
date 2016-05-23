@@ -500,6 +500,52 @@ QVariantMap SQLiteHistoryPlugin::getSingleEvent(History::EventType type, const Q
     return result;
 }
 
+bool SQLiteHistoryPlugin::updateRoomParticipants(const QString &accountId, const QString &threadId, History::EventType type, const QVariantList &participants)
+{
+    QSqlQuery query(SQLiteDatabase::instance()->database());
+    if (accountId.isEmpty() || threadId.isEmpty()) {
+        return false;
+    }
+
+    QString deleteString("DELETE FROM thread_participants WHERE threadId=:threadId AND type=:type AND accountId=:accountId");
+    query.prepare(deleteString);
+    query.bindValue(":accountId", accountId);
+    query.bindValue(":threadId", threadId);
+    query.bindValue(":type", type);
+    if (!query.exec()) {
+        qCritical() << "Error removing old participants:" << query.lastError() << query.lastQuery();
+        return false;
+    }
+
+    // and insert the participants
+    Q_FOREACH(const QVariant &participantVariant, participants) {
+        QVariantMap participant = participantVariant.toMap();
+        query.prepare("INSERT INTO thread_participants (accountId, threadId, type, participantId, normalizedId, alias)"
+                      "VALUES (:accountId, :threadId, :type, :participantId, :normalizedId, :alias)");
+        query.bindValue(":accountId", accountId);
+        query.bindValue(":threadId", threadId);
+        query.bindValue(":type", type);
+        query.bindValue(":participantId", participant["identifier"].toString());
+        query.bindValue(":normalizedId", participant["identifier"].toString());
+        query.bindValue(":alias", participant["alias"].toString());
+        if (!query.exec()) {
+            qCritical() << "Error:" << query.lastError() << query.lastQuery();
+            return false;
+        }
+    }
+
+    QVariantMap existingThread = getSingleThread(type,
+                                                 accountId,
+                                                 threadId,
+                                                 QVariantMap());
+
+    if (!existingThread.isEmpty()) {
+        addThreadsToCache(QList<QVariantMap>() << existingThread);
+    }
+
+    return true;
+}
+
 bool SQLiteHistoryPlugin::updateRoomInfo(const QString &accountId, const QString &threadId, History::EventType type, const QVariantMap &properties, const QStringList &invalidated)
 {
     QSqlQuery query(SQLiteDatabase::instance()->database());
@@ -569,6 +615,16 @@ bool SQLiteHistoryPlugin::updateRoomInfo(const QString &accountId, const QString
         qCritical() << "Error:" << query.lastError() << query.lastQuery();
         return false;
     }
+
+    QVariantMap existingThread = getSingleThread(type,
+                                                 accountId,
+                                                 threadId,
+                                                 QVariantMap());
+
+    if (!existingThread.isEmpty()) {
+        addThreadsToCache(QList<QVariantMap>() << existingThread);
+    }
+
     return true;
 }
 

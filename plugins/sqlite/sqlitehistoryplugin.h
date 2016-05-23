@@ -69,6 +69,7 @@ public:
     QVariantMap createThreadForProperties(const QString &accountId, History::EventType type, const QVariantMap &properties);
     QVariantMap createThreadForParticipants(const QString &accountId, History::EventType type, const QStringList &participants);
     
+    bool updateRoomParticipants(const QString &accountId, const QString &threadId, History::EventType type, const QVariantList &participants);
     bool updateRoomInfo(const QString &accountId, const QString &threadId, History::EventType type, const QVariantMap &properties, const QStringList &invalidated = QStringList());
     bool removeThread(const QVariantMap &thread);
 
