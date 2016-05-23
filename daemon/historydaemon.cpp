@@ -731,6 +731,12 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
     event[History::FieldAttachments] = QVariant::fromValue(attachments);
 
     writeEvents(QList<QVariantMap>() << event, properties);
+
+    // if this messages supersedes another one, remove the original message
+    if (!message.supersededToken().isEmpty()) {
+        event[History::FieldEventId] = message.supersededToken();
+        removeEvents(QList<QVariantMap>() << event);
+    }
 }
 
 QVariantMap HistoryDaemon::getSingleEventFromTextChannel(const Tp::TextChannelPtr textChannel, const QString &messageId)
