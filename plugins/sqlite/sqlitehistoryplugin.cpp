@@ -341,7 +341,7 @@ QVariantMap SQLiteHistoryPlugin::threadForParticipants(const QString &accountId,
     // select all the threads the first participant is listed in, and from that list
     // check if any of the threads has all the other participants listed
     // FIXME: find a better way to do this
-    QString queryString("SELECT threadId FROM thread_participants WHERE %1 AND type=:type AND accountId=:accountId");
+    QString queryString("SELECT threadId FROM thread_participants WHERE %1 AND type=:type AND accountId=:accountId AND chatType!=:chatType");
 
     // FIXME: for now we just compare differently when using MatchPhoneNumber
     QString firstParticipant = participants.first();
@@ -355,6 +355,9 @@ QVariantMap SQLiteHistoryPlugin::threadForParticipants(const QString &accountId,
     query.bindValue(":participantId", firstParticipant);
     query.bindValue(":type", type);
     query.bindValue(":accountId", accountId);
+
+    // we don't want to accidentally return a chat room for a multi-recipient conversation
+    query.bindValue(":chatType", (int)History::ChatTypeRoom);
     if (!query.exec()) {
         qCritical() << "Error:" << query.lastError() << query.lastQuery();
         return QVariantMap();
