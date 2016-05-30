@@ -38,7 +38,7 @@
 
 QString generateThreadMapKey(const History::Thread &thread)
 {
-    return thread.accountId() + thread.threadId();
+    return generateThreadMapKey(thread.accountId(), thread.threadId());
 }
 
 QString generateThreadMapKey(const QString &accountId, const QString &threadId)
@@ -119,6 +119,9 @@ void SQLiteHistoryPlugin::addThreadsToCache(const QList<QVariantMap> &threads)
             const QString &conversationKey = it.key();
             History::Threads groupedThreads = it.value();
             Q_FOREACH(const History::Thread &groupedThread, groupedThreads) {
+                if (!History::Utils::shouldGroupThread(groupedThread)) {
+                    continue;
+                }
                 found = History::Utils::compareNormalizedParticipants(thread.participants().identifiers(), groupedThread.participants().identifiers(), History::MatchPhoneNumber);
                 if (found) {
                     Q_FOREACH(const History::Thread &groupedThread, groupedThreads) {
