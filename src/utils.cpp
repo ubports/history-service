@@ -35,7 +35,7 @@ Utils::Utils()
 bool Utils::shouldGroupThread(const Thread &thread)
 {
     if (protocolFromAccountId(thread.accountId()) == "multimedia") {
-       return thread.chatType() != History::ChatTypeContact;
+       return thread.chatType() == History::ChatTypeContact;
     }
     return (matchFlagsForAccount(thread.accountId()) & MatchPhoneNumber);
 }
