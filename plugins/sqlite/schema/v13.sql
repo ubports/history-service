@@ -25,6 +25,7 @@ CREATE TABLE chat_room_info (
     timestamp datetime
 );
 UPDATE threads SET chatType = 0;
+UPDATE threads SET chatType=1 WHERE (SELECT COUNT(participantId) from thread_participants WHERE thread_participants.threadId=threads.threadId and thread_participants.accountId=threads.accountId AND thread_participants.type=threads.type)=1;
 
 DROP TRIGGER threads_delete_trigger;
 CREATE TRIGGER threads_delete_trigger AFTER DELETE ON threads
