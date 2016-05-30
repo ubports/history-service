@@ -36,14 +36,14 @@
 #include <QSqlError>
 #include <QDBusMetaType>
 
-QString generateThreadMapKey(const History::Thread &thread)
-{
-    return generateThreadMapKey(thread.accountId(), thread.threadId());
-}
-
 QString generateThreadMapKey(const QString &accountId, const QString &threadId)
 {
     return accountId + threadId;
+}
+
+QString generateThreadMapKey(const History::Thread &thread)
+{
+    return generateThreadMapKey(thread.accountId(), thread.threadId());
 }
 
 SQLiteHistoryPlugin::SQLiteHistoryPlugin(QObject *parent) :
