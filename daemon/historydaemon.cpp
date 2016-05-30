@@ -508,7 +508,6 @@ void HistoryDaemon::onTextChannelAvailable(const Tp::TextChannelPtr channel)
         auto room_interface = channel->optionalInterface<Tp::Client::ChannelInterfaceRoomInterface>();
         auto room_config_interface = channel->optionalInterface<Tp::Client::ChannelInterfaceRoomConfigInterface>();
         auto subject_interface = channel->optionalInterface<Tp::Client::ChannelInterfaceSubjectInterface>();
-        auto group_interface = channel->optionalInterface<Tp::Client::ChannelInterfaceGroupInterface>();
 
         if (room_interface) {
             room_interface->setMonitorProperties(true);
@@ -539,11 +538,9 @@ void HistoryDaemon::onTextChannelAvailable(const Tp::TextChannelPtr channel)
                                        SLOT(onRoomPropertiesChanged(const QVariantMap &,const QStringList &)));
         }
 
-        if (group_interface) {
-            connect(group_interface, SIGNAL(groupMembersChanged(const Tp::Contacts &, const Tp::Contacts &, const Tp::Contacts &, const Tp::Contacts &, const Tp::Channel::GroupMemberChangeDetails &)), SLOT(onUpdateRoomParticipants()));
+        connect(channel.data(), SIGNAL(groupMembersChanged(const Tp::Contacts &, const Tp::Contacts &, const Tp::Contacts &, const Tp::Contacts &, const Tp::Channel::GroupMemberChangeDetails &)), SLOT(onUpdateRoomParticipants()));
 
-            updateRoomParticipants(channel);
-        }
+        updateRoomParticipants(channel);
     }
 }
 
