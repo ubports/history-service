@@ -137,6 +137,9 @@ Thread Manager::threadForParticipants(const QString &accountId,
 
     QVariantMap properties;
     properties[History::FieldParticipantIds] = participants;
+    if (participants.size() == 1) {
+        properties[History::FieldChatType] = History::ChatTypeContact;
+    }
     return d->dbus->threadForProperties(accountId, type, properties, matchFlags, create);
 }
 
