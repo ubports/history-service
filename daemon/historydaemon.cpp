@@ -32,6 +32,7 @@
 #include <QStandardPaths>
 #include <QCryptographicHash>
 #include <TelepathyQt/CallChannel>
+#include <TelepathyQt/PendingVariantMap>
 #include <TelepathyQt/ReferencedHandles>
 
 HistoryDaemon::HistoryDaemon(QObject *parent)
@@ -119,22 +120,22 @@ QVariantMap HistoryDaemon::propertiesFromChannel(const Tp::ChannelPtr &textChann
     case Tp::HandleTypeRoom:
         if (textChannel->hasInterface(TP_QT_IFACE_CHANNEL_INTERFACE_ROOM)) {
             auto room_interface = textChannel->optionalInterface<Tp::Client::ChannelInterfaceRoomInterface>();
-            QDBusMessage msg = QDBusMessage::createMethodCall(room_interface->service(), room_interface->path(),
-                TP_QT_IFACE_PROPERTIES, QLatin1String("GetAll"));
-            msg << TP_QT_IFACE_CHANNEL_INTERFACE_ROOM;
-            QDBusReply<QVariantMap> reply = room_interface->connection().call(msg);
-            if (reply.isValid()) {
-                roomProperties = reply.value();
+            auto pendingResult = room_interface->requestAllProperties();
+            while (!pendingResult->isFinished()) {
+                QCoreApplication::processEvents();
+            }
+            if (!pendingResult->isError()) {
+                roomProperties = pendingResult->result();
             }
         }
         if (textChannel->hasInterface(TP_QT_IFACE_CHANNEL_INTERFACE_ROOM_CONFIG)) {
             auto room_config_interface = textChannel->optionalInterface<Tp::Client::ChannelInterfaceRoomConfigInterface>();
-            QDBusMessage msg = QDBusMessage::createMethodCall(room_config_interface->service(), room_config_interface->path(),
-                TP_QT_IFACE_PROPERTIES, QLatin1String("GetAll"));
-            msg << TP_QT_IFACE_CHANNEL_INTERFACE_ROOM_CONFIG;
-            QDBusReply<QVariantMap> reply = room_config_interface->connection().call(msg);
-            if (reply.isValid()) {
-                QVariantMap map = reply.value();
+            auto pendingResult = room_config_interface->requestAllProperties();
+            while (!pendingResult->isFinished()) {
+                QCoreApplication::processEvents();
+            }
+            if (!pendingResult->isError()) {
+                QVariantMap map = pendingResult->result();
                 for(QVariantMap::const_iterator iter = map.begin(); iter != map.end(); ++iter) {
                      roomProperties[iter.key()] = iter.value();
                 }
@@ -142,12 +143,12 @@ QVariantMap HistoryDaemon::propertiesFromChannel(const Tp::ChannelPtr &textChann
         }
         if (textChannel->hasInterface(TP_QT_IFACE_CHANNEL_INTERFACE_SUBJECT)) {
             auto subject_interface = textChannel->optionalInterface<Tp::Client::ChannelInterfaceSubjectInterface>();
-            QDBusMessage msg = QDBusMessage::createMethodCall(subject_interface->service(), subject_interface->path(),
-                TP_QT_IFACE_PROPERTIES, QLatin1String("GetAll"));
-            msg << TP_QT_IFACE_CHANNEL_INTERFACE_SUBJECT;
-            QDBusReply<QVariantMap> reply = subject_interface->connection().call(msg);
-            if (reply.isValid()) {
-                QVariantMap map = reply.value();
+            auto pendingResult = subject_interface->requestAllProperties();
+            while (!pendingResult->isFinished()) {
+                QCoreApplication::processEvents();
+            }
+            if (!pendingResult->isError()) {
+                QVariantMap map = pendingResult->result();
                 for(QVariantMap::const_iterator iter = map.begin(); iter != map.end(); ++iter) {
                      roomProperties[iter.key()] = iter.value();
                 }
