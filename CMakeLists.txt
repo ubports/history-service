@@ -49,6 +49,11 @@ pkg_check_modules(QTGLIB QtGLib-2.0)
 
 find_program(DBUS_RUNNER dbus-test-runner)
 
+option(TRACE_SQLITE "Print Sqlite commants to the log." off)
+if (${TRACE_SQLITE})
+    add_definitions(-DTRACE_SQLITE)
+endif()
+
 add_definitions(-DQT_NO_KEYWORDS)
 
 include_directories(
