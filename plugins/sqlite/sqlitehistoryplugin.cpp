@@ -523,6 +523,7 @@ bool SQLiteHistoryPlugin::updateRoomParticipants(const QString &accountId, const
     query.bindValue(":type", type);
     if (!query.exec()) {
         qCritical() << "Error removing old participants:" << query.lastError() << query.lastQuery();
+        SQLiteDatabase::instance()->rollbackTransaction();
         return false;
     }
 
