@@ -515,6 +515,7 @@ bool SQLiteHistoryPlugin::updateRoomParticipants(const QString &accountId, const
         return false;
     }
 
+    SQLiteDatabase::instance()->beginTransation();
     QString deleteString("DELETE FROM thread_participants WHERE threadId=:threadId AND type=:type AND accountId=:accountId");
     query.prepare(deleteString);
     query.bindValue(":accountId", accountId);
@@ -538,8 +539,14 @@ bool SQLiteHistoryPlugin::updateRoomParticipants(const QString &accountId, const
         query.bindValue(":alias", participant["alias"].toString());
         if (!query.exec()) {
             qCritical() << "Error:" << query.lastError() << query.lastQuery();
+            SQLiteDatabase::instance()->rollbackTransaction();
             return false;
         }
+    }
+
+    if (!SQLiteDatabase::instance()->finishTransaction()) {
+        qCritical() << "Failed to commit the transaction.";
+        return false;
     }
 
     QVariantMap existingThread = getSingleThread(type,
@@ -561,6 +568,8 @@ bool SQLiteHistoryPlugin::updateRoomInfo(const QString &accountId, const QString
     if (threadId.isEmpty() || accountId.isEmpty()) {
         return false;
     }
+
+    SQLiteDatabase::instance()->beginTransation();
 
     QDateTime creationTimestamp = QDateTime::fromTime_t(properties["CreationTimestamp"].toUInt());
     QDateTime timestamp = QDateTime::fromTime_t(properties["Timestamp"].toUInt());
@@ -621,6 +630,12 @@ bool SQLiteHistoryPlugin::updateRoomInfo(const QString &accountId, const QString
 
     if (!query.exec()) {
         qCritical() << "Error:" << query.lastError() << query.lastQuery();
+        SQLiteDatabase::instance()->rollbackTransaction();
+        return false;
+    }
+
+    if (!SQLiteDatabase::instance()->finishTransaction()) {
+        qCritical() << "Failed to commit the transaction.";
         return false;
     }
 
@@ -649,10 +664,13 @@ QVariantMap SQLiteHistoryPlugin::createThreadForProperties(const QString &accoun
     History::ChatType chatType = (History::ChatType)properties[History::FieldChatType].toInt();
     QVariantMap chatRoomInfo;
 
+    SQLiteDatabase::instance()->beginTransation();
+
     if (chatType == History::ChatTypeRoom) {
         threadId = properties[History::FieldThreadId].toString();
         // we cannot save chat room without threadId
         if (accountId.isEmpty() || threadId.isEmpty()) {
+            SQLiteDatabase::instance()->rollbackTransaction();
             return thread;
         }
         chatRoomInfo = properties[History::FieldChatRoomInfo].toMap();
@@ -688,6 +706,7 @@ QVariantMap SQLiteHistoryPlugin::createThreadForProperties(const QString &accoun
 
         if (!query.exec()) {
             qCritical() << "Error:" << query.lastError() << query.lastQuery();
+            SQLiteDatabase::instance()->rollbackTransaction();
             return QVariantMap();
         }
     } else {
@@ -705,6 +724,7 @@ QVariantMap SQLiteHistoryPlugin::createThreadForProperties(const QString &accoun
     query.bindValue(":chatType", (int) chatType);
     if (!query.exec()) {
         qCritical() << "Error:" << query.lastError() << query.lastQuery();
+        SQLiteDatabase::instance()->rollbackTransaction();
         return QVariantMap();
     }
 
@@ -720,8 +740,14 @@ QVariantMap SQLiteHistoryPlugin::createThreadForProperties(const QString &accoun
         query.bindValue(":alias", participant.alias());
         if (!query.exec()) {
             qCritical() << "Error:" << query.lastError() << query.lastQuery();
+            SQLiteDatabase::instance()->rollbackTransaction();
             return QVariantMap();
         }
+    }
+
+    if (!SQLiteDatabase::instance()->finishTransaction()) {
+        qCritical() << "Failed to commit the transaction.";
+        return QVariantMap();
     }
 
     // and finally create the thread
@@ -775,6 +801,8 @@ History::EventWriteResult SQLiteHistoryPlugin::writeTextEvent(const QVariantMap 
                                                event[History::FieldThreadId].toString(),
                                                event[History::FieldEventId].toString());
 
+    SQLiteDatabase::instance()->beginTransation();
+
     History::EventWriteResult result;
     if (existingEvent.isEmpty()) {
         // create new
@@ -802,6 +830,7 @@ History::EventWriteResult SQLiteHistoryPlugin::writeTextEvent(const QVariantMap 
 
     if (!query.exec()) {
         qCritical() << "Failed to save the text event: Error:" << query.lastError() << query.lastQuery();
+        SQLiteDatabase::instance()->rollbackTransaction();
         return History::EventWriteError;
     }
 
@@ -817,6 +846,7 @@ History::EventWriteResult SQLiteHistoryPlugin::writeTextEvent(const QVariantMap 
             query.bindValue(":eventId", event[History::FieldEventId]);
             if (!query.exec()) {
                 qCritical() << "Could not erase previous attachments. Error:" << query.lastError() << query.lastQuery();
+                SQLiteDatabase::instance()->rollbackTransaction();
                 return History::EventWriteError;
             }
         }
@@ -833,9 +863,15 @@ History::EventWriteResult SQLiteHistoryPlugin::writeTextEvent(const QVariantMap 
             query.bindValue(":status", attachment[History::FieldStatus]);
             if (!query.exec()) {
                 qCritical() << "Failed to save attachment to database" << query.lastError() << attachment;
+                SQLiteDatabase::instance()->rollbackTransaction();
                 return History::EventWriteError;
             }
         }
+    }
+
+    if (!SQLiteDatabase::instance()->finishTransaction()) {
+        qCritical() << "Failed to commit transaction.";
+        return History::EventWriteError;
     }
 
     if (result == History::EventWriteModified || result == History::EventWriteCreated) {
