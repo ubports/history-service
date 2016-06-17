@@ -121,37 +121,22 @@ QVariantMap HistoryDaemon::propertiesFromChannel(const Tp::ChannelPtr &textChann
         if (textChannel->hasInterface(TP_QT_IFACE_CHANNEL_INTERFACE_ROOM)) {
             auto room_interface = textChannel->optionalInterface<Tp::Client::ChannelInterfaceRoomInterface>();
             auto pendingResult = room_interface->requestAllProperties();
-            while (!pendingResult->isFinished()) {
-                QCoreApplication::processEvents();
-            }
-            if (!pendingResult->isError()) {
-                roomProperties = pendingResult->result();
-            }
+            roomProperties = waitForPendingVariantMap(pendingResult);
         }
         if (textChannel->hasInterface(TP_QT_IFACE_CHANNEL_INTERFACE_ROOM_CONFIG)) {
             auto room_config_interface = textChannel->optionalInterface<Tp::Client::ChannelInterfaceRoomConfigInterface>();
             auto pendingResult = room_config_interface->requestAllProperties();
-            while (!pendingResult->isFinished()) {
-                QCoreApplication::processEvents();
-            }
-            if (!pendingResult->isError()) {
-                QVariantMap map = pendingResult->result();
-                for(QVariantMap::const_iterator iter = map.begin(); iter != map.end(); ++iter) {
-                     roomProperties[iter.key()] = iter.value();
-                }
+            QVariantMap map = waitForPendingVariantMap(pendingResult);
+            for(QVariantMap::const_iterator iter = map.begin(); iter != map.end(); ++iter) {
+                 roomProperties[iter.key()] = iter.value();
             }
         }
         if (textChannel->hasInterface(TP_QT_IFACE_CHANNEL_INTERFACE_SUBJECT)) {
             auto subject_interface = textChannel->optionalInterface<Tp::Client::ChannelInterfaceSubjectInterface>();
             auto pendingResult = subject_interface->requestAllProperties();
-            while (!pendingResult->isFinished()) {
-                QCoreApplication::processEvents();
-            }
-            if (!pendingResult->isError()) {
-                QVariantMap map = pendingResult->result();
-                for(QVariantMap::const_iterator iter = map.begin(); iter != map.end(); ++iter) {
-                     roomProperties[iter.key()] = iter.value();
-                }
+            QVariantMap map = waitForPendingVariantMap(pendingResult);
+            for(QVariantMap::const_iterator iter = map.begin(); iter != map.end(); ++iter) {
+                 roomProperties[iter.key()] = iter.value();
             }
         }
 
@@ -882,4 +867,21 @@ QString HistoryDaemon::hashThread(const QVariantMap &thread)
     hash += "#-#" + thread[History::FieldAccountId].toString();
     hash += "#-#" + thread[History::FieldThreadId].toString();
     return hash;
+}
+
+QVariantMap HistoryDaemon::waitForPendingVariantMap(Tp::PendingVariantMap *pendingOperation)
+{
+    bool finished = pendingOperation->isFinished();
+    QVariantMap map;
+    connect(pendingOperation, &Tp::PendingOperation::finished, [&finished, &map, pendingOperation](){
+        if (!pendingOperation->isError()) {
+            map = pendingOperation->result();
+        }
+        finished = true;
+    });
+
+    while (!finished) {
+        QCoreApplication::processEvents();
+    }
+    return map;
 }
