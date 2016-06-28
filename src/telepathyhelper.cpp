@@ -23,6 +23,8 @@
 #include "telepathyhelper_p.h"
 
 #include <TelepathyQt/ClientRegistrar>
+#include <TelepathyQt/Types>
+#include <TelepathyQt/Debug>
 
 namespace History
 {
@@ -32,6 +34,10 @@ TelepathyHelper::TelepathyHelper(QObject *parent)
       mChannelObserver(0),
       mReady(false)
 {
+    // initialize telepathy
+    Tp::registerTypes();
+    Tp::enableWarnings(true);
+
     mAccountFeatures << Tp::Account::FeatureCore
                      << Tp::Account::FeatureProtocolInfo;
     mContactFeatures << Tp::Contact::FeatureAlias
