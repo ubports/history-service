@@ -546,8 +546,24 @@ void HistoryDaemon::updateRoomParticipants(const Tp::TextChannelPtr channel)
         QVariantMap participant;
         participant["identifier"] = contact->id();
         participant["alias"] = contact->alias();
+        participant["state"] = History::ParticipantStateRegular;
         participants << QVariant::fromValue(participant);
     }
+    Q_FOREACH(const Tp::ContactPtr contact, channel->groupRemotePendingContacts(false)) {
+        QVariantMap participant;
+        participant["identifier"] = contact->id();
+        participant["alias"] = contact->alias();
+        participant["state"] = History::ParticipantStatePendingRemote;
+        participants << QVariant::fromValue(participant);
+    }
+    Q_FOREACH(const Tp::ContactPtr contact, channel->groupLocalPendingContacts(false)) {
+        QVariantMap participant;
+        participant["identifier"] = contact->id();
+        participant["alias"] = contact->alias();
+        participant["state"] = History::ParticipantStatePendingLocal;
+        participants << QVariant::fromValue(participant);
+    }
+
     QString accountId = channel->property(History::FieldAccountId).toString();
     QString threadId = channel->targetId();;
     if (mBackend->updateRoomParticipants(accountId, threadId, History::EventTypeText, participants)) {

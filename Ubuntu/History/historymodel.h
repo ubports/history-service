@@ -95,6 +95,8 @@ public:
         AccountIdRole = Qt::UserRole,
         ThreadIdRole,
         ParticipantsRole,
+        ParticipantsLocalPendingRole,
+        ParticipantsRemotePendingRole,
         ParticipantIdsRole,
         TypeRole,
         PropertiesRole,

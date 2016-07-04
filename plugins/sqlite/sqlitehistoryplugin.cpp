@@ -262,7 +262,7 @@ void SQLiteHistoryPlugin::generateContactCache()
     time.start();
     qDebug() << "---- HistoryService: start generating cached content";
     QSqlQuery query(SQLiteDatabase::instance()->database());
-    if (!query.exec("SELECT DISTINCT accountId, normalizedId, alias FROM thread_participants")) {
+    if (!query.exec("SELECT DISTINCT accountId, normalizedId, alias, state FROM thread_participants")) {
         qWarning() << "Failed to generate contact cache:" << query.lastError().text();
         return;
     }
@@ -530,14 +530,15 @@ bool SQLiteHistoryPlugin::updateRoomParticipants(const QString &accountId, const
     // and insert the participants
     Q_FOREACH(const QVariant &participantVariant, participants) {
         QVariantMap participant = participantVariant.toMap();
-        query.prepare("INSERT INTO thread_participants (accountId, threadId, type, participantId, normalizedId, alias)"
-                      "VALUES (:accountId, :threadId, :type, :participantId, :normalizedId, :alias)");
+        query.prepare("INSERT INTO thread_participants (accountId, threadId, type, participantId, normalizedId, alias, state)"
+                      "VALUES (:accountId, :threadId, :type, :participantId, :normalizedId, :alias, :state)");
         query.bindValue(":accountId", accountId);
         query.bindValue(":threadId", threadId);
         query.bindValue(":type", type);
         query.bindValue(":participantId", participant["identifier"].toString());
         query.bindValue(":normalizedId", participant["identifier"].toString());
         query.bindValue(":alias", participant["alias"].toString());
+        query.bindValue(":state", participant["state"].toUInt());
         if (!query.exec()) {
             qCritical() << "Error:" << query.lastError() << query.lastQuery();
             SQLiteDatabase::instance()->rollbackTransaction();
@@ -731,14 +732,15 @@ QVariantMap SQLiteHistoryPlugin::createThreadForProperties(const QString &accoun
 
     // and insert the participants
     Q_FOREACH(const History::Participant &participant, participants) {
-        query.prepare("INSERT INTO thread_participants (accountId, threadId, type, participantId, normalizedId, alias)"
-                      "VALUES (:accountId, :threadId, :type, :participantId, :normalizedId, :alias)");
+        query.prepare("INSERT INTO thread_participants (accountId, threadId, type, participantId, normalizedId, alias, state)"
+                      "VALUES (:accountId, :threadId, :type, :participantId, :normalizedId, :alias, :state)");
         query.bindValue(":accountId", accountId);
         query.bindValue(":threadId", threadId);
         query.bindValue(":type", type);
         query.bindValue(":participantId", participant.identifier());
         query.bindValue(":normalizedId", History::Utils::normalizeId(accountId, participant.identifier()));
         query.bindValue(":alias", participant.alias());
+        query.bindValue(":state", participant.state());
         if (!query.exec()) {
             qCritical() << "Error:" << query.lastError() << query.lastQuery();
             SQLiteDatabase::instance()->rollbackTransaction();

@@ -93,6 +93,13 @@ enum AttachmentFlag
 
 Q_DECLARE_FLAGS(AttachmentFlags, AttachmentFlag)
 
+enum ParticipantState
+{
+    ParticipantStateRegular = 0,
+    ParticipantStatePendingLocal = 1,
+    ParticipantStatePendingRemote = 2
+};
+
 // Event writing results
 enum EventWriteResult {
     EventWriteCreated,
@@ -185,6 +192,7 @@ static const char* FieldAlias = "alias";
 static const char* FieldAvatar = "avatar";
 static const char* FieldIdentifier = "identifier";
 static const char* FieldDetailProperties = "detailProperties";
+static const char* FieldParticipantState = "state";
 
 }
 
