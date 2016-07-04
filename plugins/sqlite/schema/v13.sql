@@ -1,5 +1,6 @@
 ALTER TABLE threads ADD COLUMN chatType tinyint;
 ALTER TABLE thread_participants ADD COLUMN alias varchar(255);
+ALTER TABLE thread_participants ADD COLUMN state tinyint;
 CREATE TABLE chat_room_info (
     accountId varchar(255),
     type tinyint,
@@ -26,6 +27,7 @@ CREATE TABLE chat_room_info (
 );
 UPDATE threads SET chatType = 0;
 UPDATE threads SET chatType=1 WHERE (SELECT COUNT(participantId) from thread_participants WHERE thread_participants.threadId=threads.threadId and thread_participants.accountId=threads.accountId AND thread_participants.type=threads.type)=1;
+UPDATE thread_participants SET state = 0;
 
 DROP TRIGGER threads_delete_trigger;
 CREATE TRIGGER threads_delete_trigger AFTER DELETE ON threads

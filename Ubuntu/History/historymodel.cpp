@@ -40,6 +40,8 @@ HistoryModel::HistoryModel(QObject *parent) :
     mRoles[AccountIdRole] = "accountId";
     mRoles[ThreadIdRole] = "threadId";
     mRoles[ParticipantsRole] = "participants";
+    mRoles[ParticipantsRemotePendingRole] = "remotePendingParticipants";
+    mRoles[ParticipantsLocalPendingRole] = "localPendingParticipants";
     mRoles[TypeRole] = "type";
     mRoles[PropertiesRole] = "properties";
 
@@ -98,6 +100,42 @@ QVariant HistoryModel::data(const QModelIndex &index, int role) const
             result = properties[History::FieldParticipants];
         }
         break;
+    case ParticipantsRemotePendingRole: {
+        QStringList identifiers;
+        Q_FOREACH(const History::Participant &participant, History::Participants::fromVariantList(properties[History::FieldParticipants].toList())) {
+            if (participant.state() == History::ParticipantStatePendingRemote) {
+                identifiers << participant.identifier();
+            }
+        }
+
+        if (mMatchContacts) {
+            result = History::ContactMatcher::instance()->contactInfo(properties[History::FieldAccountId].toString(),
+                                                                      identifiers);
+        } else {
+            //FIXME: handle contact changes
+            result = identifiers;
+        }
+
+        break;
+    }
+    case ParticipantsLocalPendingRole: {
+        QStringList identifiers;
+        Q_FOREACH(const History::Participant &participant, History::Participants::fromVariantList(properties[History::FieldParticipants].toList())) {
+            if (participant.state() == History::ParticipantStatePendingLocal) {
+                identifiers << participant.identifier();
+            }
+        }
+
+        if (mMatchContacts) {
+            result = History::ContactMatcher::instance()->contactInfo(properties[History::FieldAccountId].toString(),
+                                                                      identifiers);
+        } else {
+            //FIXME: handle contact changes
+            result = identifiers;
+        }
+
+        break;
+    }
     case ParticipantIdsRole:
         result = History::Participants::fromVariantList(properties[History::FieldParticipants].toList()).identifiers();
         break;
