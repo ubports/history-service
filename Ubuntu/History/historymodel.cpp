@@ -103,7 +103,7 @@ QVariant HistoryModel::data(const QModelIndex &index, int role) const
     case ParticipantsRemotePendingRole: {
         QStringList identifiers;
         Q_FOREACH(const History::Participant &participant, History::Participants::fromVariantList(properties[History::FieldParticipants].toList())) {
-            if (participant.state() == History::ParticipantStatePendingRemote) {
+            if (participant.state() == History::ParticipantStateRemotePending) {
                 identifiers << participant.identifier();
             }
         }
@@ -121,7 +121,7 @@ QVariant HistoryModel::data(const QModelIndex &index, int role) const
     case ParticipantsLocalPendingRole: {
         QStringList identifiers;
         Q_FOREACH(const History::Participant &participant, History::Participants::fromVariantList(properties[History::FieldParticipants].toList())) {
-            if (participant.state() == History::ParticipantStatePendingLocal) {
+            if (participant.state() == History::ParticipantStateLocalPending) {
                 identifiers << participant.identifier();
             }
         }

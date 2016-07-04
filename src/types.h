@@ -96,8 +96,8 @@ Q_DECLARE_FLAGS(AttachmentFlags, AttachmentFlag)
 enum ParticipantState
 {
     ParticipantStateRegular = 0,
-    ParticipantStatePendingLocal = 1,
-    ParticipantStatePendingRemote = 2
+    ParticipantStateLocalPending = 1,
+    ParticipantStateRemotePending = 2
 };
 
 // Event writing results
