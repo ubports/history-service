@@ -96,6 +96,27 @@ QVariantMap HistoryDaemon::propertiesFromChannel(const Tp::ChannelPtr &textChann
         contactProperties[History::FieldAlias] = contact->alias();
         contactProperties[History::FieldAccountId] = textChannel->property(History::FieldAccountId).toString();
         contactProperties[History::FieldIdentifier] = contact->id();
+        contactProperties[History::FieldParticipantState] = History::ParticipantStateRegular;
+        participantIds << contact->id();
+        participants << contactProperties;
+    }
+
+    Q_FOREACH(const Tp::ContactPtr contact, textChannel->groupRemotePendingContacts(false)) {
+        QVariantMap contactProperties;
+        contactProperties[History::FieldAlias] = contact->alias();
+        contactProperties[History::FieldAccountId] = textChannel->property(History::FieldAccountId).toString();
+        contactProperties[History::FieldIdentifier] = contact->id();
+        contactProperties[History::FieldParticipantState] = History::ParticipantStateRemotePending;
+        participantIds << contact->id();
+        participants << contactProperties;
+    }
+
+    Q_FOREACH(const Tp::ContactPtr contact, textChannel->groupLocalPendingContacts(false)) {
+        QVariantMap contactProperties;
+        contactProperties[History::FieldAlias] = contact->alias();
+        contactProperties[History::FieldAccountId] = textChannel->property(History::FieldAccountId).toString();
+        contactProperties[History::FieldIdentifier] = contact->id();
+        contactProperties[History::FieldParticipantState] = History::ParticipantStateLocalPending;
         participantIds << contact->id();
         participants << contactProperties;
     }
@@ -106,6 +127,7 @@ QVariantMap HistoryDaemon::propertiesFromChannel(const Tp::ChannelPtr &textChann
         contactProperties[History::FieldAlias] = textChannel->targetContact()->alias();
         contactProperties[History::FieldAccountId] = textChannel->property(History::FieldAccountId).toString();
         contactProperties[History::FieldIdentifier] = textChannel->targetContact()->id();
+        contactProperties[History::FieldParticipantState] = History::ParticipantStateRegular;
         participantIds << textChannel->targetContact()->id();
         participants << contactProperties;
     }
@@ -544,23 +566,23 @@ void HistoryDaemon::updateRoomParticipants(const Tp::TextChannelPtr channel)
     QVariantList participants;
     Q_FOREACH(const Tp::ContactPtr contact, channel->groupContacts(false)) {
         QVariantMap participant;
-        participant["identifier"] = contact->id();
-        participant["alias"] = contact->alias();
-        participant["state"] = History::ParticipantStateRegular;
+        participant[History::FieldIdentifier] = contact->id();
+        participant[History::FieldAlias] = contact->alias();
+        participant[History::FieldParticipantState] = History::ParticipantStateRegular;
         participants << QVariant::fromValue(participant);
     }
     Q_FOREACH(const Tp::ContactPtr contact, channel->groupRemotePendingContacts(false)) {
         QVariantMap participant;
-        participant["identifier"] = contact->id();
-        participant["alias"] = contact->alias();
-        participant["state"] = History::ParticipantStateLocalPending;
+        participant[History::FieldIdentifier] = contact->id();
+        participant[History::FieldAlias] = contact->alias();
+        participant[History::FieldParticipantState] = History::ParticipantStateRemotePending;
         participants << QVariant::fromValue(participant);
     }
     Q_FOREACH(const Tp::ContactPtr contact, channel->groupLocalPendingContacts(false)) {
         QVariantMap participant;
-        participant["identifier"] = contact->id();
-        participant["alias"] = contact->alias();
-        participant["state"] = History::ParticipantStateLocalPending;
+        participant[History::FieldIdentifier] = contact->id();
+        participant[History::FieldAlias] = contact->alias();
+        participant[History::FieldParticipantState] = History::ParticipantStateLocalPending;
         participants << QVariant::fromValue(participant);
     }
 
