@@ -1084,7 +1084,7 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseThreadResults(History::EventType ty
         thread[History::FieldEventId] = query.value(2);
         thread[History::FieldCount] = query.value(3);
         thread[History::FieldUnreadCount] = query.value(4);
-        QStringList participants = query.value(5).toString().split("|,|");
+        QStringList participants = query.value(5).toString().split("|,|", QString::SkipEmptyParts);
         thread[History::FieldParticipants] = History::ContactMatcher::instance()->contactInfo(accountId, participants, true);
 
         // the generic event fields
