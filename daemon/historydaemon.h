@@ -69,7 +69,7 @@ protected:
     History::MatchFlags matchFlagsForChannel(const Tp::ChannelPtr &channel);
     void updateRoomParticipants(const Tp::TextChannelPtr channel);
     QString hashThread(const QVariantMap &thread);
-    static QVariantMap waitForPendingVariantMap(Tp::PendingVariantMap *pendingOperation);
+    static QVariantMap getInterfaceProperties(const Tp::AbstractInterface *interface);
 
 private:
     HistoryDaemon(QObject *parent = 0);
