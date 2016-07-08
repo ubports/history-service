@@ -142,21 +142,18 @@ QVariantMap HistoryDaemon::propertiesFromChannel(const Tp::ChannelPtr &textChann
     case Tp::HandleTypeRoom:
         if (textChannel->hasInterface(TP_QT_IFACE_CHANNEL_INTERFACE_ROOM)) {
             auto room_interface = textChannel->optionalInterface<Tp::Client::ChannelInterfaceRoomInterface>();
-            auto pendingResult = room_interface->requestAllProperties();
-            roomProperties = waitForPendingVariantMap(pendingResult);
+            roomProperties = getInterfaceProperties(room_interface);
         }
         if (textChannel->hasInterface(TP_QT_IFACE_CHANNEL_INTERFACE_ROOM_CONFIG)) {
             auto room_config_interface = textChannel->optionalInterface<Tp::Client::ChannelInterfaceRoomConfigInterface>();
-            auto pendingResult = room_config_interface->requestAllProperties();
-            QVariantMap map = waitForPendingVariantMap(pendingResult);
+            QVariantMap map = getInterfaceProperties(room_config_interface);
             for(QVariantMap::const_iterator iter = map.begin(); iter != map.end(); ++iter) {
                  roomProperties[iter.key()] = iter.value();
             }
         }
         if (textChannel->hasInterface(TP_QT_IFACE_CHANNEL_INTERFACE_SUBJECT)) {
             auto subject_interface = textChannel->optionalInterface<Tp::Client::ChannelInterfaceSubjectInterface>();
-            auto pendingResult = subject_interface->requestAllProperties();
-            QVariantMap map = waitForPendingVariantMap(pendingResult);
+            QVariantMap map = getInterfaceProperties(subject_interface);
             for(QVariantMap::const_iterator iter = map.begin(); iter != map.end(); ++iter) {
                  roomProperties[iter.key()] = iter.value();
             }
@@ -907,19 +904,12 @@ QString HistoryDaemon::hashThread(const QVariantMap &thread)
     return hash;
 }
 
-QVariantMap HistoryDaemon::waitForPendingVariantMap(Tp::PendingVariantMap *pendingOperation)
+QVariantMap HistoryDaemon::getInterfaceProperties(const Tp::AbstractInterface *interface)
 {
-    bool finished = pendingOperation->isFinished();
-    QVariantMap map;
-    connect(pendingOperation, &Tp::PendingOperation::finished, [&finished, &map, pendingOperation](){
-        if (!pendingOperation->isError()) {
-            map = pendingOperation->result();
-        }
-        finished = true;
-    });
-
-    while (!finished) {
-        QCoreApplication::processEvents();
+    QDBusInterface propsInterface(interface->service(), interface->path(), "org.freedesktop.DBus.Properties");
+    QDBusReply<QVariantMap> reply = propsInterface.call("GetAll", interface->interface());
+    if (!reply.isValid()) {
+        qWarning() << "Failed to fetch channel properties for interface" << interface->interface() << reply.error().message();
     }
-    return map;
+    return reply.value();
 }
