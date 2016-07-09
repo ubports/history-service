@@ -28,6 +28,7 @@
 #include "plugin.h"
 #include "pluginthreadview.h"
 #include "plugineventview.h"
+#include "textevent.h"
 
 #include <QStandardPaths>
 #include <QCryptographicHash>
@@ -510,6 +511,12 @@ void HistoryDaemon::onTextChannelAvailable(const Tp::TextChannelPtr channel)
                                                  matchFlagsForChannel(channel),
                                                  true);
 
+        // FIXME: this is a hack. we need proper information event support
+        if (thread[History::FieldChatType].toInt() == History::ChatTypeRoom &&
+            thread[History::FieldCount].toInt() == 0) {
+            writeInformationEvent(thread, "You joined the group.");
+        }
+
         auto room_interface = channel->optionalInterface<Tp::Client::ChannelInterfaceRoomInterface>();
         auto room_config_interface = channel->optionalInterface<Tp::Client::ChannelInterfaceRoomConfigInterface>();
         auto subject_interface = channel->optionalInterface<Tp::Client::ChannelInterfaceSubjectInterface>();
@@ -912,4 +919,22 @@ QVariantMap HistoryDaemon::getInterfaceProperties(const Tp::AbstractInterface *i
         qWarning() << "Failed to fetch channel properties for interface" << interface->interface() << reply.error().message();
     }
     return reply.value();
+}
+
+// FIXME: this is a hack. we need proper information event support.
+void HistoryDaemon::writeInformationEvent(const QVariantMap &thread, const QString &text)
+{
+    History::TextEvent historyEvent = History::TextEvent(thread[History::FieldAccountId].toString(),
+                                                         thread[History::FieldThreadId].toString(),
+                                                         QString(QCryptographicHash::hash(QByteArray(
+                                                                 QDateTime::currentDateTime().toString().toLatin1()),
+                                                                 QCryptographicHash::Md5).toHex()),
+                                                         "self",
+                                                         QDateTime::currentDateTime(),
+                                                         false,
+                                                         text,
+                                                         History::MessageTypeInformation,
+                                                         History::MessageStatusUnknown,
+                                                         QDateTime::currentDateTime());
+    writeEvents(QList<QVariantMap>() << historyEvent.properties(), thread);
 }
