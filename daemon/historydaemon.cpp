@@ -517,37 +517,23 @@ void HistoryDaemon::onTextChannelAvailable(const Tp::TextChannelPtr channel)
             writeInformationEvent(thread, "You joined the group.");
         }
 
-        auto room_interface = channel->optionalInterface<Tp::Client::ChannelInterfaceRoomInterface>();
-        auto room_config_interface = channel->optionalInterface<Tp::Client::ChannelInterfaceRoomConfigInterface>();
-        auto subject_interface = channel->optionalInterface<Tp::Client::ChannelInterfaceSubjectInterface>();
+        Tp::AbstractInterface *room_interface = channel->optionalInterface<Tp::Client::ChannelInterfaceRoomInterface>();
+        Tp::AbstractInterface *room_config_interface = channel->optionalInterface<Tp::Client::ChannelInterfaceRoomConfigInterface>();
+        Tp::AbstractInterface *subject_interface = channel->optionalInterface<Tp::Client::ChannelInterfaceSubjectInterface>();
 
-        if (room_interface) {
-            room_interface->setMonitorProperties(true);
-            room_interface->setProperty(History::FieldAccountId, accountId);
-            room_interface->setProperty(History::FieldThreadId, thread[History::FieldThreadId].toString());
-            room_interface->setProperty(History::FieldType, thread[History::FieldType].toInt());
-            connect(room_interface, SIGNAL(propertiesChanged(const QVariantMap &,const QStringList &)),
-                                    SLOT(onRoomPropertiesChanged(const QVariantMap &,const QStringList &)));
-
-        }
-
-        if (room_config_interface) {
-            room_config_interface->setMonitorProperties(true);
-            room_config_interface->setProperty(History::FieldAccountId, accountId);
-            room_config_interface->setProperty(History::FieldThreadId, thread[History::FieldThreadId].toString());
-            room_config_interface->setProperty(History::FieldType, thread[History::FieldType].toInt());
-            connect(room_config_interface, SIGNAL(propertiesChanged(const QVariantMap &,const QStringList &)),
-                                           SLOT(onRoomPropertiesChanged(const QVariantMap &,const QStringList &)));
-        }
-
-        if (subject_interface) {
-            subject_interface->setMonitorProperties(true);
-            subject_interface->setProperty(History::FieldAccountId, accountId);
-            subject_interface->setProperty(History::FieldThreadId, thread[History::FieldThreadId].toString());
-            subject_interface->setProperty(History::FieldType, thread[History::FieldType].toInt());
-
-            connect(subject_interface, SIGNAL(propertiesChanged(const QVariantMap &,const QStringList &)),
-                                       SLOT(onRoomPropertiesChanged(const QVariantMap &,const QStringList &)));
+        QList<Tp::AbstractInterface*> interfaces;
+        interfaces << room_interface << room_config_interface << subject_interface;
+        for (auto interface : interfaces) {
+            if (interface) {
+                interface->setMonitorProperties(true);
+                interface->setProperty(History::FieldAccountId, accountId);
+                interface->setProperty(History::FieldThreadId, thread[History::FieldThreadId].toString());
+                interface->setProperty(History::FieldType, thread[History::FieldType].toInt());
+                connect(interface, SIGNAL(propertiesChanged(const QVariantMap &,const QStringList &)),
+                                   SLOT(onRoomPropertiesChanged(const QVariantMap &,const QStringList &)));
+                // update the stored info
+                Q_EMIT interface->propertiesChanged(getInterfaceProperties(interface), QStringList());
+            }
         }
 
         connect(channel.data(), SIGNAL(groupMembersChanged(const Tp::Contacts &, const Tp::Contacts &, const Tp::Contacts &, const Tp::Contacts &, const Tp::Channel::GroupMemberChangeDetails &)), SLOT(onUpdateRoomParticipants()));
