@@ -637,6 +637,13 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
             return;
         }
 
+        // FIXME: if this message is already read, don't allow reverting the status.
+        // we need to check if this is the right place to do it.
+        if (textEvent[History::FieldMessageStatus].toInt() == History::MessageStatusRead) {
+            qWarning() << "Skipping delivery report as it is trying to revert the Read status of an existing message to the following status:" << message.deliveryDetails().status();
+            return;
+        }
+
         History::MessageStatus status;
         switch (message.deliveryDetails().status()) {
         case Tp::DeliveryStatusAccepted:
