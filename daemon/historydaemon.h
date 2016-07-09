@@ -71,6 +71,9 @@ protected:
     QString hashThread(const QVariantMap &thread);
     static QVariantMap getInterfaceProperties(const Tp::AbstractInterface *interface);
 
+    // FIXME: this is a hack. we need proper information event support.
+    void writeInformationEvent(const QVariantMap &thread, const QString &text);
+
 private:
     HistoryDaemon(QObject *parent = 0);
 
