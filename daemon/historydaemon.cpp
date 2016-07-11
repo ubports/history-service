@@ -502,18 +502,29 @@ void HistoryDaemon::onCallEnded(const Tp::CallChannelPtr &channel)
 
 void HistoryDaemon::onTextChannelAvailable(const Tp::TextChannelPtr channel)
 {
+    // for Rooms we need to explicitly create the thread to allow users to send messages to groups even
+    // before they receive any message.
+    // for other types, we can wait until messages are received
     if (channel->targetHandleType() == Tp::HandleTypeRoom) {
         QString accountId = channel->property(History::FieldAccountId).toString();
         QVariantMap properties = propertiesFromChannel(channel);
+
+        // first try to fetch the existing thread to see if there is any.
         QVariantMap thread = threadForProperties(accountId,
                                                  History::EventTypeText,
                                                  properties,
                                                  matchFlagsForChannel(channel),
-                                                 true);
+                                                 false);
 
-        // FIXME: this is a hack. we need proper information event support
-        if (thread[History::FieldChatType].toInt() == History::ChatTypeRoom &&
-            thread[History::FieldCount].toInt() == 0) {
+        if (thread.isEmpty()) {
+            // if there no existing thread, create one
+            thread = threadForProperties(accountId,
+                                         History::EventTypeText,
+                                         properties,
+                                         matchFlagsForChannel(channel),
+                                         true);
+            // FIXME: this is a hack. we need proper information event support
+            // write an entry saying you joined the group
             writeInformationEvent(thread, "You joined the group.");
         }
 
