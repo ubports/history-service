@@ -36,6 +36,8 @@
 #include <QSqlError>
 #include <QDBusMetaType>
 
+static const QLatin1String timestampFormat("yyyy-MM-ddTHH:mm:ss.zzz");
+
 QString generateThreadMapKey(const QString &accountId, const QString &threadId)
 {
     return accountId + threadId;
@@ -81,11 +83,11 @@ void SQLiteHistoryPlugin::addThreadsToCache(const QList<QVariantMap> &threads)
         // so instead we just convert to UTC here on the cache and convert back to local time
         // when returning
         QDateTime timestamp = QDateTime::fromString(properties[History::FieldTimestamp].toString(), Qt::ISODate);
-        properties[History::FieldTimestamp] = timestamp.toUTC().toString("yyyy-MM-ddTHH:mm:ss.zzz");
+        properties[History::FieldTimestamp] = timestamp.toUTC().toString(timestampFormat);
 
         // the same for readTimestamp
         timestamp = QDateTime::fromString(properties[History::FieldReadTimestamp].toString(), Qt::ISODate);
-        properties[History::FieldReadTimestamp] = timestamp.toUTC().toString("yyyy-MM-ddTHH:mm:ss.zzz");
+        properties[History::FieldReadTimestamp] = timestamp.toUTC().toString(timestampFormat);
 
         History::Thread thread = History::Thread::fromProperties(properties);
         const QString &threadKey = generateThreadMapKey(thread);
@@ -613,7 +615,7 @@ bool SQLiteHistoryPlugin::updateRoomInfo(const QString &accountId, const QString
     query.bindValue(":roomName", properties["RoomName"].toString());
     query.bindValue(":server", properties["Server"].toString());
     query.bindValue(":creator", properties["Creator"].toString());
-    query.bindValue(":creationTimestamp", creationTimestamp.toUTC().toString("yyyy-MM-ddTHH:mm:ss.zzz"));
+    query.bindValue(":creationTimestamp", creationTimestamp.toUTC().toString(timestampFormat));
     query.bindValue(":anonymous", properties["Anonymous"].toBool());
     query.bindValue(":inviteOnly", properties["InviteOnly"].toBool());
     query.bindValue(":participantLimit", properties["Limit"].toInt());
@@ -628,7 +630,7 @@ bool SQLiteHistoryPlugin::updateRoomInfo(const QString &accountId, const QString
     query.bindValue(":canUpdateConfiguration", properties["CanUpdateConfiguration"].toBool());
     query.bindValue(":subject", properties["Subject"].toString());
     query.bindValue(":actor", properties["Actor"].toString());
-    query.bindValue(":timestamp", timestamp.toUTC().toString("yyyy-MM-ddTHH:mm:ss.zzz"));
+    query.bindValue(":timestamp", timestamp.toUTC().toString(timestampFormat));
 
     if (!query.exec()) {
         qCritical() << "Error:" << query.lastError() << query.lastQuery();
@@ -689,7 +691,7 @@ QVariantMap SQLiteHistoryPlugin::createThreadForProperties(const QString &accoun
         query.bindValue(":roomName", chatRoomInfo["RoomName"].toString());
         query.bindValue(":server", chatRoomInfo["Server"].toString());
         query.bindValue(":creator", chatRoomInfo["Creator"].toString());
-        query.bindValue(":creationTimestamp", creationTimestamp.toUTC().toString("yyyy-MM-ddTHH:mm:ss.zzz"));
+        query.bindValue(":creationTimestamp", creationTimestamp.toUTC().toString(timestampFormat));
         query.bindValue(":anonymous", chatRoomInfo["Anonymous"].toBool());
         query.bindValue(":inviteOnly", chatRoomInfo["InviteOnly"].toBool());
         query.bindValue(":participantLimit", chatRoomInfo["Limit"].toInt());
@@ -704,7 +706,7 @@ QVariantMap SQLiteHistoryPlugin::createThreadForProperties(const QString &accoun
         query.bindValue(":canUpdateConfiguration", chatRoomInfo["CanUpdateConfiguration"].toBool());
         query.bindValue(":subject", chatRoomInfo["Subject"].toString());
         query.bindValue(":actor", chatRoomInfo["Actor"].toString());
-        query.bindValue(":timestamp", timestamp.toUTC().toString("yyyy-MM-ddTHH:mm:ss.zzz"));
+        query.bindValue(":timestamp", timestamp.toUTC().toString(timestampFormat));
 
         if (!query.exec()) {
             qCritical() << "Error:" << query.lastError() << query.lastQuery();
@@ -716,14 +718,16 @@ QVariantMap SQLiteHistoryPlugin::createThreadForProperties(const QString &accoun
     }
 
     QSqlQuery query(SQLiteDatabase::instance()->database());
-    query.prepare("INSERT INTO threads (accountId, threadId, type, count, unreadCount, chatType)"
-                  "VALUES (:accountId, :threadId, :type, :count, :unreadCount, :chatType)");
+    query.prepare("INSERT INTO threads (accountId, threadId, type, count, unreadCount, chatType, lastEventTimestamp)"
+                  "VALUES (:accountId, :threadId, :type, :count, :unreadCount, :chatType, :lastEventTimestamp)");
     query.bindValue(":accountId", accountId);
     query.bindValue(":threadId", threadId);
     query.bindValue(":type", (int) type);
     query.bindValue(":count", 0);
     query.bindValue(":unreadCount", 0);
     query.bindValue(":chatType", (int) chatType);
+    // make sure threads are created with an up-to-date timestamp
+    query.bindValue(":lastEventTimestamp", QDateTime::currentDateTimeUtc().toString(timestampFormat));
     if (!query.exec()) {
         qCritical() << "Error:" << query.lastError() << query.lastQuery();
         SQLiteDatabase::instance()->rollbackTransaction();
@@ -1278,7 +1282,7 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseEventResults(History::EventType typ
 
 QString SQLiteHistoryPlugin::toLocalTimeString(const QDateTime &timestamp)
 {
-    return QDateTime(timestamp.date(), timestamp.time(), Qt::UTC).toLocalTime().toString("yyyy-MM-ddTHH:mm:ss.zzz");
+    return QDateTime(timestamp.date(), timestamp.time(), Qt::UTC).toLocalTime().toString(timestampFormat);
 }
 
 QString SQLiteHistoryPlugin::filterToString(const History::Filter &filter, QVariantMap &bindValues, const QString &propertyPrefix) const
