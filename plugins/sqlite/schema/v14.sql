@@ -1,6 +1,6 @@
 DROP TRIGGER text_events_insert_trigger;
 CREATE TRIGGER text_events_insert_trigger AFTER INSERT ON text_events
-FOR EACH ROW WHEN messageType != 2
+FOR EACH ROW WHEN new.messageType!=2
 BEGIN
     UPDATE threads SET count=(SELECT count(eventId) FROM text_events WHERE
         accountId=new.accountId AND
@@ -25,8 +25,8 @@ BEGIN
 END;
 
 DROP TRIGGER text_events_update_trigger;
-CREATE TRIGGER text_events_update_trigger  AFTER UPDATE ON text_events
-FOR EACH ROW WHEN messageType != 2
+CREATE TRIGGER text_events_update_trigger AFTER UPDATE ON text_events
+FOR EACH ROW WHEN new.messageType!=2
 BEGIN
     UPDATE threads SET count=(SELECT count(eventId) FROM text_events WHERE
         accountId=new.accountId AND
@@ -51,8 +51,8 @@ BEGIN
 END;
 
 DROP TRIGGER text_events_delete_trigger;
-CREATE TRIGGER text_events_delete_trigger  AFTER DELETE ON text_events
-FOR EACH ROW WHEN messageType != 2
+CREATE TRIGGER text_events_delete_trigger AFTER DELETE ON text_events
+FOR EACH ROW WHEN old.messageType!=2
 BEGIN
     UPDATE threads SET count=(SELECT count(eventId) FROM text_events WHERE
         accountId=old.accountId AND

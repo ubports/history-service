@@ -99,6 +99,7 @@ public:
         ParticipantsRemotePendingRole,
         ParticipantIdsRole,
         TypeRole,
+        TimestampRole,
         PropertiesRole,
         LastRole
     };

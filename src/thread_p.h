@@ -38,6 +38,7 @@ public:
                          const QString &theThreadId,
                          EventType theType,
                          const Participants &theParticipants,
+                         const QDateTime &theTimestamp,
                          const Event &theLastEvent,
                          int theCount,
                          int theUnreadCount,
@@ -50,6 +51,7 @@ public:
     QString threadId;
     Participants participants;
     EventType type;
+    QDateTime timestamp;
     Event lastEvent;
     int count;
     int unreadCount;
