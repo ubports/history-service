@@ -1018,7 +1018,8 @@ QString SQLiteHistoryPlugin::sqlQueryForThreads(History::EventType type, const Q
            << "threads.threadId"
            << "threads.lastEventId"
            << "threads.count"
-           << "threads.unreadCount";
+           << "threads.unreadCount"
+           << "threads.lastEventTimestamp";
 
     // get the participants in the query already
     fields << "(SELECT group_concat(thread_participants.participantId,  \"|,|\") "
@@ -1041,7 +1042,6 @@ QString SQLiteHistoryPlugin::sqlQueryForThreads(History::EventType type, const Q
     }
 
     fields << QString("%1.senderId").arg(table)
-           << QString("%1.timestamp").arg(table)
            << QString("%1.newEvent").arg(table);
     fields << extraFields;
 
@@ -1088,12 +1088,12 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseThreadResults(History::EventType ty
         thread[History::FieldEventId] = query.value(2);
         thread[History::FieldCount] = query.value(3);
         thread[History::FieldUnreadCount] = query.value(4);
-        QStringList participants = query.value(5).toString().split("|,|", QString::SkipEmptyParts);
+        QStringList participants = query.value(6).toString().split("|,|", QString::SkipEmptyParts);
         thread[History::FieldParticipants] = History::ContactMatcher::instance()->contactInfo(accountId, participants, true);
 
         // the generic event fields
-        thread[History::FieldSenderId] = query.value(6);
-        thread[History::FieldTimestamp] = toLocalTimeString(query.value(7).toDateTime());
+        thread[History::FieldSenderId] = query.value(7);
+        thread[History::FieldTimestamp] = toLocalTimeString(query.value(5).toDateTime());
         thread[History::FieldNewEvent] = query.value(8).toBool();
 
         // the next step is to get the last event

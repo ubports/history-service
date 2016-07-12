@@ -38,15 +38,16 @@ ThreadPrivate::ThreadPrivate()
 }
 
 ThreadPrivate::ThreadPrivate(const QString &theAccountId,
-                                           const QString &theThreadId, EventType theType,
-                                           const Participants &theParticipants,
-                                           const Event &theLastEvent,
-                                           int theCount,
-                                           int theUnreadCount,
-                                           const Threads &theGroupedThreads,
-                                           ChatType theChatType,
-                                           const QVariantMap &theChatRoomInfo) :
-    accountId(theAccountId), threadId(theThreadId), type(theType), participants(theParticipants),
+                             const QString &theThreadId, EventType theType,
+                             const Participants &theParticipants,
+                             const QDateTime &theTimestamp,
+                             const Event &theLastEvent,
+                             int theCount,
+                             int theUnreadCount,
+                             const Threads &theGroupedThreads,
+                             ChatType theChatType,
+                             const QVariantMap &theChatRoomInfo) :
+    accountId(theAccountId), threadId(theThreadId), type(theType), participants(theParticipants), timestamp(theTimestamp),
     lastEvent(theLastEvent), count(theCount), unreadCount(theUnreadCount), groupedThreads(theGroupedThreads),
     chatType(theChatType), chatRoomInfo(theChatRoomInfo)
 {
@@ -66,13 +67,14 @@ Thread::Thread()
 Thread::Thread(const QString &accountId,
                const QString &threadId, EventType type,
                const Participants &participants,
+               const QDateTime &timestamp,
                const Event &lastEvent,
                int count,
                int unreadCount,
                const Threads &groupedThreads,
                ChatType chatType,
                const QVariantMap &chatRoomInfo)
-: d_ptr(new ThreadPrivate(accountId, threadId, type, participants, lastEvent, count, unreadCount, groupedThreads, chatType, chatRoomInfo))
+: d_ptr(new ThreadPrivate(accountId, threadId, type, participants, timestamp, lastEvent, count, unreadCount, groupedThreads, chatType, chatRoomInfo))
 {
     qDBusRegisterMetaType<QList<QVariantMap> >();
     qRegisterMetaType<QList<QVariantMap> >();
@@ -118,6 +120,12 @@ Participants Thread::participants() const
 {
     Q_D(const Thread);
     return d->participants;
+}
+
+QDateTime Thread::timestamp() const
+{
+    Q_D(const Thread);
+    return d->timestamp;
 }
 
 Event Thread::lastEvent() const
@@ -201,10 +209,11 @@ QVariantMap Thread::properties() const
     map[FieldType] = d->type;
     map[FieldChatType] = d->chatType;
     map[FieldParticipants] = d->participants.toVariantList();
+    map[FieldTimestamp] = d->timestamp;
     map[FieldCount] = d->count;
     map[FieldUnreadCount] = d->unreadCount;
     map[FieldLastEventId] = lastEvent().eventId();
-    map[FieldLastEventTimestamp] = lastEvent().timestamp();
+    map[FieldLastEventTimestamp] = d->timestamp;
     map[FieldChatRoomInfo] = d->chatRoomInfo;
 
     QList<QVariantMap> groupedThreads;
@@ -231,6 +240,8 @@ Thread Thread::fromProperties(const QVariantMap &properties)
     EventType type = (EventType) properties[FieldType].toInt();
     ChatType chatType = (ChatType) properties[FieldChatType].toInt();
     Participants participants = Participants::fromVariant(properties[FieldParticipants]);
+    QDateTime timestamp = QDateTime::fromString(properties[FieldTimestamp].toString(), Qt::ISODate);
+    qDebug() << "BLABLA timestamp is " << timestamp;
     int count = properties[FieldCount].toInt();
     int unreadCount = properties[FieldUnreadCount].toInt();
 
@@ -261,7 +272,7 @@ Thread Thread::fromProperties(const QVariantMap &properties)
             event = VoiceEvent::fromProperties(properties);
             break;
     }
-    return Thread(accountId, threadId, type, participants, event, count, unreadCount, groupedThreads, chatType, chatRoomInfo);
+    return Thread(accountId, threadId, type, participants, timestamp, event, count, unreadCount, groupedThreads, chatType, chatRoomInfo);
 }
 
 const QDBusArgument &operator>>(const QDBusArgument &argument, Threads &threads)

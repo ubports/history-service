@@ -43,6 +43,7 @@ HistoryModel::HistoryModel(QObject *parent) :
     mRoles[ParticipantsRemotePendingRole] = "remotePendingParticipants";
     mRoles[ParticipantsLocalPendingRole] = "localPendingParticipants";
     mRoles[TypeRole] = "type";
+    mRoles[TimestampRole] = "timestamp";
     mRoles[PropertiesRole] = "properties";
 
     connect(this, SIGNAL(rowsInserted(QModelIndex,int,int)), this, SIGNAL(countChanged()));
@@ -139,8 +140,11 @@ QVariant HistoryModel::data(const QModelIndex &index, int role) const
     case ParticipantIdsRole:
         result = History::Participants::fromVariantList(properties[History::FieldParticipants].toList()).identifiers();
         break;
-
+    case TimestampRole:
+        result = QDateTime::fromString(properties[History::FieldTimestamp].toString(), Qt::ISODate);
+        break;
     }
+
     return result;
 }
 
