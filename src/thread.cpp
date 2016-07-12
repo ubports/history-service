@@ -241,7 +241,6 @@ Thread Thread::fromProperties(const QVariantMap &properties)
     ChatType chatType = (ChatType) properties[FieldChatType].toInt();
     Participants participants = Participants::fromVariant(properties[FieldParticipants]);
     QDateTime timestamp = QDateTime::fromString(properties[FieldTimestamp].toString(), Qt::ISODate);
-    qDebug() << "BLABLA timestamp is " << timestamp;
     int count = properties[FieldCount].toInt();
     int unreadCount = properties[FieldUnreadCount].toInt();
 
