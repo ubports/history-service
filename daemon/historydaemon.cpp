@@ -189,6 +189,11 @@ QVariantMap HistoryDaemon::threadForProperties(const QString &accountId,
     if (thread.isEmpty() && create) {
         thread = mBackend->createThreadForProperties(accountId, type, properties);
         if (!thread.isEmpty()) {
+            if (properties.contains("Requested") && properties[History::FieldChatType].toInt() == History::ChatTypeRoom) {
+                QVariantMap map = thread[History::FieldChatRoomInfo].toMap();
+                map["Requested"] = properties["Requested"];
+                thread[History::FieldChatRoomInfo] = map;
+            }
             mDBus.notifyThreadsAdded(QList<QVariantMap>() << thread);
         }
     }
@@ -518,6 +523,7 @@ void HistoryDaemon::onTextChannelAvailable(const Tp::TextChannelPtr channel)
 
         if (thread.isEmpty()) {
             // if there no existing thread, create one
+            properties["Requested"] = channel->isRequested();
             thread = threadForProperties(accountId,
                                          History::EventTypeText,
                                          properties,
