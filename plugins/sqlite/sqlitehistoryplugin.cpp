@@ -713,6 +713,7 @@ QVariantMap SQLiteHistoryPlugin::createThreadForProperties(const QString &accoun
             SQLiteDatabase::instance()->rollbackTransaction();
             return QVariantMap();
         }
+        thread[History::FieldChatRoomInfo] = chatRoomInfo;
     } else {
         threadId = participants.identifiers().join("%");
     }
