@@ -143,20 +143,29 @@ QVariantMap HistoryDaemon::propertiesFromChannel(const Tp::ChannelPtr &textChann
     case Tp::HandleTypeRoom:
         if (textChannel->hasInterface(TP_QT_IFACE_CHANNEL_INTERFACE_ROOM)) {
             auto room_interface = textChannel->optionalInterface<Tp::Client::ChannelInterfaceRoomInterface>();
-            roomProperties = getInterfaceProperties(room_interface);
+            QVariantMap map = getInterfaceProperties(room_interface);
+            for (QVariantMap::const_iterator iter = map.begin(); iter != map.end(); ++iter) {
+                if (iter.value().isValid()) {
+                    roomProperties[iter.key()] = iter.value();
+                }
+            }
         }
         if (textChannel->hasInterface(TP_QT_IFACE_CHANNEL_INTERFACE_ROOM_CONFIG)) {
             auto room_config_interface = textChannel->optionalInterface<Tp::Client::ChannelInterfaceRoomConfigInterface>();
             QVariantMap map = getInterfaceProperties(room_config_interface);
-            for(QVariantMap::const_iterator iter = map.begin(); iter != map.end(); ++iter) {
-                 roomProperties[iter.key()] = iter.value();
+            for (QVariantMap::const_iterator iter = map.begin(); iter != map.end(); ++iter) {
+                if (iter.value().isValid()) {
+                    roomProperties[iter.key()] = iter.value();
+                }
             }
         }
         if (textChannel->hasInterface(TP_QT_IFACE_CHANNEL_INTERFACE_SUBJECT)) {
             auto subject_interface = textChannel->optionalInterface<Tp::Client::ChannelInterfaceSubjectInterface>();
             QVariantMap map = getInterfaceProperties(subject_interface);
-            for(QVariantMap::const_iterator iter = map.begin(); iter != map.end(); ++iter) {
-                 roomProperties[iter.key()] = iter.value();
+            for (QVariantMap::const_iterator iter = map.begin(); iter != map.end(); ++iter) {
+                if (iter.value().isValid()) {
+                    roomProperties[iter.key()] = iter.value();
+                }
             }
         }
 

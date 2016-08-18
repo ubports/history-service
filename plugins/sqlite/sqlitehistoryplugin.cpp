@@ -713,6 +713,13 @@ QVariantMap SQLiteHistoryPlugin::createThreadForProperties(const QString &accoun
             SQLiteDatabase::instance()->rollbackTransaction();
             return QVariantMap();
         }
+        for (QVariantMap::iterator iter = chatRoomInfo.begin(); iter != chatRoomInfo.end();) {
+            if (!iter.value().isValid()) {
+                iter = chatRoomInfo.erase(iter);
+            } else {
+                iter++;
+            }
+        }
         thread[History::FieldChatRoomInfo] = chatRoomInfo;
     } else {
         threadId = participants.identifiers().join("%");
@@ -1147,25 +1154,44 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseThreadResults(History::EventType ty
                 }
                 query1.next();
 
-                chatRoomInfo["RoomName"] = query1.value(0);
-                chatRoomInfo["Server"] = query1.value(1);
-                chatRoomInfo["Creator"] = query1.value(2);
-                chatRoomInfo["CreationTimestamp"] = toLocalTimeString(query1.value(3).toDateTime());
-                chatRoomInfo["Anonymous"] = query1.value(4).toBool();
-                chatRoomInfo["InviteOnly"] = query1.value(5).toBool();
-                chatRoomInfo["Limit"] = query1.value(6).toInt();
-                chatRoomInfo["Moderated"] = query1.value(7).toBool();
-                chatRoomInfo["Title"] = query1.value(8);
-                chatRoomInfo["Description"] = query1.value(9);
-                chatRoomInfo["Persistent"] = query1.value(10).toBool();
-                chatRoomInfo["Private"] = query1.value(11).toBool();
-                chatRoomInfo["PasswordProtected"] = query1.value(12).toBool();
-                chatRoomInfo["Password"] = query1.value(13);
-                chatRoomInfo["PasswordHint"] = query1.value(14);
-                chatRoomInfo["CanUpdateConfiguration"] = query1.value(15).toBool();
-                chatRoomInfo["Subject"] = query1.value(16);
-                chatRoomInfo["Actor"] = query1.value(17);
-                chatRoomInfo["Timestamp"] = toLocalTimeString(query1.value(18).toDateTime());
+                if (query1.value(0).isValid())
+                    chatRoomInfo["RoomName"] = query1.value(0);
+                if (query1.value(1).isValid())
+                    chatRoomInfo["Server"] = query1.value(1);
+                if (query1.value(2).isValid())
+                    chatRoomInfo["Creator"] = query1.value(2);
+                if (query1.value(3).isValid())
+                    chatRoomInfo["CreationTimestamp"] = toLocalTimeString(query1.value(3).toDateTime());
+                if (query1.value(4).isValid())
+                    chatRoomInfo["Anonymous"] = query1.value(4).toBool();
+                if (query1.value(5).isValid())
+                    chatRoomInfo["InviteOnly"] = query1.value(5).toBool();
+                if (query1.value(6).isValid())
+                    chatRoomInfo["Limit"] = query1.value(6).toInt();
+                if (query1.value(7).isValid())
+                    chatRoomInfo["Moderated"] = query1.value(7).toBool();
+                if (query1.value(8).isValid())
+                    chatRoomInfo["Title"] = query1.value(8);
+                if (query1.value(9).isValid())
+                    chatRoomInfo["Description"] = query1.value(9);
+                if (query1.value(10).isValid())
+                    chatRoomInfo["Persistent"] = query1.value(10).toBool();
+                if (query1.value(11).isValid())
+                    chatRoomInfo["Private"] = query1.value(11).toBool();
+                if (query1.value(12).isValid())
+                    chatRoomInfo["PasswordProtected"] = query1.value(12).toBool();
+                if (query1.value(13).isValid())
+                    chatRoomInfo["Password"] = query1.value(13);
+                if (query1.value(14).isValid())
+                    chatRoomInfo["PasswordHint"] = query1.value(14);
+                if (query1.value(15).isValid())
+                    chatRoomInfo["CanUpdateConfiguration"] = query1.value(15).toBool();
+                if (query1.value(16).isValid())
+                    chatRoomInfo["Subject"] = query1.value(16);
+                if (query1.value(17).isValid())
+                    chatRoomInfo["Actor"] = query1.value(17);
+                if (query1.value(18).isValid())
+                    chatRoomInfo["Timestamp"] = toLocalTimeString(query1.value(18).toDateTime());
 
                 thread[History::FieldChatRoomInfo] = chatRoomInfo;
             }
