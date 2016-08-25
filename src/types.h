@@ -100,6 +100,13 @@ enum ParticipantState
     ParticipantStateRemotePending = 2
 };
 
+enum ParticipantRoles
+{
+    ParticipantRoleNone = 0,
+    ParticipantRoleMember = 1,
+    ParticipantRoleAdmin = 2
+};
+
 // Event writing results
 enum EventWriteResult {
     EventWriteCreated,
@@ -193,6 +200,7 @@ static const char* FieldAvatar = "avatar";
 static const char* FieldIdentifier = "identifier";
 static const char* FieldDetailProperties = "detailProperties";
 static const char* FieldParticipantState = "state";
+static const char* FieldParticipantRoles = "roles";
 
 }
 

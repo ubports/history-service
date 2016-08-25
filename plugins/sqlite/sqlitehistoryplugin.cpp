@@ -532,8 +532,8 @@ bool SQLiteHistoryPlugin::updateRoomParticipants(const QString &accountId, const
     // and insert the participants
     Q_FOREACH(const QVariant &participantVariant, participants) {
         QVariantMap participant = participantVariant.toMap();
-        query.prepare("INSERT INTO thread_participants (accountId, threadId, type, participantId, normalizedId, alias, state)"
-                      "VALUES (:accountId, :threadId, :type, :participantId, :normalizedId, :alias, :state)");
+        query.prepare("INSERT INTO thread_participants (accountId, threadId, type, participantId, normalizedId, alias, state, roles)"
+                      "VALUES (:accountId, :threadId, :type, :participantId, :normalizedId, :alias, :state, :roles)");
         query.bindValue(":accountId", accountId);
         query.bindValue(":threadId", threadId);
         query.bindValue(":type", type);
@@ -541,6 +541,7 @@ bool SQLiteHistoryPlugin::updateRoomParticipants(const QString &accountId, const
         query.bindValue(":normalizedId", participant["identifier"].toString());
         query.bindValue(":alias", participant["alias"].toString());
         query.bindValue(":state", participant["state"].toUInt());
+        query.bindValue(":roles", participant["roles"].toUInt());
         if (!query.exec()) {
             qCritical() << "Error:" << query.lastError() << query.lastQuery();
             SQLiteDatabase::instance()->rollbackTransaction();
@@ -744,8 +745,8 @@ QVariantMap SQLiteHistoryPlugin::createThreadForProperties(const QString &accoun
 
     // and insert the participants
     Q_FOREACH(const History::Participant &participant, participants) {
-        query.prepare("INSERT INTO thread_participants (accountId, threadId, type, participantId, normalizedId, alias, state)"
-                      "VALUES (:accountId, :threadId, :type, :participantId, :normalizedId, :alias, :state)");
+        query.prepare("INSERT INTO thread_participants (accountId, threadId, type, participantId, normalizedId, alias, state, roles)"
+                      "VALUES (:accountId, :threadId, :type, :participantId, :normalizedId, :alias, :state, :roles)");
         query.bindValue(":accountId", accountId);
         query.bindValue(":threadId", threadId);
         query.bindValue(":type", type);
@@ -753,6 +754,7 @@ QVariantMap SQLiteHistoryPlugin::createThreadForProperties(const QString &accoun
         query.bindValue(":normalizedId", History::Utils::normalizeId(accountId, participant.identifier()));
         query.bindValue(":alias", participant.alias());
         query.bindValue(":state", participant.state());
+        query.bindValue(":roles", participant.roles());
         if (!query.exec()) {
             qCritical() << "Error:" << query.lastError() << query.lastQuery();
             SQLiteDatabase::instance()->rollbackTransaction();
@@ -773,7 +775,8 @@ QVariantMap SQLiteHistoryPlugin::createThreadForProperties(const QString &accoun
     int count = 0;
     Q_FOREACH (QVariant contact, History::ContactMatcher::instance()->contactInfo(accountId, participants.identifiers(), true)) {
         QVariantMap map = contact.toMap();
-        map["state"] = participants.at(count++).state();
+        map["state"] = participants.at(count).state();
+        map["roles"] = participants.at(count++).roles();
         contactList << map;
     }
     thread[History::FieldParticipants] = contactList;
@@ -1047,6 +1050,11 @@ QString SQLiteHistoryPlugin::sqlQueryForThreads(History::EventType type, const Q
               "AND thread_participants.threadId=threads.threadId "
               "AND thread_participants.type=threads.type GROUP BY accountId,threadId,type) as state";
 
+    fields << "(SELECT group_concat(thread_participants.roles,  \"|,|\") "
+              "FROM thread_participants WHERE thread_participants.accountId=threads.accountId "
+              "AND thread_participants.threadId=threads.threadId "
+              "AND thread_participants.type=threads.type GROUP BY accountId,threadId,type) as roles";
+
     QStringList extraFields;
     QString table;
 
@@ -1114,19 +1122,25 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseThreadResults(History::EventType ty
         Q_FOREACH(const QString &statusString, participantStatusString) {
             participantStatus << statusString.toUInt();
         }
+        QStringList participantRolesString = query.value(8).toString().split("|,|", QString::SkipEmptyParts);
+        QList<int> participantRoles;
+        Q_FOREACH(const QString &rolesString, participantRolesString) {
+            participantRoles << rolesString.toUInt();
+        }
         QVariantList contactList;
         int count = 0;
         Q_FOREACH (QVariant contact, History::ContactMatcher::instance()->contactInfo(accountId, participants, true)) {
             QVariantMap map = contact.toMap();
-            map["state"] = participantStatus.at(count++);
+            map["state"] = participantStatus.at(count);
+            map["roles"] = participantRoles.at(count++);
             contactList << map;
         }
         thread[History::FieldParticipants] = contactList;
 
         // the generic event fields
-        thread[History::FieldSenderId] = query.value(8);
+        thread[History::FieldSenderId] = query.value(9);
         thread[History::FieldTimestamp] = toLocalTimeString(query.value(5).toDateTime());
-        thread[History::FieldNewEvent] = query.value(9).toBool();
+        thread[History::FieldNewEvent] = query.value(10).toBool();
 
         // the next step is to get the last event
         switch (type) {
@@ -1157,11 +1171,11 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseThreadResults(History::EventType ty
                 thread[History::FieldAttachments] = QVariant::fromValue(attachments);
                 attachments.clear();
             }
-            thread[History::FieldMessage] = query.value(10);
-            thread[History::FieldMessageType] = query.value(11);
-            thread[History::FieldMessageStatus] = query.value(12);
-            thread[History::FieldReadTimestamp] = toLocalTimeString(query.value(13).toDateTime());
-            thread[History::FieldChatType] = query.value(14).toUInt();
+            thread[History::FieldMessage] = query.value(11);
+            thread[History::FieldMessageType] = query.value(12);
+            thread[History::FieldMessageStatus] = query.value(13);
+            thread[History::FieldReadTimestamp] = toLocalTimeString(query.value(14).toDateTime());
+            thread[History::FieldChatType] = query.value(15).toUInt();
 
             if (thread[History::FieldChatType].toInt() == 2) {
                 QVariantMap chatRoomInfo;
@@ -1221,9 +1235,9 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseThreadResults(History::EventType ty
             }
             break;
         case History::EventTypeVoice:
-            thread[History::FieldMissed] = query.value(11);
-            thread[History::FieldDuration] = query.value(10);
-            thread[History::FieldRemoteParticipant] = History::ContactMatcher::instance()->contactInfo(accountId, query.value(12).toString(), true);
+            thread[History::FieldMissed] = query.value(12);
+            thread[History::FieldDuration] = query.value(11);
+            thread[History::FieldRemoteParticipant] = History::ContactMatcher::instance()->contactInfo(accountId, query.value(13).toString(), true);
             break;
         }
         threads << thread;

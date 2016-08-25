@@ -36,9 +36,29 @@
 #include <TelepathyQt/PendingVariantMap>
 #include <TelepathyQt/ReferencedHandles>
 
+typedef QMap<uint,uint> RolesMap;
+Q_DECLARE_METATYPE(RolesMap)
+
+const QDBusArgument &operator>>(const QDBusArgument &argument, RolesMap &roles)
+{
+    argument.beginMap();
+    while ( !argument.atEnd() ) {
+        argument.beginMapEntry();
+        uint key,value;
+        argument >> key >> value;
+        argument.endMapEntry();
+        roles[key] = value;
+    }
+
+    argument.endMap();
+    return argument;
+}
+
 HistoryDaemon::HistoryDaemon(QObject *parent)
     : QObject(parent), mCallObserver(this), mTextObserver(this)
 {
+    qRegisterMetaType<RolesMap>();
+    qDBusRegisterMetaType<RolesMap>();
     // get the first plugin
     if (!History::PluginManager::instance()->plugins().isEmpty()) {
         mBackend = History::PluginManager::instance()->plugins().first();
@@ -91,6 +111,13 @@ QVariantMap HistoryDaemon::propertiesFromChannel(const Tp::ChannelPtr &textChann
     QVariantMap properties;
     QVariantList participants;
     QStringList participantIds;
+    RolesMap roles;
+
+    QDBusInterface propsInterface(textChannel->busName(), textChannel->objectPath(), "org.freedesktop.DBus.Properties");
+    if (propsInterface.isValid()) {
+        QDBusMessage result = propsInterface.call("Get", "org.freedesktop.Telepathy.Channel.Interface.Roles", "Roles");
+        roles = qdbus_cast<RolesMap>(result.arguments().at(0).value<QDBusVariant>().variant().value<QDBusArgument>());
+    }
 
     Q_FOREACH(const Tp::ContactPtr contact, textChannel->groupContacts(false)) {
         QVariantMap contactProperties;
@@ -98,6 +125,7 @@ QVariantMap HistoryDaemon::propertiesFromChannel(const Tp::ChannelPtr &textChann
         contactProperties[History::FieldAccountId] = textChannel->property(History::FieldAccountId).toString();
         contactProperties[History::FieldIdentifier] = contact->id();
         contactProperties[History::FieldParticipantState] = History::ParticipantStateRegular;
+        contactProperties[History::FieldParticipantRoles] = roles[contact->handle().at(0)];
         participantIds << contact->id();
         participants << contactProperties;
     }
@@ -108,6 +136,7 @@ QVariantMap HistoryDaemon::propertiesFromChannel(const Tp::ChannelPtr &textChann
         contactProperties[History::FieldAccountId] = textChannel->property(History::FieldAccountId).toString();
         contactProperties[History::FieldIdentifier] = contact->id();
         contactProperties[History::FieldParticipantState] = History::ParticipantStateRemotePending;
+        contactProperties[History::FieldParticipantRoles] = roles[contact->handle().at(0)];
         participantIds << contact->id();
         participants << contactProperties;
     }
@@ -118,6 +147,7 @@ QVariantMap HistoryDaemon::propertiesFromChannel(const Tp::ChannelPtr &textChann
         contactProperties[History::FieldAccountId] = textChannel->property(History::FieldAccountId).toString();
         contactProperties[History::FieldIdentifier] = contact->id();
         contactProperties[History::FieldParticipantState] = History::ParticipantStateLocalPending;
+        contactProperties[History::FieldParticipantRoles] = roles[contact->handle().at(0)];
         participantIds << contact->id();
         participants << contactProperties;
     }
@@ -580,27 +610,46 @@ void HistoryDaemon::updateRoomParticipants(const Tp::TextChannelPtr channel)
     }
 
     QVariantList participants;
-    Q_FOREACH(const Tp::ContactPtr contact, channel->groupContacts(false)) {
-        QVariantMap participant;
-        participant[History::FieldIdentifier] = contact->id();
-        participant[History::FieldAlias] = contact->alias();
-        participant[History::FieldParticipantState] = History::ParticipantStateRegular;
-        participants << QVariant::fromValue(participant);
+    QStringList contactsAdded;
+    RolesMap roles;
+
+    QDBusInterface propsInterface(channel->busName(), channel->objectPath(), "org.freedesktop.DBus.Properties");
+    if (propsInterface.isValid()) {
+        QDBusMessage result = propsInterface.call("Get", "org.freedesktop.Telepathy.Channel.Interface.Roles", "Roles");
+        roles = qdbus_cast<RolesMap>(result.arguments().at(0).value<QDBusVariant>().variant().value<QDBusArgument>());
     }
     Q_FOREACH(const Tp::ContactPtr contact, channel->groupRemotePendingContacts(false)) {
         QVariantMap participant;
+        contactsAdded << contact->id();
         participant[History::FieldIdentifier] = contact->id();
         participant[History::FieldAlias] = contact->alias();
         participant[History::FieldParticipantState] = History::ParticipantStateRemotePending;
+        participant[History::FieldParticipantRoles] = roles[contact->handle().at(0)];
         participants << QVariant::fromValue(participant);
     }
     Q_FOREACH(const Tp::ContactPtr contact, channel->groupLocalPendingContacts(false)) {
         QVariantMap participant;
+        contactsAdded << contact->id();
         participant[History::FieldIdentifier] = contact->id();
         participant[History::FieldAlias] = contact->alias();
         participant[History::FieldParticipantState] = History::ParticipantStateLocalPending;
+        participant[History::FieldParticipantRoles] = roles[contact->handle().at(0)];
         participants << QVariant::fromValue(participant);
     }
+
+    Q_FOREACH(const Tp::ContactPtr contact, channel->groupContacts(false)) {
+        // do not include remote and local pending members
+        if (contactsAdded.contains(contact->id())) {
+            continue;
+        }
+        QVariantMap participant;
+        participant[History::FieldIdentifier] = contact->id();
+        participant[History::FieldAlias] = contact->alias();
+        participant[History::FieldParticipantState] = History::ParticipantStateRegular;
+        participant[History::FieldParticipantRoles] = roles[contact->handle().at(0)];
+        participants << QVariant::fromValue(participant);
+    }
+
 
     QString accountId = channel->property(History::FieldAccountId).toString();
     QString threadId = channel->targetId();;

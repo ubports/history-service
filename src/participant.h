@@ -45,6 +45,7 @@ public:
                 const QString &alias = QString::null,
                 const QString &avatar = QString::null,
                 uint state = 0,
+                uint roles = 0,
                 const QVariantMap &detailProperties = QVariantMap());
     Participant(const Participant &other);
     Participant& operator=(const Participant &other);
@@ -56,6 +57,7 @@ public:
     QString alias() const;
     QString avatar() const;
     uint state() const;
+    uint roles() const;
     QVariantMap detailProperties() const;
 
     bool isNull() const;
