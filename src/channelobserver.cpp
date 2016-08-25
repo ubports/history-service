@@ -135,6 +135,11 @@ void ChannelObserver::onCallChannelReady(Tp::PendingOperation *op)
 
 void ChannelObserver::onChannelInvalidated()
 {
+    Tp::TextChannelPtr textChannel(qobject_cast<Tp::TextChannel*>(sender()));
+    if (textChannel) {
+        Q_EMIT textChannelInvalidated(textChannel);
+    }
+
     Tp::ChannelPtr channel(qobject_cast<Tp::Channel*>(sender()));
     mChannels.removeAll(channel);
 }

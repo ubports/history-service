@@ -57,6 +57,8 @@ void TextChannelObserver::onTextChannelInvalidated()
 {
     Tp::TextChannelPtr textChannel(qobject_cast<Tp::TextChannel*>(sender()));
     mChannels.removeAll(textChannel);
+
+    Q_EMIT channelInvalidated(textChannel);
 }
 
 void TextChannelObserver::onMessageReceived(const Tp::ReceivedMessage &message)

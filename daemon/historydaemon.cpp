@@ -90,6 +90,9 @@ HistoryDaemon::HistoryDaemon(QObject *parent)
     connect(&mTextObserver,
             SIGNAL(channelAvailable(Tp::TextChannelPtr)),
             SLOT(onTextChannelAvailable(Tp::TextChannelPtr)));
+    connect(&mTextObserver,
+            SIGNAL(textChannelInvalidated(Tp::TextChannelPtr)),
+            SLOT(onTextChannelInvalidated(Tp::TextChannelPtr)));
 
     // FIXME: we need to do this in a better way, but for now this should do
     mProtocolFlags["ofono"] = History::MatchPhoneNumber;
@@ -488,6 +491,8 @@ void HistoryDaemon::onObserverCreated()
             &mCallObserver, SLOT(onCallChannelAvailable(Tp::CallChannelPtr)));
     connect(observer, SIGNAL(textChannelAvailable(Tp::TextChannelPtr)),
             &mTextObserver, SLOT(onTextChannelAvailable(Tp::TextChannelPtr)));
+    connect(observer, SIGNAL(textChannelInvalidated(Tp::TextChannelPtr)),
+            &mTextObserver, SLOT(onTextChannelInvalidated()));
 }
 
 void HistoryDaemon::onCallEnded(const Tp::CallChannelPtr &channel)
@@ -595,6 +600,22 @@ void HistoryDaemon::onTextChannelAvailable(const Tp::TextChannelPtr channel)
         connect(channel.data(), SIGNAL(groupMembersChanged(const Tp::Contacts &, const Tp::Contacts &, const Tp::Contacts &, const Tp::Contacts &, const Tp::Channel::GroupMemberChangeDetails &)), SLOT(onUpdateRoomParticipants()));
 
         updateRoomParticipants(channel);
+    }
+}
+
+void HistoryDaemon::onTextChannelInvalidated(const Tp::TextChannelPtr channel)
+{
+    // see if self handle has been removed from channel before closing. In that case write the info event in thread
+    if (channel->groupSelfContactRemoveInfo().isValid()) {
+        QString message = channel->groupSelfContactRemoveInfo().message();
+
+        QVariantMap properties = propertiesFromChannel(channel);
+        QVariantMap thread = threadForProperties(channel->property(History::FieldAccountId).toString(),
+                                                                   History::EventTypeText,
+                                                                   properties,
+                                                                   matchFlagsForChannel(channel),
+                                                                   false);
+        writeInformationEvent(thread, message);
     }
 }
 
