@@ -37,9 +37,10 @@ ParticipantPrivate::ParticipantPrivate(const QString &theAccountId,
                                        const QString &theAlias,
                                        const QString &theAvatar,
                                        const uint theState,
+                                       const uint theRoles,
                                        const QVariantMap &theDetailProperties) :
     accountId(theAccountId), identifier(theIdentifier), contactId(theContactId),
-    alias(theAlias), avatar(theAvatar), state(theState), detailProperties(theDetailProperties)
+    alias(theAlias), avatar(theAvatar), state(theState), roles(theRoles), detailProperties(theDetailProperties)
 {
 }
 
@@ -52,8 +53,8 @@ Participant::Participant()
 {
 }
 
-Participant::Participant(const QString &accountId, const QString &identifier, const QString &contactId, const QString &alias, const QString &avatar, uint state, const QVariantMap &detailProperties)
-    : d_ptr(new ParticipantPrivate(accountId, identifier, contactId, alias, avatar, state, detailProperties))
+Participant::Participant(const QString &accountId, const QString &identifier, const QString &contactId, const QString &alias, const QString &avatar, uint state, uint roles, const QVariantMap &detailProperties)
+    : d_ptr(new ParticipantPrivate(accountId, identifier, contactId, alias, avatar, state, roles, detailProperties))
 {
 }
 
@@ -111,6 +112,12 @@ uint Participant::state() const
     return d->state;
 }
 
+uint Participant::roles() const
+{
+    Q_D(const Participant);
+    return d->roles;
+}
+
 QVariantMap Participant::detailProperties() const
 {
     Q_D(const Participant);
@@ -148,6 +155,7 @@ QVariantMap Participant::properties() const
     map[FieldAlias] = d->alias;
     map[FieldAvatar] = d->avatar;
     map[FieldParticipantState] = d->state;
+    map[FieldParticipantRoles] = d->roles;
     map[FieldDetailProperties] = d->detailProperties;
 
     return map;
@@ -166,6 +174,7 @@ Participant Participant::fromProperties(const QVariantMap &properties)
     QString alias = properties[FieldAlias].toString();
     QString avatar = properties[FieldAvatar].toString();
     uint state = properties[FieldParticipantState].toUInt();
+    uint roles = properties[FieldParticipantRoles].toUInt();
     QVariantMap detailProperties;
     QVariant detailPropertiesVariant = properties[FieldDetailProperties];
     if (detailPropertiesVariant.canConvert<QVariantMap>()) {
@@ -178,7 +187,7 @@ Participant Participant::fromProperties(const QVariantMap &properties)
         }
     }
 
-    return Participant(accountId, identifier, contactId, alias, avatar, state, detailProperties);
+    return Participant(accountId, identifier, contactId, alias, avatar, state, roles, detailProperties);
 }
 
 QStringList Participants::identifiers() const
