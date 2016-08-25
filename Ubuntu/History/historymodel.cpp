@@ -101,6 +101,7 @@ QVariant HistoryModel::data(const QModelIndex &index, int role) const
             int count = 0;
             Q_FOREACH(const QVariant &participantInfo, participantsInfo) {
                 QVariantMap newMap = participantInfo.toMap();
+                newMap[History::FieldParticipantState] = participants.at(count).state();
                 newMap[History::FieldParticipantRoles] = participants.at(count++).roles();
                 finalParticipantsList << newMap;
             }
@@ -128,6 +129,7 @@ QVariant HistoryModel::data(const QModelIndex &index, int role) const
             int count = 0;
             Q_FOREACH(const QVariant &participantInfo, participantsInfo) {
                 QVariantMap newMap = participantInfo.toMap();
+                newMap[History::FieldParticipantState] = participants.at(count).state();
                 newMap[History::FieldParticipantRoles] = participants.at(count++).roles();
                 finalParticipantsList << newMap;
             }
@@ -155,6 +157,7 @@ QVariant HistoryModel::data(const QModelIndex &index, int role) const
             int count = 0;
             Q_FOREACH(const QVariant &participantInfo, participantsInfo) {
                 QVariantMap newMap = participantInfo.toMap();
+                newMap[History::FieldParticipantState] = participants.at(count).state();
                 newMap[History::FieldParticipantRoles] = participants.at(count++).roles();
                 finalParticipantsList << newMap;
             }
