@@ -90,9 +90,6 @@ HistoryDaemon::HistoryDaemon(QObject *parent)
     connect(&mTextObserver,
             SIGNAL(channelAvailable(Tp::TextChannelPtr)),
             SLOT(onTextChannelAvailable(Tp::TextChannelPtr)));
-    connect(&mTextObserver,
-            SIGNAL(channelInvalidated(Tp::TextChannelPtr)),
-            SLOT(onTextChannelInvalidated(Tp::TextChannelPtr)));
 
     // FIXME: we need to do this in a better way, but for now this should do
     mProtocolFlags["ofono"] = History::MatchPhoneNumber;
@@ -652,7 +649,6 @@ void HistoryDaemon::updateRoomParticipants(const Tp::TextChannelPtr channel)
         participant[History::FieldParticipantRoles] = roles[contact->handle().at(0)];
         participants << QVariant::fromValue(participant);
     }
-
 
     Q_FOREACH(const Tp::ContactPtr contact, channel->groupContacts(false)) {
         // do not include remote and local pending members
