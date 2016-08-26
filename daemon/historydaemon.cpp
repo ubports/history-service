@@ -91,7 +91,7 @@ HistoryDaemon::HistoryDaemon(QObject *parent)
             SIGNAL(channelAvailable(Tp::TextChannelPtr)),
             SLOT(onTextChannelAvailable(Tp::TextChannelPtr)));
     connect(&mTextObserver,
-            SIGNAL(textChannelInvalidated(Tp::TextChannelPtr)),
+            SIGNAL(channelInvalidated(Tp::TextChannelPtr)),
             SLOT(onTextChannelInvalidated(Tp::TextChannelPtr)));
 
     // FIXME: we need to do this in a better way, but for now this should do
@@ -491,8 +491,6 @@ void HistoryDaemon::onObserverCreated()
             &mCallObserver, SLOT(onCallChannelAvailable(Tp::CallChannelPtr)));
     connect(observer, SIGNAL(textChannelAvailable(Tp::TextChannelPtr)),
             &mTextObserver, SLOT(onTextChannelAvailable(Tp::TextChannelPtr)));
-    connect(observer, SIGNAL(textChannelInvalidated(Tp::TextChannelPtr)),
-            &mTextObserver, SLOT(onTextChannelInvalidated()));
 }
 
 void HistoryDaemon::onCallEnded(const Tp::CallChannelPtr &channel)
@@ -603,25 +601,22 @@ void HistoryDaemon::onTextChannelAvailable(const Tp::TextChannelPtr channel)
     }
 }
 
-void HistoryDaemon::onTextChannelInvalidated(const Tp::TextChannelPtr channel)
+void HistoryDaemon::onUpdateRoomParticipants()
 {
-    // see if self handle has been removed from channel before closing. In that case write the info event in thread
-    if (channel->groupSelfContactRemoveInfo().isValid()) {
-        QString message = channel->groupSelfContactRemoveInfo().message();
+    Tp::TextChannelPtr channel(qobject_cast<Tp::TextChannel*>(sender()));
 
+    // evaluate if removed self handle and insert an information message in the thread in that case
+    if (channel->groupSelfContactRemoveInfo().isValid()) {
         QVariantMap properties = propertiesFromChannel(channel);
         QVariantMap thread = threadForProperties(channel->property(History::FieldAccountId).toString(),
                                                                    History::EventTypeText,
                                                                    properties,
                                                                    matchFlagsForChannel(channel),
                                                                    false);
-        writeInformationEvent(thread, message);
+        writeInformationEvent(thread, channel->groupSelfContactRemoveInfo().message());
     }
-}
 
-void HistoryDaemon::onUpdateRoomParticipants()
-{
-    updateRoomParticipants(Tp::TextChannelPtr(qobject_cast<Tp::TextChannel*>(sender())));
+    updateRoomParticipants(channel);
 }
 
 void HistoryDaemon::updateRoomParticipants(const Tp::TextChannelPtr channel)
@@ -657,6 +652,7 @@ void HistoryDaemon::updateRoomParticipants(const Tp::TextChannelPtr channel)
         participant[History::FieldParticipantRoles] = roles[contact->handle().at(0)];
         participants << QVariant::fromValue(participant);
     }
+
 
     Q_FOREACH(const Tp::ContactPtr contact, channel->groupContacts(false)) {
         // do not include remote and local pending members

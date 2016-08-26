@@ -62,7 +62,6 @@ private Q_SLOTS:
     void onMessageRead(const Tp::TextChannelPtr textChannel, const Tp::ReceivedMessage &message);
     void onMessageSent(const Tp::TextChannelPtr textChannel, const Tp::Message &message, const QString &messageToken);
     void onTextChannelAvailable(const Tp::TextChannelPtr channel);
-    void onTextChannelInvalidated(const Tp::TextChannelPtr channel);
     void onRoomPropertiesChanged(const QVariantMap &properties,const QStringList &invalidated);
     void onUpdateRoomParticipants();
 
