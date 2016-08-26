@@ -610,7 +610,9 @@ void HistoryDaemon::onUpdateRoomParticipants()
                                                                    properties,
                                                                    matchFlagsForChannel(channel),
                                                                    false);
-        writeInformationEvent(thread, channel->groupSelfContactRemoveInfo().message());
+        if (!thread.isEmpty()) {
+            writeInformationEvent(thread, channel->groupSelfContactRemoveInfo().message());
+        }
     }
 
     updateRoomParticipants(channel);
