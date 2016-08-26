@@ -101,6 +101,10 @@ QVariant HistoryModel::data(const QModelIndex &index, int role) const
             int count = 0;
             Q_FOREACH(const QVariant &participantInfo, participantsInfo) {
                 QVariantMap newMap = participantInfo.toMap();
+                if (participants.at(count).state() != History::ParticipantStateRegular) {
+                   count++;
+                   continue;
+                }
                 newMap[History::FieldParticipantState] = participants.at(count).state();
                 newMap[History::FieldParticipantRoles] = participants.at(count++).roles();
                 finalParticipantsList << newMap;
