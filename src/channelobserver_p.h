@@ -49,7 +49,6 @@ public:
 Q_SIGNALS:
     void textChannelAvailable(const Tp::TextChannelPtr &channel);
     void callChannelAvailable(const Tp::CallChannelPtr &channel);
-    void textChannelInvalidated(const Tp::TextChannelPtr &channel);
 
 protected Q_SLOTS:
     void onChannelInvalidated();
