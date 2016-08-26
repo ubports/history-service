@@ -610,7 +610,9 @@ void HistoryDaemon::onUpdateRoomParticipants()
                                                                    properties,
                                                                    matchFlagsForChannel(channel),
                                                                    false);
-        writeInformationEvent(thread, channel->groupSelfContactRemoveInfo().message());
+        if (not thread.isEmpty()) {
+            writeInformationEvent(thread, channel->groupSelfContactRemoveInfo().message());
+        }
     }
 
     updateRoomParticipants(channel);
@@ -876,7 +878,11 @@ void HistoryDaemon::onMessageRead(const Tp::TextChannelPtr textChannel, const Tp
     if (textEvent.isEmpty()) {
         qWarning() << "Cound not find the original event to update with newEvent = false.";
         return;
+    }if (thread.isEmpty()) {
+        qWarning() << "Cound not find the thread related to this eventId.";
+        return QVariantMap();
     }
+
 
     textEvent[History::FieldNewEvent] = false;
     if (!writeEvents(QList<QVariantMap>() << textEvent, properties)) {
