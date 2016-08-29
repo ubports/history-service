@@ -608,6 +608,9 @@ bool SQLiteHistoryPlugin::updateRoomInfo(const QString &accountId, const QString
             changedPropListValues << QString(prop+"=:"+ prop);
         }
     }
+    if (changedPropListValues.isEmpty()) {
+       return false;
+    }
 
     query.prepare("UPDATE chat_room_info SET "+ changedPropListValues.join(", ")+" WHERE accountId=:accountId AND threadId=:threadId AND type=:type");
     query.bindValue(":accountId", accountId);
