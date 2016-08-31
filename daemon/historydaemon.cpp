@@ -571,6 +571,17 @@ void HistoryDaemon::onTextChannelAvailable(const Tp::TextChannelPtr channel)
             // FIXME: this is a hack. we need proper information event support
             // write an entry saying you joined the group
             writeInformationEvent(thread, "You joined the group.");
+
+            QStringList inviteesAliases;
+            Q_FOREACH(const Tp::ContactPtr contact, channel->groupRemotePendingContacts(false)) {
+                inviteesAliases << contact->alias();
+            }
+            if (inviteesAliases.length() > 0) {
+                QString pluralLabel = inviteesAliases.length() > 1 ? " were " : " was ";
+                QString invitees = inviteesAliases.join(", ");
+                QString inviteesText = QString("%1").arg(invitees) + pluralLabel + "invited to the group";
+                writeInformationEvent(thread, inviteesText);
+            }
         }
 
         Tp::AbstractInterface *room_interface = channel->optionalInterface<Tp::Client::ChannelInterfaceRoomInterface>();
@@ -592,26 +603,57 @@ void HistoryDaemon::onTextChannelAvailable(const Tp::TextChannelPtr channel)
             }
         }
 
-        connect(channel.data(), SIGNAL(groupMembersChanged(const Tp::Contacts &, const Tp::Contacts &, const Tp::Contacts &, const Tp::Contacts &, const Tp::Channel::GroupMemberChangeDetails &)), SLOT(onUpdateRoomParticipants()));
+        connect(channel.data(), SIGNAL(groupMembersChanged(const Tp::Contacts &, const Tp::Contacts &, const Tp::Contacts &, const Tp::Contacts &, const Tp::Channel::GroupMemberChangeDetails &)),
+                SLOT(onGroupMembersChanged(const Tp::Contacts &, const Tp::Contacts &, const Tp::Contacts &, const Tp::Contacts &, const Tp::Channel::GroupMemberChangeDetails &)));
 
         updateRoomParticipants(channel);
     }
 }
 
-void HistoryDaemon::onUpdateRoomParticipants()
+void HistoryDaemon::onGroupMembersChanged(const Tp::Contacts &groupMembersAdded,
+                                          const Tp::Contacts &groupLocalPendingMembersAdded,
+                                          const Tp::Contacts &groupRemotePendingMembersAdded,
+                                          const Tp::Contacts &groupMembersRemoved,
+                                          const Tp::Channel::GroupMemberChangeDetails &details)
 {
     Tp::TextChannelPtr channel(qobject_cast<Tp::TextChannel*>(sender()));
 
-    // evaluate if removed self handle and insert an information message in the thread in that case
-    if (channel->groupSelfContactRemoveInfo().isValid()) {
-        QVariantMap properties = propertiesFromChannel(channel);
-        QVariantMap thread = threadForProperties(channel->property(History::FieldAccountId).toString(),
-                                                                   History::EventTypeText,
-                                                                   properties,
-                                                                   matchFlagsForChannel(channel),
-                                                                   false);
+    QVariantMap properties;
+    QVariantMap thread;
+
+    // information events for members updates.
+    bool hasMembersAdded = groupMembersAdded.size() > 0;
+    //TODO: we have to take into account that removed could be in a pending list (see TelephonyService::ChatEntry for details)
+    bool hasMembersRemoved = groupMembersRemoved.size() > 0;
+
+    if (hasMembersAdded || hasMembersRemoved) {
+        properties = propertiesFromChannel(channel);
+        thread = threadForProperties(channel->property(History::FieldAccountId).toString(),
+                                                       History::EventTypeText,
+                                                       properties,
+                                                       matchFlagsForChannel(channel),
+                                                       false);
         if (!thread.isEmpty()) {
-            writeInformationEvent(thread, channel->groupSelfContactRemoveInfo().message());
+
+            if (hasMembersAdded) {
+                Q_FOREACH (const Tp::ContactPtr& contact, groupMembersAdded) {
+                    writeInformationEvent(thread, QString("%1 joined the group").arg(contact->alias()));
+                }
+            }
+
+            if (hasMembersRemoved) {
+
+                if (channel->groupSelfContactRemoveInfo().isValid()) {
+                    writeInformationEvent(thread, channel->groupSelfContactRemoveInfo().message());
+                }
+
+                Q_FOREACH (const Tp::ContactPtr& contact, groupMembersRemoved) {
+                    // inform about removed members other than us
+                    if (contact->id() != channel->groupSelfContact()->id()) {
+                        writeInformationEvent(thread, QString("%1 left the group").arg(contact->alias()));
+                    }
+                }
+            }
         }
     }
 
@@ -664,7 +706,6 @@ void HistoryDaemon::updateRoomParticipants(const Tp::TextChannelPtr channel)
         participant[History::FieldParticipantRoles] = roles[contact->handle().at(0)];
         participants << QVariant::fromValue(participant);
     }
-
 
     QString accountId = channel->property(History::FieldAccountId).toString();
     QString threadId = channel->targetId();;
@@ -1007,10 +1048,15 @@ QVariantMap HistoryDaemon::getInterfaceProperties(const Tp::AbstractInterface *i
 // FIXME: this is a hack. we need proper information event support.
 void HistoryDaemon::writeInformationEvent(const QVariantMap &thread, const QString &text)
 {
+    //TODO TRACE
+    uint high = 1000;
+    uint low = 0;
+    QString delta = QString::number((qrand() % ((high + 1) - low) + low));
+
     History::TextEvent historyEvent = History::TextEvent(thread[History::FieldAccountId].toString(),
                                                          thread[History::FieldThreadId].toString(),
                                                          QString(QCryptographicHash::hash(QByteArray(
-                                                                 QDateTime::currentDateTime().toString().toLatin1()),
+                                                                 (QDateTime::currentDateTime().toString() + delta).toLatin1()),
                                                                  QCryptographicHash::Md5).toHex()),
                                                          "self",
                                                          QDateTime::currentDateTime(),
