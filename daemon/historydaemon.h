@@ -63,7 +63,9 @@ private Q_SLOTS:
     void onMessageSent(const Tp::TextChannelPtr textChannel, const Tp::Message &message, const QString &messageToken);
     void onTextChannelAvailable(const Tp::TextChannelPtr channel);
     void onRoomPropertiesChanged(const QVariantMap &properties,const QStringList &invalidated);
-    void onUpdateRoomParticipants();
+    void onGroupMembersChanged(const Tp::Contacts &groupMembersAdded, const Tp::Contacts &groupLocalPendingMembersAdded,
+                               const Tp::Contacts &groupRemotePendingMembersAdded, const Tp::Contacts &groupMembersRemoved,
+                               const Tp::Channel::GroupMemberChangeDetails &details);
 
 protected:
     History::MatchFlags matchFlagsForChannel(const Tp::ChannelPtr &channel);
