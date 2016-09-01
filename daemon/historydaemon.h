@@ -74,6 +74,8 @@ protected:
     void updateRoomParticipants(const Tp::TextChannelPtr channel, const QVariantMap &thread);
     QString hashThread(const QVariantMap &thread);
     static QVariantMap getInterfaceProperties(const Tp::AbstractInterface *interface);
+    void updateRoomProperties(const Tp::TextChannelPtr &channel, const QVariantMap &properties);
+    void updateRoomProperties(const QString &accountId, const QString &threadId, History::EventType type, const QVariantMap &properties, const QStringList &invalidated);
 
     // FIXME: this is a hack. we need proper information event support.
     void writeInformationEvent(const QVariantMap &thread, const QString &text);
