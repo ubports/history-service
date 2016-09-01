@@ -691,7 +691,7 @@ QVariantMap SQLiteHistoryPlugin::createThreadForProperties(const QString &accoun
         QDateTime creationTimestamp = QDateTime::fromTime_t(chatRoomInfo["CreationTimestamp"].toUInt());
         QDateTime timestamp = QDateTime::fromTime_t(chatRoomInfo["Timestamp"].toUInt());
 
-        query.prepare("INSERT INTO chat_room_info (accountId, threadId, type, roomName, server, creator, creationTimestamp, anonymous, inviteOnly, participantLimit, moderated, title, description, persistent, private, passwordProtected, password, passwordHint, canUpdateConfiguration, subject, actor, timestamp, joined, selfRoles)"
+        query.prepare("INSERT INTO chat_room_info (accountId, threadId, type, roomName, server, creator, creationTimestamp, anonymous, inviteOnly, participantLimit, moderated, title, description, persistent, private, passwordProtected, password, passwordHint, canUpdateConfiguration, subject, actor, timestamp, joined, selfRoles) "
                       "VALUES (:accountId, :threadId, :type, :roomName, :server, :creator, :creationTimestamp, :anonymous, :inviteOnly, :participantLimit, :moderated, :title, :description, :persistent, :private, :passwordProtected, :password, :passwordHint, :canUpdateConfiguration, :subject, :actor, :timestamp, :joined, :selfRoles)");
         query.bindValue(":accountId", accountId);
         query.bindValue(":threadId", threadId);
