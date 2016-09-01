@@ -136,6 +136,7 @@ static const char* FieldDate = "date";
 static const char* FieldNewEvent = "newEvent";
 static const char* FieldChatType = "chatType";
 static const char* FieldChatRoomInfo = "chatRoomInfo";
+static const char* FieldChatRoomJoined = "joined";
 
 // Chat Room Info Fields
 static const char* FieldChatRoomName = "roomName";
