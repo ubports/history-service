@@ -54,6 +54,19 @@ const QDBusArgument &operator>>(const QDBusArgument &argument, RolesMap &roles)
     return argument;
 }
 
+bool foundAsMemberInThread(const Tp::ContactPtr& contact, QVariantMap thread)
+{
+    Q_FOREACH (QVariant participant, thread[History::FieldParticipants].toList()) {
+        // found if same identifier and as member into thread info
+        if (contact->id() == participant.toMap()[History::FieldIdentifier].toString() &&
+                participant.toMap()[History::FieldParticipantState].toUInt() == History::ParticipantStateRegular)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 HistoryDaemon::HistoryDaemon(QObject *parent)
     : QObject(parent), mCallObserver(this), mTextObserver(this)
 {
@@ -580,6 +593,10 @@ void HistoryDaemon::onTextChannelAvailable(const Tp::TextChannelPtr channel)
                 // FIXME: this is a hack. we need proper information event support
                 writeInformationEvent(thread, inviteesText);
             }
+
+            // update participants only if the thread is not available previously. Otherwise we'll wait for membersChanged event
+            // for reflect in conversation information events for modified participants.
+            updateRoomParticipants(channel);
         }
 
         // write an entry saying you joined the group if 'joined' flag in thread is false and modify that flag.
@@ -617,7 +634,6 @@ void HistoryDaemon::onTextChannelAvailable(const Tp::TextChannelPtr channel)
         connect(channel.data(), SIGNAL(groupMembersChanged(const Tp::Contacts &, const Tp::Contacts &, const Tp::Contacts &, const Tp::Contacts &, const Tp::Channel::GroupMemberChangeDetails &)),
                 SLOT(onGroupMembersChanged(const Tp::Contacts &, const Tp::Contacts &, const Tp::Contacts &, const Tp::Contacts &, const Tp::Channel::GroupMemberChangeDetails &)));
 
-        updateRoomParticipants(channel);
     }
 }
 
@@ -645,16 +661,17 @@ void HistoryDaemon::onGroupMembersChanged(const Tp::Contacts &groupMembersAdded,
                                                        matchFlagsForChannel(channel),
                                                        false);
         if (!thread.isEmpty()) {
-
             if (hasMembersAdded) {
                 Q_FOREACH (const Tp::ContactPtr& contact, groupMembersAdded) {
-                    // FIXME: this is a hack. we need proper information event support
-                    writeInformationEvent(thread, QString("%1 joined the group").arg(contact->alias()));
+                    // if this member was not previously regular member in thread, notify about his join
+                    if (!foundAsMemberInThread(contact, thread)) {
+                        // FIXME: this is a hack. we need proper information event support
+                        writeInformationEvent(thread, QString("%1 joined the group").arg(contact->alias()));
+                    }
                 }
             }
 
             if (hasMembersRemoved) {
-
                 if (channel->groupSelfContactRemoveInfo().isValid()) {
                     // FIXME: this is a hack. we need proper information event support
                     writeInformationEvent(thread, channel->groupSelfContactRemoveInfo().message());
