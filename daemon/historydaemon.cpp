@@ -577,14 +577,16 @@ void HistoryDaemon::onTextChannelAvailable(const Tp::TextChannelPtr channel)
                 QString pluralLabel = inviteesAliases.length() > 1 ? " were " : " was ";
                 QString invitees = inviteesAliases.join(", ");
                 QString inviteesText = QString("%1").arg(invitees) + pluralLabel + "invited to the group";
+                // FIXME: this is a hack. we need proper information event support
                 writeInformationEvent(thread, inviteesText);
             }
         }
 
-        // FIXME: this is a hack. we need proper information event support
         // write an entry saying you joined the group if 'joined' flag in thread is false and modify that flag.
         if (!thread[History::FieldChatRoomInfo].toMap()["Joined"].toBool()) {
+            // FIXME: this is a hack. we need proper information event support
             writeInformationEvent(thread, "You joined the group.");
+            // update backend
             QString threadId = thread[History::FieldThreadId].toString();
             History::EventType type = History::EventTypeText;
             if (mBackend->updateRoomInfo(accountId, threadId, type, QVariantMap{{"Joined", true}}, QStringList())) {
@@ -646,6 +648,7 @@ void HistoryDaemon::onGroupMembersChanged(const Tp::Contacts &groupMembersAdded,
 
             if (hasMembersAdded) {
                 Q_FOREACH (const Tp::ContactPtr& contact, groupMembersAdded) {
+                    // FIXME: this is a hack. we need proper information event support
                     writeInformationEvent(thread, QString("%1 joined the group").arg(contact->alias()));
                 }
             }
@@ -653,9 +656,10 @@ void HistoryDaemon::onGroupMembersChanged(const Tp::Contacts &groupMembersAdded,
             if (hasMembersRemoved) {
 
                 if (channel->groupSelfContactRemoveInfo().isValid()) {
+                    // FIXME: this is a hack. we need proper information event support
                     writeInformationEvent(thread, channel->groupSelfContactRemoveInfo().message());
 
-                    //TODO move this to another method
+                    // update backend
                     QString accountId = channel->property(History::FieldAccountId).toString();
                     QString threadId = thread[History::FieldThreadId].toString();
                     History::EventType type = History::EventTypeText;
@@ -669,6 +673,7 @@ void HistoryDaemon::onGroupMembersChanged(const Tp::Contacts &groupMembersAdded,
                     Q_FOREACH (const Tp::ContactPtr& contact, groupMembersRemoved) {
                         // inform about removed members other than us
                         if (contact->id() != channel->groupSelfContact()->id()) {
+                            // FIXME: this is a hack. we need proper information event support
                             writeInformationEvent(thread, QString("%1 left the group").arg(contact->alias()));
                         }
                     }
