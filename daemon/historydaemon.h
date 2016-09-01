@@ -31,6 +31,8 @@
 #include "historyservicedbus.h"
 #include "plugin.h"
 
+typedef QMap<uint,uint> RolesMap;
+
 class HistoryDaemon : public QObject
 {
     Q_OBJECT
@@ -69,7 +71,7 @@ private Q_SLOTS:
 
 protected:
     History::MatchFlags matchFlagsForChannel(const Tp::ChannelPtr &channel);
-    void updateRoomParticipants(const Tp::TextChannelPtr channel);
+    void updateRoomParticipants(const Tp::TextChannelPtr channel, const QVariantMap &thread);
     QString hashThread(const QVariantMap &thread);
     static QVariantMap getInterfaceProperties(const Tp::AbstractInterface *interface);
 
@@ -77,7 +79,7 @@ protected:
     void writeInformationEvent(const QVariantMap &thread, const QString &text);
 
     void writeRoomChangesInformationEvents(const QVariantMap &thread, const QVariantMap &interfaceProperties);
-
+    void writeRolesInformationEvents(const QVariantMap &thread, const Tp::ChannelPtr &channel, const RolesMap &rolesMap);
 private:
     HistoryDaemon(QObject *parent = 0);
 
