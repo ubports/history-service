@@ -599,6 +599,7 @@ bool SQLiteHistoryPlugin::updateRoomInfo(const QString &accountId, const QString
     propertyMapping["Subject"] = "subject";
     propertyMapping["Actor"] = "actor";
     propertyMapping["Timestamp"] = "timestamp";
+    propertyMapping["Joined"] = "joined";
 
     QStringList changedPropListValues;
     // populate sql query
@@ -635,6 +636,7 @@ bool SQLiteHistoryPlugin::updateRoomInfo(const QString &accountId, const QString
     query.bindValue(":subject", properties["Subject"].toString());
     query.bindValue(":actor", properties["Actor"].toString());
     query.bindValue(":timestamp", timestamp.toUTC().toString(timestampFormat));
+    query.bindValue(":joined", properties["Joined"].toBool());
 
     if (!query.exec()) {
         qCritical() << "Error:" << query.lastError() << query.lastQuery();
@@ -687,8 +689,8 @@ QVariantMap SQLiteHistoryPlugin::createThreadForProperties(const QString &accoun
         QDateTime creationTimestamp = QDateTime::fromTime_t(chatRoomInfo["CreationTimestamp"].toUInt());
         QDateTime timestamp = QDateTime::fromTime_t(chatRoomInfo["Timestamp"].toUInt());
 
-        query.prepare("INSERT INTO chat_room_info (accountId, threadId, type, roomName, server, creator, creationTimestamp, anonymous, inviteOnly, participantLimit, moderated, title, description, persistent, private, passwordProtected, password, passwordHint, canUpdateConfiguration, subject, actor, timestamp)"
-                      "VALUES (:accountId, :threadId, :type, :roomName, :server, :creator, :creationTimestamp, :anonymous, :inviteOnly, :participantLimit, :moderated, :title, :description, :persistent, :private, :passwordProtected, :password, :passwordHint, :canUpdateConfiguration, :subject, :actor, :timestamp)");
+        query.prepare("INSERT INTO chat_room_info (accountId, threadId, type, roomName, server, creator, creationTimestamp, anonymous, inviteOnly, participantLimit, moderated, title, description, persistent, private, passwordProtected, password, passwordHint, canUpdateConfiguration, subject, actor, timestamp, joined)"
+                      "VALUES (:accountId, :threadId, :type, :roomName, :server, :creator, :creationTimestamp, :anonymous, :inviteOnly, :participantLimit, :moderated, :title, :description, :persistent, :private, :passwordProtected, :password, :passwordHint, :canUpdateConfiguration, :subject, :actor, :timestamp, :joined)");
         query.bindValue(":accountId", accountId);
         query.bindValue(":threadId", threadId);
         query.bindValue(":type", (int) type);
@@ -711,6 +713,7 @@ QVariantMap SQLiteHistoryPlugin::createThreadForProperties(const QString &accoun
         query.bindValue(":subject", chatRoomInfo["Subject"].toString());
         query.bindValue(":actor", chatRoomInfo["Actor"].toString());
         query.bindValue(":timestamp", timestamp.toUTC().toString(timestampFormat));
+        query.bindValue(":joined", chatRoomInfo["Joined"].toBool());
 
         if (!query.exec()) {
             qCritical() << "Error:" << query.lastError() << query.lastQuery();
@@ -1184,7 +1187,7 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseThreadResults(History::EventType ty
                 QVariantMap chatRoomInfo;
                 QSqlQuery query1(SQLiteDatabase::instance()->database());
 
-                query1.prepare("SELECT roomName, server, creator, creationTimestamp, anonymous, inviteOnly, participantLimit, moderated, title, description, persistent, private, passwordProtected, password, passwordHint, canUpdateConfiguration, subject, actor, timestamp FROM chat_room_info WHERE accountId=:accountId AND threadId=:threadId AND type=:type LIMIT 1");
+                query1.prepare("SELECT roomName, server, creator, creationTimestamp, anonymous, inviteOnly, participantLimit, moderated, title, description, persistent, private, passwordProtected, password, passwordHint, canUpdateConfiguration, subject, actor, timestamp, joined FROM chat_room_info WHERE accountId=:accountId AND threadId=:threadId AND type=:type LIMIT 1");
                 query1.bindValue(":accountId", thread[History::FieldAccountId]);
                 query1.bindValue(":threadId", thread[History::FieldThreadId]);
                 query1.bindValue(":type", thread[History::FieldType].toInt());
@@ -1233,6 +1236,8 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseThreadResults(History::EventType ty
                     chatRoomInfo["Actor"] = query1.value(17);
                 if (query1.value(18).isValid())
                     chatRoomInfo["Timestamp"] = toLocalTimeString(query1.value(18).toDateTime());
+                if (query1.value(19).isValid())
+                    chatRoomInfo["Joined"] = query1.value(19).toBool();
 
                 thread[History::FieldChatRoomInfo] = chatRoomInfo;
             }
