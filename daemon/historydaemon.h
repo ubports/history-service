@@ -76,6 +76,8 @@ protected:
     // FIXME: this is a hack. we need proper information event support.
     void writeInformationEvent(const QVariantMap &thread, const QString &text);
 
+    void writeRoomChangesInformationEvents(const QVariantMap &thread, const QVariantMap &interfaceProperties);
+
 private:
     HistoryDaemon(QObject *parent = 0);
 

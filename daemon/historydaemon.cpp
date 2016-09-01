@@ -685,7 +685,7 @@ void HistoryDaemon::onGroupMembersChanged(const Tp::Contacts &groupMembersAdded,
                         mDBus.notifyThreadsModified(QList<QVariantMap>() << thread);
                     }
                 }
-                else // don't remove any other group members if we are leaving the group
+                else // don't notify any other group member removal if we are leaving the group
                 {
                     Q_FOREACH (const Tp::ContactPtr& contact, groupMembersRemoved) {
                         // inform about removed members other than us
@@ -750,10 +750,22 @@ void HistoryDaemon::updateRoomParticipants(const Tp::TextChannelPtr channel)
     }
 
     QString accountId = channel->property(History::FieldAccountId).toString();
-    QString threadId = channel->targetId();;
+    QString threadId = channel->targetId();
     if (mBackend->updateRoomParticipants(accountId, threadId, History::EventTypeText, participants)) {
         QVariantMap thread = getSingleThread(History::EventTypeText, accountId, threadId, QVariantMap());
         mDBus.notifyThreadsModified(QList<QVariantMap>() << thread);
+    }
+}
+
+void HistoryDaemon::writeRoomChangesInformationEvents(const QVariantMap &thread, const QVariantMap &interfaceProperties)
+{
+    if (!thread.isEmpty()) {
+        // group title
+        QString storedTitle = thread[History::FieldChatRoomInfo].toMap()["Title"].toString();
+        QString newTitle = interfaceProperties["Title"].toString();
+        if (!newTitle.isEmpty() && storedTitle != newTitle) {
+            writeInformationEvent(thread, "Title changed to '" + newTitle + "'");
+        }
     }
 }
 
@@ -763,10 +775,13 @@ void HistoryDaemon::onRoomPropertiesChanged(const QVariantMap &properties,const 
     QString threadId = sender()->property(History::FieldThreadId).toString();
     int type = sender()->property(History::FieldType).toInt();
 
-    bool success = mBackend->updateRoomInfo(accountId, threadId, (History::EventType)type, properties, invalidated);
+    // get thread before updating to see if there are changes to insert as information events
+    QVariantMap thread = getSingleThread(type, accountId, threadId, QVariantMap());
+    writeRoomChangesInformationEvents(thread, properties);
 
+    bool success = mBackend->updateRoomInfo(accountId, threadId, (History::EventType)type, properties, invalidated);
     if (success) {
-        QVariantMap thread = getSingleThread(type, accountId, threadId, QVariantMap());
+        thread = getSingleThread(type, accountId, threadId, QVariantMap());
         mDBus.notifyThreadsModified(QList<QVariantMap>() << thread);
     }
 }
