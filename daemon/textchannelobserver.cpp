@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012-2013 Canonical, Ltd.
+ * Copyright (C) 2012-2016 Canonical, Ltd.
  *
  * Authors:
  *  Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>
@@ -42,6 +42,8 @@ void TextChannelObserver::onTextChannelAvailable(Tp::TextChannelPtr textChannel)
     connect(textChannel.data(),
             SIGNAL(pendingMessageRemoved(const Tp::ReceivedMessage&)),
             SLOT(onPendingMessageRemoved(const Tp::ReceivedMessage&)));
+
+    Q_EMIT channelAvailable(textChannel);
 
     // process the messages that are already pending in the channel
     Q_FOREACH(const Tp::ReceivedMessage &message, textChannel->messageQueue()) {

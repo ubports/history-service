@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Canonical, Ltd.
+ * Copyright (C) 2015-2016 Canonical, Ltd.
  *
  * Authors:
  *  Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>
@@ -44,6 +44,8 @@ public:
                 const QString &contactId = QString::null,
                 const QString &alias = QString::null,
                 const QString &avatar = QString::null,
+                uint state = 0,
+                uint roles = 0,
                 const QVariantMap &detailProperties = QVariantMap());
     Participant(const Participant &other);
     Participant& operator=(const Participant &other);
@@ -54,6 +56,8 @@ public:
     QString contactId() const;
     QString alias() const;
     QString avatar() const;
+    uint state() const;
+    uint roles() const;
     QVariantMap detailProperties() const;
 
     bool isNull() const;
@@ -75,6 +79,7 @@ public:
     QStringList identifiers() const;
     static Participants fromVariant(const QVariant &variant);
     static Participants fromVariantList(const QVariantList &list);
+    static Participants fromStringList(const QStringList &list);
     QVariantList toVariantList() const;
 
 };

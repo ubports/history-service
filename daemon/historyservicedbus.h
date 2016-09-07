@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Canonical, Ltd.
+ * Copyright (C) 2013-2016 Canonical, Ltd.
  *
  * Authors:
  *  Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>
@@ -50,6 +50,11 @@ public:
                                       const QStringList &participants,
                                       int matchFlags,
                                       bool create);
+    QVariantMap ThreadForProperties(const QString &accountId,
+                                    int type,
+                                    const QVariantMap &properties,
+                                    int matchFlags,
+                                    bool create);
     bool WriteEvents(const QList <QVariantMap> &events);
     bool RemoveThreads(const QList <QVariantMap> &threads);
     bool RemoveEvents(const QList <QVariantMap> &events);

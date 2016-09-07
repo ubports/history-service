@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Canonical, Ltd.
+ * Copyright (C) 2015-2016 Canonical, Ltd.
  *
  * Authors:
  *  Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>
@@ -32,9 +32,12 @@ Utils::Utils()
 }
 
 // FIXME: find a better way to determine when accounts should be grouped
-bool Utils::shouldGroupAccount(const QString &accountId)
+bool Utils::shouldGroupThread(const Thread &thread)
 {
-    return (matchFlagsForAccount(accountId) & MatchPhoneNumber);
+    if (protocolFromAccountId(thread.accountId()) == "multimedia") {
+       return thread.chatType() == History::ChatTypeContact;
+    }
+    return (matchFlagsForAccount(thread.accountId()) & MatchPhoneNumber);
 }
 
 MatchFlags Utils::matchFlagsForAccount(const QString &accountId)
