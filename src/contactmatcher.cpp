@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2015 Canonical, Ltd.
+ * Copyright (C) 2014-2016 Canonical, Ltd.
  *
  * Authors:
  *  Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>
@@ -95,7 +95,7 @@ ContactMatcher *ContactMatcher::instance(QContactManager *manager)
  *
  * Note that synchronous requests should only be placed after \ref TelepathyHelper is ready.
  */
-QVariantMap ContactMatcher::contactInfo(const QString &accountId, const QString &identifier, bool synchronous)
+QVariantMap ContactMatcher::contactInfo(const QString &accountId, const QString &identifier, bool synchronous, const QVariantMap &properties)
 {
     InternalContactMap &internalMap = mContactMap[accountId];
 
@@ -103,8 +103,9 @@ QVariantMap ContactMatcher::contactInfo(const QString &accountId, const QString 
     if (internalMap.contains(identifier)) {
         return internalMap[identifier];
     }
-
+    
     QVariantMap map;
+
     // and if there was no match, asynchronously request the info, and return an empty map for now
     if (History::TelepathyHelper::instance()->ready()) {
         map = requestContactInfo(accountId, identifier, synchronous);
@@ -114,6 +115,15 @@ QVariantMap ContactMatcher::contactInfo(const QString &accountId, const QString 
     }
     map[History::FieldIdentifier] = identifier;
     map[History::FieldAccountId] = accountId;
+
+    QMapIterator<QString, QVariant> i(properties);
+    while (i.hasNext()) {
+        i.next();
+        if (!map.contains(i.key())) {
+            map[i.key()] = i.value();
+        }
+    }
+
     mContactMap[accountId][identifier] = map;
     return map;
 }

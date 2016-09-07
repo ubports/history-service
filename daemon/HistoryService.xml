@@ -9,6 +9,20 @@
         <dox:d>
           An interface to the history service
         </dox:d>
+        <method name="ThreadForProperties">
+            <dox:d><![CDATA[
+                Return an existing thread for the given parameters.
+            ]]></dox:d>
+            <arg name="accountId" type="s" direction="in"/>
+            <arg name="type" type="i" direction="in"/>
+            <arg name="properties" type="a{sv}" direction="in"/>
+            <arg name="matchFlags" type="i" direction="in"/>
+            <arg name="create" type="b" direction="in"/>
+            <arg type="a{sv}" direction="out"/>
+            <annotation name="org.qtproject.QtDBus.QtTypeName.Out0" value="QVariantMap"/>
+            <annotation name="org.qtproject.QtDBus.QtTypeName.In2" value="QVariantMap"/>
+        </method>
+
         <method name="ThreadForParticipants">
             <dox:d><![CDATA[
                 Return an existing thread for the given parameters.

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Canonical, Ltd.
+ * Copyright (C) 2013-2016 Canonical, Ltd.
  *
  * Authors:
  *  Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>
@@ -75,6 +75,13 @@ enum MessageType
     MessageTypeInformation = 2
 };
 
+enum ChatType
+{
+    ChatTypeNone = 0,
+    ChatTypeContact = 1,
+    ChatTypeRoom = 2
+};
+
 // FIXME (boiko): I think this needs to be changed to a simple enum and not flags,
 // as the statuses are mutually exclusive
 enum AttachmentFlag
@@ -85,6 +92,20 @@ enum AttachmentFlag
 };
 
 Q_DECLARE_FLAGS(AttachmentFlags, AttachmentFlag)
+
+enum ParticipantState
+{
+    ParticipantStateRegular = 0,
+    ParticipantStateLocalPending = 1,
+    ParticipantStateRemotePending = 2
+};
+
+enum ParticipantRoles
+{
+    ParticipantRoleNone = 0,
+    ParticipantRoleMember = 1,
+    ParticipantRoleAdmin = 2
+};
 
 // Event writing results
 enum EventWriteResult {
@@ -106,12 +127,35 @@ static const char* FieldThreadId = "threadId";
 static const char* FieldEventId = "eventId";
 static const char* FieldType = "type";
 static const char* FieldParticipants = "participants";
+static const char* FieldParticipantIds = "participantIds";
 static const char* FieldCount = "count";
 static const char* FieldUnreadCount = "unreadCount";
 static const char* FieldSenderId = "senderId";
 static const char* FieldTimestamp = "timestamp";
 static const char* FieldDate = "date";
 static const char* FieldNewEvent = "newEvent";
+static const char* FieldChatType = "chatType";
+static const char* FieldChatRoomInfo = "chatRoomInfo";
+static const char* FieldChatRoomJoined = "joined";
+static const char* FieldChatRoomSelfRoles = "selfRoles";
+
+// Chat Room Info Fields
+static const char* FieldChatRoomName = "roomName";
+static const char* FieldChatRoomServer = "server";
+static const char* FieldChatRoomCreator = "creator";
+static const char* FieldChatRoomCreationTimestamp = "creationTimestamp";
+static const char* FieldChatRoomAnonymous = "anonymous";
+static const char* FieldChatRoomInviteOnly = "inviteOnly";
+static const char* FieldChatRoomParticipantLimit = "participantLimit";
+static const char* FieldChatRoomModerated = "moderated";
+static const char* FieldChatRoomTitle = "title";
+static const char* FieldChatRoomDescription = "description";
+static const char* FieldChatRoomPersistent = "persistent";
+static const char* FieldChatRoomPrivate = "private";
+static const char* FieldChatRoomPasswordProtected = "passwordProtected";
+static const char* FieldChatRoomPassword = "password";
+static const char* FieldChatRoomPasswordHint = "passwordHint";
+static const char* FieldChatRoomCanUpdateConfiguration = "canUpdateConfiguration";
 
 // thread fields
 static const char* FieldLastEventId = "lastEventId";
@@ -157,6 +201,8 @@ static const char* FieldAlias = "alias";
 static const char* FieldAvatar = "avatar";
 static const char* FieldIdentifier = "identifier";
 static const char* FieldDetailProperties = "detailProperties";
+static const char* FieldParticipantState = "state";
+static const char* FieldParticipantRoles = "roles";
 
 }
 
