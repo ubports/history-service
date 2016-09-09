@@ -45,6 +45,7 @@ HistoryEventModel::HistoryEventModel(QObject *parent) :
     mRoles[TextMessageAttachmentsRole] = "textMessageAttachments";
     mRoles[TextReadTimestampRole] = "textReadTimestamp";
     mRoles[TextReadSubjectRole] = "textSubject";
+    mRoles[TextInformationTypeRole] = "textInformationType";
     mRoles[CallMissedRole] = "callMissed";
     mRoles[CallDurationRole] = "callDuration";
     mRoles[RemoteParticipantRole] = "remoteParticipant";
@@ -133,6 +134,11 @@ QVariant HistoryEventModel::eventData(const History::Event &event, int role) con
     case TextReadSubjectRole:
         if (!textEvent.isNull()) {
             result = textEvent.subject();
+        }
+        break;
+    case TextInformationTypeRole:
+        if (!textEvent.isNull()) {
+            result = (int)textEvent.informationType();
         }
         break;
     case TextMessageAttachmentsRole:
