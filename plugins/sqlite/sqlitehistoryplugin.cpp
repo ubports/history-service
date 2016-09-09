@@ -1346,6 +1346,10 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseEventResults(History::EventType typ
             event[History::FieldMessageType] = query.value(8);
             event[History::FieldMessageStatus] = query.value(9);
             event[History::FieldReadTimestamp] = toLocalTimeString(query.value(10).toDateTime());
+            if (!query.value(11).toString().isEmpty()) {
+                event[History::FieldSubject] = query.value(11).toString();
+            }
+            event[History::FieldInformationType] = query.value(12).toInt();
             break;
         case History::EventTypeVoice:
             event[History::FieldDuration] = query.value(7).toInt();
