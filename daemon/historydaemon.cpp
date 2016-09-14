@@ -660,8 +660,14 @@ void HistoryDaemon::onGroupMembersChanged(const Tp::Contacts &groupMembersAdded,
 
             if (hasMembersRemoved) {
                 if (channel->groupSelfContactRemoveInfo().isValid()) {
+                    // evaluate if we are leaving by our own or we are kicked
+                    History::InformationType type = History::InformationTypeSelfLeaving;
+                    if (channel->groupSelfContactRemoveInfo().hasReason() &&
+                            channel->groupSelfContactRemoveInfo().reason() == Tp::ChannelGroupChangeReason::ChannelGroupChangeReasonKicked) {
+                        type = History::InformationTypeSelfKicked;
+                    }
                     // FIXME: this is a hack. we need proper information event support
-                    writeInformationEvent(thread, History::InformationTypeSelfLeaving);
+                    writeInformationEvent(thread, type);
                     // update backend
                     updateRoomProperties(channel, QVariantMap{{"Joined", false}});
                 }
