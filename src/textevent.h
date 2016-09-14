@@ -49,6 +49,7 @@ public:
               MessageStatus messageStatus = MessageStatusUnknown,
               const QDateTime &readTimestamp = QDateTime(),
               const QString &subject = QString(),
+              InformationType informationType = InformationTypeNone,
               const TextEventAttachments &attachments = TextEventAttachments(),
               const Participants &participants = Participants());
 
@@ -65,6 +66,7 @@ public:
     QDateTime readTimestamp() const;
     void setReadTimestamp(const QDateTime &value);
     QString subject() const;
+    InformationType informationType() const;
     TextEventAttachments attachments() const;
 
     static Event fromProperties(const QVariantMap &properties);
