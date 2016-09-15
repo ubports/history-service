@@ -68,6 +68,17 @@ bool foundAsMemberInThread(const Tp::ContactPtr& contact, QVariantMap thread)
     return false;
 }
 
+bool foundInThread(const Tp::ContactPtr& contact, QVariantMap thread)
+{
+    Q_FOREACH (QVariant participant, thread[History::FieldParticipants].toList()) {
+        if (contact->id() == participant.toMap()[History::FieldIdentifier].toString())
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 HistoryDaemon::HistoryDaemon(QObject *parent)
     : QObject(parent), mCallObserver(this), mTextObserver(this)
 {
@@ -636,11 +647,11 @@ void HistoryDaemon::onGroupMembersChanged(const Tp::Contacts &groupMembersAdded,
     QVariantMap thread;
 
     // information events for members updates.
+    bool hasRemotePendingMembersAdded = groupRemotePendingMembersAdded.size() > 0;
     bool hasMembersAdded = groupMembersAdded.size() > 0;
-    //TODO: we have to take into account that removed could be in a pending list (see TelephonyService::ChatEntry for details)
     bool hasMembersRemoved = groupMembersRemoved.size() > 0;
 
-    if (hasMembersAdded || hasMembersRemoved) {
+    if (hasRemotePendingMembersAdded || hasMembersAdded || hasMembersRemoved) {
         properties = propertiesFromChannel(channel);
         thread = threadForProperties(channel->property(History::FieldAccountId).toString(),
                                                        History::EventTypeText,
@@ -648,6 +659,13 @@ void HistoryDaemon::onGroupMembersChanged(const Tp::Contacts &groupMembersAdded,
                                                        matchFlagsForChannel(channel),
                                                        false);
         if (!thread.isEmpty()) {
+            if (hasRemotePendingMembersAdded) {
+                Q_FOREACH (const Tp::ContactPtr& contact, groupRemotePendingMembersAdded) {
+                    if (!foundInThread(contact, thread)) {
+                        writeInformationEvent(thread, History::InformationTypeInvitationSent, contact->alias());
+                    }
+                }
+            }
             if (hasMembersAdded) {
                 Q_FOREACH (const Tp::ContactPtr& contact, groupMembersAdded) {
                     // if this member was not previously regular member in thread, notify about his join
