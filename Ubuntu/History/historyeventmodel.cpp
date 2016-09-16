@@ -49,6 +49,7 @@ HistoryEventModel::HistoryEventModel(QObject *parent) :
     mRoles[CallMissedRole] = "callMissed";
     mRoles[CallDurationRole] = "callDuration";
     mRoles[RemoteParticipantRole] = "remoteParticipant";
+    mRoles[SubjectAsAliasRole] = "subjectAsAlias";
 }
 
 int HistoryEventModel::rowCount(const QModelIndex &parent) const
@@ -168,6 +169,16 @@ QVariant HistoryEventModel::eventData(const History::Event &event, int role) con
     case RemoteParticipantRole:
         if (!voiceEvent.isNull()) {
             result = voiceEvent.remoteParticipant();
+        }
+        break;
+    case SubjectAsAliasRole:
+        if (!textEvent.isNull()) {
+            QVariantMap contactInfo = History::ContactMatcher::instance()->contactInfo(event.accountId(), textEvent.subject());
+            QString returnValue = contactInfo[History::FieldAlias].toString();
+            if (returnValue.isEmpty()) {
+                returnValue = contactInfo[History::FieldIdentifier].toString();
+            }
+            return returnValue;
         }
         break;
     }
