@@ -49,8 +49,8 @@ public:
         CallMissedRole,
         CallDurationRole,
         RemoteParticipantRole,
-        LastEventRole,
-        SubjectAsAliasRole
+        SubjectAsAliasRole,
+        LastEventRole
     };
 
     explicit HistoryEventModel(QObject *parent = 0);
