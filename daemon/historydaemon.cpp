@@ -1117,14 +1117,14 @@ QVariantMap HistoryDaemon::getInterfaceProperties(const Tp::AbstractInterface *i
 }
 
 // FIXME: this is a hack. we need proper information event support.
-void HistoryDaemon::writeInformationEvent(const QVariantMap &thread, History::InformationType type, const QString &subject, const QString &text)
+void HistoryDaemon::writeInformationEvent(const QVariantMap &thread, History::InformationType type, const QString &subject, const QString &sender, const QString &text)
 {
     History::TextEvent historyEvent = History::TextEvent(thread[History::FieldAccountId].toString(),
                                                          thread[History::FieldThreadId].toString(),
                                                          QString(QCryptographicHash::hash(QByteArray(
                                                                  (QDateTime::currentDateTime().toString() + subject + text).toLatin1()),
                                                                  QCryptographicHash::Md5).toHex()),
-                                                         "self",
+                                                         sender,
                                                          QDateTime::currentDateTime(),
                                                          false,
                                                          text,
@@ -1146,17 +1146,9 @@ void HistoryDaemon::writeRoomChangesInformationEvents(const QVariantMap &thread,
             //see if we have an actor. If actor is 'me', we have changed that subject
             QString actor = thread[History::FieldChatRoomInfo].toMap()["Actor"].toString();
             if (actor == "me") {
-                actor = "You";
+                actor = "self";
             }
-
-            //QString prefix = actor.isEmpty() ? "Renamed" : QString("%1 renamed").arg(actor);
-            //writeInformationEvent(thread, QString("%1 the group to '%2'").arg(prefix).arg(newSubject));
-
-            if (actor.isEmpty()) {
-                writeInformationEvent(thread, History::InformationTypeTitleChanged, newSubject);
-            } else {
-                writeInformationEvent(thread, History::InformationTypeTitleChanged, actor, newSubject);
-            }
+            writeInformationEvent(thread, History::InformationTypeTitleChanged, newSubject, actor);
         }
     }
 }
