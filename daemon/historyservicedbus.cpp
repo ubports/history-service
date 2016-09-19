@@ -34,16 +34,15 @@ HistoryServiceDBus::HistoryServiceDBus(QObject *parent) :
 
 bool HistoryServiceDBus::connectToBus()
 {
-    bool ok = QDBusConnection::sessionBus().registerService(History::DBusService);
-    if (!ok) {
-        return false;
-    }
-
     if (!mAdaptor) {
         mAdaptor = new HistoryServiceAdaptor(this);
     }
 
-    return QDBusConnection::sessionBus().registerObject(History::DBusObjectPath, this);
+    if (!QDBusConnection::sessionBus().registerObject(History::DBusObjectPath, this)) {
+        return false;
+    }
+
+    return QDBusConnection::sessionBus().registerService(History::DBusService);
 }
 
 void HistoryServiceDBus::notifyThreadsAdded(const QList<QVariantMap> &threads)
