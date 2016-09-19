@@ -40,6 +40,28 @@ Q_DECLARE_METATYPE(RolesMap)
 
 const constexpr static int AdminRole = 2;
 
+enum ChannelGroupChangeReason
+{
+    ChannelGroupChangeReasonNone = 0,
+    ChannelGroupChangeReasonOffline = 1,
+    ChannelGroupChangeReasonKicked = 2,
+    ChannelGroupChangeReasonBusy = 3,
+    ChannelGroupChangeReasonInvited = 4,
+    ChannelGroupChangeReasonBanned = 5,
+    ChannelGroupChangeReasonError = 6,
+    ChannelGroupChangeReasonInvalidContact = 7,
+    ChannelGroupChangeReasonNoAnswer = 8,
+    ChannelGroupChangeReasonRenamed = 9,
+    ChannelGroupChangeReasonPermissionDenied = 10,
+    ChannelGroupChangeReasonSeparated = 11,
+
+    // additional enum values not included in original ChannelGroupChangeReason
+    // telepathy enumeration but needed here to provide extra info to client when group
+    // is cancelled
+    ChannelGroupChangeReasonGone = 12,
+    ChannelGroupChangeReasonRejected = 13
+};
+
 const QDBusArgument &operator>>(const QDBusArgument &argument, RolesMap &roles)
 {
     argument.beginMap();
@@ -605,7 +627,6 @@ void HistoryDaemon::onTextChannelAvailable(const Tp::TextChannelPtr channel)
 
         // write an entry saying you joined the group if 'joined' flag in thread is false and modify that flag.
         if (!thread[History::FieldChatRoomInfo].toMap()["Joined"].toBool()) {
-            // FIXME: this is a hack. we need proper information event support
             writeInformationEvent(thread, History::InformationTypeSelfJoined);
             // update backend
             updateRoomProperties(channel, QVariantMap{{"Joined", true}});
@@ -680,11 +701,16 @@ void HistoryDaemon::onGroupMembersChanged(const Tp::Contacts &groupMembersAdded,
                 if (channel->groupSelfContactRemoveInfo().isValid()) {
                     // evaluate if we are leaving by our own or we are kicked
                     History::InformationType type = History::InformationTypeSelfLeaving;
-                    if (channel->groupSelfContactRemoveInfo().hasReason() &&
-                            channel->groupSelfContactRemoveInfo().reason() == Tp::ChannelGroupChangeReason::ChannelGroupChangeReasonKicked) {
-                        type = History::InformationTypeSelfKicked;
+                    if (channel->groupSelfContactRemoveInfo().hasReason()) {
+                        switch (channel->groupSelfContactRemoveInfo().reason()) {
+                        case ChannelGroupChangeReasonKicked:
+                            type = History::InformationTypeSelfKicked;
+                            break;
+                        case ChannelGroupChangeReasonGone:
+                            type = History::InformationTypeGroupGone;
+                            break;
+                        }
                     }
-                    // FIXME: this is a hack. we need proper information event support
                     writeInformationEvent(thread, type);
                     // update backend
                     updateRoomProperties(channel, QVariantMap{{"Joined", false}});
@@ -753,8 +779,8 @@ void HistoryDaemon::updateRoomParticipants(const Tp::TextChannelPtr channel, con
         participants << QVariant::fromValue(participant);
     }
 
-    if (!thread.isEmpty()) {
-        // FIXME: this is a hack. we need proper information event support
+    // write roles information events only if already joined to the group
+    if (!thread.isEmpty() && thread[History::FieldChatRoomInfo].toMap()["Joined"].toBool()) {
         writeRolesInformationEvents(thread, channel, roles);
     }
 
@@ -1155,6 +1181,14 @@ void HistoryDaemon::writeRoomChangesInformationEvents(const QVariantMap &thread,
 
 void HistoryDaemon::writeRolesInformationEvents(const QVariantMap &thread, const Tp::ChannelPtr &channel, const RolesMap &rolesMap)
 {
+    if (thread.isEmpty()) {
+        return;
+    }
+
+    if (!thread[History::FieldChatRoomInfo].toMap()["Joined"].toBool()) {
+        return;
+    }
+
     // list of identifiers for current channel admins
     QStringList adminIds;
 
