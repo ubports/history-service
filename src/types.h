@@ -90,7 +90,8 @@ enum InformationType
     InformationTypeAdminRemoved = 10,
     InformationTypeSelfAdminGranted = 11,
     InformationTypeSelfAdminRemoved = 12,
-    InformationTypeSelfKicked = 13
+    InformationTypeSelfKicked = 13,
+    InformationTypeGroupGone = 14
 };
 
 enum ChatType
