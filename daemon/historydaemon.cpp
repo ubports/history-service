@@ -36,6 +36,9 @@
 #include <TelepathyQt/PendingVariantMap>
 #include <TelepathyQt/ReferencedHandles>
 
+#include <TelepathyQt/PendingVariant>
+#include <TelepathyQt/PendingOperation>
+
 Q_DECLARE_METATYPE(RolesMap)
 
 const constexpr static int AdminRole = 2;
@@ -120,8 +123,17 @@ HistoryDaemon *HistoryDaemon::instance()
     return self;
 }
 
+void HistoryDaemon::onRolesChanged(const HandleRolesMap &added, const HandleRolesMap &removed)
+{
+    //TODO TRACE
+    qDebug() << "ON_ROLES_CHANGED:" << added << " ,removed:" << removed;
+}
+
 QVariantMap HistoryDaemon::propertiesFromChannel(const Tp::ChannelPtr &textChannel)
 {
+    //TODO TRACE
+    qDebug() << "PROPERTIES FROM CHANNEL";
+
     QVariantMap properties;
     QVariantList participants;
     QStringList participantIds;
@@ -132,6 +144,26 @@ QVariantMap HistoryDaemon::propertiesFromChannel(const Tp::ChannelPtr &textChann
         QDBusMessage result = propsInterface.call("Get", "org.freedesktop.Telepathy.Channel.Interface.Roles", "Roles");
         roles = qdbus_cast<RolesMap>(result.arguments().at(0).value<QDBusVariant>().variant().value<QDBusArgument>());
     }
+
+    ChannelInterfaceRolesInterface *roles_interface = textChannel->optionalInterface<ChannelInterfaceRolesInterface>();
+
+    qDebug() << "ROLES INTERFACE:" << roles_interface;
+
+/*
+    Tp::PendingVariant *reply = roles_interface->requestPropertyRoles();
+    connect(reply, &Tp::PendingVariant::finished, [reply](Tp::PendingOperation* po){
+                                                                        if (po->isError()) {
+                                                                            qDebug() << "getRoles resulted in error: " << po->errorMessage();
+                                                                        } else {
+                                                                            qDebug() << "result" << reply->result();
+                                                                            Tp::PendingVariant *pv = qobject_cast<Tp::PendingVariant*>(po);
+                                                                            qDebug() << "getRoles result:" << pv->result();
+                                                                        }
+                                                               });
+    qDebug() << "ROLS:" << reply->result();
+    */
+    qDebug() << "ROLES:" << roles_interface->requestPropertyRoles()->result();
+
 
     Q_FOREACH(const Tp::ContactPtr contact, textChannel->groupContacts(false)) {
         QVariantMap contactProperties;
