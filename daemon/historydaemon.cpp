@@ -175,27 +175,51 @@ QVariantMap HistoryDaemon::propertiesFromChannel(const Tp::ChannelPtr &textChann
     QDBusInterface propsInterface(textChannel->busName(), textChannel->objectPath(), "org.freedesktop.DBus.Properties");
     if (propsInterface.isValid()) {
         QDBusMessage result = propsInterface.call("Get", "org.freedesktop.Telepathy.Channel.Interface.Roles", "Roles");
-        roles = qdbus_cast<RolesMap>(result.arguments().at(0).value<QDBusVariant>().variant().value<QDBusArgument>());
+        roles = qdbus_cast<RolesMap>(result.arguments().at(0).value<QDBusVariant>().variant());
+
+        QDBusMessage result2 = propsInterface.call("Get", "org.freedesktop.Telepathy.Channel.Interface.Roles", "CanUpdateRoles");
+        bool canUpdateRoles = result2.arguments().at(0).value<QDBusVariant>().variant().toBool();
+        qDebug() << "CANUPDATEROLES:" << canUpdateRoles;
+
+        QDBusMessage result3 = propsInterface.call("GetAll", "org.freedesktop.Telepathy.Channel.Interface.Roles");
+        QVariantMap all = result3.arguments().at(0).value<QDBusVariant>().variant().toMap();
+        qDebug() << "ALL:" << all;
     }
 
     ChannelInterfaceRolesInterface *roles_interface = textChannel->optionalInterface<ChannelInterfaceRolesInterface>();
 
-    qDebug() << "ROLES INTERFACE:" << roles_interface;
+    qDebug() << "ROLES:" << roles;
 
-/*
+    qDebug() << "ROLES INTERFACE:" << roles_interface;
     Tp::PendingVariant *reply = roles_interface->requestPropertyRoles();
     connect(reply, &Tp::PendingVariant::finished, [reply](Tp::PendingOperation* po){
                                                                         if (po->isError()) {
                                                                             qDebug() << "getRoles resulted in error: " << po->errorMessage();
                                                                         } else {
-                                                                            qDebug() << "result" << reply->result();
                                                                             Tp::PendingVariant *pv = qobject_cast<Tp::PendingVariant*>(po);
-                                                                            qDebug() << "getRoles result:" << pv->result();
+                                                                            qDebug() << "getRoles valid:" << pv->result().isValid();
+                                                                            qDebug() << "getRoles result:" << qdbus_cast<RolesMap>(pv->result());
                                                                         }
                                                                });
-    qDebug() << "ROLS:" << reply->result();
-    */
-    qDebug() << "ROLES:" << roles_interface->requestPropertyRoles()->result();
+    reply = roles_interface->requestPropertyCanUpdateRoles();
+    connect(reply, &Tp::PendingVariant::finished, [reply](Tp::PendingOperation* po){
+                                                                        if (po->isError()) {
+                                                                            qDebug() << "getCanUpdateRoles resulted in error: " << po->errorMessage();
+                                                                        } else {
+                                                                            Tp::PendingVariant *pv = qobject_cast<Tp::PendingVariant*>(po);
+                                                                            qDebug() << "getCanUpdateRoles valid:" << pv->result().isValid();
+                                                                            qDebug() << "getCanUpdateRoles result:" << pv->result().toBool();
+                                                                        }
+                                                               });
+    Tp::PendingVariantMap *props = roles_interface->requestAllProperties();
+    connect(props, &Tp::PendingVariantMap::finished, [reply](Tp::PendingOperation* po){
+                                                                        if (po->isError()) {
+                                                                            qDebug() << "allProperties resulted in error: " << po->errorMessage();
+                                                                        } else {
+                                                                            Tp::PendingVariantMap *pvm = qobject_cast<Tp::PendingVariantMap*>(po);
+                                                                            qDebug() << "allProperties result:" << pvm->result();
+                                                                        }
+                                                               });
 
 
     Q_FOREACH(const Tp::ContactPtr contact, textChannel->groupContacts(false)) {
@@ -685,6 +709,9 @@ void HistoryDaemon::onTextChannelAvailable(const Tp::TextChannelPtr channel)
 
         connect(channel.data(), SIGNAL(groupMembersChanged(const Tp::Contacts &, const Tp::Contacts &, const Tp::Contacts &, const Tp::Contacts &, const Tp::Channel::GroupMemberChangeDetails &)),
                 SLOT(onGroupMembersChanged(const Tp::Contacts &, const Tp::Contacts &, const Tp::Contacts &, const Tp::Contacts &, const Tp::Channel::GroupMemberChangeDetails &)));
+
+        ChannelInterfaceRolesInterface *roles_interface = channel->optionalInterface<ChannelInterfaceRolesInterface>();
+        qDebug() << "CONNECTED: " << connect(roles_interface, SIGNAL(RolesChanged(HandleRolesMap,HandleRolesMap)), SLOT(onRolesChanged(HandleRolesMap,HandleRolesMap)));
     }
 }
 
