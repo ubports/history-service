@@ -68,6 +68,7 @@ void HistoryEventModelTest::testTelepathyInitializedCorrectly()
                              History::MessageStatusRead,
                              QDateTime::currentDateTime(),
                              "The subject",
+                             History::InformationTypeNone,
                              History::TextEventAttachments(),
                              textThread.participants());
     QVERIFY(mManager->writeEvents(History::Events() << event));

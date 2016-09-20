@@ -81,10 +81,11 @@ protected:
     void updateRoomProperties(const QString &accountId, const QString &threadId, History::EventType type, const QVariantMap &properties, const QStringList &invalidated);
 
     // FIXME: this is a hack. we need proper information event support.
-    void writeInformationEvent(const QVariantMap &thread, const QString &text);
+    void writeInformationEvent(const QVariantMap &thread, History::InformationType type, const QString &subject = QString(), const QString &sender = QString("self"), const QString &text = QString());
 
     void writeRoomChangesInformationEvents(const QVariantMap &thread, const QVariantMap &interfaceProperties);
     void writeRolesInformationEvents(const QVariantMap &thread, const Tp::ChannelPtr &channel, const RolesMap &rolesMap);
+    void writeRolesChangesInformationEvents(const QVariantMap &thread, const Tp::ChannelPtr &channel, const RolesMap &rolesMap);
 private:
     HistoryDaemon(QObject *parent = 0);
 
