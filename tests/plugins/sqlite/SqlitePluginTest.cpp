@@ -318,7 +318,7 @@ void SqlitePluginTest::testWriteTextEvent_data()
     QTest::newRow("text event with attachments") << History::TextEvent("mmsAccountId", "mmsSender", "mmsEventId", "mmsSender",
                                                                        QDateTime::currentDateTime(), false, "Hello with attachments",
                                                                        History::MessageTypeMultiPart, History::MessageStatusDelivered,
-                                                                       QDateTime::currentDateTime(), "The Subject", attachments).properties();
+                                                                       QDateTime::currentDateTime(), "The Subject", History::InformationTypeNone, attachments).properties();
 }
 
 void SqlitePluginTest::testWriteTextEvent()
@@ -405,7 +405,7 @@ void SqlitePluginTest::testModifyTextEvent()
                                             thread[History::FieldEventId].toString(), "theAttachmentId", "text/plain", "/file/path");
     History::TextEvent textEvent(thread[History::FieldAccountId].toString(), thread[History::FieldThreadId].toString(), "theEventId",
                                  "theParticipant", QDateTime::currentDateTime(), true, "Hi there!", History::MessageTypeMultiPart,
-                                 History::MessageStatusPending, QDateTime::currentDateTime(), "theSubject",
+                                 History::MessageStatusPending, QDateTime::currentDateTime(), "theSubject", History::InformationTypeNone,
                                  History::TextEventAttachments() << attachment);
     QCOMPARE(mPlugin->writeTextEvent(textEvent.properties()), History::EventWriteCreated);
 
@@ -605,7 +605,7 @@ void SqlitePluginTest::testEventsForThread()
                                      QString("textEventId%1").arg(QString::number(i)), "textParticipant",
                                      QDateTime::currentDateTime(), true, "Hello World!", History::MessageTypeMultiPart,
                                      History::MessageStatusPending, QDateTime::currentDateTime(),
-                                     "theSubject", History::TextEventAttachments() << attachment);
+                                     "theSubject", History::InformationTypeNone, History::TextEventAttachments() << attachment);
         QCOMPARE(mPlugin->writeTextEvent(textEvent.properties()), History::EventWriteCreated);
     }
 
@@ -658,7 +658,7 @@ void SqlitePluginTest::testGetSingleEvent_data()
     QTest::newRow("text event with attachments") << History::TextEvent("mmsAccountId", "mmsSender", "mmsEventId", "mmsSender",
                                                                        QDateTime::currentDateTime(), false, "Hello with attachments",
                                                                        History::MessageTypeMultiPart, History::MessageStatusDelivered,
-                                                                       QDateTime::currentDateTime(), "The Subject", attachments).properties();
+                                                                       QDateTime::currentDateTime(), "The Subject", History::InformationTypeNone, attachments).properties();
     QTest::newRow("missed call") << History::VoiceEvent("theAccountId", "theSenderId", "theEventId", "theSenderId",
                                                         QDateTime::currentDateTime(), true, true).properties();
     QTest::newRow("incoming call") << History::VoiceEvent("otherAccountId", "otherSenderId", "otherEventId", "otherSenderId",

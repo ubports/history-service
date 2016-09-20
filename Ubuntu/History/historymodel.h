@@ -46,6 +46,7 @@ class HistoryModel : public QAbstractListModel, public QQmlParserStatus
     Q_ENUMS(MessageStatus)
     Q_ENUMS(AttachmentFlag)
     Q_ENUMS(Role)
+    Q_ENUMS(InformationType)
 
 public:
     enum ChatType {
@@ -90,6 +91,26 @@ public:
         AttachmentPending = History::AttachmentPending,
         AttachmentError = History::AttachmentError
     };
+
+    enum InformationType
+    {
+        InformationTypeNone = History::InformationTypeNone,
+        InformationTypeSimChange = History::InformationTypeSimChange,
+        InformationTypeText = History::InformationTypeText,
+        InformationTypeSelfJoined = History::InformationTypeSelfJoined,
+        InformationTypeJoined = History::InformationTypeJoined,
+        InformationTypeTitleChanged = History::InformationTypeTitleChanged,
+        InformationTypeInvitationSent = History::InformationTypeInvitationSent,
+        InformationTypeLeaving = History::InformationTypeLeaving,
+        InformationTypeSelfLeaving = History::InformationTypeSelfLeaving,
+        InformationTypeAdminGranted = History::InformationTypeAdminGranted,
+        InformationTypeAdminRemoved = History::InformationTypeAdminRemoved,
+        InformationTypeSelfAdminGranted = History::InformationTypeSelfAdminGranted,
+        InformationTypeSelfAdminRemoved = History::InformationTypeSelfAdminRemoved,
+        InformationTypeSelfKicked = History::InformationTypeSelfKicked,
+        InformationTypeGroupGone = History::InformationTypeGroupGone
+    };
+
  
     enum Role {
         AccountIdRole = Qt::UserRole,
