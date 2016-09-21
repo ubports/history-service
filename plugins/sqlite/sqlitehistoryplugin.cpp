@@ -566,6 +566,45 @@ bool SQLiteHistoryPlugin::updateRoomParticipants(const QString &accountId, const
     return true;
 }
 
+bool SQLiteHistoryPlugin::updateRoomParticipantsRoles(const QString &accountId, const QString &threadId, History::EventType type, const QVariantMap &participantsRoles)
+{
+    QSqlQuery query(SQLiteDatabase::instance()->database());
+    if (accountId.isEmpty() || threadId.isEmpty()) {
+        return false;
+    }
+
+    SQLiteDatabase::instance()->beginTransation();
+    Q_FOREACH(const QString &participantId, participantsRoles.keys()) {
+        query.prepare("UPDATE thread_participants SET roles=:roles WHERE accountId=:accountId AND threadId=:threadId AND type=:type AND participantId=:participantId");
+        query.bindValue(":roles", participantsRoles.value(participantId).toUInt());
+        query.bindValue(":accountId", accountId);
+        query.bindValue(":threadId", threadId);
+        query.bindValue(":type", type);
+        query.bindValue(":participantId", participantId);
+        if (!query.exec()) {
+            qCritical() << "Error:" << query.lastError() << query.lastQuery();
+            SQLiteDatabase::instance()->rollbackTransaction();
+            return false;
+        }
+    }
+
+    if (!SQLiteDatabase::instance()->finishTransaction()) {
+        qCritical() << "Failed to commit the transaction.";
+        return false;
+    }
+
+    QVariantMap existingThread = getSingleThread(type,
+                                                 accountId,
+                                                 threadId,
+                                                 QVariantMap());
+
+    if (!existingThread.isEmpty()) {
+        addThreadsToCache(QList<QVariantMap>() << existingThread);
+    }
+
+    return true;
+}
+
 bool SQLiteHistoryPlugin::updateRoomInfo(const QString &accountId, const QString &threadId, History::EventType type, const QVariantMap &properties, const QStringList &invalidated)
 {
     QSqlQuery query(SQLiteDatabase::instance()->database());
