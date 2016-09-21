@@ -146,6 +146,16 @@ public:
         return internalRequestAllProperties();
     }
 
+    /**
+     * Synchronous version to get Roles property
+     */
+    HandleRolesMap getRoles() const;
+
+    /**
+     * Synchronous version to get CanUpdateRoles property
+     */
+    bool getCanUpdateRoles() const;
+
 public Q_SLOTS:
     /**
      * Begins a call to the D-Bus method \c UpdateRoles on the remote object.

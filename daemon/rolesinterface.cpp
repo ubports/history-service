@@ -30,3 +30,21 @@ void ChannelInterfaceRolesInterface::invalidate(Tp::DBusProxy *proxy,
 {
     Tp::AbstractInterface::invalidate(proxy, error, message);
 }
+
+HandleRolesMap ChannelInterfaceRolesInterface::getRoles() const
+{
+    QDBusMessage msg = QDBusMessage::createMethodCall(service(), path(),
+            TP_QT_IFACE_PROPERTIES, QLatin1String("Get"));
+    msg << interface() << QLatin1String("Roles");
+    QDBusMessage result = connection().call(msg);
+    return qdbus_cast<HandleRolesMap>(result.arguments().at(0).value<QDBusVariant>().variant());
+}
+
+bool ChannelInterfaceRolesInterface::getCanUpdateRoles() const
+{
+    QDBusMessage msg = QDBusMessage::createMethodCall(service(), path(),
+            TP_QT_IFACE_PROPERTIES, QLatin1String("Get"));
+    msg << interface() << QLatin1String("CanUpdateRoles");
+    QDBusMessage result = connection().call(msg);
+    return qdbus_cast<bool>(result.arguments().at(0).value<QDBusVariant>().variant());
+}

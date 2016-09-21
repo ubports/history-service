@@ -69,9 +69,7 @@ private Q_SLOTS:
     void onGroupMembersChanged(const Tp::Contacts &groupMembersAdded, const Tp::Contacts &groupLocalPendingMembersAdded,
                                const Tp::Contacts &groupRemotePendingMembersAdded, const Tp::Contacts &groupMembersRemoved,
                                const Tp::Channel::GroupMemberChangeDetails &details);
-
-    void onRolesChanged(HandleRolesMap added, HandleRolesMap removed);
-    void onCanUpdateRolesChanged(bool canUpdateRoles);
+    void onRolesChanged(const HandleRolesMap &added, const HandleRolesMap &removed);
 
 protected:
     History::MatchFlags matchFlagsForChannel(const Tp::ChannelPtr &channel);
