@@ -73,7 +73,8 @@ private Q_SLOTS:
 
 protected:
     History::MatchFlags matchFlagsForChannel(const Tp::ChannelPtr &channel);
-    void updateRoomParticipants(const Tp::TextChannelPtr channel, const QVariantMap &thread);
+    void updateRoomParticipants(const Tp::TextChannelPtr channel);
+    void updateRoomRoles(const Tp::TextChannelPtr &channel, const RolesMap &rolesMap);
     QString hashThread(const QVariantMap &thread);
     static QVariantMap getInterfaceProperties(const Tp::AbstractInterface *interface);
     void updateRoomProperties(const Tp::TextChannelPtr &channel, const QVariantMap &properties);
