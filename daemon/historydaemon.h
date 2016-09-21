@@ -70,7 +70,8 @@ private Q_SLOTS:
                                const Tp::Contacts &groupRemotePendingMembersAdded, const Tp::Contacts &groupMembersRemoved,
                                const Tp::Channel::GroupMemberChangeDetails &details);
 
-    void onRolesChanged(const HandleRolesMap &added, const HandleRolesMap &removed);
+    void onRolesChanged(HandleRolesMap added, HandleRolesMap removed);
+    void onCanUpdateRolesChanged(bool canUpdateRoles);
 
 protected:
     History::MatchFlags matchFlagsForChannel(const Tp::ChannelPtr &channel);
@@ -94,6 +95,8 @@ private:
     QMap<QString, History::MatchFlags> mProtocolFlags;
     History::PluginPtr mBackend;
     HistoryServiceDBus mDBus;
+
+    QSharedPointer<QDBusInterface> mPropsInterface;
 };
 
 #endif
