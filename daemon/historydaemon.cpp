@@ -107,8 +107,8 @@ bool foundInThread(const Tp::ContactPtr& contact, QVariantMap thread)
 HistoryDaemon::HistoryDaemon(QObject *parent)
     : QObject(parent), mCallObserver(this), mTextObserver(this)
 {
-    qRegisterMetaType<RolesMap>();
-    qDBusRegisterMetaType<RolesMap>();
+    qRegisterMetaType<HandleRolesMap>();
+    qDBusRegisterMetaType<HandleRolesMap>();
     // get the first plugin
     if (!History::PluginManager::instance()->plugins().isEmpty()) {
         mBackend = History::PluginManager::instance()->plugins().first();
@@ -156,10 +156,16 @@ HistoryDaemon *HistoryDaemon::instance()
     return self;
 }
 
-void HistoryDaemon::onRolesChanged(const HandleRolesMap &added, const HandleRolesMap &removed)
+void HistoryDaemon::onRolesChanged(HandleRolesMap added, HandleRolesMap removed)
 {
     //TODO TRACE
+    qDebug() << "ON_ROLES_CHANGED...";
     qDebug() << "ON_ROLES_CHANGED:" << added << " ,removed:" << removed;
+}
+
+void HistoryDaemon::onCanUpdateRolesChanged(bool canUpdateRoles)
+{
+    qDebug() << "ON_CAN_UPDATE_ROLES_CHANGED:" << canUpdateRoles;
 }
 
 QVariantMap HistoryDaemon::propertiesFromChannel(const Tp::ChannelPtr &textChannel)
@@ -649,6 +655,9 @@ void HistoryDaemon::onCallEnded(const Tp::CallChannelPtr &channel)
 
 void HistoryDaemon::onTextChannelAvailable(const Tp::TextChannelPtr channel)
 {
+    //TODO TRACE
+    qDebug() << "ON_TEXT_CHANNEL_AVAILABLE";
+
     // for Rooms we need to explicitly create the thread to allow users to send messages to groups even
     // before they receive any message.
     // for other types, we can wait until messages are received
@@ -710,8 +719,35 @@ void HistoryDaemon::onTextChannelAvailable(const Tp::TextChannelPtr channel)
         connect(channel.data(), SIGNAL(groupMembersChanged(const Tp::Contacts &, const Tp::Contacts &, const Tp::Contacts &, const Tp::Contacts &, const Tp::Channel::GroupMemberChangeDetails &)),
                 SLOT(onGroupMembersChanged(const Tp::Contacts &, const Tp::Contacts &, const Tp::Contacts &, const Tp::Contacts &, const Tp::Channel::GroupMemberChangeDetails &)));
 
+
         ChannelInterfaceRolesInterface *roles_interface = channel->optionalInterface<ChannelInterfaceRolesInterface>();
-        qDebug() << "CONNECTED: " << connect(roles_interface, SIGNAL(RolesChanged(HandleRolesMap,HandleRolesMap)), SLOT(onRolesChanged(HandleRolesMap,HandleRolesMap)));
+        connect(roles_interface, SIGNAL(RolesChanged(HandleRolesMap,HandleRolesMap)), SLOT(onRolesChanged(HandleRolesMap,HandleRolesMap)));
+        connect(roles_interface, SIGNAL(RolesChanged(const HandleRolesMap&, const HandleRolesMap&)), SLOT(onRolesChanged(const HandleRolesMap&, const HandleRolesMap&)));
+        connect(roles_interface, SIGNAL(CanUpdateRolesChanged(bool)), SLOT(onCanUpdateRolesChanged(bool)));
+
+
+        //TODO TRACE
+        qDebug() << "busname:" << channel->busName();
+        qDebug() << "objectpath:" << channel->objectPath();
+
+        mPropsInterface = QSharedPointer<QDBusInterface>(new QDBusInterface(channel->busName(),
+                                                                            channel->objectPath(),
+                                                                            "org.freedesktop.Telepathy.Channel.Interface.Roles"));
+        connect(mPropsInterface.data(), SIGNAL(RolesChanged(const HandleRolesMap&, const HandleRolesMap&)), SLOT(onRolesChanged(const HandleRolesMap&, const HandleRolesMap&)));
+        connect(mPropsInterface.data(), SIGNAL(RolesChanged(HandleRolesMap, HandleRolesMap)), SLOT(onRolesChanged(HandleRolesMap, HandleRolesMap)));
+        connect(mPropsInterface.data(), SIGNAL(CanUpdateRolesChanged(bool)), SLOT(onCanUpdateRolesChanged(bool)));
+
+        QDBusConnection::sessionBus().connect(channel->busName(), channel->objectName(),"org.freedesktop.Telepathy.Channel.Interface.Roles",
+                             "RolesChanged",
+                             this,
+                             SLOT(onRolesChanged(HandleRolesMap, HandleRolesMap)));
+
+        QDBusConnection::sessionBus().connect(channel->busName(), channel->objectName(),"org.freedesktop.Telepathy.Channel.Interface.Roles",
+                             "RolesChanged",
+                             this,
+                             SLOT(onRolesChanged(const HandleRolesMap&, const HandleRolesMap&)));
+
+
     }
 }
 

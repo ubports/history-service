@@ -184,6 +184,8 @@ Q_SIGNALS:
      */
      void RolesChanged(const HandleRolesMap &added, const HandleRolesMap& removed);
 
+     void CanUpdateRolesChanged(bool);
+
 protected:
     virtual void invalidate(Tp::DBusProxy *, const QString &, const QString &);
 
