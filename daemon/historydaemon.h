@@ -94,8 +94,6 @@ private:
     QMap<QString, History::MatchFlags> mProtocolFlags;
     History::PluginPtr mBackend;
     HistoryServiceDBus mDBus;
-
-    QSharedPointer<QDBusInterface> mPropsInterface;
 };
 
 #endif
