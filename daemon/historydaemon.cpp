@@ -158,8 +158,8 @@ HistoryDaemon *HistoryDaemon::instance()
 
 void HistoryDaemon::onRolesChanged(const HandleRolesMap &added, const HandleRolesMap &removed)
 {
-    //TODO TRACE
-    qDebug() << "ON_ROLES_CHANGED:" << added << " ,removed:" << removed;
+    Q_UNUSED(added);
+    Q_UNUSED(removed);
 
     ChannelInterfaceRolesInterface *roles_interface = qobject_cast<ChannelInterfaceRolesInterface*>(sender());
     RolesMap roles = roles_interface->getRoles();
@@ -1228,18 +1228,10 @@ void HistoryDaemon::writeRoomChangesInformationEvents(const QVariantMap &thread,
 void HistoryDaemon::writeRolesInformationEvents(const QVariantMap &thread, const Tp::ChannelPtr &channel, const RolesMap &rolesMap)
 {
     if (thread.isEmpty()) {
-
-        //TODO TRACE
-        qDebug() << "THREAD EMPTY";
-
         return;
     }
 
     if (!thread[History::FieldChatRoomInfo].toMap()["Joined"].toBool()) {
-
-        //TODO TRACE
-        qDebug() << "NOT JOINED";
-
         return;
     }
 
@@ -1253,32 +1245,19 @@ void HistoryDaemon::writeRolesInformationEvents(const QVariantMap &thread, const
         }
     }
 
-    //TODO TRACE
-    qDebug() << "ADMINS:" << adminIds;
-
     Q_FOREACH (QVariant participant, thread[History::FieldParticipants].toList()) {
         QString participantId = participant.toMap()[History::FieldIdentifier].toString();
         if (adminIds.contains(participantId)) {
             // see if already was admin or not (ChannelAdminRole == 2)
-
-            //TODO TRACE
-            qDebug() << "PREVIOUS FOR " << participantId << " ROLES: " << participant.toMap()[History::FieldParticipantRoles].toUInt();
-
             if (! (participant.toMap()[History::FieldParticipantRoles].toUInt() & AdminRole)) {
                 writeInformationEvent(thread, History::InformationTypeAdminGranted, participantId);
             }
         }
     }
 
-    //TODO TRACE
-    qDebug() << "EVALUATING ME: " << rolesMap[channel->groupSelfContact()->handle().at(0)];
-
     //evaluate now self roles
     if (rolesMap[channel->groupSelfContact()->handle().at(0)] & AdminRole) {
         uint selfRoles = thread[History::FieldChatRoomInfo].toMap()["SelfRoles"].toUInt();
-
-        qDebug() << "STORED FOR ME: " << selfRoles;
-
         if (! (selfRoles & AdminRole)) {
             writeInformationEvent(thread, History::InformationTypeSelfAdminGranted);
         }

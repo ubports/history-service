@@ -22,22 +22,9 @@
 #ifndef CHANNELINTERFACEROLESINTERFACE_H
 #define CHANNELINTERFACEROLESINTERFACE_H
 
-/*
-#include <TelepathyQt/Types>
-
-#include <QtGlobal>
-
-#include <QString>
-#include <QObject>
-#include <QVariant>
-*/
 #include <QMap>
 
-//#include <QDBusPendingReply>
 #include <TelepathyQt/AbstractInterface>
-//#include <TelepathyQt/DBusProxy>
-//#include <TelepathyQt/Global>
-
 #include <TelepathyQt/ChannelInterface>
 
 /**
