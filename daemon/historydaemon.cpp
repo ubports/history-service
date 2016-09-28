@@ -184,7 +184,10 @@ QVariantMap HistoryDaemon::propertiesFromChannel(const Tp::ChannelPtr &textChann
     QStringList participantIds;
 
     ChannelInterfaceRolesInterface *roles_interface = textChannel->optionalInterface<ChannelInterfaceRolesInterface>();
-    RolesMap roles = roles_interface->getRoles();
+    RolesMap roles;
+    if (roles_interface) {
+        roles = roles_interface->getRoles();
+    }
 
     Q_FOREACH(const Tp::ContactPtr contact, textChannel->groupContacts(false)) {
         QVariantMap contactProperties;
