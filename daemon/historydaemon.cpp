@@ -768,7 +768,10 @@ void HistoryDaemon::updateRoomParticipants(const Tp::TextChannelPtr channel)
     QStringList contactsAdded;
 
     ChannelInterfaceRolesInterface *roles_interface = channel->optionalInterface<ChannelInterfaceRolesInterface>();
-    RolesMap roles = roles_interface->getRoles();
+    RolesMap roles;
+    if (roles_interface) {
+        roles = roles_interface->getRoles();
+    }
 
     Q_FOREACH(const Tp::ContactPtr contact, channel->groupRemotePendingContacts(false)) {
         QVariantMap participant;
