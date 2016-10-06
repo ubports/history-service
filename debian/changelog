@@ -1,3 +1,9 @@
+history-service (0.1+16.10.20160909.1-0ubuntu1) yakkety; urgency=medium
+
+  * Temporarily disable DaemonTest until we get QtDBus fixed.
+
+ -- Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>  Fri, 09 Sep 2016 14:53:42 +0000
+
 history-service (0.1+16.04.20160425-0ubuntu1) xenial; urgency=medium
 
   * Make sure Telepathy types are always initialized. (LP: #1563050)
