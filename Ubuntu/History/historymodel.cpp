@@ -93,6 +93,7 @@ QVariant HistoryModel::data(const QModelIndex &index, int role) const
         result = properties[History::FieldType];
         break;
     case ParticipantsRole: {
+        // FIXME: reimplement in a cleaner way
         History::Participants participants = History::Participants::fromVariantList(properties[History::FieldParticipants].toList());
         if (mMatchContacts) {
             QVariantList finalParticipantsList;
@@ -117,6 +118,7 @@ QVariant HistoryModel::data(const QModelIndex &index, int role) const
         break;
     }
     case ParticipantsRemotePendingRole: {
+        // FIXME: reimplement in a cleaner way
         QStringList identifiers;
         History::Participants participants;
         // filter remote pending participants
@@ -146,6 +148,7 @@ QVariant HistoryModel::data(const QModelIndex &index, int role) const
         break;
     }
     case ParticipantsLocalPendingRole: {
+        // FIXME: reimplement in a cleaner way
         QStringList identifiers;
         History::Participants participants;
         Q_FOREACH(const History::Participant &participant, History::Participants::fromVariantList(properties[History::FieldParticipants].toList())) {
