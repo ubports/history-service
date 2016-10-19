@@ -600,7 +600,22 @@ void HistoryDaemon::onTextChannelAvailable(const Tp::TextChannelPtr channel)
 
 void HistoryDaemon::onUpdateRoomParticipants()
 {
-    updateRoomParticipants(Tp::TextChannelPtr(qobject_cast<Tp::TextChannel*>(sender())));
+    Tp::TextChannelPtr channel(qobject_cast<Tp::TextChannel*>(sender()));
+
+    // evaluate if removed self handle and insert an information message in the thread in that case
+    if (channel->groupSelfContactRemoveInfo().isValid()) {
+        QVariantMap properties = propertiesFromChannel(channel);
+        QVariantMap thread = threadForProperties(channel->property(History::FieldAccountId).toString(),
+                                                                   History::EventTypeText,
+                                                                   properties,
+                                                                   matchFlagsForChannel(channel),
+                                                                   false);
+        if (!thread.isEmpty()) {
+            writeInformationEvent(thread, channel->groupSelfContactRemoveInfo().message());
+        }
+    }
+
+    updateRoomParticipants(channel);
 }
 
 void HistoryDaemon::updateRoomParticipants(const Tp::TextChannelPtr channel)
