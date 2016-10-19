@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 Canonical, Ltd.
+ * Copyright (C) 2013-2016 Canonical, Ltd.
  *
  * Authors:
  *  Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>
@@ -40,6 +40,8 @@ public:
     enum ThreadRole {
         CountRole = HistoryModel::LastRole,
         UnreadCountRole,
+        ChatType,
+        ChatRoomInfo,
         LastEventIdRole,
         LastEventSenderIdRole,
         LastEventTimestampRole,

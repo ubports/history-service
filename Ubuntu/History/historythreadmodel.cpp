@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 Canonical, Ltd.
+ * Copyright (C) 2013-2016 Canonical, Ltd.
  *
  * Authors:
  *  Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>
@@ -38,6 +38,8 @@ HistoryThreadModel::HistoryThreadModel(QObject *parent) :
     mRoles = HistoryModel::roleNames();
     mRoles[CountRole] = "count";
     mRoles[UnreadCountRole] = "unreadCount";
+    mRoles[ChatType] = "chatType";
+    mRoles[ChatRoomInfo] = "chatRoomInfo";
 
     // roles related to the thread´s last event
     mRoles[LastEventIdRole] = "eventId";
@@ -104,6 +106,12 @@ QVariant HistoryThreadModel::threadData(const History::Thread &thread, int role)
     case UnreadCountRole:
         result = thread.unreadCount();
         break;
+    case ChatType:
+         result = thread.chatType();
+         break;
+    case ChatRoomInfo:
+          result = thread.chatRoomInfo();
+         break;
     case PropertiesRole:
         result = thread.properties();
         break;

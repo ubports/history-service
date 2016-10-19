@@ -249,36 +249,35 @@ void SqlitePluginTest::testBatchOperation()
 {
     // clear the database
     SQLiteDatabase::instance()->reopen();
+    QSqlQuery query(SQLiteDatabase::instance()->database());
 
     QVERIFY(mPlugin->beginBatchOperation());
-    mPlugin->createThreadForParticipants("accountOne", History::EventTypeText, QStringList() << "participantOne");
-    mPlugin->createThreadForParticipants("accountTwo", History::EventTypeText, QStringList() << "participantTwo");
-    mPlugin->createThreadForParticipants("accountThree", History::EventTypeText, QStringList() << "participantThree");
+    QVERIFY(query.exec("UPDATE schema_version SET version=123"));
     QVERIFY(mPlugin->endBatchOperation());
 
     // check that the data was actually written
-    QSqlQuery query(SQLiteDatabase::instance()->database());
-    QVERIFY(query.exec("SELECT count(*) FROM threads"));
+    QVERIFY(query.exec("SELECT version FROM schema_version"));
     QVERIFY(query.next());
-    QCOMPARE(query.value(0).toInt(), 3);
+    QCOMPARE(query.value(0).toInt(), 123);
 }
 
 void SqlitePluginTest::testRollback()
 {
     // clear the database
     SQLiteDatabase::instance()->reopen();
+    QSqlQuery query(SQLiteDatabase::instance()->database());
+    QVERIFY(query.exec("SELECT version FROM schema_version"));
+    QVERIFY(query.next());
+    int version = query.value(0).toInt();
 
     QVERIFY(mPlugin->beginBatchOperation());
-    mPlugin->createThreadForParticipants("accountOne", History::EventTypeText, QStringList() << "participantOne");
-    mPlugin->createThreadForParticipants("accountTwo", History::EventTypeText, QStringList() << "participantTwo");
-    mPlugin->createThreadForParticipants("accountThree", History::EventTypeText, QStringList() << "participantThree");
+    QVERIFY(query.exec("UPDATE schema_version SET version=255"));
     QVERIFY(mPlugin->rollbackBatchOperation());
 
     // check that the steps were reverted
-    QSqlQuery query(SQLiteDatabase::instance()->database());
-    QVERIFY(query.exec("SELECT count(*) FROM threads"));
+    QVERIFY(query.exec("SELECT version FROM schema_version"));
     QVERIFY(query.next());
-    QCOMPARE(query.value(0).toInt(), 0);
+    QCOMPARE(query.value(0).toInt(), version);
 }
 
 void SqlitePluginTest::testQueryThreads()

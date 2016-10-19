@@ -58,16 +58,20 @@ void ParticipantTest::testConstructor()
     QString contactId("theContactId");
     QString alias("theAlias");
     QString avatar("theAvatar");
+    uint state = History::ParticipantStateRegular;
+    uint roles = History::ParticipantRoleMember;
     QVariantMap detailProperties;
     detailProperties["someProperty"] = "someValue";
 
 
-    History::Participant participant(accountId, identifier, contactId, alias, avatar, detailProperties);
+    History::Participant participant(accountId, identifier, contactId, alias, avatar, state, roles, detailProperties);
     QCOMPARE(participant.accountId(), accountId);
     QCOMPARE(participant.identifier(), identifier);
     QCOMPARE(participant.contactId(), contactId);
     QCOMPARE(participant.alias(), alias);
     QCOMPARE(participant.avatar(), avatar);
+    QCOMPARE(participant.state(), state);
+    QCOMPARE(participant.roles(), roles);
     QCOMPARE(participant.detailProperties(), detailProperties);
 }
 
@@ -105,7 +109,7 @@ void ParticipantTest::testCopyConstructor()
 {
     QVariantMap detailProperties;
     detailProperties["theProperty"] = "theValue";
-    History::Participant original("accountId", "identifier", "contactId", "alias", "avatar", detailProperties);
+    History::Participant original("accountId", "identifier", "contactId", "alias", "avatar", History::ParticipantStateRegular, History::ParticipantRoleAdmin, detailProperties);
 
     History::Participant copy(original);
 
@@ -114,6 +118,8 @@ void ParticipantTest::testCopyConstructor()
     QCOMPARE(copy.contactId(), original.contactId());
     QCOMPARE(copy.alias(), original.alias());
     QCOMPARE(copy.avatar(), original.avatar());
+    QCOMPARE(copy.state(), original.state());
+    QCOMPARE(copy.roles(), original.roles());
     QCOMPARE(copy.detailProperties(), original.detailProperties());
 }
 
@@ -121,7 +127,7 @@ void ParticipantTest::testAssignmentOperator()
 {
     QVariantMap detailProperties;
     detailProperties["theProperty2"] = "theValue2";
-    History::Participant original("accountId2", "identifier2", "contactId2", "alias2", "avatar2", detailProperties);
+    History::Participant original("accountId2", "identifier2", "contactId2", "alias2", "avatar2", History::ParticipantStateRegular, History::ParticipantRoleMember, detailProperties);
 
     History::Participant copy;
     copy = original;
@@ -131,6 +137,8 @@ void ParticipantTest::testAssignmentOperator()
     QCOMPARE(copy.contactId(), original.contactId());
     QCOMPARE(copy.alias(), original.alias());
     QCOMPARE(copy.avatar(), original.avatar());
+    QCOMPARE(copy.state(), original.state());
+    QCOMPARE(copy.roles(), original.roles());
     QCOMPARE(copy.detailProperties(), original.detailProperties());
 }
 
@@ -166,13 +174,15 @@ void ParticipantTest::testProperties()
     QVariantMap detailProperties;
     detailProperties["someDetailProperty"] = "someValue";
 
-    History::Participant participant("theAccountId", "theIdentifier", "theContactId", "theAlias", "theAvatar", detailProperties);
+    History::Participant participant("theAccountId", "theIdentifier", "theContactId", "theAlias", "theAvatar", History::ParticipantStateRegular, History::ParticipantRoleAdmin, detailProperties);
     QVariantMap properties = participant.properties();
     QCOMPARE(properties[History::FieldAccountId].toString(), participant.accountId());
     QCOMPARE(properties[History::FieldIdentifier].toString(), participant.identifier());
     QCOMPARE(properties[History::FieldContactId].toString(), participant.contactId());
     QCOMPARE(properties[History::FieldAlias].toString(), participant.alias());
     QCOMPARE(properties[History::FieldAvatar].toString(), participant.avatar());
+    QCOMPARE(properties[History::FieldParticipantState].toUInt(), participant.state());
+    QCOMPARE(properties[History::FieldParticipantRoles].toUInt(), participant.roles());
     QCOMPARE(properties[History::FieldDetailProperties].toMap(), participant.detailProperties());
 }
 
@@ -186,6 +196,8 @@ void ParticipantTest::testFromProperties()
     properties[History::FieldContactId] = "someContactId";
     properties[History::FieldAlias] = "someAlias";
     properties[History::FieldAvatar] = "someAvatar";
+    properties[History::FieldParticipantState] = History::ParticipantStateRegular;
+    properties[History::FieldParticipantRoles] = History::ParticipantRoleAdmin;
     detailProperties["someDetailProperty"] = "someValue";
     properties[History::FieldDetailProperties] = detailProperties;
 
@@ -195,6 +207,8 @@ void ParticipantTest::testFromProperties()
     QCOMPARE(participant.contactId(), properties[History::FieldContactId].toString());
     QCOMPARE(participant.alias(), properties[History::FieldAlias].toString());
     QCOMPARE(participant.avatar(), properties[History::FieldAvatar].toString());
+    QCOMPARE(participant.state(), properties[History::FieldParticipantState].toUInt());
+    QCOMPARE(participant.roles(), properties[History::FieldParticipantRoles].toUInt());
     QCOMPARE(participant.detailProperties(), properties[History::FieldDetailProperties].toMap());
 }
 

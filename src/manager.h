@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Canonical, Ltd.
+ * Copyright (C) 2013-2016 Canonical, Ltd.
  *
  * Authors:
  *  Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>
@@ -61,6 +61,12 @@ public:
                                  const QStringList &participants,
                                  History::MatchFlags matchFlags = History::MatchCaseSensitive,
                                  bool create = false);
+    Thread threadForProperties(const QString &accountId,
+                               EventType type,
+                               const QVariantMap &properties,
+                               History::MatchFlags matchFlags = History::MatchCaseSensitive,
+                               bool create = false);
+
     Thread getSingleThread(EventType type, const QString &accountId, const QString &threadId, const QVariantMap &properties = QVariantMap());
 
     bool writeEvents(const History::Events &events);

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Canonical, Ltd.
+ * Copyright (C) 2013-2016 Canonical, Ltd.
  *
  * Authors:
  *  Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>
@@ -135,7 +135,23 @@ Thread Manager::threadForParticipants(const QString &accountId,
 {
     Q_D(Manager);
 
-    return d->dbus->threadForParticipants(accountId, type, participants, matchFlags, create);
+    QVariantMap properties;
+    properties[History::FieldParticipantIds] = participants;
+    if (participants.size() == 1) {
+        properties[History::FieldChatType] = History::ChatTypeContact;
+    }
+    return d->dbus->threadForProperties(accountId, type, properties, matchFlags, create);
+}
+
+Thread Manager::threadForProperties(const QString &accountId,
+                                    EventType type,
+                                    const QVariantMap &properties,
+                                    MatchFlags matchFlags,
+                                    bool create)
+{
+    Q_D(Manager);
+
+    return d->dbus->threadForProperties(accountId, type, properties, matchFlags, create);
 }
 
 Thread Manager::getSingleThread(EventType type, const QString &accountId, const QString &threadId, const QVariantMap &properties)
