@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 Canonical, Ltd.
+ * Copyright (C) 2013-2016 Canonical, Ltd.
  *
  * Authors:
  *  Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>
@@ -55,6 +55,10 @@ public:
                                       History::EventType type,
                                       const QStringList &participants,
                                       History::MatchFlags matchFlags = History::MatchCaseSensitive);
+    QVariantMap threadForProperties(const QString &accountId,
+                                      History::EventType type,
+                                      const QVariantMap &properties,
+                                      History::MatchFlags matchFlags = History::MatchCaseSensitive);
 
     QList<QVariantMap> eventsForThread(const QVariantMap &thread);
 
@@ -62,7 +66,11 @@ public:
     QVariantMap getSingleEvent(History::EventType type, const QString &accountId, const QString &threadId, const QString &eventId);
 
     // Writer part of the plugin
+    QVariantMap createThreadForProperties(const QString &accountId, History::EventType type, const QVariantMap &properties);
     QVariantMap createThreadForParticipants(const QString &accountId, History::EventType type, const QStringList &participants);
+    
+    bool updateRoomParticipants(const QString &accountId, const QString &threadId, History::EventType type, const QVariantList &participants);
+    bool updateRoomInfo(const QString &accountId, const QString &threadId, History::EventType type, const QVariantMap &properties, const QStringList &invalidated = QStringList());
     bool removeThread(const QVariantMap &thread);
 
     History::EventWriteResult writeTextEvent(const QVariantMap &event);
