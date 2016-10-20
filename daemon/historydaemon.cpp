@@ -23,6 +23,7 @@
 #include "telepathyhelper_p.h"
 #include "filter.h"
 #include "sort.h"
+#include "utils_p.h"
 
 #include "pluginmanager.h"
 #include "plugin.h"
@@ -59,7 +60,9 @@ bool foundAsMemberInThread(const Tp::ContactPtr& contact, QVariantMap thread)
 {
     Q_FOREACH (QVariant participant, thread[History::FieldParticipants].toList()) {
         // found if same identifier and as member into thread info
-        if (contact->id() == participant.toMap()[History::FieldIdentifier].toString() &&
+        if (History::Utils::compareIds(thread[History::FieldAccountId].toString(),
+                                       contact->id(),
+                                       participant.toMap()[History::FieldIdentifier].toString()) &&
                 participant.toMap()[History::FieldParticipantState].toUInt() == History::ParticipantStateRegular)
         {
             return true;
