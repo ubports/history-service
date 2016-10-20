@@ -594,7 +594,6 @@ void HistoryDaemon::onTextChannelAvailable(const Tp::TextChannelPtr channel)
 
         // write an entry saying you joined the group if 'joined' flag in thread is false and modify that flag.
         if (!thread[History::FieldChatRoomInfo].toMap()["Joined"].toBool()) {
-            // FIXME: this is a hack. we need proper information event support
             writeInformationEvent(thread, History::InformationTypeSelfJoined);
             // update backend
             updateRoomProperties(channel, QVariantMap{{"Joined", true}});
@@ -652,7 +651,6 @@ void HistoryDaemon::onGroupMembersChanged(const Tp::Contacts &groupMembersAdded,
                 Q_FOREACH (const Tp::ContactPtr& contact, groupMembersAdded) {
                     // if this member was not previously regular member in thread, notify about his join
                     if (!foundAsMemberInThread(contact, thread)) {
-                        // FIXME: this is a hack. we need proper information event support
                         writeInformationEvent(thread, History::InformationTypeJoined, contact->alias());
                     }
                 }
@@ -666,7 +664,6 @@ void HistoryDaemon::onGroupMembersChanged(const Tp::Contacts &groupMembersAdded,
                             channel->groupSelfContactRemoveInfo().reason() == Tp::ChannelGroupChangeReason::ChannelGroupChangeReasonKicked) {
                         type = History::InformationTypeSelfKicked;
                     }
-                    // FIXME: this is a hack. we need proper information event support
                     writeInformationEvent(thread, type);
                     // update backend
                     updateRoomProperties(channel, QVariantMap{{"Joined", false}});
@@ -676,7 +673,6 @@ void HistoryDaemon::onGroupMembersChanged(const Tp::Contacts &groupMembersAdded,
                     Q_FOREACH (const Tp::ContactPtr& contact, groupMembersRemoved) {
                         // inform about removed members other than us
                         if (contact->id() != channel->groupSelfContact()->id()) {
-                            // FIXME: this is a hack. we need proper information event support
                             writeInformationEvent(thread, History::InformationTypeLeaving, contact->alias());
                         }
                     }
@@ -736,7 +732,6 @@ void HistoryDaemon::updateRoomParticipants(const Tp::TextChannelPtr channel, con
     }
 
     if (!thread.isEmpty()) {
-        // FIXME: this is a hack. we need proper information event support
         writeRolesInformationEvents(thread, channel, roles);
     }
 
@@ -1098,7 +1093,6 @@ QVariantMap HistoryDaemon::getInterfaceProperties(const Tp::AbstractInterface *i
     return reply.value();
 }
 
-// FIXME: this is a hack. we need proper information event support.
 void HistoryDaemon::writeInformationEvent(const QVariantMap &thread, History::InformationType type, const QString &subject, const QString &text)
 {
     History::TextEvent historyEvent = History::TextEvent(thread[History::FieldAccountId].toString(),
