@@ -75,6 +75,24 @@ enum MessageType
     MessageTypeInformation = 2
 };
 
+enum InformationType
+{
+    InformationTypeNone = 0,
+    InformationTypeSimChange = 1,
+    InformationTypeText = 2,
+    InformationTypeSelfJoined = 3,
+    InformationTypeJoined = 4,
+    InformationTypeTitleChanged = 5,
+    InformationTypeInvitationSent = 6,
+    InformationTypeLeaving = 7,
+    InformationTypeSelfLeaving = 8,
+    InformationTypeAdminGranted = 9,
+    InformationTypeAdminRemoved = 10,
+    InformationTypeSelfAdminGranted = 11,
+    InformationTypeSelfAdminRemoved = 12,
+    InformationTypeSelfKicked = 13
+};
+
 enum ChatType
 {
     ChatTypeNone = 0,
@@ -168,6 +186,7 @@ static const char* FieldMessageType = "messageType";
 static const char* FieldMessageStatus = "messageStatus";
 static const char* FieldReadTimestamp = "readTimestamp";
 static const char* FieldSubject = "subject";
+static const char* FieldInformationType = "informationType";
 static const char* FieldAttachments = "attachments";
 
 // text attachment fields
