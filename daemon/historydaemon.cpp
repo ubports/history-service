@@ -1118,11 +1118,21 @@ void HistoryDaemon::writeInformationEvent(const QVariantMap &thread, History::In
 void HistoryDaemon::writeRoomChangesInformationEvents(const QVariantMap &thread, const QVariantMap &interfaceProperties)
 {
     if (!thread.isEmpty()) {
-        // group title
-        QString storedTitle = thread[History::FieldChatRoomInfo].toMap()["Title"].toString();
-        QString newTitle = interfaceProperties["Title"].toString();
-        if (!newTitle.isEmpty() && storedTitle != newTitle) {
-            writeInformationEvent(thread, History::InformationTypeTitleChanged, newTitle);
+        // group subject
+        QString storedSubject = thread[History::FieldChatRoomInfo].toMap()["Subject"].toString();
+        QString newSubject = interfaceProperties["Subject"].toString();
+        if (!newSubject.isEmpty() && storedSubject != newSubject) {
+            //see if we have an actor. If actor is 'me', we have changed that subject
+            QString actor = thread[History::FieldChatRoomInfo].toMap()["Actor"].toString();
+            if (actor == "me") {
+                actor = "self";
+            }
+
+            if (actor.isEmpty()) {
+                writeInformationEvent(thread, History::InformationTypeTitleChanged, newSubject);
+            } else {
+                writeInformationEvent(thread, History::InformationTypeTitleChanged, actor, newSubject);
+            }
         }
     }
 }
