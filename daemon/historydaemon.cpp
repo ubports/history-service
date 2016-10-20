@@ -586,16 +586,8 @@ void HistoryDaemon::onTextChannelAvailable(const Tp::TextChannelPtr channel)
                                          true);
 
             // write information event including all initial invitees
-            QStringList inviteesAliases;
             Q_FOREACH(const Tp::ContactPtr contact, channel->groupRemotePendingContacts(false)) {
-                inviteesAliases << contact->alias();
-            }
-            if (inviteesAliases.length() > 0) {
-                QString pluralLabel = inviteesAliases.length() > 1 ? " were " : " was ";
-                QString invitees = inviteesAliases.join(", ");
-                QString inviteesText = QString("%1").arg(invitees) + pluralLabel + "invited to the group";
-                // FIXME: this is a hack. we need proper information event support
-                writeInformationEvent(thread, inviteesText);
+                writeInformationEvent(thread, History::InformationTypeInvitationSent, contact->alias());
             }
 
             // update participants only if the thread is not available previously. Otherwise we'll wait for membersChanged event
@@ -605,8 +597,7 @@ void HistoryDaemon::onTextChannelAvailable(const Tp::TextChannelPtr channel)
 
         // write an entry saying you joined the group if 'joined' flag in thread is false and modify that flag.
         if (!thread[History::FieldChatRoomInfo].toMap()["Joined"].toBool()) {
-            // FIXME: this is a hack. we need proper information event support
-            writeInformationEvent(thread, "You joined the group.");
+            writeInformationEvent(thread, History::InformationTypeSelfJoined);
             // update backend
             updateRoomProperties(channel, QVariantMap{{"Joined", true}});
         }
@@ -663,16 +654,20 @@ void HistoryDaemon::onGroupMembersChanged(const Tp::Contacts &groupMembersAdded,
                 Q_FOREACH (const Tp::ContactPtr& contact, groupMembersAdded) {
                     // if this member was not previously regular member in thread, notify about his join
                     if (!foundAsMemberInThread(contact, thread)) {
-                        // FIXME: this is a hack. we need proper information event support
-                        writeInformationEvent(thread, QString("%1 joined the group").arg(contact->alias()));
+                        writeInformationEvent(thread, History::InformationTypeJoined, contact->alias());
                     }
                 }
             }
 
             if (hasMembersRemoved) {
                 if (channel->groupSelfContactRemoveInfo().isValid()) {
-                    // FIXME: this is a hack. we need proper information event support
-                    writeInformationEvent(thread, channel->groupSelfContactRemoveInfo().message());
+                    // evaluate if we are leaving by our own or we are kicked
+                    History::InformationType type = History::InformationTypeSelfLeaving;
+                    if (channel->groupSelfContactRemoveInfo().hasReason() &&
+                            channel->groupSelfContactRemoveInfo().reason() == Tp::ChannelGroupChangeReason::ChannelGroupChangeReasonKicked) {
+                        type = History::InformationTypeSelfKicked;
+                    }
+                    writeInformationEvent(thread, type);
                     // update backend
                     updateRoomProperties(channel, QVariantMap{{"Joined", false}});
                 }
@@ -681,8 +676,7 @@ void HistoryDaemon::onGroupMembersChanged(const Tp::Contacts &groupMembersAdded,
                     Q_FOREACH (const Tp::ContactPtr& contact, groupMembersRemoved) {
                         // inform about removed members other than us
                         if (contact->id() != channel->groupSelfContact()->id()) {
-                            // FIXME: this is a hack. we need proper information event support
-                            writeInformationEvent(thread, QString("%1 left the group").arg(contact->alias()));
+                            writeInformationEvent(thread, History::InformationTypeLeaving, contact->alias());
                         }
                     }
                 }
@@ -741,7 +735,6 @@ void HistoryDaemon::updateRoomParticipants(const Tp::TextChannelPtr channel, con
     }
 
     if (!thread.isEmpty()) {
-        // FIXME: this is a hack. we need proper information event support
         writeRolesInformationEvents(thread, channel, roles);
     }
 
@@ -1103,13 +1096,12 @@ QVariantMap HistoryDaemon::getInterfaceProperties(const Tp::AbstractInterface *i
     return reply.value();
 }
 
-// FIXME: this is a hack. we need proper information event support.
-void HistoryDaemon::writeInformationEvent(const QVariantMap &thread, const QString &text)
+void HistoryDaemon::writeInformationEvent(const QVariantMap &thread, History::InformationType type, const QString &subject, const QString &text)
 {
     History::TextEvent historyEvent = History::TextEvent(thread[History::FieldAccountId].toString(),
                                                          thread[History::FieldThreadId].toString(),
                                                          QString(QCryptographicHash::hash(QByteArray(
-                                                                 (QDateTime::currentDateTime().toString() + text).toLatin1()),
+                                                                 (QDateTime::currentDateTime().toString() + subject + text).toLatin1()),
                                                                  QCryptographicHash::Md5).toHex()),
                                                          "self",
                                                          QDateTime::currentDateTime(),
@@ -1117,7 +1109,9 @@ void HistoryDaemon::writeInformationEvent(const QVariantMap &thread, const QStri
                                                          text,
                                                          History::MessageTypeInformation,
                                                          History::MessageStatusUnknown,
-                                                         QDateTime::currentDateTime());
+                                                         QDateTime::currentDateTime(),
+                                                         subject,
+                                                         type);
     writeEvents(QList<QVariantMap>() << historyEvent.properties(), thread);
 }
 
@@ -1128,7 +1122,7 @@ void HistoryDaemon::writeRoomChangesInformationEvents(const QVariantMap &thread,
         QString storedTitle = thread[History::FieldChatRoomInfo].toMap()["Title"].toString();
         QString newTitle = interfaceProperties["Title"].toString();
         if (!newTitle.isEmpty() && storedTitle != newTitle) {
-            writeInformationEvent(thread, "Title changed to '" + newTitle + "'");
+            writeInformationEvent(thread, History::InformationTypeTitleChanged, newTitle);
         }
     }
 }
@@ -1150,7 +1144,7 @@ void HistoryDaemon::writeRolesInformationEvents(const QVariantMap &thread, const
         if (adminIds.contains(participantId)) {
             // see if already was admin or not (ChannelAdminRole == 2)
             if (! (participant.toMap()[History::FieldParticipantRoles].toUInt() & AdminRole)) {
-                writeInformationEvent(thread, participantId + " has become Admin");
+                writeInformationEvent(thread, History::InformationTypeAdminGranted, participantId);
             }
         }
     }
@@ -1159,7 +1153,7 @@ void HistoryDaemon::writeRolesInformationEvents(const QVariantMap &thread, const
     if (rolesMap[channel->groupSelfContact()->handle().at(0)] & AdminRole) {
         uint selfRoles = thread[History::FieldChatRoomInfo].toMap()["SelfRoles"].toUInt();
         if (! (selfRoles & AdminRole)) {
-            writeInformationEvent(thread, "You are Admin");
+            writeInformationEvent(thread, History::InformationTypeSelfAdminGranted);
         }
     }
 }

@@ -44,6 +44,7 @@ public:
         TextMessageStatusRole,
         TextReadTimestampRole,
         TextReadSubjectRole,
+        TextInformationTypeRole,
         TextMessageAttachmentsRole,
         CallMissedRole,
         CallDurationRole,
