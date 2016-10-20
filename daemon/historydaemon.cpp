@@ -1131,9 +1131,6 @@ void HistoryDaemon::writeRoomChangesInformationEvents(const QVariantMap &thread,
                 actor = "You";
             }
 
-            //QString prefix = actor.isEmpty() ? "Renamed" : QString("%1 renamed").arg(actor);
-            //writeInformationEvent(thread, QString("%1 the group to '%2'").arg(prefix).arg(newSubject));
-
             if (actor.isEmpty()) {
                 writeInformationEvent(thread, History::InformationTypeTitleChanged, newSubject);
             } else {
