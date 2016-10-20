@@ -81,6 +81,7 @@ protected:
 
     void writeRoomChangesInformationEvents(const QVariantMap &thread, const QVariantMap &interfaceProperties);
     void writeRolesInformationEvents(const QVariantMap &thread, const Tp::ChannelPtr &channel, const RolesMap &rolesMap);
+    void writeRolesChangesInformationEvents(const QVariantMap &thread, const Tp::ChannelPtr &channel, const RolesMap &rolesMap);
 private:
     HistoryDaemon(QObject *parent = 0);
 

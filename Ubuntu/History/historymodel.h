@@ -107,7 +107,8 @@ public:
         InformationTypeAdminRemoved = History::InformationTypeAdminRemoved,
         InformationTypeSelfAdminGranted = History::InformationTypeSelfAdminGranted,
         InformationTypeSelfAdminRemoved = History::InformationTypeSelfAdminRemoved,
-        InformationTypeSelfKicked = History::InformationTypeSelfKicked
+        InformationTypeSelfKicked = History::InformationTypeSelfKicked,
+        InformationTypeGroupGone = History::InformationTypeGroupGone
     };
 
  
