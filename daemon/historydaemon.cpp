@@ -23,6 +23,7 @@
 #include "telepathyhelper_p.h"
 #include "filter.h"
 #include "sort.h"
+#include "utils_p.h"
 
 #include "pluginmanager.h"
 #include "plugin.h"
@@ -81,7 +82,9 @@ bool foundAsMemberInThread(const Tp::ContactPtr& contact, QVariantMap thread)
 {
     Q_FOREACH (QVariant participant, thread[History::FieldParticipants].toList()) {
         // found if same identifier and as member into thread info
-        if (contact->id() == participant.toMap()[History::FieldIdentifier].toString() &&
+        if (History::Utils::compareIds(thread[History::FieldAccountId].toString(),
+                                       contact->id(),
+                                       participant.toMap()[History::FieldIdentifier].toString()) &&
                 participant.toMap()[History::FieldParticipantState].toUInt() == History::ParticipantStateRegular)
         {
             return true;
@@ -691,7 +694,6 @@ void HistoryDaemon::onGroupMembersChanged(const Tp::Contacts &groupMembersAdded,
                 Q_FOREACH (const Tp::ContactPtr& contact, groupMembersAdded) {
                     // if this member was not previously regular member in thread, notify about his join
                     if (!foundAsMemberInThread(contact, thread)) {
-                        // FIXME: this is a hack. we need proper information event support
                         writeInformationEvent(thread, History::InformationTypeJoined, contact->alias());
                     }
                 }
@@ -720,7 +722,6 @@ void HistoryDaemon::onGroupMembersChanged(const Tp::Contacts &groupMembersAdded,
                     Q_FOREACH (const Tp::ContactPtr& contact, groupMembersRemoved) {
                         // inform about removed members other than us
                         if (contact->id() != channel->groupSelfContact()->id()) {
-                            // FIXME: this is a hack. we need proper information event support
                             writeInformationEvent(thread, History::InformationTypeLeaving, contact->alias());
                         }
                     }
@@ -1142,7 +1143,6 @@ QVariantMap HistoryDaemon::getInterfaceProperties(const Tp::AbstractInterface *i
     return reply.value();
 }
 
-// FIXME: this is a hack. we need proper information event support.
 void HistoryDaemon::writeInformationEvent(const QVariantMap &thread, History::InformationType type, const QString &subject, const QString &sender, const QString &text)
 {
     History::TextEvent historyEvent = History::TextEvent(thread[History::FieldAccountId].toString(),
