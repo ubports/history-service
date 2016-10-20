@@ -31,6 +31,8 @@
 #include "historyservicedbus.h"
 #include "plugin.h"
 
+typedef QMap<uint,uint> RolesMap;
+
 class HistoryDaemon : public QObject
 {
     Q_OBJECT
@@ -63,17 +65,23 @@ private Q_SLOTS:
     void onMessageSent(const Tp::TextChannelPtr textChannel, const Tp::Message &message, const QString &messageToken);
     void onTextChannelAvailable(const Tp::TextChannelPtr channel);
     void onRoomPropertiesChanged(const QVariantMap &properties,const QStringList &invalidated);
-    void onUpdateRoomParticipants();
+    void onGroupMembersChanged(const Tp::Contacts &groupMembersAdded, const Tp::Contacts &groupLocalPendingMembersAdded,
+                               const Tp::Contacts &groupRemotePendingMembersAdded, const Tp::Contacts &groupMembersRemoved,
+                               const Tp::Channel::GroupMemberChangeDetails &details);
 
 protected:
     History::MatchFlags matchFlagsForChannel(const Tp::ChannelPtr &channel);
-    void updateRoomParticipants(const Tp::TextChannelPtr channel);
+    void updateRoomParticipants(const Tp::TextChannelPtr channel, const QVariantMap &thread);
     QString hashThread(const QVariantMap &thread);
     static QVariantMap getInterfaceProperties(const Tp::AbstractInterface *interface);
+    void updateRoomProperties(const Tp::TextChannelPtr &channel, const QVariantMap &properties);
+    void updateRoomProperties(const QString &accountId, const QString &threadId, History::EventType type, const QVariantMap &properties, const QStringList &invalidated);
 
     // FIXME: this is a hack. we need proper information event support.
     void writeInformationEvent(const QVariantMap &thread, const QString &text);
 
+    void writeRoomChangesInformationEvents(const QVariantMap &thread, const QVariantMap &interfaceProperties);
+    void writeRolesInformationEvents(const QVariantMap &thread, const Tp::ChannelPtr &channel, const RolesMap &rolesMap);
 private:
     HistoryDaemon(QObject *parent = 0);
 
