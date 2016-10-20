@@ -1114,14 +1114,14 @@ QVariantMap HistoryDaemon::getInterfaceProperties(const Tp::AbstractInterface *i
     return reply.value();
 }
 
-void HistoryDaemon::writeInformationEvent(const QVariantMap &thread, History::InformationType type, const QString &subject, const QString &text)
+void HistoryDaemon::writeInformationEvent(const QVariantMap &thread, History::InformationType type, const QString &subject, const QString &sender, const QString &text)
 {
     History::TextEvent historyEvent = History::TextEvent(thread[History::FieldAccountId].toString(),
                                                          thread[History::FieldThreadId].toString(),
                                                          QString(QCryptographicHash::hash(QByteArray(
                                                                  (QDateTime::currentDateTime().toString() + subject + text).toLatin1()),
                                                                  QCryptographicHash::Md5).toHex()),
-                                                         "self",
+                                                         sender,
                                                          QDateTime::currentDateTime(),
                                                          false,
                                                          text,
@@ -1145,12 +1145,7 @@ void HistoryDaemon::writeRoomChangesInformationEvents(const QVariantMap &thread,
             if (actor == "me") {
                 actor = "self";
             }
-
-            if (actor.isEmpty()) {
-                writeInformationEvent(thread, History::InformationTypeTitleChanged, newSubject);
-            } else {
-                writeInformationEvent(thread, History::InformationTypeTitleChanged, actor, newSubject);
-            }
+            writeInformationEvent(thread, History::InformationTypeTitleChanged, newSubject, actor);
         }
     }
 }

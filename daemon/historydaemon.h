@@ -77,7 +77,7 @@ protected:
     void updateRoomProperties(const Tp::TextChannelPtr &channel, const QVariantMap &properties);
     void updateRoomProperties(const QString &accountId, const QString &threadId, History::EventType type, const QVariantMap &properties, const QStringList &invalidated);
 
-    void writeInformationEvent(const QVariantMap &thread, History::InformationType type, const QString &subject = QString(), const QString &text = QString());
+    void writeInformationEvent(const QVariantMap &thread, History::InformationType type, const QString &subject = QString(), const QString &sender = QString("self"), const QString &text = QString());
 
     void writeRoomChangesInformationEvents(const QVariantMap &thread, const QVariantMap &interfaceProperties);
     void writeRolesInformationEvents(const QVariantMap &thread, const Tp::ChannelPtr &channel, const RolesMap &rolesMap);

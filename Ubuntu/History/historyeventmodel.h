@@ -49,6 +49,7 @@ public:
         CallMissedRole,
         CallDurationRole,
         RemoteParticipantRole,
+        SubjectAsAliasRole,
         LastEventRole
     };
 
