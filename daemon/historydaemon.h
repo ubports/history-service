@@ -77,7 +77,6 @@ protected:
     void updateRoomProperties(const Tp::TextChannelPtr &channel, const QVariantMap &properties);
     void updateRoomProperties(const QString &accountId, const QString &threadId, History::EventType type, const QVariantMap &properties, const QStringList &invalidated);
 
-    // FIXME: this is a hack. we need proper information event support.
     void writeInformationEvent(const QVariantMap &thread, History::InformationType type, const QString &subject = QString(), const QString &sender = QString("self"), const QString &text = QString());
 
     void writeRoomChangesInformationEvents(const QVariantMap &thread, const QVariantMap &interfaceProperties);
