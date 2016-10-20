@@ -1128,7 +1128,7 @@ void HistoryDaemon::writeRoomChangesInformationEvents(const QVariantMap &thread,
             //see if we have an actor. If actor is 'me', we have changed that subject
             QString actor = thread[History::FieldChatRoomInfo].toMap()["Actor"].toString();
             if (actor == "me") {
-                actor = "You";
+                actor = "self";
             }
 
             if (actor.isEmpty()) {
