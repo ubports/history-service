@@ -23,6 +23,7 @@
 #include "telepathyhelper_p.h"
 #include "filter.h"
 #include "sort.h"
+#include "utils_p.h"
 
 #include "pluginmanager.h"
 #include "plugin.h"
@@ -36,8 +37,9 @@
 #include <TelepathyQt/PendingVariantMap>
 #include <TelepathyQt/ReferencedHandles>
 
-typedef QMap<uint,uint> RolesMap;
 Q_DECLARE_METATYPE(RolesMap)
+
+const constexpr static int AdminRole = 2;
 
 const QDBusArgument &operator>>(const QDBusArgument &argument, RolesMap &roles)
 {
@@ -52,6 +54,21 @@ const QDBusArgument &operator>>(const QDBusArgument &argument, RolesMap &roles)
 
     argument.endMap();
     return argument;
+}
+
+bool foundAsMemberInThread(const Tp::ContactPtr& contact, QVariantMap thread)
+{
+    Q_FOREACH (QVariant participant, thread[History::FieldParticipants].toList()) {
+        // found if same identifier and as member into thread info
+        if (History::Utils::compareIds(thread[History::FieldAccountId].toString(),
+                                       contact->id(),
+                                       participant.toMap()[History::FieldIdentifier].toString()) &&
+                participant.toMap()[History::FieldParticipantState].toUInt() == History::ParticipantStateRegular)
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 HistoryDaemon::HistoryDaemon(QObject *parent)
@@ -559,7 +576,6 @@ void HistoryDaemon::onTextChannelAvailable(const Tp::TextChannelPtr channel)
                                                  properties,
                                                  matchFlagsForChannel(channel),
                                                  false);
-
         if (thread.isEmpty()) {
             // if there no existing thread, create one
             properties["Requested"] = channel->isRequested();
@@ -568,9 +584,31 @@ void HistoryDaemon::onTextChannelAvailable(const Tp::TextChannelPtr channel)
                                          properties,
                                          matchFlagsForChannel(channel),
                                          true);
+
+            // write information event including all initial invitees
+            QStringList inviteesAliases;
+            Q_FOREACH(const Tp::ContactPtr contact, channel->groupRemotePendingContacts(false)) {
+                inviteesAliases << contact->alias();
+            }
+            if (inviteesAliases.length() > 0) {
+                QString pluralLabel = inviteesAliases.length() > 1 ? " were " : " was ";
+                QString invitees = inviteesAliases.join(", ");
+                QString inviteesText = QString("%1").arg(invitees) + pluralLabel + "invited to the group";
+                // FIXME: this is a hack. we need proper information event support
+                writeInformationEvent(thread, inviteesText);
+            }
+
+            // update participants only if the thread is not available previously. Otherwise we'll wait for membersChanged event
+            // for reflect in conversation information events for modified participants.
+            updateRoomParticipants(channel, thread);
+        }
+
+        // write an entry saying you joined the group if 'joined' flag in thread is false and modify that flag.
+        if (!thread[History::FieldChatRoomInfo].toMap()["Joined"].toBool()) {
             // FIXME: this is a hack. we need proper information event support
-            // write an entry saying you joined the group
             writeInformationEvent(thread, "You joined the group.");
+            // update backend
+            updateRoomProperties(channel, QVariantMap{{"Joined", true}});
         }
 
         Tp::AbstractInterface *room_interface = channel->optionalInterface<Tp::Client::ChannelInterfaceRoomInterface>();
@@ -592,33 +630,70 @@ void HistoryDaemon::onTextChannelAvailable(const Tp::TextChannelPtr channel)
             }
         }
 
-        connect(channel.data(), SIGNAL(groupMembersChanged(const Tp::Contacts &, const Tp::Contacts &, const Tp::Contacts &, const Tp::Contacts &, const Tp::Channel::GroupMemberChangeDetails &)), SLOT(onUpdateRoomParticipants()));
-
-        updateRoomParticipants(channel);
+        connect(channel.data(), SIGNAL(groupMembersChanged(const Tp::Contacts &, const Tp::Contacts &, const Tp::Contacts &, const Tp::Contacts &, const Tp::Channel::GroupMemberChangeDetails &)),
+                SLOT(onGroupMembersChanged(const Tp::Contacts &, const Tp::Contacts &, const Tp::Contacts &, const Tp::Contacts &, const Tp::Channel::GroupMemberChangeDetails &)));
     }
 }
 
-void HistoryDaemon::onUpdateRoomParticipants()
+void HistoryDaemon::onGroupMembersChanged(const Tp::Contacts &groupMembersAdded,
+                                          const Tp::Contacts &groupLocalPendingMembersAdded,
+                                          const Tp::Contacts &groupRemotePendingMembersAdded,
+                                          const Tp::Contacts &groupMembersRemoved,
+                                          const Tp::Channel::GroupMemberChangeDetails &details)
 {
     Tp::TextChannelPtr channel(qobject_cast<Tp::TextChannel*>(sender()));
 
-    // evaluate if removed self handle and insert an information message in the thread in that case
-    if (channel->groupSelfContactRemoveInfo().isValid()) {
-        QVariantMap properties = propertiesFromChannel(channel);
-        QVariantMap thread = threadForProperties(channel->property(History::FieldAccountId).toString(),
-                                                                   History::EventTypeText,
-                                                                   properties,
-                                                                   matchFlagsForChannel(channel),
-                                                                   false);
+    QVariantMap properties;
+    QVariantMap thread;
+
+    // information events for members updates.
+    bool hasMembersAdded = groupMembersAdded.size() > 0;
+    //TODO: we have to take into account that removed could be in a pending list (see TelephonyService::ChatEntry for details)
+    bool hasMembersRemoved = groupMembersRemoved.size() > 0;
+
+    if (hasMembersAdded || hasMembersRemoved) {
+        properties = propertiesFromChannel(channel);
+        thread = threadForProperties(channel->property(History::FieldAccountId).toString(),
+                                                       History::EventTypeText,
+                                                       properties,
+                                                       matchFlagsForChannel(channel),
+                                                       false);
         if (!thread.isEmpty()) {
-            writeInformationEvent(thread, channel->groupSelfContactRemoveInfo().message());
+            if (hasMembersAdded) {
+                Q_FOREACH (const Tp::ContactPtr& contact, groupMembersAdded) {
+                    // if this member was not previously regular member in thread, notify about his join
+                    if (!foundAsMemberInThread(contact, thread)) {
+                        // FIXME: this is a hack. we need proper information event support
+                        writeInformationEvent(thread, QString("%1 joined the group").arg(contact->alias()));
+                    }
+                }
+            }
+
+            if (hasMembersRemoved) {
+                if (channel->groupSelfContactRemoveInfo().isValid()) {
+                    // FIXME: this is a hack. we need proper information event support
+                    writeInformationEvent(thread, channel->groupSelfContactRemoveInfo().message());
+                    // update backend
+                    updateRoomProperties(channel, QVariantMap{{"Joined", false}});
+                }
+                else // don't notify any other group member removal if we are leaving the group
+                {
+                    Q_FOREACH (const Tp::ContactPtr& contact, groupMembersRemoved) {
+                        // inform about removed members other than us
+                        if (contact->id() != channel->groupSelfContact()->id()) {
+                            // FIXME: this is a hack. we need proper information event support
+                            writeInformationEvent(thread, QString("%1 left the group").arg(contact->alias()));
+                        }
+                    }
+                }
+            }
         }
     }
 
-    updateRoomParticipants(channel);
+    updateRoomParticipants(channel, thread);
 }
 
-void HistoryDaemon::updateRoomParticipants(const Tp::TextChannelPtr channel)
+void HistoryDaemon::updateRoomParticipants(const Tp::TextChannelPtr channel, const QVariantMap &thread)
 {
     if (!channel) {
         return;
@@ -665,24 +740,48 @@ void HistoryDaemon::updateRoomParticipants(const Tp::TextChannelPtr channel)
         participants << QVariant::fromValue(participant);
     }
 
+    if (!thread.isEmpty()) {
+        // FIXME: this is a hack. we need proper information event support
+        writeRolesInformationEvents(thread, channel, roles);
+    }
 
     QString accountId = channel->property(History::FieldAccountId).toString();
-    QString threadId = channel->targetId();;
+    QString threadId = channel->targetId();
     if (mBackend->updateRoomParticipants(accountId, threadId, History::EventTypeText, participants)) {
-        QVariantMap thread = getSingleThread(History::EventTypeText, accountId, threadId, QVariantMap());
-        mDBus.notifyThreadsModified(QList<QVariantMap>() << thread);
+        QVariantMap updatedThread = getSingleThread(History::EventTypeText, accountId, threadId, QVariantMap());
+        mDBus.notifyThreadsModified(QList<QVariantMap>() << updatedThread);
     }
+
+    uint selfRoles = roles[channel->groupSelfContact()->handle().at(0)];
+    updateRoomProperties(channel, QVariantMap{{"SelfRoles", selfRoles}});
 }
 
 void HistoryDaemon::onRoomPropertiesChanged(const QVariantMap &properties,const QStringList &invalidated)
 {
     QString accountId = sender()->property(History::FieldAccountId).toString();
     QString threadId = sender()->property(History::FieldThreadId).toString();
-    int type = sender()->property(History::FieldType).toInt();
+    History::EventType type = (History::EventType)sender()->property(History::FieldType).toInt();
 
-    bool success = mBackend->updateRoomInfo(accountId, threadId, (History::EventType)type, properties, invalidated);
+    // get thread before updating to see if there are changes to insert as information events
+    QVariantMap thread = getSingleThread(type, accountId, threadId, QVariantMap());
+    if (!thread.empty()) {
+        writeRoomChangesInformationEvents(thread, properties);
+    }
 
-    if (success) {
+    updateRoomProperties(accountId, threadId, type, properties, invalidated);
+}
+
+void HistoryDaemon::updateRoomProperties(const Tp::TextChannelPtr &channel, const QVariantMap &properties)
+{
+    QString accountId = channel->property(History::FieldAccountId).toString();
+    QString threadId = channel->targetId();
+    History::EventType type = History::EventTypeText;
+    updateRoomProperties(accountId, threadId, type, properties, QStringList());
+}
+
+void HistoryDaemon::updateRoomProperties(const QString &accountId, const QString &threadId, History::EventType type, const QVariantMap &properties, const QStringList &invalidated)
+{
+    if (mBackend->updateRoomInfo(accountId, threadId, type, properties, invalidated)) {
         QVariantMap thread = getSingleThread(type, accountId, threadId, QVariantMap());
         mDBus.notifyThreadsModified(QList<QVariantMap>() << thread);
     }
@@ -1010,7 +1109,7 @@ void HistoryDaemon::writeInformationEvent(const QVariantMap &thread, const QStri
     History::TextEvent historyEvent = History::TextEvent(thread[History::FieldAccountId].toString(),
                                                          thread[History::FieldThreadId].toString(),
                                                          QString(QCryptographicHash::hash(QByteArray(
-                                                                 QDateTime::currentDateTime().toString().toLatin1()),
+                                                                 (QDateTime::currentDateTime().toString() + text).toLatin1()),
                                                                  QCryptographicHash::Md5).toHex()),
                                                          "self",
                                                          QDateTime::currentDateTime(),
@@ -1020,4 +1119,47 @@ void HistoryDaemon::writeInformationEvent(const QVariantMap &thread, const QStri
                                                          History::MessageStatusUnknown,
                                                          QDateTime::currentDateTime());
     writeEvents(QList<QVariantMap>() << historyEvent.properties(), thread);
+}
+
+void HistoryDaemon::writeRoomChangesInformationEvents(const QVariantMap &thread, const QVariantMap &interfaceProperties)
+{
+    if (!thread.isEmpty()) {
+        // group title
+        QString storedTitle = thread[History::FieldChatRoomInfo].toMap()["Title"].toString();
+        QString newTitle = interfaceProperties["Title"].toString();
+        if (!newTitle.isEmpty() && storedTitle != newTitle) {
+            writeInformationEvent(thread, "Title changed to '" + newTitle + "'");
+        }
+    }
+}
+
+void HistoryDaemon::writeRolesInformationEvents(const QVariantMap &thread, const Tp::ChannelPtr &channel, const RolesMap &rolesMap)
+{
+    // list of identifiers for current channel admins
+    QStringList adminIds;
+
+    Q_FOREACH(const Tp::ContactPtr contact, channel->groupContacts(false)) {
+        // see if admin role (ChannelAdminRole == 2)
+        if (rolesMap[contact->handle().at(0)] & AdminRole) {
+            adminIds << contact->id();
+        }
+    }
+
+    Q_FOREACH (QVariant participant, thread[History::FieldParticipants].toList()) {
+        QString participantId = participant.toMap()[History::FieldIdentifier].toString();
+        if (adminIds.contains(participantId)) {
+            // see if already was admin or not (ChannelAdminRole == 2)
+            if (! (participant.toMap()[History::FieldParticipantRoles].toUInt() & AdminRole)) {
+                writeInformationEvent(thread, participantId + " has become Admin");
+            }
+        }
+    }
+
+    //evaluate now self roles
+    if (rolesMap[channel->groupSelfContact()->handle().at(0)] & AdminRole) {
+        uint selfRoles = thread[History::FieldChatRoomInfo].toMap()["SelfRoles"].toUInt();
+        if (! (selfRoles & AdminRole)) {
+            writeInformationEvent(thread, "You are Admin");
+        }
+    }
 }
