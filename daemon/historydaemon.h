@@ -30,6 +30,7 @@
 #include "callchannelobserver.h"
 #include "historyservicedbus.h"
 #include "plugin.h"
+#include "rolesinterface.h"
 
 typedef QMap<uint,uint> RolesMap;
 
@@ -68,10 +69,12 @@ private Q_SLOTS:
     void onGroupMembersChanged(const Tp::Contacts &groupMembersAdded, const Tp::Contacts &groupLocalPendingMembersAdded,
                                const Tp::Contacts &groupRemotePendingMembersAdded, const Tp::Contacts &groupMembersRemoved,
                                const Tp::Channel::GroupMemberChangeDetails &details);
+    void onRolesChanged(const HandleRolesMap &added, const HandleRolesMap &removed);
 
 protected:
     History::MatchFlags matchFlagsForChannel(const Tp::ChannelPtr &channel);
-    void updateRoomParticipants(const Tp::TextChannelPtr channel, const QVariantMap &thread);
+    void updateRoomParticipants(const Tp::TextChannelPtr channel);
+    void updateRoomRoles(const Tp::TextChannelPtr &channel, const RolesMap &rolesMap);
     QString hashThread(const QVariantMap &thread);
     static QVariantMap getInterfaceProperties(const Tp::AbstractInterface *interface);
     void updateRoomProperties(const Tp::TextChannelPtr &channel, const QVariantMap &properties);

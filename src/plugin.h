@@ -72,6 +72,7 @@ public:
     virtual QVariantMap createThreadForParticipants(const QString &accountId, EventType type, const QStringList &participants) { return QVariantMap(); }
     virtual QVariantMap createThreadForProperties(const QString &accountId, EventType type, const QVariantMap &properties) { return QVariantMap(); }
     virtual bool updateRoomParticipants(const QString &accountId, const QString &threadId, History::EventType type, const QVariantList &participants) { return false; };
+    virtual bool updateRoomParticipantsRoles(const QString &accountId, const QString &threadId, History::EventType type, const QVariantMap &participantsRoles) { return false; };
     virtual bool updateRoomInfo(const QString &accountId, const QString &threadId, EventType type, const QVariantMap &properties, const QStringList &invalidated = QStringList()) { return false; };
     virtual bool removeThread(const QVariantMap &thread) { return false; }
 

@@ -37,6 +37,9 @@
 #include <TelepathyQt/PendingVariantMap>
 #include <TelepathyQt/ReferencedHandles>
 
+#include <TelepathyQt/PendingVariant>
+#include <TelepathyQt/PendingOperation>
+
 Q_DECLARE_METATYPE(RolesMap)
 
 const constexpr static int AdminRole = 2;
@@ -107,8 +110,8 @@ bool foundInThread(const Tp::ContactPtr& contact, QVariantMap thread)
 HistoryDaemon::HistoryDaemon(QObject *parent)
     : QObject(parent), mCallObserver(this), mTextObserver(this)
 {
-    qRegisterMetaType<RolesMap>();
-    qDBusRegisterMetaType<RolesMap>();
+    qRegisterMetaType<HandleRolesMap>();
+    qDBusRegisterMetaType<HandleRolesMap>();
     // get the first plugin
     if (!History::PluginManager::instance()->plugins().isEmpty()) {
         mBackend = History::PluginManager::instance()->plugins().first();
@@ -156,17 +159,37 @@ HistoryDaemon *HistoryDaemon::instance()
     return self;
 }
 
+void HistoryDaemon::onRolesChanged(const HandleRolesMap &added, const HandleRolesMap &removed)
+{
+    Q_UNUSED(added);
+    Q_UNUSED(removed);
+
+    ChannelInterfaceRolesInterface *roles_interface = qobject_cast<ChannelInterfaceRolesInterface*>(sender());
+    RolesMap roles = roles_interface->getRoles();
+
+    Tp::TextChannelPtr channel(qobject_cast<Tp::TextChannel*>(sender()->parent()));
+    QVariantMap properties = propertiesFromChannel(channel);
+    QVariantMap thread = threadForProperties(channel->property(History::FieldAccountId).toString(),
+                                             History::EventTypeText,
+                                             properties,
+                                             matchFlagsForChannel(channel),
+                                             false);
+
+    writeRolesInformationEvents(thread, channel, roles);
+
+    updateRoomRoles(channel, roles);
+}
+
 QVariantMap HistoryDaemon::propertiesFromChannel(const Tp::ChannelPtr &textChannel)
 {
     QVariantMap properties;
     QVariantList participants;
     QStringList participantIds;
-    RolesMap roles;
 
-    QDBusInterface propsInterface(textChannel->busName(), textChannel->objectPath(), "org.freedesktop.DBus.Properties");
-    if (propsInterface.isValid()) {
-        QDBusMessage result = propsInterface.call("Get", "org.freedesktop.Telepathy.Channel.Interface.Roles", "Roles");
-        roles = qdbus_cast<RolesMap>(result.arguments().at(0).value<QDBusVariant>().variant().value<QDBusArgument>());
+    ChannelInterfaceRolesInterface *roles_interface = textChannel->optionalInterface<ChannelInterfaceRolesInterface>();
+    RolesMap roles;
+    if (roles_interface) {
+        roles = roles_interface->getRoles();
     }
 
     Q_FOREACH(const Tp::ContactPtr contact, textChannel->groupContacts(false)) {
@@ -625,7 +648,7 @@ void HistoryDaemon::onTextChannelAvailable(const Tp::TextChannelPtr channel)
 
             // update participants only if the thread is not available previously. Otherwise we'll wait for membersChanged event
             // for reflect in conversation information events for modified participants.
-            updateRoomParticipants(channel, thread);
+            updateRoomParticipants(channel);
         }
 
         // write an entry saying you joined the group if 'joined' flag in thread is false and modify that flag.
@@ -638,9 +661,10 @@ void HistoryDaemon::onTextChannelAvailable(const Tp::TextChannelPtr channel)
         Tp::AbstractInterface *room_interface = channel->optionalInterface<Tp::Client::ChannelInterfaceRoomInterface>();
         Tp::AbstractInterface *room_config_interface = channel->optionalInterface<Tp::Client::ChannelInterfaceRoomConfigInterface>();
         Tp::AbstractInterface *subject_interface = channel->optionalInterface<Tp::Client::ChannelInterfaceSubjectInterface>();
+        ChannelInterfaceRolesInterface *roles_interface = channel->optionalInterface<ChannelInterfaceRolesInterface>();
 
         QList<Tp::AbstractInterface*> interfaces;
-        interfaces << room_interface << room_config_interface << subject_interface;
+        interfaces << room_interface << room_config_interface << subject_interface << roles_interface;
         for (auto interface : interfaces) {
             if (interface) {
                 interface->setMonitorProperties(true);
@@ -656,6 +680,8 @@ void HistoryDaemon::onTextChannelAvailable(const Tp::TextChannelPtr channel)
 
         connect(channel.data(), SIGNAL(groupMembersChanged(const Tp::Contacts &, const Tp::Contacts &, const Tp::Contacts &, const Tp::Contacts &, const Tp::Channel::GroupMemberChangeDetails &)),
                 SLOT(onGroupMembersChanged(const Tp::Contacts &, const Tp::Contacts &, const Tp::Contacts &, const Tp::Contacts &, const Tp::Channel::GroupMemberChangeDetails &)));
+
+        connect(roles_interface, SIGNAL(RolesChanged(const HandleRolesMap&, const HandleRolesMap&)), SLOT(onRolesChanged(const HandleRolesMap&, const HandleRolesMap&)));
     }
 }
 
@@ -730,10 +756,10 @@ void HistoryDaemon::onGroupMembersChanged(const Tp::Contacts &groupMembersAdded,
         }
     }
 
-    updateRoomParticipants(channel, thread);
+    updateRoomParticipants(channel);
 }
 
-void HistoryDaemon::updateRoomParticipants(const Tp::TextChannelPtr channel, const QVariantMap &thread)
+void HistoryDaemon::updateRoomParticipants(const Tp::TextChannelPtr channel)
 {
     if (!channel) {
         return;
@@ -741,13 +767,13 @@ void HistoryDaemon::updateRoomParticipants(const Tp::TextChannelPtr channel, con
 
     QVariantList participants;
     QStringList contactsAdded;
-    RolesMap roles;
 
-    QDBusInterface propsInterface(channel->busName(), channel->objectPath(), "org.freedesktop.DBus.Properties");
-    if (propsInterface.isValid()) {
-        QDBusMessage result = propsInterface.call("Get", "org.freedesktop.Telepathy.Channel.Interface.Roles", "Roles");
-        roles = qdbus_cast<RolesMap>(result.arguments().at(0).value<QDBusVariant>().variant().value<QDBusArgument>());
+    ChannelInterfaceRolesInterface *roles_interface = channel->optionalInterface<ChannelInterfaceRolesInterface>();
+    RolesMap roles;
+    if (roles_interface) {
+        roles = roles_interface->getRoles();
     }
+
     Q_FOREACH(const Tp::ContactPtr contact, channel->groupRemotePendingContacts(false)) {
         QVariantMap participant;
         contactsAdded << contact->id();
@@ -780,19 +806,45 @@ void HistoryDaemon::updateRoomParticipants(const Tp::TextChannelPtr channel, con
         participants << QVariant::fromValue(participant);
     }
 
-    // write roles information events only if already joined to the group
-    if (!thread.isEmpty() && thread[History::FieldChatRoomInfo].toMap()["Joined"].toBool()) {
-        writeRolesInformationEvents(thread, channel, roles);
-    }
-
     QString accountId = channel->property(History::FieldAccountId).toString();
     QString threadId = channel->targetId();
     if (mBackend->updateRoomParticipants(accountId, threadId, History::EventTypeText, participants)) {
         QVariantMap updatedThread = getSingleThread(History::EventTypeText, accountId, threadId, QVariantMap());
         mDBus.notifyThreadsModified(QList<QVariantMap>() << updatedThread);
     }
+}
 
-    uint selfRoles = roles[channel->groupSelfContact()->handle().at(0)];
+void HistoryDaemon::updateRoomRoles(const Tp::TextChannelPtr &channel, const RolesMap &rolesMap)
+{
+    if (!channel) {
+        return;
+    }
+
+    QVariantMap participantsRoles;
+
+    Q_FOREACH(const Tp::ContactPtr contact, channel->groupRemotePendingContacts(false)) {
+        participantsRoles[contact->id()] = rolesMap[contact->handle().at(0)];
+    }
+    Q_FOREACH(const Tp::ContactPtr contact, channel->groupLocalPendingContacts(false)) {
+        participantsRoles[contact->id()] = rolesMap[contact->handle().at(0)];
+    }
+
+    Q_FOREACH(const Tp::ContactPtr contact, channel->groupContacts(false)) {
+        if (!participantsRoles.contains(contact->id())) {
+            participantsRoles[contact->id()] = rolesMap[contact->handle().at(0)];
+        }
+    }
+
+    // update participants roles
+    QString accountId = channel->property(History::FieldAccountId).toString();
+    QString threadId = channel->targetId();
+    if (mBackend->updateRoomParticipantsRoles(accountId, threadId, History::EventTypeText, participantsRoles)) {
+        QVariantMap updatedThread = getSingleThread(History::EventTypeText, accountId, threadId, QVariantMap());
+        mDBus.notifyThreadsModified(QList<QVariantMap>() << updatedThread);
+    }
+
+    // update self roles in room properties
+    uint selfRoles = rolesMap[channel->groupSelfContact()->handle().at(0)];
     updateRoomProperties(channel, QVariantMap{{"SelfRoles", selfRoles}});
 }
 
