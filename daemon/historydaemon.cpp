@@ -653,7 +653,11 @@ void HistoryDaemon::onTextChannelAvailable(const Tp::TextChannelPtr channel)
 
         // write an entry saying you joined the group if 'joined' flag in thread is false and modify that flag.
         if (!thread[History::FieldChatRoomInfo].toMap()["Joined"].toBool()) {
-            writeInformationEvent(thread, History::InformationTypeSelfJoined);
+            // only write self joined notification if protocol is not a phone one.
+            // FIXME (rmescandon): as a first solution, let's take only ofono as phone protocol
+            if (History::TelepathyHelper::instance()->accountForId(accountId)->protocolName() != "ofono") {
+                writeInformationEvent(thread, History::InformationTypeSelfJoined);
+            }
             // update backend
             updateRoomProperties(channel, QVariantMap{{"Joined", true}});
         }
