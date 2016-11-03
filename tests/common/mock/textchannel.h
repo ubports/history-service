@@ -45,11 +45,7 @@ public:
     void addMembers(QStringList recipients);
     QStringList recipients() const;
     Tp::UIntList members();
-#if TP_QT_VERSION >= TP_QT_VERSION_CHECK(0, 9, 7)
     void onRemoveMembers(const Tp::UIntList& handles, const QString& message, uint reason, Tp::DBusError* error);
-#else
-    void onRemoveMembers(const Tp::UIntList& handles, const QString& message, Tp::DBusError* error);
-#endif
     void onAddMembers(const Tp::UIntList& handles, const QString& message, Tp::DBusError* error);
 
 public Q_SLOTS:
