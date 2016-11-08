@@ -207,6 +207,7 @@ bool SQLiteDatabase::createOrUpdateDatabase()
 
     QStringList statements;
     int existingVersion = 0;
+    int upgradeToVersion = 0;
 
     if (create) {
          statements = parseSchemaFile(":/database/schema/schema.sql");
@@ -219,7 +220,7 @@ bool SQLiteDatabase::createOrUpdateDatabase()
         }
 
         existingVersion = query.value(0).toInt();
-        int upgradeToVersion = existingVersion + 1;
+        upgradeToVersion = existingVersion + 1;
         while (upgradeToVersion <= mSchemaVersion) {
             statements += parseSchemaFile(QString(":/database/schema/v%1.sql").arg(QString::number(upgradeToVersion)));
             ++upgradeToVersion;
@@ -254,6 +255,22 @@ bool SQLiteDatabase::createOrUpdateDatabase()
                 qCritical() << "Failed to update existing data.";
                 rollbackTransaction();
                 return false;
+            }
+        }
+        if (existingVersion < 13 && upgradeToVersion >= 13) {
+            // convert all groups to Room type depending if the mms option is enabled
+            QVariant mmsGroupChatEnabled = History::Utils::getUserValue("com.ubuntu.touch.AccountsService.Phone", "MmsGroupChatEnabled");
+            // we must not fail if we cannot reach accounts service.
+            if (mmsGroupChatEnabled.isValid()) {
+                // if mms is disabled all chats will be turned into broadcast, otherwise
+                // we turn them into Room
+                if (mmsGroupChatEnabled.toBool()) {
+                    if (!convertGroupChatToRoom()) {
+                        qCritical() << "Failed to update existing group chats to Room type.";
+                        rollbackTransaction();
+                        return false;
+                    }
+                }
             }
         }
     }
@@ -392,3 +409,40 @@ bool SQLiteDatabase::changeTimestampsToUtc()
 
     return true;
 }
+
+bool SQLiteDatabase::convertGroupChatToRoom()
+{
+    QSqlQuery query(database());
+    QString queryText = "UPDATE threads SET chatType=2 WHERE (SELECT COUNT(participantId) from thread_participants WHERE thread_participants.threadId=threads.threadId and thread_participants.accountId=threads.accountId AND thread_participants.type=threads.type) > 1";
+
+    query.prepare(queryText);
+    if (!query.exec()) {
+        qWarning() << "Failed to update group chats to Room 1:" << query.executedQuery() << query.lastError();
+        return false;
+    }
+    query.clear();
+
+    // now insert a row in chat_room_info for each room
+    if (!query.exec("SELECT accountId, threadId from threads WHERE chatType=2")) {
+        qWarning() << "Failed to update group chats to Room 2:" << query.executedQuery() << query.lastError();
+        return false;
+    }
+
+    while (query.next()) {
+        QSqlQuery queryInsertRoom(database());
+        QString accountId = query.value(0).toString();
+        QString threadId = query.value(1).toString();
+        queryInsertRoom.prepare("INSERT INTO chat_room_info (accountId, threadId, type, joined) VALUES (:accountId,:threadId,:type,:joined)");
+        queryInsertRoom.bindValue(":accountId", accountId);
+        queryInsertRoom.bindValue(":threadId", threadId);
+        queryInsertRoom.bindValue(":type", History::EventTypeText);
+        queryInsertRoom.bindValue(":joined", true);
+        if(!queryInsertRoom.exec()) {
+            qWarning() << "Failed to update group chats to Room 3:" << queryInsertRoom.executedQuery() << queryInsertRoom.lastError();
+            return false;
+        }
+        queryInsertRoom.clear();
+    }
+    query.clear();
+}
+

@@ -19,10 +19,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <unistd.h>
 #include "utils_p.h"
 #include "phoneutils_p.h"
 #include <QDebug>
 #include <QStringList>
+#include <QDBusInterface>
+#include <QDBusConnection>
+#include <QDBusReply>
 #include <QMap>
 
 namespace History {
@@ -151,6 +155,24 @@ QString Utils::normalizeId(const QString &accountId, const QString &id)
         normalizedId = id;
     }
     return normalizedId;
+}
+
+QVariant Utils::getUserValue(const QString &interface, const QString &propName)
+{
+    QString uid = QString::number(getuid());
+    QString activeUser = "/org/freedesktop/Accounts/User" + uid;
+
+    QDBusInterface iface("org.freedesktop.Accounts",
+                         activeUser,
+                         "org.freedesktop.DBus.Properties",
+                         QDBusConnection::systemBus());
+    QDBusReply<QVariant> reply = iface.call("Get", interface, propName);
+    if (reply.isValid()) {
+        return reply.value();
+    } else {
+        qWarning() << "Failed to get user property " << propName << " from AccountsService:" << reply.error().message();
+    }
+    return QVariant();
 }
 
 }
