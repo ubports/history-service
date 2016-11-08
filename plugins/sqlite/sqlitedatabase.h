@@ -50,7 +50,7 @@ protected:
 
     // data upgrade functions
     bool changeTimestampsToUtc();
-    bool convertGroupChatToRoom();
+    bool convertOfonoGroupChatToRoom();
 
 private:
     explicit SQLiteDatabase(QObject *parent = 0);

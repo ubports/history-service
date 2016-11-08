@@ -257,15 +257,15 @@ bool SQLiteDatabase::createOrUpdateDatabase()
                 return false;
             }
         }
-        if (existingVersion < 13 && upgradeToVersion >= 13) {
-            // convert all groups to Room type depending if the mms option is enabled
+        if (existingVersion < 13) {
+            // convert all ofono groups to Room type depending if the mms option is enabled
             QVariant mmsGroupChatEnabled = History::Utils::getUserValue("com.ubuntu.touch.AccountsService.Phone", "MmsGroupChatEnabled");
             // we must not fail if we cannot reach accounts service.
             if (mmsGroupChatEnabled.isValid()) {
                 // if mms is disabled all chats will be turned into broadcast, otherwise
                 // we turn them into Room
                 if (mmsGroupChatEnabled.toBool()) {
-                    if (!convertGroupChatToRoom()) {
+                    if (!convertOfonoGroupChatToRoom()) {
                         qCritical() << "Failed to update existing group chats to Room type.";
                         rollbackTransaction();
                         return false;
@@ -410,10 +410,10 @@ bool SQLiteDatabase::changeTimestampsToUtc()
     return true;
 }
 
-bool SQLiteDatabase::convertGroupChatToRoom()
+bool SQLiteDatabase::convertOfonoGroupChatToRoom()
 {
     QSqlQuery query(database());
-    QString queryText = "UPDATE threads SET chatType=2 WHERE (SELECT COUNT(participantId) from thread_participants WHERE thread_participants.threadId=threads.threadId and thread_participants.accountId=threads.accountId AND thread_participants.type=threads.type) > 1";
+    QString queryText = "UPDATE threads SET chatType=2 WHERE accountId LIKE 'ofono/ofono%' AND (SELECT COUNT(participantId) from thread_participants WHERE thread_participants.threadId=threads.threadId and thread_participants.accountId=threads.accountId AND thread_participants.type=threads.type) > 1";
 
     query.prepare(queryText);
     if (!query.exec()) {
@@ -423,7 +423,7 @@ bool SQLiteDatabase::convertGroupChatToRoom()
     query.clear();
 
     // now insert a row in chat_room_info for each room
-    if (!query.exec("SELECT accountId, threadId from threads WHERE chatType=2")) {
+    if (!query.exec("SELECT accountId, threadId from threads WHERE accountId LIKE 'ofono/ofono%' AND chatType=2")) {
         qWarning() << "Failed to update group chats to Room 2:" << query.executedQuery() << query.lastError();
         return false;
     }
