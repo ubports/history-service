@@ -169,7 +169,9 @@ public:
     Q_INVOKABLE bool writeTextInformationEvent(const QString &accountId,
                                    const QString &threadId,
                                    const QStringList &participants,
-                                   const QString &message);
+                                   const QString &message,
+                                   int informationType = (int)History::InformationTypeNone,
+                                   const QString &subject = QString());
 
     Q_INVOKABLE virtual QVariant get(int row) const;
 
