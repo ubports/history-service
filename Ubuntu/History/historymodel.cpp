@@ -360,7 +360,7 @@ QString HistoryModel::threadIdForParticipants(const QString &accountId, int even
     return QString::null;
 }
 
-bool HistoryModel::writeTextInformationEvent(const QString &accountId, const QString &threadId, const QStringList &participants, const QString &message)
+bool HistoryModel::writeTextInformationEvent(const QString &accountId, const QString &threadId, const QStringList &participants, const QString &message, int informationType, const QString &subject)
 {
     if (participants.isEmpty() || threadId.isEmpty() || accountId.isEmpty()) {
         return false;
@@ -369,7 +369,7 @@ bool HistoryModel::writeTextInformationEvent(const QString &accountId, const QSt
     History::TextEvent historyEvent = History::TextEvent(accountId,
                                                          threadId,
                                                          QString(QCryptographicHash::hash(QByteArray(
-                                                                 QDateTime::currentDateTime().toString().toLatin1()), 
+                                                                 QDateTime::currentDateTimeUtc().toString("yyyyMMddhhmmsszzz").toLatin1()), 
                                                                  QCryptographicHash::Md5).toHex()),
                                                          "self",
                                                          QDateTime::currentDateTime(),
@@ -377,7 +377,9 @@ bool HistoryModel::writeTextInformationEvent(const QString &accountId, const QSt
                                                          message,
                                                          History::MessageTypeInformation,
                                                          History::MessageStatusUnknown,
-                                                         QDateTime::currentDateTime());
+                                                         QDateTime::currentDateTime(),
+                                                         subject,
+                                                         (History::InformationType)informationType);
     History::Events events;
     events << historyEvent;
     return History::Manager::instance()->writeEvents(events);
