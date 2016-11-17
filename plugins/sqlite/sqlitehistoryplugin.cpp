@@ -845,6 +845,7 @@ QVariantMap SQLiteHistoryPlugin::createThreadForParticipants(const QString &acco
 {
     QVariantMap properties;
     properties[History::FieldParticipantIds] = participants;
+    properties[History::FieldChatType] = participants.size() != 1 ? History::ChatTypeNone : History::ChatTypeContact;
     return createThreadForProperties(accountId, type, properties);
 }
 
