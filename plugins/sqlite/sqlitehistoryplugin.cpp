@@ -35,6 +35,7 @@
 #include <QStringList>
 #include <QSqlError>
 #include <QDBusMetaType>
+#include <QCryptographicHash>
 
 static const QLatin1String timestampFormat("yyyy-MM-ddTHH:mm:ss.zzz");
 
@@ -121,7 +122,7 @@ void SQLiteHistoryPlugin::addThreadsToCache(const QList<QVariantMap> &threads)
             const QString &conversationKey = it.key();
             History::Threads groupedThreads = it.value();
             Q_FOREACH(const History::Thread &groupedThread, groupedThreads) {
-                if (!History::Utils::shouldGroupThread(groupedThread)) {
+                if (!History::Utils::shouldGroupThread(groupedThread) || thread.chatType() != groupedThread.chatType()) {
                     continue;
                 }
                 found = History::Utils::compareNormalizedParticipants(thread.participants().identifiers(), groupedThread.participants().identifiers(), History::MatchPhoneNumber);
@@ -770,8 +771,10 @@ QVariantMap SQLiteHistoryPlugin::createThreadForProperties(const QString &accoun
             }
         }
         thread[History::FieldChatRoomInfo] = chatRoomInfo;
-    } else {
+    } else if (chatType == History::ChatTypeContact) {
         threadId = participants.identifiers().join("%");
+    } else {
+        threadId = QString("broadcast:%1").arg(QString(QCryptographicHash::hash(participants.identifiers().join(";").toLocal8Bit(),QCryptographicHash::Md5).toHex()));;
     }
 
     QSqlQuery query(SQLiteDatabase::instance()->database());
