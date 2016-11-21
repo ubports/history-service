@@ -55,7 +55,7 @@ void PluginManager::loadPlugins()
 {
     QString pluginPath = qgetenv("HISTORY_PLUGIN_PATH");
     if (pluginPath.isEmpty()) {
-        pluginPath = HISTORY_PLUGIN_PATH;
+        pluginPath = qgetenv("SNAP") + HISTORY_PLUGIN_PATH;
     }
 
     QDir dir(pluginPath);
