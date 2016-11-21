@@ -24,7 +24,7 @@ plugs:
 parts:
     history-service:
         plugin: cmake
-        configflags: [-DCMAKE_INSTALL_PREFIX=/usr, -DCLICK_MODE=off, -DCMAKE_CROSSCOMPILING=On]
+        configflags: [-DCMAKE_INSTALL_PREFIX=/usr, -DCMAKE_CROSSCOMPILING=On]
         source: .
         build-packages:
             - cmake
