@@ -99,7 +99,9 @@ bool foundAsMemberInThread(const Tp::ContactPtr& contact, QVariantMap thread)
 bool foundInThread(const Tp::ContactPtr& contact, QVariantMap thread)
 {
     Q_FOREACH (QVariant participant, thread[History::FieldParticipants].toList()) {
-        if (contact->id() == participant.toMap()[History::FieldIdentifier].toString())
+        if (History::Utils::compareIds(thread[History::FieldAccountId].toString(),
+                                       contact->id(),
+                                       participant.toMap()[History::FieldIdentifier].toString()))
         {
             return true;
         }
