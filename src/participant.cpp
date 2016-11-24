@@ -242,6 +242,17 @@ QVariantList Participants::toVariantList() const
     return list;
 }
 
+Participants Participants::filterByState(uint state) const
+{
+    Participants filtered;
+    Q_FOREACH(const Participant &participant, *this) {
+        if (participant.state() == state) {
+            filtered << participant;
+        }
+    }
+    return filtered;
+}
+
 const QDBusArgument &operator>>(const QDBusArgument &argument, Participants &participants)
 {
     argument.beginArray();
