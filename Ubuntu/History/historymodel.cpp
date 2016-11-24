@@ -93,41 +93,29 @@ QVariant HistoryModel::data(const QModelIndex &index, int role) const
         result = properties[History::FieldType];
         break;
     case ParticipantsRole: {
-        // FIXME: reimplement in a cleaner way
-        History::Participants participants = History::Participants::fromVariantList(properties[History::FieldParticipants].toList());
+        History::Participants participants = History::Participants::fromVariantList(properties[History::FieldParticipants].toList())
+                                             .filterByState(History::ParticipantStateRegular);
         if (mMatchContacts) {
             QVariantList finalParticipantsList;
             QVariantList participantsInfo = History::ContactMatcher::instance()->contactInfo(properties[History::FieldAccountId].toString(),
-                                                                      participants.identifiers());
-            int count = 0;
-            Q_FOREACH(const QVariant &participantInfo, participantsInfo) {
-                QVariantMap newMap = participantInfo.toMap();
-                if (participants.at(count).state() != History::ParticipantStateRegular) {
-                   count++;
-                   continue;
-                }
-                newMap[History::FieldParticipantState] = participants.at(count).state();
-                newMap[History::FieldParticipantRoles] = participants.at(count++).roles();
+                                                                                             participants.identifiers());
+            for (int i = 0; i < participantsInfo.count(); ++i) {
+                QVariantMap newMap = participantsInfo[i].toMap();
+                History::Participant participant = participants[i];
+                newMap[History::FieldParticipantState] = participant.state();
+                newMap[History::FieldParticipantRoles] = participant.roles();
                 finalParticipantsList << newMap;
             }
             result = finalParticipantsList;
         } else {
             //FIXME: handle contact changes
-            result = properties[History::FieldParticipants];
+            result = participants.identifiers();
         }
         break;
     }
     case ParticipantsRemotePendingRole: {
-        // FIXME: reimplement in a cleaner way
-        QStringList identifiers;
-        History::Participants participants;
-        // filter remote pending participants
-        Q_FOREACH(const History::Participant &participant, History::Participants::fromVariantList(properties[History::FieldParticipants].toList())) {
-            if (participant.state() == History::ParticipantStateRemotePending) {
-                participants << participant;
-            }
-        }
-
+        History::Participants participants = History::Participants::fromVariantList(properties[History::FieldParticipants].toList())
+                                             .filterByState(History::ParticipantStateRemotePending);
         if (mMatchContacts) {
             QVariantList finalParticipantsList;
             QVariantList participantsInfo = History::ContactMatcher::instance()->contactInfo(properties[History::FieldAccountId].toString(),
@@ -148,19 +136,12 @@ QVariant HistoryModel::data(const QModelIndex &index, int role) const
         break;
     }
     case ParticipantsLocalPendingRole: {
-        // FIXME: reimplement in a cleaner way
-        QStringList identifiers;
-        History::Participants participants;
-        Q_FOREACH(const History::Participant &participant, History::Participants::fromVariantList(properties[History::FieldParticipants].toList())) {
-            if (participant.state() == History::ParticipantStateLocalPending) {
-                participants << participant;
-            }
-        }
-
+        History::Participants participants = History::Participants::fromVariantList(properties[History::FieldParticipants].toList())
+                                             .filterByState(History::ParticipantStateLocalPending);
         if (mMatchContacts) {
             QVariantList finalParticipantsList;
             QVariantList participantsInfo = History::ContactMatcher::instance()->contactInfo(properties[History::FieldAccountId].toString(),
-                                                                      identifiers);
+                                                                      participants.identifiers());
             int count = 0;
             Q_FOREACH(const QVariant &participantInfo, participantsInfo) {
                 QVariantMap newMap = participantInfo.toMap();
@@ -171,7 +152,7 @@ QVariant HistoryModel::data(const QModelIndex &index, int role) const
             result = finalParticipantsList;
         } else {
             //FIXME: handle contact changes
-            result = identifiers;
+            result = participants.identifiers();
         }
 
         break;

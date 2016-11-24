@@ -81,7 +81,7 @@ public:
     static Participants fromVariantList(const QVariantList &list);
     static Participants fromStringList(const QStringList &list);
     QVariantList toVariantList() const;
-
+    History::Participants filterByState(uint state) const;
 };
 
 const QDBusArgument &operator>>(const QDBusArgument &argument, Participants &participants);
