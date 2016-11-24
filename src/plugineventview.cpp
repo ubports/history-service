@@ -56,7 +56,6 @@ PluginEventView::~PluginEventView()
 
 void PluginEventView::Destroy()
 {
-    qDebug() << __PRETTY_FUNCTION__;
     Q_D(PluginEventView);
     deleteLater();
 }
