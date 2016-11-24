@@ -1182,11 +1182,11 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseThreadResults(History::EventType ty
             participantRoles << rolesString.toUInt();
         }
         QVariantList contactList;
-        int count = 0;
-        Q_FOREACH (QVariant contact, History::ContactMatcher::instance()->contactInfo(accountId, participants, true)) {
-            QVariantMap map = contact.toMap();
-            map["state"] = participantStatus.at(count);
-            map["roles"] = participantRoles.at(count++);
+        QVariantList contactInfo = History::ContactMatcher::instance()->contactInfo(accountId, participants, true);
+        for (int i = 0; i < contactInfo.count(); ++i) {
+            QVariantMap map = contactInfo[i].toMap();
+            map["state"] = participantStatus[i];
+            map["roles"] = participantRoles[i];
             contactList << map;
         }
         thread[History::FieldParticipants] = contactList;
