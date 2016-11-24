@@ -1196,7 +1196,7 @@ void HistoryDaemon::writeInformationEvent(const QVariantMap &thread, History::In
     History::TextEvent historyEvent = History::TextEvent(thread[History::FieldAccountId].toString(),
                                                          thread[History::FieldThreadId].toString(),
                                                          QString(QCryptographicHash::hash(QByteArray(
-                                                                 (QDateTime::currentDateTime().toString() + subject + text).toLatin1()),
+                                                                 (QDateTime::currentDateTime().toString("yyyy-MM-ddTHH:mm:ss.zzz") + subject + text).toLatin1()),
                                                                  QCryptographicHash::Md5).toHex()),
                                                          sender,
                                                          QDateTime::currentDateTime(),
