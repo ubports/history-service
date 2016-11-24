@@ -439,7 +439,6 @@ bool HistoryDaemon::writeEvents(const QList<QVariantMap> &events, const QVariant
 
 bool HistoryDaemon::removeEvents(const QList<QVariantMap> &events)
 {
-    qDebug() << __PRETTY_FUNCTION__;
     if (!mBackend) {
         return false;
     }
@@ -513,7 +512,6 @@ bool HistoryDaemon::removeEvents(const QList<QVariantMap> &events)
 
 bool HistoryDaemon::removeThreads(const QList<QVariantMap> &threads)
 {
-    qDebug() << __PRETTY_FUNCTION__;
     if (!mBackend) {
         return false;
     }
@@ -554,7 +552,6 @@ bool HistoryDaemon::removeThreads(const QList<QVariantMap> &threads)
 
 void HistoryDaemon::onObserverCreated()
 {
-    qDebug() << __PRETTY_FUNCTION__;
     History::ChannelObserver *observer = History::TelepathyHelper::instance()->channelObserver();
 
     connect(observer, SIGNAL(callChannelAvailable(Tp::CallChannelPtr)),
@@ -565,7 +562,6 @@ void HistoryDaemon::onObserverCreated()
 
 void HistoryDaemon::onCallEnded(const Tp::CallChannelPtr &channel)
 {
-    qDebug() << __PRETTY_FUNCTION__;
     QVariantMap properties = propertiesFromChannel(channel);
     QVariantList participants;
     Q_FOREACH(const Tp::ContactPtr contact, channel->remoteMembers()) {
@@ -885,17 +881,12 @@ void HistoryDaemon::updateRoomProperties(const QString &accountId, const QString
 
 void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, const Tp::ReceivedMessage &message)
 {
-    qDebug() << __PRETTY_FUNCTION__;
     QString eventId;
     Tp::MessagePart header = message.header();
     QString senderId;
     QVariantMap properties = propertiesFromChannel(textChannel);
     History::MessageStatus status = History::MessageStatusUnknown;
     if (!message.sender() || message.sender()->handle().at(0) == textChannel->connection()->selfHandle()) {
-        qDebug() << __PRETTY_FUNCTION__ << message.sender();
-        if (message.sender()) {
-            qDebug() << __PRETTY_FUNCTION__ << "size: " << message.sender()->handle().size() << "first handle" << message.sender()->handle().at(0);
-        }
         senderId = "self";
         status = History::MessageStatusDelivered;
     } else {
@@ -1083,7 +1074,6 @@ void HistoryDaemon::onMessageRead(const Tp::TextChannelPtr textChannel, const Tp
 
 void HistoryDaemon::onMessageSent(const Tp::TextChannelPtr textChannel, const Tp::Message &message, const QString &messageToken)
 {
-    qDebug() << __PRETTY_FUNCTION__;
     QVariantMap properties = propertiesFromChannel(textChannel);
     QList<QVariantMap> attachments;
     History::MessageType type = History::MessageTypeText;
