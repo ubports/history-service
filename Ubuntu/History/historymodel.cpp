@@ -93,7 +93,6 @@ QVariant HistoryModel::data(const QModelIndex &index, int role) const
         result = properties[History::FieldType];
         break;
     case ParticipantsRole: {
-        // FIXME: reimplement in a cleaner way
         History::Participants participants = History::Participants::fromVariantList(properties[History::FieldParticipants].toList())
                                              .filterByState(History::ParticipantStateRegular);
         if (mMatchContacts) {
