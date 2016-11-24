@@ -823,11 +823,12 @@ QVariantMap SQLiteHistoryPlugin::createThreadForProperties(const QString &accoun
     thread[History::FieldThreadId] = threadId;
     thread[History::FieldType] = (int) type;
     QVariantList contactList;
-    int count = 0;
-    Q_FOREACH (QVariant contact, History::ContactMatcher::instance()->contactInfo(accountId, participants.identifiers(), true)) {
-        QVariantMap map = contact.toMap();
-        map["state"] = participants.at(count).state();
-        map["roles"] = participants.at(count++).roles();
+    QVariantList contactInfo = History::ContactMatcher::instance()->contactInfo(accountId, participants.identifiers(), true);
+    for (int i = 0; i < participants.count(); ++i) {
+        QVariantMap map = contactInfo[i].toMap();
+        History::Participant participant = participants[i];
+        map["state"] = participant.state();
+        map["roles"] = participant.roles();
         contactList << map;
     }
     thread[History::FieldParticipants] = contactList;
@@ -1181,11 +1182,11 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseThreadResults(History::EventType ty
             participantRoles << rolesString.toUInt();
         }
         QVariantList contactList;
-        int count = 0;
-        Q_FOREACH (QVariant contact, History::ContactMatcher::instance()->contactInfo(accountId, participants, true)) {
-            QVariantMap map = contact.toMap();
-            map["state"] = participantStatus.at(count);
-            map["roles"] = participantRoles.at(count++);
+        QVariantList contactInfo = History::ContactMatcher::instance()->contactInfo(accountId, participants, true);
+        for (int i = 0; i < contactInfo.count(); ++i) {
+            QVariantMap map = contactInfo[i].toMap();
+            map["state"] = participantStatus[i];
+            map["roles"] = participantRoles[i];
             contactList << map;
         }
         thread[History::FieldParticipants] = contactList;
