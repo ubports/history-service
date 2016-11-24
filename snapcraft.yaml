@@ -1,5 +1,5 @@
 name: history-service
-version: 0.1
+version: 0.1+17.04.20161124.1-0ubuntu1
 summary: History service to store messages and calls
 description: A service to record the messages that are sent and received and the calls that are made in the Ubuntu Touch platform.
 confinement: devmode  # use "strict" to enforce system access only via declared interfaces
