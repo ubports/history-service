@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Canonical, Ltd.
+ * Copyright (C) 2013-2016 Canonical, Ltd.
  *
  * Authors:
  *  Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>
@@ -34,16 +34,15 @@ HistoryServiceDBus::HistoryServiceDBus(QObject *parent) :
 
 bool HistoryServiceDBus::connectToBus()
 {
-    bool ok = QDBusConnection::sessionBus().registerService(History::DBusService);
-    if (!ok) {
-        return false;
-    }
-
     if (!mAdaptor) {
         mAdaptor = new HistoryServiceAdaptor(this);
     }
 
-    return QDBusConnection::sessionBus().registerObject(History::DBusObjectPath, this);
+    if (!QDBusConnection::sessionBus().registerObject(History::DBusObjectPath, this)) {
+        return false;
+    }
+
+    return QDBusConnection::sessionBus().registerService(History::DBusService);
 }
 
 void HistoryServiceDBus::notifyThreadsAdded(const QList<QVariantMap> &threads)
@@ -76,58 +75,67 @@ void HistoryServiceDBus::notifyEventsRemoved(const QList<QVariantMap> &events)
     Q_EMIT EventsRemoved(events);
 }
 
+QVariantMap HistoryServiceDBus::ThreadForProperties(const QString &accountId,
+                                                    int type,
+                                                    const QVariantMap &properties,
+                                                    int matchFlags,
+                                                    bool create)
+{
+    return HistoryDaemon::instance()->threadForProperties(accountId,
+                                                            (History::EventType) type,
+                                                            properties,
+                                                            (History::MatchFlags) matchFlags,
+                                                            create);
+}
+
 QVariantMap HistoryServiceDBus::ThreadForParticipants(const QString &accountId,
                                                       int type,
                                                       const QStringList &participants,
                                                       int matchFlags,
                                                       bool create)
 {
-    return HistoryDaemon::instance()->threadForParticipants(accountId,
+    QVariantMap properties;
+    properties[History::FieldParticipants] = participants;
+
+    return HistoryDaemon::instance()->threadForProperties(accountId,
                                                             (History::EventType) type,
-                                                            participants,
+                                                            properties,
                                                             (History::MatchFlags) matchFlags,
                                                             create);
 }
 
 bool HistoryServiceDBus::WriteEvents(const QList<QVariantMap> &events)
 {
-    qDebug() << __PRETTY_FUNCTION__;
-    return HistoryDaemon::instance()->writeEvents(events);
+    return HistoryDaemon::instance()->writeEvents(events, QVariantMap());
 }
 
 bool HistoryServiceDBus::RemoveThreads(const QList<QVariantMap> &threads)
 {
-    qDebug() << __PRETTY_FUNCTION__;
     return HistoryDaemon::instance()->removeThreads(threads);
 }
 
 bool HistoryServiceDBus::RemoveEvents(const QList<QVariantMap> &events)
 {
-    qDebug() << __PRETTY_FUNCTION__;
     return HistoryDaemon::instance()->removeEvents(events);
 }
 
 QString HistoryServiceDBus::QueryThreads(int type, const QVariantMap &sort, const QVariantMap &filter, const QVariantMap &properties)
 {
-    qDebug() << __PRETTY_FUNCTION__;
     return HistoryDaemon::instance()->queryThreads(type, sort, filter, properties);
 }
 
 QString HistoryServiceDBus::QueryEvents(int type, const QVariantMap &sort, const QVariantMap &filter)
 {
-    qDebug() << __PRETTY_FUNCTION__;
     return HistoryDaemon::instance()->queryEvents(type, sort, filter);
 }
 
 QVariantMap HistoryServiceDBus::GetSingleThread(int type, const QString &accountId, const QString &threadId, const QVariantMap &properties)
 {
-    qDebug() << __PRETTY_FUNCTION__;
     return HistoryDaemon::instance()->getSingleThread(type, accountId, threadId, properties);
 }
 
 QVariantMap HistoryServiceDBus::GetSingleEvent(int type, const QString &accountId, const QString &threadId, const QString &eventId)
 {
-    qDebug() << __PRETTY_FUNCTION__;
     return HistoryDaemon::instance()->getSingleEvent(type, accountId, threadId, eventId);
 }
 

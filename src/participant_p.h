@@ -39,6 +39,8 @@ public:
                        const QString &theContactId = QString::null,
                        const QString &theAlias = QString::null,
                        const QString &theAvatar = QString::null,
+                       uint theState = 0,
+                       uint theRoles = 0,
                        const QVariantMap &theDetailProperties = QVariantMap());
     virtual ~ParticipantPrivate();
 
@@ -47,6 +49,8 @@ public:
     QString contactId;
     QString alias;
     QString avatar;
+    uint state;
+    uint roles;
     QVariantMap detailProperties;
 };
 

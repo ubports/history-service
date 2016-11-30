@@ -324,7 +324,7 @@ void DaemonTest::testOutgoingCall()
     connect(mAccount->connection()->contactManager()->contactsForIdentifiers(QStringList() << phoneNumber),
             SIGNAL(finished(Tp::PendingOperation*)),
             SLOT(onPendingContactsFinished(Tp::PendingOperation*)));
-    QTRY_COMPARE(spy.count(), 1);
+    QVERIFY(spy.wait());
 
     QList<Tp::ContactPtr> contacts = spy.first().first().value<QList<Tp::ContactPtr> >();
     QCOMPARE(contacts.count(), 1);
@@ -335,7 +335,7 @@ void DaemonTest::testOutgoingCall()
     Q_FOREACH(Tp::ContactPtr contact, contacts) {
         mAccount->ensureAudioCall(contact, "audio", QDateTime::currentDateTime(), TP_QT_IFACE_CLIENT + ".HistoryTestHandler");
     }
-    QTRY_COMPARE(spyCallChannel.count(), 1);
+    QVERIFY(spyCallChannel.wait());
 
     Tp::CallChannelPtr channel = spyCallChannel.first().first().value<Tp::CallChannelPtr>();
     QVERIFY(channel);

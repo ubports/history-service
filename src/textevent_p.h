@@ -45,6 +45,7 @@ public:
                     MessageStatus theMessageStatus,
                     const QDateTime &theReadTimestamp,
                     const QString &theSubject,
+                    InformationType theInformationType,
                     const TextEventAttachments &theAttachments,
                     const Participants &theParticipants);
     ~TextEventPrivate();
@@ -53,6 +54,7 @@ public:
     MessageStatus messageStatus;
     QDateTime readTimestamp;
     QString subject;
+    InformationType informationType;
     TextEventAttachments attachments;
 
     EventType type() const;

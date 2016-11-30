@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012-2013 Canonical, Ltd.
+ * Copyright (C) 2012-2016 Canonical, Ltd.
  *
  * Authors:
  *  Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>
@@ -36,6 +36,7 @@ public Q_SLOTS:
     void onTextChannelAvailable(Tp::TextChannelPtr textChannel);
 
 Q_SIGNALS:
+    void channelAvailable(const Tp::TextChannelPtr textChannel);
     void messageReceived(const Tp::TextChannelPtr textChannel, const Tp::ReceivedMessage &message);
     void messageRead(const Tp::TextChannelPtr textChannel, const Tp::ReceivedMessage &message);
     void messageSent(const Tp::TextChannelPtr textChannel, const Tp::Message &message, const QString &messageToken);
