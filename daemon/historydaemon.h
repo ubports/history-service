@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Canonical, Ltd.
+ * Copyright (C) 2013-2016 Canonical, Ltd.
  *
  * Authors:
  *  Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>
@@ -30,6 +30,9 @@
 #include "callchannelobserver.h"
 #include "historyservicedbus.h"
 #include "plugin.h"
+#include "rolesinterface.h"
+
+typedef QMap<uint,uint> RolesMap;
 
 class HistoryDaemon : public QObject
 {
@@ -39,19 +42,19 @@ public:
 
     static HistoryDaemon *instance();
 
-    static QStringList participantsFromChannel(const Tp::TextChannelPtr &textChannel);
-    QVariantMap threadForParticipants(const QString &accountId,
-                                      History::EventType type,
-                                      const QStringList &participants,
-                                      History::MatchFlags matchFlags = History::MatchCaseSensitive,
-                                      bool create = true);
+    static QVariantMap propertiesFromChannel(const Tp::ChannelPtr &textChannel);
+    QVariantMap threadForProperties(const QString &accountId,
+                                    History::EventType type,
+                                    const QVariantMap &properties,
+                                    History::MatchFlags matchFlags = History::MatchCaseSensitive,
+                                    bool create = true);
     QString queryThreads(int type, const QVariantMap &sort, const QVariantMap &filter, const QVariantMap &properties);
     QString queryEvents(int type, const QVariantMap &sort, const QVariantMap &filter);
     QVariantMap getSingleThread(int type, const QString &accountId, const QString &threadId, const QVariantMap &properties);
     QVariantMap getSingleEvent(int type, const QString &accountId, const QString &threadId, const QString &eventId);
     QVariantMap getSingleEventFromTextChannel(const Tp::TextChannelPtr textChannel, const QString &messageId);
 
-    bool writeEvents(const QList<QVariantMap> &events);
+    bool writeEvents(const QList<QVariantMap> &events, const QVariantMap &properties);
     bool removeEvents(const QList<QVariantMap> &events);
     bool removeThreads(const QList<QVariantMap> &threads);
 
@@ -61,11 +64,27 @@ private Q_SLOTS:
     void onMessageReceived(const Tp::TextChannelPtr textChannel, const Tp::ReceivedMessage &message);
     void onMessageRead(const Tp::TextChannelPtr textChannel, const Tp::ReceivedMessage &message);
     void onMessageSent(const Tp::TextChannelPtr textChannel, const Tp::Message &message, const QString &messageToken);
+    void onTextChannelAvailable(const Tp::TextChannelPtr channel);
+    void onRoomPropertiesChanged(const QVariantMap &properties,const QStringList &invalidated);
+    void onGroupMembersChanged(const Tp::Contacts &groupMembersAdded, const Tp::Contacts &groupLocalPendingMembersAdded,
+                               const Tp::Contacts &groupRemotePendingMembersAdded, const Tp::Contacts &groupMembersRemoved,
+                               const Tp::Channel::GroupMemberChangeDetails &details);
+    void onRolesChanged(const HandleRolesMap &added, const HandleRolesMap &removed);
 
 protected:
     History::MatchFlags matchFlagsForChannel(const Tp::ChannelPtr &channel);
+    void updateRoomParticipants(const Tp::TextChannelPtr channel);
+    void updateRoomRoles(const Tp::TextChannelPtr &channel, const RolesMap &rolesMap);
     QString hashThread(const QVariantMap &thread);
+    static QVariantMap getInterfaceProperties(const Tp::AbstractInterface *interface);
+    void updateRoomProperties(const Tp::TextChannelPtr &channel, const QVariantMap &properties);
+    void updateRoomProperties(const QString &accountId, const QString &threadId, History::EventType type, const QVariantMap &properties, const QStringList &invalidated);
 
+    void writeInformationEvent(const QVariantMap &thread, History::InformationType type, const QString &subject = QString(), const QString &sender = QString("self"), const QString &text = QString());
+
+    void writeRoomChangesInformationEvents(const QVariantMap &thread, const QVariantMap &interfaceProperties);
+    void writeRolesInformationEvents(const QVariantMap &thread, const Tp::ChannelPtr &channel, const RolesMap &rolesMap);
+    void writeRolesChangesInformationEvents(const QVariantMap &thread, const Tp::ChannelPtr &channel, const RolesMap &rolesMap);
 private:
     HistoryDaemon(QObject *parent = 0);
 

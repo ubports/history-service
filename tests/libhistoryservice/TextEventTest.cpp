@@ -53,33 +53,34 @@ void TextEventTest::testCreateNewEvent_data()
     QTest::addColumn<int>("messageStatus");
     QTest::addColumn<QDateTime>("readTimestamp");
     QTest::addColumn<QString>("subject");
+    QTest::addColumn<int>("informationType");
     QTest::addColumn<QStringList>("participants");
 
     QTest::newRow("unread message") << "testAccountId" << "testThreadId" << "testEventId"
                                     << "testSenderId" << QDateTime::currentDateTime().addDays(-10)
                                     << true << "One Test Message" << (int)History::MessageTypeText
-                                    << 0 << QDateTime::currentDateTime().addDays(-5) << "Test Subject"
+                                    << 0 << QDateTime::currentDateTime().addDays(-5) << "Test Subject" << (int) History::InformationTypeJoined
                                     << (QStringList() << "testParticipant");
     QTest::newRow("read message")   << "testAccountId2" << "testThreadId2" << "testEventId2"
                                     << "testSenderId2" << QDateTime::currentDateTime().addDays(-10)
                                     << false << "One Test Message" << (int)History::MessageTypeText
-                                    << 0 << QDateTime::currentDateTime().addDays(-5) << "Test Subject 2"
+                                    << 0 << QDateTime::currentDateTime().addDays(-5) << "Test Subject 2" << (int) History::InformationTypeLeaving
                                     << (QStringList() << "testParticipant2");
     QTest::newRow("message status") << "testAccountId" << "testThreadId" << "testEventId"
                                     << "testSenderId" << QDateTime::currentDateTime().addDays(-10)
                                     << true << "One Test Message" << (int)History::MessageTypeText
                                     << (int)History::MessageStatusAccepted
-                                    << QDateTime::currentDateTime().addDays(-5) << "Test Subject 3"
+                                    << QDateTime::currentDateTime().addDays(-5) << "Test Subject 3" << (int) History::InformationTypeSelfLeaving
                                     << (QStringList() << "testParticipant");
     QTest::newRow("multi party message") << "testAccountId" << "testThreadId" << "testEventId"
                                     << "testSenderId" << QDateTime::currentDateTime().addDays(-10)
                                     << true << "One Test Message" << (int)History::MessageTypeMultiPart
-                                    << 0 << QDateTime::currentDateTime().addDays(-5) << QString()
+                                    << 0 << QDateTime::currentDateTime().addDays(-5) << QString() << (int) History::InformationTypeNone
                                     << (QStringList() << "testParticipant");
     QTest::newRow("multiple participants") << "testAccountId2" << "testThreadId2" << "testEventId2"
                                     << "testSenderId2" << QDateTime::currentDateTime().addDays(-7)
                                     << true << "One Test Message 2" << (int)History::MessageTypeText
-                                    << 0 << QDateTime::currentDateTime().addDays(-4) << QString()
+                                    << 0 << QDateTime::currentDateTime().addDays(-4) << QString() << (int) History::InformationTypeNone
                                     << (QStringList() << "one" << "two" << "three" << "four");
 }
 
@@ -96,10 +97,11 @@ void TextEventTest::testCreateNewEvent()
     QFETCH(int, messageStatus);
     QFETCH(QDateTime, readTimestamp);
     QFETCH(QString, subject);
+    QFETCH(int, informationType);
     QFETCH(QStringList, participants);
     History::TextEvent event(accountId, threadId, eventId, senderId, timestamp, newEvent,
                              message, (History::MessageType)messageType, (History::MessageStatus)messageStatus,
-                             readTimestamp, subject, History::TextEventAttachments(),
+                             readTimestamp, subject, (History::InformationType) informationType, History::TextEventAttachments(),
                              participantsFromIdentifiers(accountId, participants));
 
     // check that the values are properly set
@@ -150,33 +152,34 @@ void TextEventTest::testFromProperties_data()
     QTest::addColumn<int>("messageStatus");
     QTest::addColumn<QDateTime>("readTimestamp");
     QTest::addColumn<QString>("subject");
+    QTest::addColumn<int>("informationType");
     QTest::addColumn<QStringList>("participants");
 
     QTest::newRow("unread message") << "testAccountId" << "testThreadId" << "testEventId"
                                     << "testSenderId" << QDateTime::currentDateTime().addDays(-10)
                                     << true << "One Test Message" << (int)History::MessageTypeText
-                                    << 0 << QDateTime::currentDateTime().addDays(-5) << "Test Subject"
+                                    << 0 << QDateTime::currentDateTime().addDays(-5) << "Test Subject" << (int) History::InformationTypeJoined
                                     << (QStringList() << "testParticipant");
     QTest::newRow("read message")   << "testAccountId2" << "testThreadId2" << "testEventId2"
                                     << "testSenderId2" << QDateTime::currentDateTime().addDays(-10)
                                     << false << "One Test Message" << (int)History::MessageTypeText
-                                    << 0 << QDateTime::currentDateTime().addDays(-5) << "Test Subject 2"
+                                    << 0 << QDateTime::currentDateTime().addDays(-5) << "Test Subject 2" << (int) History::InformationTypeNone
                                     << (QStringList() << "testParticipant2");
     QTest::newRow("message status") << "testAccountId" << "testThreadId" << "testEventId"
                                     << "testSenderId" << QDateTime::currentDateTime().addDays(-10)
                                     << true << "One Test Message" << (int)History::MessageTypeText
                                     << (int)History::MessageStatusAccepted
-                                    << QDateTime::currentDateTime().addDays(-5) << "Test Subject 3"
+                                    << QDateTime::currentDateTime().addDays(-5) << "Test Subject 3" << (int) History::InformationTypeNone
                                     << (QStringList() << "testParticipant");
     QTest::newRow("multi party message") << "testAccountId" << "testThreadId" << "testEventId"
                                     << "testSenderId" << QDateTime::currentDateTime().addDays(-10)
                                     << true << "One Test Message" << (int)History::MessageTypeMultiPart
-                                    << 0 << QDateTime::currentDateTime().addDays(-5) << QString()
+                                    << 0 << QDateTime::currentDateTime().addDays(-5) << QString() << (int) History::InformationTypeNone
                                     << (QStringList() << "testParticipant");
     QTest::newRow("multiple participants") << "testAccountId2" << "testThreadId2" << "testEventId2"
                                     << "testSenderId2" << QDateTime::currentDateTime().addDays(-7)
                                     << true << "One Test Message 2" << (int)History::MessageTypeText
-                                    << 0 << QDateTime::currentDateTime().addDays(-4) << QString()
+                                    << 0 << QDateTime::currentDateTime().addDays(-4) << QString() << (int) History::InformationTypeNone
                                     << (QStringList() << "one" << "two" << "three" << "four");
 }
 
@@ -193,6 +196,7 @@ void TextEventTest::testFromProperties()
     QFETCH(int, messageStatus);
     QFETCH(QDateTime, readTimestamp);
     QFETCH(QString, subject);
+    QFETCH(int, informationType);
     QFETCH(QStringList, participants);
 
     QVariantMap properties;
@@ -207,6 +211,7 @@ void TextEventTest::testFromProperties()
     properties[History::FieldMessageStatus] = messageStatus;
     properties[History::FieldReadTimestamp] = readTimestamp.toString("yyyy-MM-ddTHH:mm:ss.zzz");
     properties[History::FieldSubject] = subject;
+    properties[History::FieldInformationType] = informationType;
     properties[History::FieldParticipants] = participantsFromIdentifiers(accountId, participants).toVariantList();
 
     History::TextEvent textEvent = History::TextEvent::fromProperties(properties);
@@ -221,6 +226,7 @@ void TextEventTest::testFromProperties()
     QCOMPARE(textEvent.messageStatus(), (History::MessageStatus) messageStatus);
     QCOMPARE(textEvent.readTimestamp().toString(Qt::ISODate), readTimestamp.toString(Qt::ISODate));
     QCOMPARE(textEvent.subject(), subject);
+    QCOMPARE(textEvent.informationType(), (History::InformationType) informationType);
     QCOMPARE(textEvent.participants().identifiers(), participants);
 }
 
@@ -245,33 +251,34 @@ void TextEventTest::testProperties_data()
     QTest::addColumn<int>("messageStatus");
     QTest::addColumn<QDateTime>("readTimestamp");
     QTest::addColumn<QString>("subject");
+    QTest::addColumn<int>("informationType");
     QTest::addColumn<QStringList>("participants");
 
     QTest::newRow("unread message") << "testAccountId" << "testThreadId" << "testEventId"
                                     << "testSenderId" << QDateTime::currentDateTime().addDays(-10)
                                     << true << "One Test Message" << (int)History::MessageTypeText
-                                    << 0 << QDateTime::currentDateTime().addDays(-5) << "Test Subject"
+                                    << 0 << QDateTime::currentDateTime().addDays(-5) << "Test Subject"  << (int) History::InformationTypeNone
                                     << (QStringList() << "testParticipant");
     QTest::newRow("read message")   << "testAccountId2" << "testThreadId2" << "testEventId2"
                                     << "testSenderId2" << QDateTime::currentDateTime().addDays(-10)
                                     << false << "One Test Message" << (int)History::MessageTypeText
-                                    << 0 << QDateTime::currentDateTime().addDays(-5) << "Test Subject 2"
+                                    << 0 << QDateTime::currentDateTime().addDays(-5) << "Test Subject 2"  << (int) History::InformationTypeNone
                                     << (QStringList() << "testParticipant2");
     QTest::newRow("message status") << "testAccountId" << "testThreadId" << "testEventId"
                                     << "testSenderId" << QDateTime::currentDateTime().addDays(-10)
                                     << true << "One Test Message" << (int)History::MessageTypeText
                                     << (int)History::MessageStatusAccepted
-                                    << QDateTime::currentDateTime().addDays(-5) << "Test Subject 3"
+                                    << QDateTime::currentDateTime().addDays(-5) << "Test Subject 3" << (int) History::InformationTypeNone
                                     << (QStringList() << "testParticipant");
     QTest::newRow("multi party message") << "testAccountId" << "testThreadId" << "testEventId"
                                     << "testSenderId" << QDateTime::currentDateTime().addDays(-10)
                                     << true << "One Test Message" << (int)History::MessageTypeMultiPart
-                                    << 0 << QDateTime::currentDateTime().addDays(-5) << QString()
+                                    << 0 << QDateTime::currentDateTime().addDays(-5) << QString() << (int) History::InformationTypeNone
                                     << (QStringList() << "testParticipant");
     QTest::newRow("multiple participants") << "testAccountId2" << "testThreadId2" << "testEventId2"
                                     << "testSenderId2" << QDateTime::currentDateTime().addDays(-7)
                                     << true << "One Test Message 2" << (int)History::MessageTypeText
-                                    << 0 << QDateTime::currentDateTime().addDays(-4) << QString()
+                                    << 0 << QDateTime::currentDateTime().addDays(-4) << QString() << (int) History::InformationTypeNone
                                     << (QStringList() << "one" << "two" << "three" << "four");
 }
 
@@ -288,10 +295,11 @@ void TextEventTest::testProperties()
     QFETCH(int, messageStatus);
     QFETCH(QDateTime, readTimestamp);
     QFETCH(QString, subject);
+    QFETCH(int, informationType);
     QFETCH(QStringList, participants);
     History::TextEvent event(accountId, threadId, eventId, senderId, timestamp, newEvent,
                              message, (History::MessageType)messageType, (History::MessageStatus)messageStatus,
-                             readTimestamp, subject, History::TextEventAttachments(),
+                             readTimestamp, subject, History::InformationTypeNone, History::TextEventAttachments(),
                              participantsFromIdentifiers(accountId, participants));
 
     QVariantMap properties = event.properties();
@@ -306,6 +314,7 @@ void TextEventTest::testProperties()
     QCOMPARE(properties[History::FieldMessageStatus].toInt(), messageStatus);
     QCOMPARE(properties[History::FieldReadTimestamp].toString(), readTimestamp.toString("yyyy-MM-ddTHH:mm:ss.zzz"));
     QCOMPARE(properties[History::FieldSubject].toString(), subject);
+    QCOMPARE(properties[History::FieldInformationType].toInt(), informationType);
     QCOMPARE(History::Participants::fromVariantList(properties[History::FieldParticipants].toList()).identifiers(), participants);
 }
 

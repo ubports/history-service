@@ -102,11 +102,12 @@ void ThreadTest::testCreateNewThread()
         break;
     }
 
-    History::Thread threadItem(accountId, threadId, type, participantsFromIdentifiers(accountId, participants), event, count, unreadCount);
+    History::Thread threadItem(accountId, threadId, type, participantsFromIdentifiers(accountId, participants), event.timestamp(), event, count, unreadCount);
     QCOMPARE(threadItem.accountId(), accountId);
     QCOMPARE(threadItem.threadId(), threadId);
     QCOMPARE(threadItem.type(), type);
     QCOMPARE(threadItem.participants().identifiers(), participants);
+    QCOMPARE(threadItem.timestamp(), event.timestamp());
     QCOMPARE(threadItem.lastEvent(), event);
     QCOMPARE(threadItem.count(), count);
     QCOMPARE(threadItem.unreadCount(), unreadCount);
@@ -172,6 +173,7 @@ void ThreadTest::testFromProperties()
     QCOMPARE(thread.threadId(), threadId);
     QCOMPARE(thread.type(), type);
     QCOMPARE(thread.participants().identifiers(), participants);
+    QCOMPARE(thread.timestamp(), event.timestamp());
     QCOMPARE(thread.count(), count);
     QCOMPARE(thread.unreadCount(), unreadCount);
     QVERIFY(thread.lastEvent() == event);
@@ -229,7 +231,7 @@ void ThreadTest::testProperties()
         break;
     }
 
-    History::Thread threadItem(accountId, threadId, type, participantsFromIdentifiers(accountId, participants), event, count, unreadCount);
+    History::Thread threadItem(accountId, threadId, type, participantsFromIdentifiers(accountId, participants), event.timestamp(), event, count, unreadCount);
     QVariantMap properties = threadItem.properties();
     QCOMPARE(properties[History::FieldAccountId].toString(), accountId);
     QCOMPARE(properties[History::FieldThreadId].toString(), threadId);

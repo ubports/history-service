@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2014 Canonical, Ltd.
+ * Copyright (C) 2013-2016 Canonical, Ltd.
  *
  * Authors:
  *  Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>
@@ -40,7 +40,10 @@ HistoryModel::HistoryModel(QObject *parent) :
     mRoles[AccountIdRole] = "accountId";
     mRoles[ThreadIdRole] = "threadId";
     mRoles[ParticipantsRole] = "participants";
+    mRoles[ParticipantsRemotePendingRole] = "remotePendingParticipants";
+    mRoles[ParticipantsLocalPendingRole] = "localPendingParticipants";
     mRoles[TypeRole] = "type";
+    mRoles[TimestampRole] = "timestamp";
     mRoles[PropertiesRole] = "properties";
 
     connect(this, SIGNAL(rowsInserted(QModelIndex,int,int)), this, SIGNAL(countChanged()));
@@ -89,16 +92,79 @@ QVariant HistoryModel::data(const QModelIndex &index, int role) const
     case TypeRole:
         result = properties[History::FieldType];
         break;
-    case ParticipantsRole:
+    case ParticipantsRole: {
+        History::Participants participants = History::Participants::fromVariantList(properties[History::FieldParticipants].toList())
+                                             .filterByState(History::ParticipantStateRegular);
         if (mMatchContacts) {
-            result = History::ContactMatcher::instance()->contactInfo(properties[History::FieldAccountId].toString(),
-                                                                      History::Participants::fromVariantList(properties[History::FieldParticipants].toList()).identifiers());
+            QVariantList finalParticipantsList;
+            QVariantList participantsInfo = History::ContactMatcher::instance()->contactInfo(properties[History::FieldAccountId].toString(),
+                                                                                             participants.identifiers());
+            for (int i = 0; i < participantsInfo.count(); ++i) {
+                QVariantMap newMap = participantsInfo[i].toMap();
+                History::Participant participant = participants[i];
+                newMap[History::FieldParticipantState] = participant.state();
+                newMap[History::FieldParticipantRoles] = participant.roles();
+                finalParticipantsList << newMap;
+            }
+            result = finalParticipantsList;
         } else {
             //FIXME: handle contact changes
-            result = properties[History::FieldParticipants];
+            result = participants.identifiers();
         }
         break;
     }
+    case ParticipantsRemotePendingRole: {
+        History::Participants participants = History::Participants::fromVariantList(properties[History::FieldParticipants].toList())
+                                             .filterByState(History::ParticipantStateRemotePending);
+        if (mMatchContacts) {
+            QVariantList finalParticipantsList;
+            QVariantList participantsInfo = History::ContactMatcher::instance()->contactInfo(properties[History::FieldAccountId].toString(),
+                                                                      participants.identifiers());
+            int count = 0;
+            Q_FOREACH(const QVariant &participantInfo, participantsInfo) {
+                QVariantMap newMap = participantInfo.toMap();
+                newMap[History::FieldParticipantState] = participants.at(count).state();
+                newMap[History::FieldParticipantRoles] = participants.at(count++).roles();
+                finalParticipantsList << newMap;
+            }
+            result = finalParticipantsList;
+        } else {
+            //FIXME: handle contact changes
+            result = participants.identifiers();
+        }
+
+        break;
+    }
+    case ParticipantsLocalPendingRole: {
+        History::Participants participants = History::Participants::fromVariantList(properties[History::FieldParticipants].toList())
+                                             .filterByState(History::ParticipantStateLocalPending);
+        if (mMatchContacts) {
+            QVariantList finalParticipantsList;
+            QVariantList participantsInfo = History::ContactMatcher::instance()->contactInfo(properties[History::FieldAccountId].toString(),
+                                                                      participants.identifiers());
+            int count = 0;
+            Q_FOREACH(const QVariant &participantInfo, participantsInfo) {
+                QVariantMap newMap = participantInfo.toMap();
+                newMap[History::FieldParticipantState] = participants.at(count).state();
+                newMap[History::FieldParticipantRoles] = participants.at(count++).roles();
+                finalParticipantsList << newMap;
+            }
+            result = finalParticipantsList;
+        } else {
+            //FIXME: handle contact changes
+            result = participants.identifiers();
+        }
+
+        break;
+    }
+    case ParticipantIdsRole:
+        result = History::Participants::fromVariantList(properties[History::FieldParticipants].toList()).identifiers();
+        break;
+    case TimestampRole:
+        result = QDateTime::fromString(properties[History::FieldTimestamp].toString(), Qt::ISODate);
+        break;
+    }
+
     return result;
 }
 
@@ -187,17 +253,66 @@ void HistoryModel::setMatchContacts(bool value)
     }
 }
 
+QVariantMap HistoryModel::threadForProperties(const QString &accountId, int eventType, const QVariantMap &properties, int matchFlags, bool create)
+{
+    QVariantMap newProperties = properties;
+    if (properties.isEmpty()) {
+        return QVariantMap();
+    }
+
+    if (newProperties.contains(History::FieldParticipantIds)) {
+        newProperties[History::FieldParticipantIds] = newProperties[History::FieldParticipantIds].toStringList();
+    }
+ 
+    History::Thread thread = History::Manager::instance()->threadForProperties(accountId,
+                                                                               (History::EventType)eventType,
+                                                                               newProperties,
+                                                                               (History::MatchFlags)matchFlags,
+                                                                               create);
+    if (!thread.isNull()) {
+        return thread.properties();
+    }
+
+    return QVariantMap();
+}
+
+QString HistoryModel::threadIdForProperties(const QString &accountId, int eventType, const QVariantMap &properties, int matchFlags, bool create)
+{
+    QVariantMap newProperties = properties;
+    if (properties.isEmpty()) {
+        return QString::null;
+    }
+
+    if (newProperties.contains(History::FieldParticipantIds)) {
+        newProperties[History::FieldParticipantIds] = newProperties[History::FieldParticipantIds].toStringList();
+    }
+
+    History::Thread thread = History::Manager::instance()->threadForProperties(accountId,
+                                                                               (History::EventType)eventType,
+                                                                               newProperties,
+                                                                               (History::MatchFlags)matchFlags,
+                                                                               create);
+    if (!thread.isNull()) {
+        return thread.threadId();
+    }
+
+    return QString::null;
+}
+
 QVariantMap HistoryModel::threadForParticipants(const QString &accountId, int eventType, const QStringList &participants, int matchFlags, bool create)
 {
     if (participants.isEmpty()) {
         return QVariantMap();
     }
 
-    History::Thread thread = History::Manager::instance()->threadForParticipants(accountId,
-                                                                                 (History::EventType)eventType,
-                                                                                 participants,
-                                                                                 (History::MatchFlags)matchFlags,
-                                                                                 create);
+    QVariantMap properties;
+    properties[History::FieldParticipantIds] = participants;
+
+    History::Thread thread = History::Manager::instance()->threadForProperties(accountId,
+                                                                               (History::EventType)eventType,
+                                                                               properties,
+                                                                               (History::MatchFlags)matchFlags,
+                                                                               create);
     if (!thread.isNull()) {
         return thread.properties();
     }
@@ -211,11 +326,14 @@ QString HistoryModel::threadIdForParticipants(const QString &accountId, int even
         return QString::null;
     }
 
-    History::Thread thread = History::Manager::instance()->threadForParticipants(accountId,
-                                                                                 (History::EventType)eventType,
-                                                                                 participants,
-                                                                                 (History::MatchFlags)matchFlags,
-                                                                                 create);
+    QVariantMap properties;
+    properties[History::FieldParticipantIds] = participants;
+
+    History::Thread thread = History::Manager::instance()->threadForProperties(accountId,
+                                                                               (History::EventType)eventType,
+                                                                               properties,
+                                                                               (History::MatchFlags)matchFlags,
+                                                                               create);
     if (!thread.isNull()) {
         return thread.threadId();
     }
@@ -223,7 +341,7 @@ QString HistoryModel::threadIdForParticipants(const QString &accountId, int even
     return QString::null;
 }
 
-bool HistoryModel::writeTextInformationEvent(const QString &accountId, const QString &threadId, const QStringList &participants, const QString &message)
+bool HistoryModel::writeTextInformationEvent(const QString &accountId, const QString &threadId, const QStringList &participants, const QString &message, int informationType, const QString &subject)
 {
     if (participants.isEmpty() || threadId.isEmpty() || accountId.isEmpty()) {
         return false;
@@ -232,7 +350,7 @@ bool HistoryModel::writeTextInformationEvent(const QString &accountId, const QSt
     History::TextEvent historyEvent = History::TextEvent(accountId,
                                                          threadId,
                                                          QString(QCryptographicHash::hash(QByteArray(
-                                                                 QDateTime::currentDateTime().toString().toLatin1()), 
+                                                                 QDateTime::currentDateTimeUtc().toString("yyyyMMddhhmmsszzz").toLatin1()), 
                                                                  QCryptographicHash::Md5).toHex()),
                                                          "self",
                                                          QDateTime::currentDateTime(),
@@ -240,7 +358,9 @@ bool HistoryModel::writeTextInformationEvent(const QString &accountId, const QSt
                                                          message,
                                                          History::MessageTypeInformation,
                                                          History::MessageStatusUnknown,
-                                                         QDateTime::currentDateTime());
+                                                         QDateTime::currentDateTime(),
+                                                         subject,
+                                                         (History::InformationType)informationType);
     History::Events events;
     events << historyEvent;
     return History::Manager::instance()->writeEvents(events);

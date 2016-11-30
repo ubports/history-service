@@ -45,9 +45,11 @@ HistoryEventModel::HistoryEventModel(QObject *parent) :
     mRoles[TextMessageAttachmentsRole] = "textMessageAttachments";
     mRoles[TextReadTimestampRole] = "textReadTimestamp";
     mRoles[TextReadSubjectRole] = "textSubject";
+    mRoles[TextInformationTypeRole] = "textInformationType";
     mRoles[CallMissedRole] = "callMissed";
     mRoles[CallDurationRole] = "callDuration";
     mRoles[RemoteParticipantRole] = "remoteParticipant";
+    mRoles[SubjectAsAliasRole] = "subjectAsAlias";
 }
 
 int HistoryEventModel::rowCount(const QModelIndex &parent) const
@@ -135,6 +137,11 @@ QVariant HistoryEventModel::eventData(const History::Event &event, int role) con
             result = textEvent.subject();
         }
         break;
+    case TextInformationTypeRole:
+        if (!textEvent.isNull()) {
+            result = (int)textEvent.informationType();
+        }
+        break;
     case TextMessageAttachmentsRole:
         if (!textEvent.isNull()) {
             if (mAttachmentCache.contains(textEvent)) {
@@ -162,6 +169,16 @@ QVariant HistoryEventModel::eventData(const History::Event &event, int role) con
     case RemoteParticipantRole:
         if (!voiceEvent.isNull()) {
             result = voiceEvent.remoteParticipant();
+        }
+        break;
+    case SubjectAsAliasRole:
+        if (!textEvent.isNull()) {
+            QVariantMap contactInfo = History::ContactMatcher::instance()->contactInfo(event.accountId(), textEvent.subject());
+            QString returnValue = contactInfo[History::FieldAlias].toString();
+            if (returnValue.isEmpty()) {
+                returnValue = contactInfo[History::FieldIdentifier].toString();
+            }
+            return returnValue;
         }
         break;
     }

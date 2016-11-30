@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2014 Canonical, Ltd.
+ * Copyright (C) 2013-2016 Canonical, Ltd.
  *
  * Authors:
  *  Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>
@@ -39,14 +39,22 @@ class HistoryModel : public QAbstractListModel, public QQmlParserStatus
     Q_PROPERTY(EventType type READ type WRITE setType NOTIFY typeChanged)
     Q_PROPERTY(bool matchContacts READ matchContacts WRITE setMatchContacts NOTIFY matchContactsChanged)
     Q_PROPERTY(bool canFetchMore READ canFetchMore NOTIFY canFetchMoreChanged)
+    Q_ENUMS(ChatType)
     Q_ENUMS(EventType)
     Q_ENUMS(MessageType)
     Q_ENUMS(MatchFlag)
     Q_ENUMS(MessageStatus)
     Q_ENUMS(AttachmentFlag)
     Q_ENUMS(Role)
+    Q_ENUMS(InformationType)
 
 public:
+    enum ChatType {
+        ChatTypeNone = History::ChatTypeNone,
+        ChatTypeContact = History::ChatTypeContact,
+        ChatTypeRoom = History::ChatTypeRoom
+    };
+
     enum EventType {
         EventTypeText = History::EventTypeText,
         EventTypeVoice = History::EventTypeVoice
@@ -83,12 +91,36 @@ public:
         AttachmentPending = History::AttachmentPending,
         AttachmentError = History::AttachmentError
     };
+
+    enum InformationType
+    {
+        InformationTypeNone = History::InformationTypeNone,
+        InformationTypeSimChange = History::InformationTypeSimChange,
+        InformationTypeText = History::InformationTypeText,
+        InformationTypeSelfJoined = History::InformationTypeSelfJoined,
+        InformationTypeJoined = History::InformationTypeJoined,
+        InformationTypeTitleChanged = History::InformationTypeTitleChanged,
+        InformationTypeInvitationSent = History::InformationTypeInvitationSent,
+        InformationTypeLeaving = History::InformationTypeLeaving,
+        InformationTypeSelfLeaving = History::InformationTypeSelfLeaving,
+        InformationTypeAdminGranted = History::InformationTypeAdminGranted,
+        InformationTypeAdminRemoved = History::InformationTypeAdminRemoved,
+        InformationTypeSelfAdminGranted = History::InformationTypeSelfAdminGranted,
+        InformationTypeSelfAdminRemoved = History::InformationTypeSelfAdminRemoved,
+        InformationTypeSelfKicked = History::InformationTypeSelfKicked,
+        InformationTypeGroupGone = History::InformationTypeGroupGone
+    };
+
  
     enum Role {
         AccountIdRole = Qt::UserRole,
         ThreadIdRole,
         ParticipantsRole,
+        ParticipantsLocalPendingRole,
+        ParticipantsRemotePendingRole,
+        ParticipantIdsRole,
         TypeRole,
+        TimestampRole,
         PropertiesRole,
         LastRole
     };
@@ -112,6 +144,18 @@ public:
     bool matchContacts() const;
     void setMatchContacts(bool value);
 
+    Q_INVOKABLE QVariantMap threadForProperties(const QString &accountId,
+                                                int eventType,
+                                                const QVariantMap &properties,
+                                                int matchFlags = (int)History::MatchCaseSensitive,
+                                                bool create = false);
+
+    Q_INVOKABLE QString threadIdForProperties(const QString &accountId,
+                                                int eventType,
+                                                const QVariantMap &properties,
+                                                int matchFlags = (int)History::MatchCaseSensitive,
+                                                bool create = false);
+
     Q_INVOKABLE QVariantMap threadForParticipants(const QString &accountId,
                                                   int eventType,
                                                   const QStringList &participants,
@@ -125,7 +169,9 @@ public:
     Q_INVOKABLE bool writeTextInformationEvent(const QString &accountId,
                                    const QString &threadId,
                                    const QStringList &participants,
-                                   const QString &message);
+                                   const QString &message,
+                                   int informationType = (int)History::InformationTypeNone,
+                                   const QString &subject = QString());
 
     Q_INVOKABLE virtual QVariant get(int row) const;
 

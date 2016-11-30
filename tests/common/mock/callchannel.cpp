@@ -194,7 +194,8 @@ void MockCallChannel::setCallState(const QString &state)
             reason.reason = Tp::CallStateChangeReasonNoAnswer;
         }
         mCallChannel->setCallState(Tp::CallStateEnded, 0, reason, stateDetails);
-        mBaseChannel->close();
+        // leave the channel opened for a bit longer so that the call state gets propagated correctly.
+        QTimer::singleShot(10, mBaseChannel.data(), &Tp::BaseChannel::close);
     } else if (state == "active") {
         qDebug() << "active";
         mHoldIface->setHoldState(Tp::LocalHoldStateUnheld, Tp::LocalHoldStateReasonNone);
