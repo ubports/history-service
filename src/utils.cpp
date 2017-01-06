@@ -50,6 +50,7 @@ MatchFlags Utils::matchFlagsForAccount(const QString &accountId)
     if (protocolFlags.isEmpty()) {
         protocolFlags["ofono"] = MatchPhoneNumber;
         protocolFlags["multimedia"] = MatchPhoneNumber;
+        protocolFlags["sip"] = MatchPhoneNumber;
     }
 
     QString protocol = protocolFromAccountId(accountId);
@@ -57,7 +58,7 @@ MatchFlags Utils::matchFlagsForAccount(const QString &accountId)
         return protocolFlags[protocol];
     }
 
-    // default to this value
+    // default to phone number matching for now
     return History::MatchCaseSensitive;
 }
 
