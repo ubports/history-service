@@ -1353,8 +1353,10 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseEventResults(History::EventType typ
         event[History::FieldSenderId] = query.value(3);
         event[History::FieldTimestamp] = toLocalTimeString(query.value(4).toDateTime());
         event[History::FieldNewEvent] = query.value(5).toBool();
-        QStringList participants = query.value(6).toString().split("|,|");
-        event[History::FieldParticipants] = History::ContactMatcher::instance()->contactInfo(accountId, participants, true);
+        if (type != History::EventTypeText) {
+            QStringList participants = query.value(6).toString().split("|,|");
+            event[History::FieldParticipants] = History::ContactMatcher::instance()->contactInfo(accountId, participants, true);
+        }
 
         switch (type) {
         case History::EventTypeText:

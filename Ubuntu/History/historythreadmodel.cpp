@@ -294,6 +294,10 @@ void HistoryThreadModel::updateQuery()
             SIGNAL(threadsRemoved(History::Threads)),
             SLOT(onThreadsRemoved(History::Threads)));
     connect(mThreadView.data(),
+            SIGNAL(participantsChanged(int, const QString &accountId, const QString &threadId, History::Participants, History::Participants, History::Participants)),
+            SLOT(onParticipantsChanged(int, const QString &accountId, const QString &threadId, History::Participants, History::Participants, History::Participants)));
+
+    connect(mThreadView.data(),
             SIGNAL(invalidated()),
             SLOT(triggerQueryUpdate()));
 
@@ -309,6 +313,11 @@ void HistoryThreadModel::updateQuery()
     mCanFetchMore = true;
     Q_EMIT canFetchMoreChanged();
     fetchMore(QModelIndex());
+}
+
+
+void HistoryThreadModel::onParticipantsChanged(int type, const QString &accountId, const QString &threadId, const History::Participants &added, const History::Participants &removed, const History::Participants &modified)
+{
 }
 
 void HistoryThreadModel::onThreadsAdded(const History::Threads &threads)

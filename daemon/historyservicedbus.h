@@ -39,6 +39,12 @@ public:
     void notifyThreadsAdded(const QList<QVariantMap> &threads);
     void notifyThreadsModified(const QList<QVariantMap> &threads);
     void notifyThreadsRemoved(const QList<QVariantMap> &threads);
+    void notifyParticipantsChanged(int type,
+                                   const QString &accountId,
+                                   const QString &threadId,
+                                   const QList<QVariantMap> &added,
+                                   const QList<QVariantMap> &removed,
+                                   const QList<QVariantMap> &modified);
 
     void notifyEventsAdded(const QList<QVariantMap> &events);
     void notifyEventsModified(const QList<QVariantMap> &events);
@@ -70,6 +76,12 @@ Q_SIGNALS:
     void ThreadsAdded(const QList<QVariantMap> &threads);
     void ThreadsModified(const QList<QVariantMap> &threads);
     void ThreadsRemoved(const QList<QVariantMap> &threads);
+    void ParticipantsChanged(int type,
+                             const QString &accountId,
+                             const QString &threadId,
+                             const QList<QVariantMap> &added,
+                             const QList<QVariantMap> &removed,
+                             const QList<QVariantMap> &modified);
 
     void EventsAdded(const QList<QVariantMap> &events);
     void EventsModified(const QList<QVariantMap> &events);

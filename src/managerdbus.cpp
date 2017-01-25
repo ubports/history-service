@@ -50,6 +50,14 @@ ManagerDBus::ManagerDBus(QObject *parent) :
     connection.connect(DBusService, DBusObjectPath, DBusInterface, "ThreadsRemoved",
                        this, SLOT(onThreadsRemoved(QList<QVariantMap>)));
 
+    connection.connect(DBusService, DBusObjectPath, DBusInterface, "ParticipantsChanged",
+                       this, SLOT(onParticipantsChanged(int,
+                                                        QString,
+                                                        QString,
+                                                        QList<QVariantMap>,
+                                                        QList<QVariantMap>,
+                                                        QList<QVariantMap>)));
+
     connection.connect(DBusService, DBusObjectPath, DBusInterface, "EventsAdded",
                        this, SLOT(onEventsAdded(QList<QVariantMap>)));
     connection.connect(DBusService, DBusObjectPath, DBusInterface, "EventsModified",
@@ -166,6 +174,21 @@ void ManagerDBus::onThreadsModified(const QList<QVariantMap> &threads)
 void ManagerDBus::onThreadsRemoved(const QList<QVariantMap> &threads)
 {
     Q_EMIT threadsRemoved(threadsFromProperties(threads));
+}
+
+void ManagerDBus::onParticipantsChanged(int type,
+                                        const QString &accountId,
+                                        const QString &threadId,
+                                        const QList<QVariantMap> &added,
+                                        const QList<QVariantMap> &removed,
+                                        const QList<QVariantMap> &modified)
+{
+    Q_EMIT participantsChanged(type,
+                               accountId,
+                               threadId,
+                               Participants::fromVariantMapList(added),
+                               Participants::fromVariantMapList(removed),
+                               Participants::fromVariantMapList(modified));
 }
 
 void ManagerDBus::onEventsAdded(const QList<QVariantMap> &events)

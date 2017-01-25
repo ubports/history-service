@@ -62,6 +62,12 @@ Q_SIGNALS:
     void threadsAdded(const History::Threads &threads);
     void threadsModified(const History::Threads &threads);
     void threadsRemoved(const History::Threads &threads);
+    void participantsChanged(int type,
+                             const QString &accountId,
+                             const QString &threadId,
+                             const History::Participants &added,
+                             const History::Participants &removed,
+                             const History::Participants &modified);
 
     void eventsAdded(const History::Events &events);
     void eventsModified(const History::Events &events);
@@ -71,6 +77,12 @@ protected Q_SLOTS:
     void onThreadsAdded(const QList<QVariantMap> &threads);
     void onThreadsModified(const QList<QVariantMap> &threads);
     void onThreadsRemoved(const QList<QVariantMap> &threads);
+    void onParticipantsChanged(int type,
+                               const QString &accountId,
+                               const QString &threadId,
+                               const QList<QVariantMap> &added,
+                               const QList<QVariantMap> &removed,
+                               const QList<QVariantMap> &modified);
 
     void onEventsAdded(const QList<QVariantMap> &events);
     void onEventsModified(const QList<QVariantMap> &events);

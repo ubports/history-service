@@ -54,7 +54,7 @@ public:
     QVariantMap getSingleEvent(int type, const QString &accountId, const QString &threadId, const QString &eventId);
     QVariantMap getSingleEventFromTextChannel(const Tp::TextChannelPtr textChannel, const QString &messageId);
 
-    bool writeEvents(const QList<QVariantMap> &events, const QVariantMap &properties);
+    bool writeEvents(const QList<QVariantMap> &events, const QVariantMap &properties, bool notify = true);
     bool removeEvents(const QList<QVariantMap> &events);
     bool removeThreads(const QList<QVariantMap> &threads);
 
@@ -73,14 +73,14 @@ private Q_SLOTS:
 
 protected:
     History::MatchFlags matchFlagsForChannel(const Tp::ChannelPtr &channel);
-    void updateRoomParticipants(const Tp::TextChannelPtr channel);
-    void updateRoomRoles(const Tp::TextChannelPtr &channel, const RolesMap &rolesMap);
+    void updateRoomParticipants(const Tp::TextChannelPtr channel, bool notify = true);
+    void updateRoomRoles(const Tp::TextChannelPtr &channel, const RolesMap &rolesMap, bool notify = true);
     QString hashThread(const QVariantMap &thread);
     static QVariantMap getInterfaceProperties(const Tp::AbstractInterface *interface);
-    void updateRoomProperties(const Tp::TextChannelPtr &channel, const QVariantMap &properties);
-    void updateRoomProperties(const QString &accountId, const QString &threadId, History::EventType type, const QVariantMap &properties, const QStringList &invalidated);
+    void updateRoomProperties(const Tp::TextChannelPtr &channel, const QVariantMap &properties, bool notify = true);
+    void updateRoomProperties(const QString &accountId, const QString &threadId, History::EventType type, const QVariantMap &properties, const QStringList &invalidated, bool notify = true);
 
-    void writeInformationEvent(const QVariantMap &thread, History::InformationType type, const QString &subject = QString(), const QString &sender = QString("self"), const QString &text = QString());
+    void writeInformationEvent(const QVariantMap &thread, History::InformationType type, const QString &subject = QString(), const QString &sender = QString("self"), const QString &text = QString(), bool notify = true);
 
     void writeRoomChangesInformationEvents(const QVariantMap &thread, const QVariantMap &interfaceProperties);
     void writeRolesInformationEvents(const QVariantMap &thread, const Tp::ChannelPtr &channel, const RolesMap &rolesMap);
