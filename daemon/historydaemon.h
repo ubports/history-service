@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2016 Canonical, Ltd.
+ * Copyright (C) 2013-2017 Canonical, Ltd.
  *
  * Authors:
  *  Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>
@@ -73,7 +73,7 @@ private Q_SLOTS:
 
 protected:
     History::MatchFlags matchFlagsForChannel(const Tp::ChannelPtr &channel);
-    void updateRoomParticipants(const Tp::TextChannelPtr channel);
+    void updateRoomParticipants(const Tp::TextChannelPtr channel, bool notify = true);
     void updateRoomRoles(const Tp::TextChannelPtr &channel, const RolesMap &rolesMap);
     QString hashThread(const QVariantMap &thread);
     static QVariantMap getInterfaceProperties(const Tp::AbstractInterface *interface);

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2016 Canonical, Ltd.
+ * Copyright (C) 2013-2017 Canonical, Ltd.
  *
  * Authors:
  *  Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>
@@ -702,6 +702,8 @@ void HistoryDaemon::onGroupMembersChanged(const Tp::Contacts &groupMembersAdded,
     bool hasRemotePendingMembersAdded = groupRemotePendingMembersAdded.size() > 0;
     bool hasMembersAdded = groupMembersAdded.size() > 0;
     bool hasMembersRemoved = groupMembersRemoved.size() > 0;
+    Tp::ContactPtr selfContact = channel->connection()->selfContact();
+    bool selfContactIsPending = channel->groupRemotePendingContacts(true).contains(selfContact);
 
     if (hasRemotePendingMembersAdded || hasMembersAdded || hasMembersRemoved) {
         properties = propertiesFromChannel(channel);
@@ -710,7 +712,7 @@ void HistoryDaemon::onGroupMembersChanged(const Tp::Contacts &groupMembersAdded,
                                                        properties,
                                                        matchFlagsForChannel(channel),
                                                        false);
-        if (!thread.isEmpty()) {
+        if (!thread.isEmpty() && !selfContactIsPending) {
             if (hasRemotePendingMembersAdded) {
                 Q_FOREACH (const Tp::ContactPtr& contact, groupRemotePendingMembersAdded) {
                     if (!foundInThread(contact, thread)) {
@@ -758,10 +760,10 @@ void HistoryDaemon::onGroupMembersChanged(const Tp::Contacts &groupMembersAdded,
         }
     }
 
-    updateRoomParticipants(channel);
+    updateRoomParticipants(channel, !selfContactIsPending);
 }
 
-void HistoryDaemon::updateRoomParticipants(const Tp::TextChannelPtr channel)
+void HistoryDaemon::updateRoomParticipants(const Tp::TextChannelPtr channel, bool notify)
 {
     if (!channel) {
         return;
@@ -811,8 +813,10 @@ void HistoryDaemon::updateRoomParticipants(const Tp::TextChannelPtr channel)
     QString accountId = channel->property(History::FieldAccountId).toString();
     QString threadId = channel->targetId();
     if (mBackend->updateRoomParticipants(accountId, threadId, History::EventTypeText, participants)) {
-        QVariantMap updatedThread = getSingleThread(History::EventTypeText, accountId, threadId, QVariantMap());
-        mDBus.notifyThreadsModified(QList<QVariantMap>() << updatedThread);
+        if (notify) {
+            QVariantMap updatedThread = getSingleThread(History::EventTypeText, accountId, threadId, QVariantMap());
+            mDBus.notifyThreadsModified(QList<QVariantMap>() << updatedThread);
+        }
     }
 }
 
