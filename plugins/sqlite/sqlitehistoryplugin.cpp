@@ -315,8 +315,6 @@ QVariantMap SQLiteHistoryPlugin::threadForProperties(const QString &accountId,
         return QVariantMap();
     }
 
-    QSqlQuery query(SQLiteDatabase::instance()->database());
-
     History::ChatType chatType = (History::ChatType)properties[History::FieldChatType].toUInt();
 
     if (chatType == History::ChatTypeRoom) {
@@ -330,6 +328,24 @@ QVariantMap SQLiteHistoryPlugin::threadForProperties(const QString &accountId,
     History::Participants participants = History::Participants::fromVariant(properties[History::FieldParticipantIds]);
     // if chatType != Room, then we select the thread based on the participant list.
     return threadForParticipants(accountId, type, participants.identifiers(), matchFlags);
+}
+
+QString SQLiteHistoryPlugin::threadIdForProperties(const QString &accountId, History::EventType type, const QVariantMap &properties, History::MatchFlags matchFlags)
+{
+    if (properties.isEmpty()) {
+        return QString::null;
+    }
+
+    // if chat type is room, just get the threadId directly
+    History::ChatType chatType = (History::ChatType)properties[History::FieldChatType].toUInt();
+    if (chatType == History::ChatTypeRoom) {
+          QString threadId = properties[History::FieldThreadId].toString();
+          return threadId;
+    }
+
+    // if chat type is anything else, fallback to returning the threadId from the participants list
+    History::Participants participants = History::Participants::fromVariant(properties[History::FieldParticipantIds]);
+    threadForParticipants(accountId, type, participants.identifiers(), matchFlags)[History::FieldThreadId].toString();
 }
 
 QVariantMap SQLiteHistoryPlugin::threadForParticipants(const QString &accountId,
@@ -1317,7 +1333,8 @@ QString SQLiteHistoryPlugin::sqlQueryForEvents(History::EventType type, const QS
     QString queryText;
     switch (type) {
     case History::EventTypeText:
-        participantsField = participantsField.arg("text_events", QString::number(type));
+        // for text events we don't need the participants at all
+        participantsField = "\"\" as participants";
         queryText = QString("SELECT accountId, threadId, eventId, senderId, timestamp, newEvent, %1, "
                             "message, messageType, messageStatus, readTimestamp, subject, informationType FROM text_events %2 %3").arg(participantsField, modifiedCondition, order);
         break;

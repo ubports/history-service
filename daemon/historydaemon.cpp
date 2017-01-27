@@ -314,6 +314,31 @@ QVariantMap HistoryDaemon::threadForProperties(const QString &accountId,
     return thread;
 }
 
+QString HistoryDaemon::threadIdForProperties(const QString &accountId, History::EventType type, const QVariantMap &properties, History::MatchFlags matchFlags, bool create)
+{
+    if (!mBackend) {
+        return QString::null;
+    }
+
+    QString threadId = mBackend->threadIdForProperties(accountId,
+                                                       type,
+                                                       properties,
+                                                       matchFlags);
+    if (threadId.isEmpty() && create) {
+        QVariantMap thread = mBackend->createThreadForProperties(accountId, type, properties);
+        if (!thread.isEmpty()) {
+            if (properties.contains("Requested") && properties[History::FieldChatType].toInt() == History::ChatTypeRoom) {
+                QVariantMap map = thread[History::FieldChatRoomInfo].toMap();
+                map["Requested"] = properties["Requested"];
+                thread[History::FieldChatRoomInfo] = map;
+            }
+            mDBus.notifyThreadsAdded(QList<QVariantMap>() << thread);
+            threadId = thread[History::FieldThreadId].toString();
+        }
+    }
+    return threadId;
+}
+
 QString HistoryDaemon::queryThreads(int type, const QVariantMap &sort, const QVariantMap &filter, const QVariantMap &properties)
 {
     if (!mBackend) {
@@ -407,7 +432,9 @@ bool HistoryDaemon::writeEvents(const QList<QVariantMap> &events, const QVariant
         threads[hash] = thread;
 
         // set the participants field in the event
-        savedEvent[History::FieldParticipants] = thread[History::FieldParticipants];
+        if (type == History::EventTypeVoice) {
+            savedEvent[History::FieldParticipants] = thread[History::FieldParticipants];
+        }
 
 
         // check if the event was a new one or a modification to an existing one
@@ -959,19 +986,20 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
         return;
     }
 
-    QVariantMap thread = threadForProperties(textChannel->property(History::FieldAccountId).toString(),
-                                                                   History::EventTypeText,
-                                                                   properties,
-                                                                   matchFlagsForChannel(textChannel),
-                                                                   true);
+    QString accountId = textChannel->property(History::FieldAccountId).toString();
+    QString threadId = threadIdForProperties(accountId,
+                                             History::EventTypeText,
+                                             properties,
+                                             matchFlagsForChannel(textChannel),
+                                             true);
     int count = 1;
     QList<QVariantMap> attachments;
     History::MessageType type = History::MessageTypeText;
     QString subject;
 
     if (message.hasNonTextContent()) {
-        QString normalizedAccountId = QString(QCryptographicHash::hash(thread[History::FieldAccountId].toString().toLatin1(), QCryptographicHash::Md5).toHex());
-        QString normalizedThreadId = QString(QCryptographicHash::hash(thread[History::FieldThreadId].toString().toLatin1(), QCryptographicHash::Md5).toHex());
+        QString normalizedAccountId = QString(QCryptographicHash::hash(accountId.toLatin1(), QCryptographicHash::Md5).toHex());
+        QString normalizedThreadId = QString(QCryptographicHash::hash(threadId.toLatin1(), QCryptographicHash::Md5).toHex());
         QString normalizedEventId = QString(QCryptographicHash::hash(eventId.toLatin1(), QCryptographicHash::Md5).toHex());
         QString mmsStoragePath = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation);
 
@@ -1004,8 +1032,8 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
             file.close();
 
             QVariantMap attachment;
-            attachment[History::FieldAccountId] = thread[History::FieldAccountId];
-            attachment[History::FieldThreadId] = thread[History::FieldThreadId];
+            attachment[History::FieldAccountId] = accountId;
+            attachment[History::FieldThreadId] = threadId;
             attachment[History::FieldEventId] = eventId;
             attachment[History::FieldAttachmentId] = part["identifier"].variant();
             attachment[History::FieldContentType] = part["content-type"].variant();
@@ -1017,8 +1045,8 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
 
     QVariantMap event;
     event[History::FieldType] = History::EventTypeText;
-    event[History::FieldAccountId] = thread[History::FieldAccountId];
-    event[History::FieldThreadId] = thread[History::FieldThreadId];
+    event[History::FieldAccountId] = accountId;
+    event[History::FieldThreadId] = threadId;
     event[History::FieldEventId] = eventId;
     event[History::FieldSenderId] = senderId;
     event[History::FieldTimestamp] = message.received().toString("yyyy-MM-ddTHH:mm:ss.zzz");

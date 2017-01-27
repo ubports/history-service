@@ -65,6 +65,10 @@ public:
                                               EventType type,
                                               const QVariantMap &properties,
                                               History::MatchFlags matchFlags = History::MatchCaseSensitive) = 0;
+    virtual QString threadIdForProperties(const QString &accountId,
+                                          EventType type,
+                                          const QVariantMap &properties,
+                                          History::MatchFlags matchFlags = History::MatchCaseSensitive) = 0;
 
     virtual QList<QVariantMap> eventsForThread(const QVariantMap &thread) = 0;
 
