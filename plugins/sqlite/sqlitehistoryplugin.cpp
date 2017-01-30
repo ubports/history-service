@@ -345,7 +345,7 @@ QString SQLiteHistoryPlugin::threadIdForProperties(const QString &accountId, His
 
     // if chat type is anything else, fallback to returning the threadId from the participants list
     History::Participants participants = History::Participants::fromVariant(properties[History::FieldParticipantIds]);
-    threadForParticipants(accountId, type, participants.identifiers(), matchFlags)[History::FieldThreadId].toString();
+    return threadForParticipants(accountId, type, participants.identifiers(), matchFlags)[History::FieldThreadId].toString();
 }
 
 QVariantMap SQLiteHistoryPlugin::threadForParticipants(const QString &accountId,
