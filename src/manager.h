@@ -79,6 +79,7 @@ Q_SIGNALS:
     void threadsAdded(const History::Threads &threads);
     void threadsModified(const History::Threads &threads);
     void threadsRemoved(const History::Threads &threads);
+    void threadParticipantsChanged(const History::Thread &thread, const History::Participants &added, const History::Participants &removed, const History::Participants &modified);
 
     void eventsAdded(const History::Events &events);
     void eventsModified(const History::Events &events);

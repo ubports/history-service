@@ -187,6 +187,7 @@ QVariantMap HistoryDaemon::propertiesFromChannel(const Tp::ChannelPtr &textChann
     QVariantMap properties;
     QVariantList participants;
     QStringList participantIds;
+    QString accountId = textChannel->property(History::FieldAccountId).toString();
 
     ChannelInterfaceRolesInterface *roles_interface = textChannel->optionalInterface<ChannelInterfaceRolesInterface>();
     RolesMap roles;
@@ -197,7 +198,7 @@ QVariantMap HistoryDaemon::propertiesFromChannel(const Tp::ChannelPtr &textChann
     Q_FOREACH(const Tp::ContactPtr contact, textChannel->groupContacts(false)) {
         QVariantMap contactProperties;
         contactProperties[History::FieldAlias] = contact->alias();
-        contactProperties[History::FieldAccountId] = textChannel->property(History::FieldAccountId).toString();
+        contactProperties[History::FieldAccountId] = accountId;
         contactProperties[History::FieldIdentifier] = contact->id();
         contactProperties[History::FieldParticipantState] = History::ParticipantStateRegular;
         contactProperties[History::FieldParticipantRoles] = roles[contact->handle().at(0)];
@@ -208,7 +209,7 @@ QVariantMap HistoryDaemon::propertiesFromChannel(const Tp::ChannelPtr &textChann
     Q_FOREACH(const Tp::ContactPtr contact, textChannel->groupRemotePendingContacts(false)) {
         QVariantMap contactProperties;
         contactProperties[History::FieldAlias] = contact->alias();
-        contactProperties[History::FieldAccountId] = textChannel->property(History::FieldAccountId).toString();
+        contactProperties[History::FieldAccountId] = accountId;
         contactProperties[History::FieldIdentifier] = contact->id();
         contactProperties[History::FieldParticipantState] = History::ParticipantStateRemotePending;
         contactProperties[History::FieldParticipantRoles] = roles[contact->handle().at(0)];
@@ -219,7 +220,7 @@ QVariantMap HistoryDaemon::propertiesFromChannel(const Tp::ChannelPtr &textChann
     Q_FOREACH(const Tp::ContactPtr contact, textChannel->groupLocalPendingContacts(false)) {
         QVariantMap contactProperties;
         contactProperties[History::FieldAlias] = contact->alias();
-        contactProperties[History::FieldAccountId] = textChannel->property(History::FieldAccountId).toString();
+        contactProperties[History::FieldAccountId] = accountId;
         contactProperties[History::FieldIdentifier] = contact->id();
         contactProperties[History::FieldParticipantState] = History::ParticipantStateLocalPending;
         contactProperties[History::FieldParticipantRoles] = roles[contact->handle().at(0)];
@@ -231,7 +232,7 @@ QVariantMap HistoryDaemon::propertiesFromChannel(const Tp::ChannelPtr &textChann
             textChannel->targetContact() == textChannel->connection()->selfContact()) {
         QVariantMap contactProperties;
         contactProperties[History::FieldAlias] = textChannel->targetContact()->alias();
-        contactProperties[History::FieldAccountId] = textChannel->property(History::FieldAccountId).toString();
+        contactProperties[History::FieldAccountId] = accountId;
         contactProperties[History::FieldIdentifier] = textChannel->targetContact()->id();
         contactProperties[History::FieldParticipantState] = History::ParticipantStateRegular;
         participantIds << textChannel->targetContact()->id();
@@ -718,18 +719,33 @@ void HistoryDaemon::onGroupMembersChanged(const Tp::Contacts &groupMembersAdded,
                                                        matchFlagsForChannel(channel),
                                                        false);
         if (!thread.isEmpty()) {
+            QList<QVariantMap> added;
+            QList<QVariantMap> removed;
+            QList<QVariantMap> modified;
             if (hasRemotePendingMembersAdded) {
                 Q_FOREACH (const Tp::ContactPtr& contact, groupRemotePendingMembersAdded) {
                     if (!foundInThread(contact, thread)) {
-                        writeInformationEvent(thread, History::InformationTypeInvitationSent, contact->alias(), QString(), QString(), false);
+                        writeInformationEvent(thread, History::InformationTypeInvitationSent, contact->alias(), QString(), QString(), true);
+                        QVariantMap participant;
+                        participant[History::FieldIdentifier] = contact->id();
+                        participant[History::FieldAlias] = contact->alias();
+                        participant[History::FieldParticipantState] = History::ParticipantStateRemotePending;
+                        added << participant;
                     }
                 }
+
             }
             if (hasMembersAdded) {
                 Q_FOREACH (const Tp::ContactPtr& contact, groupMembersAdded) {
                     // if this member was not previously regular member in thread, notify about his join
                     if (!foundAsMemberInThread(contact, thread)) {
-                        writeInformationEvent(thread, History::InformationTypeJoined, contact->alias(), QString(), QString(), false);
+                        writeInformationEvent(thread, History::InformationTypeJoined, contact->alias(), QString(), QString(), true);
+
+                        QVariantMap participant;
+                        participant[History::FieldIdentifier] = contact->id();
+                        participant[History::FieldAlias] = contact->alias();
+                        participant[History::FieldParticipantState] = History::ParticipantStateRegular;
+                        added << participant;
                     }
                 }
             }
@@ -750,18 +766,23 @@ void HistoryDaemon::onGroupMembersChanged(const Tp::Contacts &groupMembersAdded,
                     }
                     writeInformationEvent(thread, type);
                     // update backend
-                    updateRoomProperties(channel, QVariantMap{{"Joined", false}}, false);
+                    updateRoomProperties(channel, QVariantMap{{"Joined", false}}, true);
                 }
                 else // don't notify any other group member removal if we are leaving the group
                 {
                     Q_FOREACH (const Tp::ContactPtr& contact, groupMembersRemoved) {
                         // inform about removed members other than us
                         if (contact->id() != channel->groupSelfContact()->id()) {
-                            writeInformationEvent(thread, History::InformationTypeLeaving, contact->alias(), QString(), QString(), false);
+                            writeInformationEvent(thread, History::InformationTypeLeaving, contact->alias(), QString(), QString(), true);
                         }
+                        QVariantMap participant;
+                        participant[History::FieldIdentifier] = contact->id();
+                        participant[History::FieldAlias] = contact->alias();
+                        removed << participant;
                     }
                 }
             }
+            mDBus.notifyThreadParticipantsChanged(thread, added, removed, QList<QVariantMap>());
         }
     }
 

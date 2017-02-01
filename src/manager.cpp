@@ -65,6 +65,9 @@ Manager::Manager()
             SIGNAL(threadsRemoved(History::Threads)),
             SIGNAL(threadsRemoved(History::Threads)));
     connect(d->dbus.data(),
+            SIGNAL(threadParticipantsChanged(History::Thread, History::Participants, History::Participants, History::Participants)),
+            SIGNAL(threadParticipantsChanged(History::Thread, History::Participants, History::Participants, History::Participants)));
+    connect(d->dbus.data(),
             SIGNAL(eventsAdded(History::Events)),
             SIGNAL(eventsAdded(History::Events)));
     connect(d->dbus.data(),

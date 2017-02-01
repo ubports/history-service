@@ -50,10 +50,8 @@ ManagerDBus::ManagerDBus(QObject *parent) :
     connection.connect(DBusService, DBusObjectPath, DBusInterface, "ThreadsRemoved",
                        this, SLOT(onThreadsRemoved(QList<QVariantMap>)));
 
-    connection.connect(DBusService, DBusObjectPath, DBusInterface, "ParticipantsChanged",
-                       this, SLOT(onParticipantsChanged(int,
-                                                        QString,
-                                                        QString,
+    connection.connect(DBusService, DBusObjectPath, DBusInterface, "ThreadParticipantsChanged",
+                       this, SLOT(onThreadParticipantsChanged(QVariantMap,
                                                         QList<QVariantMap>,
                                                         QList<QVariantMap>,
                                                         QList<QVariantMap>)));
@@ -176,16 +174,12 @@ void ManagerDBus::onThreadsRemoved(const QList<QVariantMap> &threads)
     Q_EMIT threadsRemoved(threadsFromProperties(threads));
 }
 
-void ManagerDBus::onParticipantsChanged(int type,
-                                        const QString &accountId,
-                                        const QString &threadId,
+void ManagerDBus::onThreadParticipantsChanged(const QVariantMap &thread,
                                         const QList<QVariantMap> &added,
                                         const QList<QVariantMap> &removed,
                                         const QList<QVariantMap> &modified)
 {
-    Q_EMIT participantsChanged(type,
-                               accountId,
-                               threadId,
+    Q_EMIT threadParticipantsChanged(threadsFromProperties(QList<QVariantMap>() << thread).first(),
                                Participants::fromVariantMapList(added),
                                Participants::fromVariantMapList(removed),
                                Participants::fromVariantMapList(modified));

@@ -294,8 +294,8 @@ void HistoryThreadModel::updateQuery()
             SIGNAL(threadsRemoved(History::Threads)),
             SLOT(onThreadsRemoved(History::Threads)));
     connect(mThreadView.data(),
-            SIGNAL(participantsChanged(int, const QString &accountId, const QString &threadId, History::Participants, History::Participants, History::Participants)),
-            SLOT(onParticipantsChanged(int, const QString &accountId, const QString &threadId, History::Participants, History::Participants, History::Participants)));
+            SIGNAL(threadParticipantsChanged(History::Thread, History::Participants, History::Participants, History::Participants)),
+            SLOT(onThreadParticipantsChanged(History::Thread, History::Participants, History::Participants, History::Participants)));
 
     connect(mThreadView.data(),
             SIGNAL(invalidated()),
@@ -316,8 +316,17 @@ void HistoryThreadModel::updateQuery()
 }
 
 
-void HistoryThreadModel::onParticipantsChanged(int type, const QString &accountId, const QString &threadId, const History::Participants &added, const History::Participants &removed, const History::Participants &modified)
+void HistoryThreadModel::onThreadParticipantsChanged(const History::Thread &thread, const History::Participants &added, const History::Participants &removed, const History::Participants &modified)
 {
+    int pos = mThreads.indexOf(thread);
+    if (pos >= 0) {
+        mThreads[pos].removeParticipants(removed);
+        mThreads[pos].removeParticipants(modified);
+        mThreads[pos].addParticipants(added);
+        mThreads[pos].addParticipants(modified);
+        QModelIndex idx = index(pos);
+        Q_EMIT dataChanged(idx, idx);
+    }
 }
 
 void HistoryThreadModel::onThreadsAdded(const History::Threads &threads)
