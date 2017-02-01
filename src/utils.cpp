@@ -175,4 +175,11 @@ QVariant Utils::getUserValue(const QString &interface, const QString &propName)
     return QVariant();
 }
 
+bool Utils::shouldIncludeParticipants(const QString &accountId)
+{
+    // FIXME
+    // this is obviously incorrect. we have to query the protocol files as a final solution
+    return protocolFromAccountId(accountId) != "irc";
+}
+
 }
