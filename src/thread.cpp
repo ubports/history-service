@@ -192,6 +192,22 @@ bool Thread::operator<(const Thread &other) const
     return selfData < otherData;
 }
 
+void Thread::removeParticipants(const Participants &participants)
+{
+    Q_D(Thread);
+    Q_FOREACH(const Participant &participant, participants) {
+        d->participants.removeAll(participant);
+    }
+}
+
+void Thread::addParticipants(const Participants &participants)
+{
+    Q_D(Thread);
+    Q_FOREACH(const Participant &participant, participants) {
+        d->participants.append(participant);
+    }
+}
+
 QVariantMap Thread::properties() const
 {
     Q_D(const Thread);
