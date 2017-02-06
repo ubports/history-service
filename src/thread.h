@@ -73,6 +73,8 @@ public:
     ChatType chatType() const;
     Threads groupedThreads() const;
     QVariantMap chatRoomInfo() const;
+    void addParticipants(const History::Participants &participants);
+    void removeParticipants(const History::Participants &participants);
 
     bool isNull() const;
     bool operator==(const Thread &other) const;

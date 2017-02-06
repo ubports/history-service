@@ -75,6 +75,14 @@ void HistoryServiceDBus::notifyEventsRemoved(const QList<QVariantMap> &events)
     Q_EMIT EventsRemoved(events);
 }
 
+void HistoryServiceDBus::notifyThreadParticipantsChanged(const QVariantMap &thread,
+                                                   const QList<QVariantMap> &added,
+                                                   const QList<QVariantMap> &removed,
+                                                   const QList<QVariantMap> &modified)
+{
+    Q_EMIT ThreadParticipantsChanged(thread, added, removed, modified);
+}
+
 QVariantMap HistoryServiceDBus::ThreadForProperties(const QString &accountId,
                                                     int type,
                                                     const QVariantMap &properties,
