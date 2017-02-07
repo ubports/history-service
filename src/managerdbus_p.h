@@ -56,6 +56,7 @@ public:
     bool removeEvents(const Events &events);
     Thread getSingleThread(EventType type, const QString &accountId, const QString &threadId, const QVariantMap &properties = QVariantMap());
     Event getSingleEvent(EventType type, const QString &accountId, const QString &threadId, const QString &eventId);
+    void markThreadsAsRead(const History::Threads &threads);
 
 Q_SIGNALS:
     // signals that will be triggered after processing bus signals

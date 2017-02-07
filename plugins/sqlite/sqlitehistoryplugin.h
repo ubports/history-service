@@ -77,6 +77,7 @@ public:
     bool updateRoomParticipantsRoles(const QString &accountId, const QString &threadId, History::EventType type, const QVariantMap &participantsRoles);
     bool updateRoomInfo(const QString &accountId, const QString &threadId, History::EventType type, const QVariantMap &properties, const QStringList &invalidated = QStringList());
     bool removeThread(const QVariantMap &thread);
+    QVariantMap markThreadAsRead(const QVariantMap &thread);
 
     History::EventWriteResult writeTextEvent(const QVariantMap &event);
     bool removeTextEvent(const QVariantMap &event);
