@@ -44,7 +44,6 @@ SQLiteHistoryThreadView::SQLiteHistoryThreadView(SQLiteHistoryPlugin *plugin,
     QString order;
     if (!sort.sortField().isNull()) {
         // WORKAROUND: Supports multiple fields by split it using ','
-        // The idea is to implement a list of sort from the top of the API
         Q_FOREACH(const QString& field, sort.sortField().split(",")) {
             order += QString("%1 %2, ")
                     .arg(field.trimmed())
