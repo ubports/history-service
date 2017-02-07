@@ -42,16 +42,14 @@ SQLiteHistoryEventView::SQLiteHistoryEventView(SQLiteHistoryPlugin *plugin,
     QString condition = mPlugin->filterToString(filter, filterValues);
     QString order;
     if (!sort.sortField().isNull()) {
-        // WORKAROUND: Supports multiple fields split by ','
-        // The idea is to implement a list of sort from the top of the API
+        // WORKAROUND: Supports multiple fields by split it using ','
         Q_FOREACH(const QString& field, sort.sortField().split(",")) {
             order += QString("%1 %2, ")
-                    .arg(field)
+                    .arg(field.trimmed())
                     .arg(sort.sortOrder() == Qt::AscendingOrder ? "ASC" : "DESC");
         }
 
-        order = QString("ORDER BY %1").arg(order.lastIndexOf(","));
-        qDebug() << "ORDER" << order;
+        order = QString("ORDER BY %1").arg(order.mid(0, order.lastIndexOf(",")));
         // FIXME: check case sensitiviy
     }
 

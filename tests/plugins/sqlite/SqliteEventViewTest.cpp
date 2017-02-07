@@ -39,6 +39,7 @@ private Q_SLOTS:
     void testNextPage();
     void testFilter();
     void testSort();
+    void testSortWithMultipleFields();
 
 private:
     SQLiteHistoryPlugin *mPlugin;
@@ -128,7 +129,26 @@ void SqliteEventViewTest::testSort()
     QCOMPARE(allEvents.first()[History::FieldEventId].toString(), QString("event%1").arg(EVENT_COUNT-1));
     QCOMPARE(allEvents.last()[History::FieldEventId].toString(), QString("event00"));
     delete view;
+}
 
+void SqliteEventViewTest::testSortWithMultipleFields()
+{
+    History::Sort ascendingSort(QString("%1, %2").arg(History::FieldAccountId).arg(History::FieldEventId), Qt::AscendingOrder);
+    //History::Sort ascendingSort(QString("%1").arg(History::FieldEventId), Qt::AscendingOrder);
+    History::PluginEventView *view = mPlugin->queryEvents(History::EventTypeText, ascendingSort);
+    QVERIFY(view->IsValid());
+    QList<QVariantMap> allEvents;
+    QList<QVariantMap> events = view->NextPage();
+    while (!events.isEmpty()) {
+        allEvents << events;
+        events = view->NextPage();
+    }
+
+    QCOMPARE(allEvents[0][History::FieldEventId].toString(), QString("event00"));
+    QCOMPARE(allEvents[0][History::FieldAccountId].toString(), QString("account0"));
+    QCOMPARE(allEvents[1][History::FieldEventId].toString(), QString("event01"));
+    QCOMPARE(allEvents[1][History::FieldAccountId].toString(), QString("account0"));
+    delete view;
 }
 
 void SqliteEventViewTest::populateDatabase()
@@ -136,7 +156,7 @@ void SqliteEventViewTest::populateDatabase()
     mPlugin->beginBatchOperation();
 
     // create two threads of each type
-    for (int i = 0; i < 2; ++i) {
+    for (int i = 1; i >= 0; --i) {
         QVariantMap voiceThread = mPlugin->createThreadForParticipants(QString("account%1").arg(i),
                                                                        History::EventTypeVoice,
                                                                        QStringList() << QString("participant%1").arg(i));
