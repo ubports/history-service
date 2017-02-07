@@ -415,10 +415,18 @@ void HistoryModel::timerEvent(QTimerEvent *event)
 
 bool HistoryModel::lessThan(const QVariantMap &left, const QVariantMap &right) const
 {
-    QVariant leftValue = left[sort()->sortField()];
-    QVariant rightValue = right[sort()->sortField()];
+    QStringList leftFields = sort()->sortField().split(",");
+    QStringList rightFields = sort()->sortField().split(",");
 
-    return leftValue < rightValue;
+    while(!leftFields.isEmpty()) {
+        QVariant leftValue = left[leftFields.takeFirst().trimmed()];
+        QVariant rightValue = right[rightFields.takeFirst().trimmed()];
+
+        if (leftValue != rightValue) {
+            return leftValue < rightValue;
+        }
+    }
+    return false;
 }
 
 int HistoryModel::positionForItem(const QVariantMap &item) const
