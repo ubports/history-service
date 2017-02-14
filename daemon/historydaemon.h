@@ -91,6 +91,8 @@ protected:
     void writeRoomChangesInformationEvents(const QVariantMap &thread, const QVariantMap &interfaceProperties);
     void writeRolesInformationEvents(const QVariantMap &thread, const Tp::ChannelPtr &channel, const RolesMap &rolesMap);
     void writeRolesChangesInformationEvents(const QVariantMap &thread, const Tp::ChannelPtr &channel, const RolesMap &rolesMap);
+
+    static History::MessageStatus fromTelepathyDeliveryStatus(Tp::DeliveryStatus deliveryStatus);
 private:
     HistoryDaemon(QObject *parent = 0);
 

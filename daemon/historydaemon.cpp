@@ -1017,32 +1017,7 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
             return;
         }
 
-        History::MessageStatus status;
-        switch (message.deliveryDetails().status()) {
-        case Tp::DeliveryStatusAccepted:
-            status = History::MessageStatusAccepted;
-            break;
-        case Tp::DeliveryStatusDeleted:
-            status = History::MessageStatusDeleted;
-            break;
-        case Tp::DeliveryStatusDelivered:
-            status = History::MessageStatusDelivered;
-            break;
-        case Tp::DeliveryStatusPermanentlyFailed:
-            status = History::MessageStatusPermanentlyFailed;
-            break;
-        case Tp::DeliveryStatusRead:
-            status = History::MessageStatusRead;
-            break;
-        case Tp::DeliveryStatusTemporarilyFailed:
-            status = History::MessageStatusTemporarilyFailed;
-            break;
-        case Tp::DeliveryStatusUnknown:
-            status = History::MessageStatusUnknown;
-            break;
-        }
-
-        textEvent[History::FieldMessageStatus] = (int) status;
+        textEvent[History::FieldMessageStatus] = (int) fromTelepathyDeliveryStatus(message.deliveryDetails().status());
         if (!writeEvents(QList<QVariantMap>() << textEvent, properties)) {
             qWarning() << "Failed to save the new message status!";
         }
@@ -1360,4 +1335,34 @@ void HistoryDaemon::writeRolesInformationEvents(const QVariantMap &thread, const
             writeInformationEvent(thread, History::InformationTypeSelfAdminGranted);
         }
     }
+}
+
+History::MessageStatus HistoryDaemon::fromTelepathyDeliveryStatus(Tp::DeliveryStatus deliveryStatus)
+{
+    History::MessageStatus status;
+    switch (deliveryStatus) {
+    case Tp::DeliveryStatusAccepted:
+        status = History::MessageStatusAccepted;
+        break;
+    case Tp::DeliveryStatusDeleted:
+        status = History::MessageStatusDeleted;
+        break;
+    case Tp::DeliveryStatusDelivered:
+        status = History::MessageStatusDelivered;
+        break;
+    case Tp::DeliveryStatusPermanentlyFailed:
+        status = History::MessageStatusPermanentlyFailed;
+        break;
+    case Tp::DeliveryStatusRead:
+        status = History::MessageStatusRead;
+        break;
+    case Tp::DeliveryStatusTemporarilyFailed:
+        status = History::MessageStatusTemporarilyFailed;
+        break;
+    case Tp::DeliveryStatusUnknown:
+        status = History::MessageStatusUnknown;
+        break;
+    }
+
+    return status;
 }
