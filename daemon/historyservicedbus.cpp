@@ -134,6 +134,11 @@ bool HistoryServiceDBus::RemoveThreads(const QList<QVariantMap> &threads)
     return HistoryDaemon::instance()->removeThreads(threads);
 }
 
+void HistoryServiceDBus::MarkThreadsAsRead(const QList<QVariantMap> &threads)
+{
+    return HistoryDaemon::instance()->markThreadsAsRead(threads);
+}
+
 bool HistoryServiceDBus::RemoveEvents(const QList<QVariantMap> &events)
 {
     return HistoryDaemon::instance()->removeEvents(events);

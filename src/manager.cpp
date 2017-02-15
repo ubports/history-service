@@ -107,6 +107,13 @@ Manager *Manager::instance()
     return self;
 }
 
+void Manager::markThreadsAsRead(const History::Threads &threads)
+{
+    Q_D(Manager);
+
+    d->dbus->markThreadsAsRead(threads);
+}
+
 ThreadViewPtr Manager::queryThreads(EventType type,
                                     const Sort &sort,
                                     const Filter &filter,

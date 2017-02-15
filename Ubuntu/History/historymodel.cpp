@@ -385,7 +385,7 @@ void HistoryModel::onContactInfoChanged(const QString &accountId, const QString 
             // FIXME: right now we might be grouping threads from different accounts, so we are not enforcing
             // the accountId to be the same as the one from the contact info, but maybe we need to do that
             // in the future?
-            if (History::Utils::compareIds(accountId, participant.identifier(), identifier)) {
+            if (History::Utils::compareIds(accountId, History::ContactMatcher::normalizeId(participant.identifier()), identifier)) {
                 changedIndexes << idx;
             }
         }

@@ -76,6 +76,16 @@ Thread ManagerDBus::threadForParticipants(const QString &accountId,
     return threadForProperties(accountId, type, properties, matchFlags, create);
 }
 
+void ManagerDBus::markThreadsAsRead(const History::Threads &threads)
+{
+    QList<QVariantMap> threadMap = threadsToProperties(threads);
+    if (threadMap.isEmpty()) {
+        return;
+    }
+
+    mInterface.asyncCall("MarkThreadsAsRead", QVariant::fromValue(threadMap));
+}
+
 Thread ManagerDBus::threadForProperties(const QString &accountId,
                                         EventType type,
                                         const QVariantMap &properties,

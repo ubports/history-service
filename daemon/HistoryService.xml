@@ -62,6 +62,13 @@
             <arg type="b" direction="out"/>
             <annotation name="org.qtproject.QtDBus.QtTypeName.In0" value="QList &lt; QVariantMap &gt;"/>
         </method>
+        <method name="MarkThreadsAsRead">
+            <dox:d><![CDATA[
+                Mark an entire thread as read
+            ]]></dox:d>
+            <arg name="threads" type="a(a{sv})" direction="in"/>
+            <annotation name="org.qtproject.QtDBus.QtTypeName.In0" value="QList &lt; QVariantMap &gt;"/>
+        </method>
         <method name="QueryThreads">
             <dox:d><![CDATA[
                 Creates a threads view with the given filter and sort order.

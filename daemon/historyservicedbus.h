@@ -62,6 +62,7 @@ public:
     bool WriteEvents(const QList <QVariantMap> &events);
     bool RemoveThreads(const QList <QVariantMap> &threads);
     bool RemoveEvents(const QList <QVariantMap> &events);
+    void MarkThreadsAsRead(const QList <QVariantMap> &threads);
 
     // views
     QString QueryThreads(int type, const QVariantMap &sort, const QVariantMap &filter, const QVariantMap &properties);

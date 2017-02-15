@@ -51,6 +51,8 @@ public:
     // this will only watch for contact changes affecting the identifier, but won't fetch contact info
     void watchIdentifier(const QString &accountId, const QString &identifier, const QVariantMap &currentInfo = QVariantMap());
 
+    static QString normalizeId(const QString &id);
+
 Q_SIGNALS:
     void contactInfoChanged(const QString &acountId, const QString &identifier, const QVariantMap &contactInfo);
 
