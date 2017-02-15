@@ -95,7 +95,7 @@ QVariant HistoryEventModel::eventData(const History::Event &event, int role) con
         result = event.eventId();
         break;
     case SenderIdRole:
-        result = event.senderId();
+        result = History::ContactMatcher::normalizeId(event.senderId());
         break;
     case SenderRole:
         if (mMatchContacts) {
@@ -175,7 +175,7 @@ QVariant HistoryEventModel::eventData(const History::Event &event, int role) con
         break;
     case RemoteParticipantRole:
         if (!voiceEvent.isNull()) {
-            result = voiceEvent.remoteParticipant();
+            result = History::ContactMatcher::normalizeId(voiceEvent.remoteParticipant());
         }
         break;
     case SubjectAsAliasRole:
