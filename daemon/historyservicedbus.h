@@ -83,8 +83,22 @@ Q_SIGNALS:
     void EventsModified(const QList<QVariantMap> &events);
     void EventsRemoved(const QList<QVariantMap> &events);
 
+protected:
+    void timerEvent(QTimerEvent *event) override;
+
+protected Q_SLOTS:
+    void triggerSignals();
+    void processSignals();
+
 private:
     HistoryServiceAdaptor *mAdaptor;
+    QList<QVariantMap> mThreadsAdded;
+    QList<QVariantMap> mThreadsModified;
+    QList<QVariantMap> mThreadsRemoved;
+    QList<QVariantMap> mEventsAdded;
+    QList<QVariantMap> mEventsModified;
+    QList<QVariantMap> mEventsRemoved;
+    int mSignalsTimer;
 };
 
 #endif // HISTORYSERVICEDBUS_H
