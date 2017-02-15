@@ -306,6 +306,37 @@ History::PluginEventView *SQLiteHistoryPlugin::queryEvents(History::EventType ty
     return new SQLiteHistoryEventView(this, type, sort, filter);
 }
 
+QVariantMap SQLiteHistoryPlugin::markThreadAsRead(const QVariantMap &thread)
+{
+    QSqlQuery query(SQLiteDatabase::instance()->database());
+
+    if (thread[History::FieldAccountId].toString().isEmpty() ||
+           thread[History::FieldThreadId].toString().isEmpty()) {
+        return QVariantMap();
+    }
+
+    query.prepare("UPDATE text_events SET newEvent=:newEvent WHERE accountId=:accountId AND threadId=:threadId");
+    query.bindValue(":accountId", thread[History::FieldAccountId].toString());
+    query.bindValue(":threadId", thread[History::FieldThreadId].toString());
+    query.bindValue(":newEvent", false);
+
+    if (!query.exec()) {
+        qCritical() << "Failed to mark thread as read: Error:" << query.lastError() << query.lastQuery() << query.executedQuery();
+        return QVariantMap();
+    }
+
+    QVariantMap existingThread = getSingleThread((History::EventType) thread[History::FieldType].toInt(),
+                                                 thread[History::FieldAccountId].toString(),
+                                                 thread[History::FieldThreadId].toString(),
+                                                 QVariantMap());
+    if (!existingThread.isEmpty()) {
+        addThreadsToCache(QList<QVariantMap>() << existingThread);
+        return existingThread;
+    }
+
+    return QVariantMap();
+}
+
 QVariantMap SQLiteHistoryPlugin::threadForProperties(const QString &accountId,
                                                        History::EventType type,
                                                        const QVariantMap &properties,

@@ -131,8 +131,8 @@ HistoryDaemon::HistoryDaemon(QObject *parent)
     History::TelepathyHelper::instance()->registerChannelObserver();
 
     connect(&mCallObserver,
-            SIGNAL(callEnded(Tp::CallChannelPtr)),
-            SLOT(onCallEnded(Tp::CallChannelPtr)));
+            SIGNAL(callEnded(Tp::CallChannelPtr, bool)),
+            SLOT(onCallEnded(Tp::CallChannelPtr, bool)));
     connect(&mTextObserver,
             SIGNAL(messageReceived(Tp::TextChannelPtr,Tp::ReceivedMessage)),
             SLOT(onMessageReceived(Tp::TextChannelPtr,Tp::ReceivedMessage)));
@@ -561,6 +561,29 @@ bool HistoryDaemon::removeEvents(const QList<QVariantMap> &events)
     return true;
 }
 
+void HistoryDaemon::markThreadsAsRead(const QList<QVariantMap> &threads)
+{
+    if (!mBackend) {
+        return;
+    }
+
+    QList<QVariantMap> modifiedThreads;
+   
+    Q_FOREACH(const QVariantMap &thread, threads) {
+        mBackend->beginBatchOperation();
+        QVariantMap newThread = mBackend->markThreadAsRead(thread);
+        if (!newThread.isEmpty()) {
+            modifiedThreads << newThread;
+        }
+
+        mBackend->endBatchOperation();
+    }
+
+    if (!modifiedThreads.isEmpty()) {
+        mDBus.notifyThreadsModified(modifiedThreads);
+    }
+}
+
 bool HistoryDaemon::removeThreads(const QList<QVariantMap> &threads)
 {
     if (!mBackend) {
@@ -611,7 +634,7 @@ void HistoryDaemon::onObserverCreated()
             &mTextObserver, SLOT(onTextChannelAvailable(Tp::TextChannelPtr)));
 }
 
-void HistoryDaemon::onCallEnded(const Tp::CallChannelPtr &channel)
+void HistoryDaemon::onCallEnded(const Tp::CallChannelPtr &channel, bool missed)
 {
     QVariantMap properties = propertiesFromChannel(channel);
     QVariantList participants;
@@ -641,7 +664,6 @@ void HistoryDaemon::onCallEnded(const Tp::CallChannelPtr &channel)
     // FIXME: check if checking for isRequested() is enough
     bool incoming = !channel->isRequested();
     int duration;
-    bool missed = incoming && channel->callStateReason().reason == Tp::CallStateChangeReasonNoAnswer;
 
     if (!missed) {
         QDateTime activeTime = channel->property("activeTimestamp").toDateTime();
