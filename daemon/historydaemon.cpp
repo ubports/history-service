@@ -131,8 +131,8 @@ HistoryDaemon::HistoryDaemon(QObject *parent)
     History::TelepathyHelper::instance()->registerChannelObserver();
 
     connect(&mCallObserver,
-            SIGNAL(callEnded(Tp::CallChannelPtr)),
-            SLOT(onCallEnded(Tp::CallChannelPtr)));
+            SIGNAL(callEnded(Tp::CallChannelPtr, bool)),
+            SLOT(onCallEnded(Tp::CallChannelPtr, bool)));
     connect(&mTextObserver,
             SIGNAL(messageReceived(Tp::TextChannelPtr,Tp::ReceivedMessage)),
             SLOT(onMessageReceived(Tp::TextChannelPtr,Tp::ReceivedMessage)));
@@ -590,7 +590,7 @@ void HistoryDaemon::onObserverCreated()
             &mTextObserver, SLOT(onTextChannelAvailable(Tp::TextChannelPtr)));
 }
 
-void HistoryDaemon::onCallEnded(const Tp::CallChannelPtr &channel)
+void HistoryDaemon::onCallEnded(const Tp::CallChannelPtr &channel, bool missed)
 {
     QVariantMap properties = propertiesFromChannel(channel);
     QVariantList participants;
@@ -620,7 +620,6 @@ void HistoryDaemon::onCallEnded(const Tp::CallChannelPtr &channel)
     // FIXME: check if checking for isRequested() is enough
     bool incoming = !channel->isRequested();
     int duration;
-    bool missed = incoming && channel->callStateReason().reason == Tp::CallStateChangeReasonNoAnswer;
 
     if (!missed) {
         QDateTime activeTime = channel->property("activeTimestamp").toDateTime();

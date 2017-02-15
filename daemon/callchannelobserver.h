@@ -35,13 +35,14 @@ public Q_SLOTS:
     void onCallChannelAvailable(Tp::CallChannelPtr callChannel);
 
 Q_SIGNALS:
-    void callEnded(Tp::CallChannelPtr callChannel);
+    void callEnded(Tp::CallChannelPtr callChannel, bool missed);
 
 protected Q_SLOTS:
     void onCallStateChanged(Tp::CallState state);
 
 private:
     QList<Tp::CallChannelPtr> mChannels;
+    QMap<Tp::CallChannel*,Tp::CallState> mCallStates;
 };
 
 #endif // CALLCHANNELOBSERVER_H
