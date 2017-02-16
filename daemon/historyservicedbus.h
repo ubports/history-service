@@ -88,6 +88,7 @@ protected:
     void timerEvent(QTimerEvent *event) override;
 
 protected Q_SLOTS:
+    void filterDuplicatesAndAdd(QList<QVariantMap> &targetList, const QList<QVariantMap> newItems, const QStringList &propertiesToCompare);
     void triggerSignals();
     void processSignals();
 

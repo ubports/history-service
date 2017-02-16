@@ -29,7 +29,7 @@
 #include <QTimerEvent>
 
 HistoryEventModel::HistoryEventModel(QObject *parent) :
-    HistoryModel(parent), mCanFetchMore(true), mEventWritingTimer(0)
+    HistoryModel(parent), mCanFetchMore(true)
 {
     // configure the roles
     mRoles = HistoryModel::roleNames();
@@ -318,23 +318,6 @@ bool HistoryEventModel::removeEventAttachment(const QString &accountId, const QS
     return History::Manager::instance()->writeEvents(History::Events() << textEvent);
 }
 
-bool HistoryEventModel::markEventAsRead(const QString &accountId, const QString &threadId, const QString &eventId, int eventType)
-{
-    History::Event event = History::Manager::instance()->getSingleEvent((History::EventType)eventType, accountId, threadId, eventId);
-    event.setNewEvent(false);
-    if (event.type() == History::EventTypeText) {
-        History::TextEvent textEvent = event;
-        textEvent.setReadTimestamp(QDateTime::currentDateTime());
-        event = textEvent;
-    }
-    mEventWritingQueue << event;
-    if (mEventWritingTimer != 0) {
-        killTimer(mEventWritingTimer);
-    }
-    mEventWritingTimer  = startTimer(500);
-    return true;
-}
-
 void HistoryEventModel::updateQuery()
 {
     // remove all events from the model
@@ -448,25 +431,6 @@ void HistoryEventModel::onEventsRemoved(const History::Events &events)
     // FIXME: there is a corner case here: if an event was not loaded yet, but was already
     // removed by another client, it will still show up when a new page is requested. Maybe it
     // should be handle internally in History::EventView?
-}
-
-void HistoryEventModel::timerEvent(QTimerEvent *event)
-{
-    HistoryModel::timerEvent(event);
-    if (event->timerId() == mEventWritingTimer) {
-        killTimer(mEventWritingTimer);
-        mEventWritingTimer = 0;
-
-        if (mEventWritingQueue.isEmpty()) {
-            return;
-        }
-
-        qDebug() << "Goint to update" << mEventWritingQueue.count() << "events.";
-        if (History::Manager::instance()->writeEvents(mEventWritingQueue)) {
-            qDebug() << "... succeeded!";
-            mEventWritingQueue.clear();
-        }
-    }
 }
 
 History::Events HistoryEventModel::fetchNextPage()

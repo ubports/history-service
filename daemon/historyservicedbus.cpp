@@ -174,6 +174,25 @@ void HistoryServiceDBus::timerEvent(QTimerEvent *event)
     }
 }
 
+void HistoryServiceDBus::filterDuplicatesAndAdd(QList<QVariantMap> &targetList, const QList<QVariantMap> newItems, const QStringList &propertiesToCompare)
+{
+    Q_FOREACH (const QVariantMap &item, newItems) {
+        Q_FOREACH(const QVariantMap &existing, targetList) {
+            bool found = true;
+            Q_FOREACH(const QString &prop, propertiesToCompare) {
+                if (item[prop] != existing[prop]) {
+                    found = false;
+                    break;
+                }
+            }
+
+            if (!found) {
+                targetList << item;
+            }
+        }
+    }
+}
+
 void HistoryServiceDBus::triggerSignals()
 {
     qDebug() << __PRETTY_FUNCTION__;
