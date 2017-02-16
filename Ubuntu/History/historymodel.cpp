@@ -28,13 +28,14 @@
 #include "textevent.h"
 #include "manager.h"
 #include "utils_p.h"
+#include "voiceevent.h"
 #include <QTimerEvent>
 #include <QCryptographicHash>
 #include <QDebug>
 
 HistoryModel::HistoryModel(QObject *parent) :
     QAbstractListModel(parent), mFilter(0), mSort(new HistoryQmlSort(this)),
-    mType(EventTypeText), mMatchContacts(false), mUpdateTimer(0), mEventWritingTimer(0), mWaitingForQml(false)
+    mType(EventTypeText), mMatchContacts(false), mUpdateTimer(0), mEventWritingTimer(0), mThreadWritingTimer(0), mWaitingForQml(false)
 {
     // configure the roles
     mRoles[AccountIdRole] = "accountId";
@@ -425,6 +426,16 @@ void HistoryModel::timerEvent(QTimerEvent *event)
             qDebug() << "... succeeded!";
             mEventWritingQueue.clear();
         }
+    } else if (event->timerId() == mThreadWritingTimer) {
+        killTimer(mThreadWritingTimer);
+        mThreadWritingTimer = 0;
+
+        if (mThreadWritingQueue.isEmpty()) {
+            return;
+        }
+
+        History::Manager::instance()->markThreadsAsRead(mThreadWritingQueue);
+        mThreadWritingQueue.clear();
     }
 }
 
@@ -493,40 +504,55 @@ QVariant HistoryModel::get(int row) const
     return data;
 }
 
-bool HistoryModel::markEventAsRead(const QString &accountId, const QString &threadId, const QString &eventId, int eventType)
+bool HistoryModel::markEventAsRead(const QVariantMap &eventProperties)
 {
-    History::Event event = History::Manager::instance()->getSingleEvent((History::EventType)eventType, accountId, threadId, eventId);
+    History::Event event;
+    History::EventType type = (History::EventType) eventProperties[History::FieldType].toInt();
+    switch (type) {
+    case History::EventTypeText:
+        event = History::TextEvent::fromProperties(eventProperties);
+        break;
+    case History::EventTypeVoice:
+        event = History::VoiceEvent::fromProperties(eventProperties);
+        break;
+    }
+
     event.setNewEvent(false);
     if (event.type() == History::EventTypeText) {
         History::TextEvent textEvent = event;
         textEvent.setReadTimestamp(QDateTime::currentDateTime());
         event = textEvent;
     }
+    // for repeated events, keep the last called one only
+    if (mEventWritingQueue.contains(event)) {
+        mEventWritingQueue.removeOne(event);
+    }
     mEventWritingQueue << event;
     if (mEventWritingTimer != 0) {
         killTimer(mEventWritingTimer);
     }
-    mEventWritingTimer  = startTimer(500);
+    mEventWritingTimer = startTimer(500);
     return true;
 }
 
 void HistoryModel::markThreadsAsRead(const QVariantList &threadsProperties)
 {
-    History::Threads threads;
     Q_FOREACH(const QVariant &entry, threadsProperties) {
         QVariantMap threadProperties = entry.toMap();
         History::Thread thread = History::Thread::fromProperties(threadProperties);
 
         if (!thread.isNull()) {
-            threads << thread;
+            if (mThreadWritingQueue.contains(thread)) {
+                mThreadWritingQueue.removeOne(thread);
+            }
+            mThreadWritingQueue << thread;
         }
     }
 
-    if (threads.isEmpty()) {
-        return;
+    if (mThreadWritingTimer != 0) {
+        killTimer(mThreadWritingTimer);
     }
-
-    History::Manager::instance()->markThreadsAsRead(threads);
+    mThreadWritingTimer = startTimer(500);
 }
 
 void HistoryModel::classBegin()
