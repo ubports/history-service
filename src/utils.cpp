@@ -176,11 +176,14 @@ QVariant Utils::getUserValue(const QString &interface, const QString &propName)
     return QVariant();
 }
 
-bool Utils::shouldIncludeParticipants(const QString &accountId)
+bool Utils::shouldIncludeParticipants(const Thread &thread)
 {
     // FIXME
     // this is obviously incorrect. we have to query the protocol files as a final solution
-    return protocolFromAccountId(accountId) != "irc";
+    if (protocolFromAccountId(thread.accountId()) == "irc") {
+        return thread.chatType() != History::ChatTypeRoom;
+    }
+    return true;
 }
 
 }
