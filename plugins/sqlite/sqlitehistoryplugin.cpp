@@ -1306,7 +1306,7 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseThreadResults(History::EventType ty
                     chatRoomInfo["SelfRoles"] = query1.value(20).toInt();
 
                 thread[History::FieldChatRoomInfo] = chatRoomInfo;
-                if (!History::Utils::shouldIncludeParticipants(accountId)) {
+                if (!History::Utils::shouldIncludeParticipants(thread)) {
                     thread.remove(History::FieldParticipants);
                 }
             }
