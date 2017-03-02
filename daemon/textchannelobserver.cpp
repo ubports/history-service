@@ -39,10 +39,6 @@ void TextChannelObserver::onTextChannelAvailable(Tp::TextChannelPtr textChannel)
     connect(textChannel.data(),
             SIGNAL(messageSent(Tp::Message,Tp::MessageSendingFlags,QString)),
             SLOT(onMessageSent(Tp::Message,Tp::MessageSendingFlags,QString)));
-    connect(textChannel.data(),
-            SIGNAL(pendingMessageRemoved(const Tp::ReceivedMessage&)),
-            SLOT(onPendingMessageRemoved(const Tp::ReceivedMessage&)));
-
     Q_EMIT channelAvailable(textChannel);
 
     // process the messages that are already pending in the channel
@@ -82,14 +78,4 @@ void TextChannelObserver::onMessageSent(const Tp::Message &message, Tp::MessageS
     }
  
     Q_EMIT messageSent(textChannel, message, sentMessageToken);
-}
-
-void TextChannelObserver::onPendingMessageRemoved(const Tp::ReceivedMessage &message)
-{
-    Tp::TextChannelPtr textChannel(qobject_cast<Tp::TextChannel*>(sender()));
-    if (textChannel.isNull()) {
-        return;
-    }
-
-    Q_EMIT messageRead(textChannel, message);
 }

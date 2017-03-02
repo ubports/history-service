@@ -540,10 +540,9 @@ void HistoryModel::markThreadsAsRead(const QVariantList &threadsProperties)
     Q_FOREACH(const QVariant &entry, threadsProperties) {
         QVariantMap threadProperties = entry.toMap();
         History::Thread thread = History::Thread::fromProperties(threadProperties);
-
         if (!thread.isNull()) {
             if (mThreadWritingQueue.contains(thread)) {
-                mThreadWritingQueue.removeOne(thread);
+                continue;
             }
             mThreadWritingQueue << thread;
         }
@@ -552,7 +551,7 @@ void HistoryModel::markThreadsAsRead(const QVariantList &threadsProperties)
     if (mThreadWritingTimer != 0) {
         killTimer(mThreadWritingTimer);
     }
-    mThreadWritingTimer = startTimer(500);
+    mThreadWritingTimer = startTimer(2000);
 }
 
 void HistoryModel::classBegin()

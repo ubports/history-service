@@ -140,9 +140,6 @@ HistoryDaemon::HistoryDaemon(QObject *parent)
             SIGNAL(messageSent(Tp::TextChannelPtr,Tp::Message,QString)),
             SLOT(onMessageSent(Tp::TextChannelPtr,Tp::Message,QString)));
     connect(&mTextObserver,
-            SIGNAL(messageRead(Tp::TextChannelPtr,Tp::ReceivedMessage)),
-            SLOT(onMessageRead(Tp::TextChannelPtr,Tp::ReceivedMessage)));
-    connect(&mTextObserver,
             SIGNAL(channelAvailable(Tp::TextChannelPtr)),
             SLOT(onTextChannelAvailable(Tp::TextChannelPtr)));
     connect(&mTextObserver,
@@ -1149,22 +1146,6 @@ QVariantMap HistoryDaemon::getSingleEventFromTextChannel(const Tp::TextChannelPt
 
     return textEvent;
 
-}
-
-void HistoryDaemon::onMessageRead(const Tp::TextChannelPtr textChannel, const Tp::ReceivedMessage &message)
-{
-    QVariantMap textEvent = getSingleEventFromTextChannel(textChannel, message.messageToken());
-    QVariantMap properties = propertiesFromChannel(textChannel);
-
-    if (textEvent.isEmpty()) {
-        qWarning() << "Cound not find the original event to update with newEvent = false.";
-        return;
-    }
-
-    textEvent[History::FieldNewEvent] = false;
-    if (!writeEvents(QList<QVariantMap>() << textEvent, properties)) {
-        qWarning() << "Failed to save the new message status!";
-    }
 }
 
 void HistoryDaemon::onMessageSent(const Tp::TextChannelPtr textChannel, const Tp::Message &message, const QString &messageToken)
