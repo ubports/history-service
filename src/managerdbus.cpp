@@ -124,11 +124,8 @@ bool ManagerDBus::removeThreads(const Threads &threads)
         return false;
     }
 
-    QDBusReply<bool> reply = mInterface.call("RemoveThreads", QVariant::fromValue(threadMap));
-    if (!reply.isValid()) {
-        return false;
-    }
-    return reply.value();
+    mInterface.asyncCall("RemoveThreads", QVariant::fromValue(threadMap));
+    return true;
 }
 
 bool ManagerDBus::removeEvents(const Events &events)
@@ -138,11 +135,7 @@ bool ManagerDBus::removeEvents(const Events &events)
         return false;
     }
 
-    QDBusReply<bool> reply = mInterface.call("RemoveEvents", QVariant::fromValue(eventMap));
-    if (!reply.isValid()) {
-        return false;
-    }
-    return reply.value();
+    mInterface.asyncCall("RemoveEvents", QVariant::fromValue(eventMap));
 }
 
 Thread ManagerDBus::getSingleThread(EventType type, const QString &accountId, const QString &threadId, const QVariantMap &properties)
