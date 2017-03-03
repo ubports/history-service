@@ -20,16 +20,13 @@
  */
 
 #include "historydaemon.h"
+#include <QLockFile>
+#include <QDir>
 
 bool checkApplicationRunning()
 {
-    bool result = false;
-    QDBusReply<bool> reply = QDBusConnection::sessionBus().interface()->isServiceRegistered(History::DBusService);
-    if (reply.isValid()) {
-        result = reply.value();
-    }
-
-    return result;
+    static QLockFile *lockFile = new QLockFile(QDir::temp().absoluteFilePath("history-daemon.lock"));
+    return !lockFile->tryLock();
 }
 int main(int argc, char **argv)
 {
