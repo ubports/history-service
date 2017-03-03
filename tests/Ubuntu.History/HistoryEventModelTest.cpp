@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Canonical, Ltd.
+ * Copyright (C) 2016-2017 Canonical, Ltd.
  *
  * This file is part of history-service.
  *
@@ -88,9 +88,8 @@ void HistoryEventModelTest::testTelepathyInitializedCorrectly()
     // this will trigger the crash if tp-qt is not properly initialized
     qDebug() << model.index(0).data(HistoryEventModel::SenderRole);
 
-    // FIXME: we need to handle this case
-    //mManager->removeThreads(History::Threads() << textThread);
-    //QTRY_COMPARE(model.rowCount(), 0);
+    mManager->removeThreads(History::Threads() << textThread);
+    QTRY_COMPARE(model.rowCount(), 0);
 }
 
 QTEST_MAIN(HistoryEventModelTest)

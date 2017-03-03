@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 Canonical, Ltd.
+ * Copyright (C) 2013-2017 Canonical, Ltd.
  *
  * Authors:
  *  Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>
@@ -357,6 +357,9 @@ void HistoryEventModel::updateQuery()
             SIGNAL(eventsRemoved(History::Events)),
             SLOT(onEventsRemoved(History::Events)));
     connect(mView.data(),
+            SIGNAL(threadsRemoved(History::Threads)),
+            SLOT(onThreadsRemoved(History::Threads)));
+    connect(mView.data(),
             SIGNAL(invalidated()),
             SLOT(triggerQueryUpdate()));
 
@@ -431,6 +434,25 @@ void HistoryEventModel::onEventsRemoved(const History::Events &events)
     // FIXME: there is a corner case here: if an event was not loaded yet, but was already
     // removed by another client, it will still show up when a new page is requested. Maybe it
     // should be handle internally in History::EventView?
+}
+
+void HistoryEventModel::onThreadsRemoved(const History::Threads &threads)
+{
+    // When a thread is removed we don't get event removed signals,
+    // so we compare and find if we have an event matching that thread.
+    // in case we find it, we invalidate the whole view as there might be
+    // out of date cached data on the daemon side
+    int count = rowCount();
+    Q_FOREACH(const History::Thread &thread, threads) {
+        for (int i = 0; i < count; ++i) {
+            QModelIndex idx = index(i);
+            if (idx.data(AccountIdRole).toString() == thread.accountId() &&
+                idx.data(ThreadIdRole).toString() == thread.threadId()) {
+                triggerQueryUpdate();
+                return;
+            }
+        }
+    }
 }
 
 History::Events HistoryEventModel::fetchNextPage()

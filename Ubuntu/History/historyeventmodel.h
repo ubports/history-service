@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 Canonical, Ltd.
+ * Copyright (C) 2013-2017 Canonical, Ltd.
  *
  * Authors:
  *  Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>
@@ -73,6 +73,7 @@ protected Q_SLOTS:
     virtual void onEventsAdded(const History::Events &events);
     virtual void onEventsModified(const History::Events &events);
     virtual void onEventsRemoved(const History::Events &events);
+    virtual void onThreadsRemoved(const History::Threads &threads);
 
 protected:
     History::Events fetchNextPage();

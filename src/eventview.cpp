@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Canonical, Ltd.
+ * Copyright (C) 2013-2017 Canonical, Ltd.
  *
  * Authors:
  *  Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>
@@ -128,6 +128,10 @@ EventView::EventView(EventType type, const History::Sort &sort, const History::F
     connect(Manager::instance(),
             SIGNAL(eventsRemoved(History::Events)),
             SLOT(_d_eventsRemoved(History::Events)));
+    // we don't filter thread signals
+    connect(Manager::instance(),
+            SIGNAL(threadsRemoved(History::Threads)),
+            SIGNAL(threadsRemoved(History::Threads)));
 }
 
 EventView::~EventView()
