@@ -25,7 +25,12 @@
 
 bool checkApplicationRunning()
 {
-    static QLockFile *lockFile = new QLockFile(QDir::temp().absoluteFilePath("history-daemon.lock"));
+    QString lockPath = qgetenv("HISTORY_LOCK_FILE");
+    if (lockPath.isEmpty()) {
+        lockPath = QDir::temp().absoluteFilePath("history-daemon.lock");
+    }
+
+    static QLockFile *lockFile = new QLockFile(lockPath);
     return !lockFile->tryLock();
 }
 int main(int argc, char **argv)
