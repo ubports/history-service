@@ -164,6 +164,20 @@ Thread Manager::threadForProperties(const QString &accountId,
     return d->dbus->threadForProperties(accountId, type, properties, matchFlags, create);
 }
 
+/**
+ * @brief Request the list of participants of the given threads to the service
+ * @param threads The threads to be filled
+ *
+ * This is an asychronous request. When finished, the signal @ref threadParticipantsChanged
+ * will be emitted for the given threads.
+ */
+void Manager::requestThreadParticipants(const Threads &threads)
+{
+    Q_D(Manager);
+
+    d->dbus->requestThreadParticipants(threads);
+}
+
 Thread Manager::getSingleThread(EventType type, const QString &accountId, const QString &threadId, const QVariantMap &properties)
 {
     Q_D(Manager);

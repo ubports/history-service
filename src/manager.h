@@ -66,7 +66,7 @@ public:
                                const QVariantMap &properties,
                                History::MatchFlags matchFlags = History::MatchCaseSensitive,
                                bool create = false);
-
+    void requestThreadParticipants(const History::Threads &threads);
     Thread getSingleThread(EventType type, const QString &accountId, const QString &threadId, const QVariantMap &properties = QVariantMap());
 
     bool writeEvents(const History::Events &events);

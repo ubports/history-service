@@ -358,6 +358,14 @@ QString HistoryDaemon::threadIdForProperties(const QString &accountId, History::
     return threadId;
 }
 
+QList<QVariantMap> HistoryDaemon::participantsForThreads(const QList<QVariantMap> &threadIds)
+{
+    if (!mBackend) {
+        return QList<QVariantMap>();
+    }
+    return mBackend->participantsForThreads(threadIds);
+}
+
 QString HistoryDaemon::queryThreads(int type, const QVariantMap &sort, const QVariantMap &filter, const QVariantMap &properties)
 {
     if (!mBackend) {

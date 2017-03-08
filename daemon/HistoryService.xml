@@ -35,6 +35,15 @@
             <arg type="a{sv}" direction="out"/>
             <annotation name="org.qtproject.QtDBus.QtTypeName.Out0" value="QVariantMap"/>
         </method>
+        <method name="ParticipantsForThreads">
+            <dox:d><![CDATA[
+                Return the participants for the given threads
+            ]]></dox:d>
+            <arg name="threadIds" type="a(a{sv})" direction="in"/>
+            <annotation name="org.qtproject.QtDBus.QtTypeName.In0" value="QList &lt; QVariantMap &gt;"/>
+            <arg name="participants" type="a(a{sv})" direction="out"/>
+            <annotation name="org.qtproject.QtDBus.QtTypeName.Out0" value="QList &lt; QVariantMap &gt;"/>
+        </method>
         <method name="WriteEvents">
             <dox:d><![CDATA[
                 Write the given events to the storage.

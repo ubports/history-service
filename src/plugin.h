@@ -69,6 +69,7 @@ public:
                                           EventType type,
                                           const QVariantMap &properties,
                                           History::MatchFlags matchFlags = History::MatchCaseSensitive) = 0;
+    virtual QList<QVariantMap> participantsForThreads(const QList<QVariantMap> &threadIds) = 0;
 
     virtual QList<QVariantMap> eventsForThread(const QVariantMap &thread) = 0;
 

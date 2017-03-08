@@ -140,6 +140,11 @@ QVariantList ContactMatcher::contactInfo(const QString &accountId, const QString
     return contacts;
 }
 
+QVariantMap ContactMatcher::contactInfo(const QString &accountId, const QVariantMap &contact, bool synchronous)
+{
+    return contactInfo(accountId, contact[History::FieldIdentifier].toString(), synchronous, contact);
+}
+
 void ContactMatcher::watchIdentifier(const QString &accountId, const QString &identifier, const QVariantMap &currentInfo)
 {
     // only add the identifier to the map of watched identifiers

@@ -59,6 +59,7 @@ public:
                                     const QVariantMap &properties,
                                     int matchFlags,
                                     bool create);
+    QList<QVariantMap> ParticipantsForThreads(const QList<QVariantMap> &threadIds);
     bool WriteEvents(const QList <QVariantMap> &events);
     bool RemoveThreads(const QList <QVariantMap> &threads);
     bool RemoveEvents(const QList <QVariantMap> &events);
