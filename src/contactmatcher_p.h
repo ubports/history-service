@@ -47,7 +47,6 @@ public:
     static ContactMatcher *instance(QContactManager *manager = 0);
     QVariantMap contactInfo(const QString &accountId, const QString &identifier, bool synchronous = false, const QVariantMap &properties = QVariantMap());
     QVariantList contactInfo(const QString &accountId, const QStringList &identifiers, bool synchronous = false);
-    QVariantMap contactInfo(const QString &accountId, const QVariantMap &contact, bool synchronous = false);
 
     // this will only watch for contact changes affecting the identifier, but won't fetch contact info
     void watchIdentifier(const QString &accountId, const QString &identifier, const QVariantMap &currentInfo = QVariantMap());

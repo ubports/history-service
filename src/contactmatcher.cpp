@@ -106,7 +106,7 @@ QVariantMap ContactMatcher::contactInfo(const QString &accountId, const QString 
     // first do a simple string match on the map
     if (internalMap.contains(normalizedId)) {
         map = internalMap[normalizedId];
-    } if (History::TelepathyHelper::instance()->ready()) {
+    } else if (History::TelepathyHelper::instance()->ready()) {
         // and if there was no match, asynchronously request the info, and return an empty map for now
         map = requestContactInfo(accountId, normalizedId, synchronous);
     } else if (!synchronous) {
@@ -136,11 +136,6 @@ QVariantList ContactMatcher::contactInfo(const QString &accountId, const QString
         contacts << contactInfo(accountId, identifier, synchronous);
     }
     return contacts;
-}
-
-QVariantMap ContactMatcher::contactInfo(const QString &accountId, const QVariantMap &contact, bool synchronous)
-{
-    return contactInfo(accountId, contact[History::FieldIdentifier].toString(), synchronous, contact);
 }
 
 void ContactMatcher::watchIdentifier(const QString &accountId, const QString &identifier, const QVariantMap &currentInfo)
@@ -317,9 +312,15 @@ QVariantMap ContactMatcher::requestContactInfo(const QString &accountId, const Q
 {
     QString normalizedId = normalizeId(identifier);
     QStringList addressableVCardFields = addressableFields(accountId);
+
+    QVariantMap contactInfo;
+    contactInfo[History::FieldIdentifier] = identifier;
+    contactInfo[History::FieldAccountId] = accountId;
+
     if (addressableVCardFields.isEmpty()) {
+        mContactMap[accountId][identifier] = contactInfo;
         // FIXME: add support for generic accounts
-        return QVariantMap();
+        return contactInfo;
     }
 
     bool phoneCompare = addressableVCardFields.contains("tel");
@@ -360,7 +361,8 @@ QVariantMap ContactMatcher::requestContactInfo(const QString &accountId, const Q
     if (synchronous) {
         QList<QContact> contacts = mManager->contacts(topLevelFilter, QList<QContactSortOrder>(), hint);
         if (contacts.isEmpty()) {
-            return QVariantMap();
+            mContactMap[accountId][identifier] = contactInfo;
+            return contactInfo;
         }
         // for synchronous requests, return the results right away.
         return matchAndUpdate(accountId, normalizedId, contacts.first());
@@ -467,6 +469,14 @@ QStringList ContactMatcher::addressableFields(const QString &accountId)
 {
     if (mAddressableFields.contains(accountId)) {
         return mAddressableFields[accountId];
+    }
+
+    // FIXME: hardcoding account IDs here is not a good idea, we have to fix addressable fields on
+    // the protocols themselves
+    if (accountId.startsWith("irc/irc")) {
+        QStringList empty;
+        mAddressableFields[accountId] = empty;
+        return empty;
     }
 
     Tp::AccountPtr account = History::TelepathyHelper::instance()->accountForId(accountId);

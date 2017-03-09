@@ -403,11 +403,12 @@ QList<QVariantMap> SQLiteHistoryPlugin::participantsForThreads(const QList<QVari
 
         while (query.next()) {
             QVariantMap participant;
-            participant[History::FieldIdentifier] = query.value(0);
+            QString identifier = query.value(0).toString();
+            participant[History::FieldIdentifier] = identifier;
             participant[History::FieldAlias] = query.value(1);
             participant[History::FieldParticipantState] = query.value(2);
             participant[History::FieldParticipantRoles] = query.value(3);
-            participants << History::ContactMatcher::instance()->contactInfo(accountId, participant, true);
+            participants << History::ContactMatcher::instance()->contactInfo(accountId, identifier, true, participant);
         }
 
         result[History::FieldParticipants] = participants;
