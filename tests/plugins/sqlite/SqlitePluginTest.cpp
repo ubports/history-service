@@ -189,7 +189,6 @@ void SqlitePluginTest::testThreadForParticipants()
     QCOMPARE(retrievedThread[History::FieldType], thread[History::FieldType]);
     QCOMPARE(retrievedThread[History::FieldCount], thread[History::FieldCount]);
     QCOMPARE(retrievedThread[History::FieldUnreadCount], thread[History::FieldUnreadCount]);
-    QCOMPARE(retrievedThread[History::FieldParticipants], thread[History::FieldParticipants]);
 }
 
 void SqlitePluginTest::testEmptyThreadForParticipants()
@@ -219,7 +218,6 @@ void SqlitePluginTest::testGetSingleThread()
     QCOMPARE(retrievedThread[History::FieldType], thread[History::FieldType]);
     QCOMPARE(retrievedThread[History::FieldCount], thread[History::FieldCount]);
     QCOMPARE(retrievedThread[History::FieldUnreadCount], thread[History::FieldUnreadCount]);
-    QCOMPARE(retrievedThread[History::FieldParticipants], thread[History::FieldParticipants]);
 
     // FIXME: check that the last event data is also present
 }

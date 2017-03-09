@@ -406,6 +406,7 @@ QList<QVariantMap> SQLiteHistoryPlugin::participantsForThreads(const QList<QVari
             participant[History::FieldIdentifier] = query.value(0);
             participant[History::FieldAlias] = query.value(1);
             participant[History::FieldParticipantState] = query.value(2);
+            participant[History::FieldParticipantRoles] = query.value(3);
             participants << History::ContactMatcher::instance()->contactInfo(accountId, participant, true);
         }
 
@@ -1203,6 +1204,7 @@ QString SQLiteHistoryPlugin::sqlQueryForThreads(History::EventType type, const Q
 QList<QVariantMap> SQLiteHistoryPlugin::parseThreadResults(History::EventType type, QSqlQuery &query, const QVariantMap &properties)
 {
     QList<QVariantMap> threads;
+    QList<QVariantMap> threadsWithoutParticipants;
     QSqlQuery attachmentsQuery(SQLiteDatabase::instance()->database());
     QList<QVariantMap> attachments;
     bool grouped = false;
@@ -1278,7 +1280,7 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseThreadResults(History::EventType ty
             thread[History::FieldReadTimestamp] = toLocalTimeString(query.value(11).toDateTime());
             thread[History::FieldChatType] = query.value(12).toUInt();
 
-            if (thread[History::FieldChatType].toInt() == 2) {
+            if (thread[History::FieldChatType].toInt() == History::ChatTypeRoom) {
                 QVariantMap chatRoomInfo;
                 QSqlQuery query1(SQLiteDatabase::instance()->database());
 
@@ -1337,19 +1339,29 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseThreadResults(History::EventType ty
                     chatRoomInfo["SelfRoles"] = query1.value(20).toInt();
 
                 thread[History::FieldChatRoomInfo] = chatRoomInfo;
-                if (!History::Utils::shouldIncludeParticipants(History::Thread::fromProperties(thread))) {
-                    thread.remove(History::FieldParticipants);
-                }
+            }
+            if (!History::Utils::shouldIncludeParticipants(History::Thread::fromProperties(thread))) {
+                thread.remove(History::FieldParticipants);
+                threadsWithoutParticipants << thread;
+            } else {
+                threads << thread;
             }
             break;
         case History::EventTypeVoice:
             thread[History::FieldMissed] = query.value(9);
             thread[History::FieldDuration] = query.value(8);
             thread[History::FieldRemoteParticipant] = History::ContactMatcher::instance()->contactInfo(accountId, query.value(10).toString(), true);
+            threads << thread;
             break;
         }
-        threads << thread;
     }
+
+    // get the participants
+    threads = participantsForThreads(threads);
+
+    // and append the threads with no participants
+    threads << threadsWithoutParticipants;
+
     return threads;
 }
 

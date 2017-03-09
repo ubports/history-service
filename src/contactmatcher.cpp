@@ -102,14 +102,12 @@ QVariantMap ContactMatcher::contactInfo(const QString &accountId, const QString 
 
     QString normalizedId = normalizeId(identifier);
 
+    QVariantMap map;
     // first do a simple string match on the map
     if (internalMap.contains(normalizedId)) {
-        return internalMap[normalizedId];
-    }
-    
-    QVariantMap map;
-    // and if there was no match, asynchronously request the info, and return an empty map for now
-    if (History::TelepathyHelper::instance()->ready()) {
+        map = internalMap[normalizedId];
+    } if (History::TelepathyHelper::instance()->ready()) {
+        // and if there was no match, asynchronously request the info, and return an empty map for now
         map = requestContactInfo(accountId, normalizedId, synchronous);
     } else if (!synchronous) {
         RequestInfo info{accountId, normalizedId};
