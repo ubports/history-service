@@ -847,7 +847,7 @@ void HistoryDaemon::onGroupMembersChanged(const Tp::Contacts &groupMembersAdded,
         }
     }
 
-    updateRoomParticipants(channel, !selfContactIsPending, added, removed);
+    updateRoomParticipants(channel, !selfContactIsPending);
 }
 
 void HistoryDaemon::updateRoomParticipants(const Tp::TextChannelPtr channel, bool notify)
