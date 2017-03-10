@@ -205,56 +205,58 @@ QVariantMap HistoryDaemon::propertiesFromChannel(const Tp::ChannelPtr &textChann
     QStringList participantIds;
     QString accountId = textChannel->property(History::FieldAccountId).toString();
 
-    ChannelInterfaceRolesInterface *roles_interface = textChannel->optionalInterface<ChannelInterfaceRolesInterface>();
-    RolesMap roles;
-    if (roles_interface) {
-        if (mRolesMap.contains(textChannel->objectPath())) {
-            roles = mRolesMap[textChannel->objectPath()];
+    if (History::Utils::shouldIncludeParticipants(accountId, fromTelepathyHandleType(textChannel->targetHandleType()))) {
+        ChannelInterfaceRolesInterface *roles_interface = textChannel->optionalInterface<ChannelInterfaceRolesInterface>();
+        RolesMap roles;
+        if (roles_interface) {
+            if (mRolesMap.contains(textChannel->objectPath())) {
+                roles = mRolesMap[textChannel->objectPath()];
+            }
         }
-    }
 
-    Q_FOREACH(const Tp::ContactPtr contact, textChannel->groupContacts(false)) {
-        QVariantMap contactProperties;
-        contactProperties[History::FieldAlias] = contact->alias();
-        contactProperties[History::FieldAccountId] = accountId;
-        contactProperties[History::FieldIdentifier] = contact->id();
-        contactProperties[History::FieldParticipantState] = History::ParticipantStateRegular;
-        contactProperties[History::FieldParticipantRoles] = roles[contact->handle().at(0)];
-        participantIds << contact->id();
-        participants << contactProperties;
-    }
+        Q_FOREACH(const Tp::ContactPtr contact, textChannel->groupContacts(false)) {
+            QVariantMap contactProperties;
+            contactProperties[History::FieldAlias] = contact->alias();
+            contactProperties[History::FieldAccountId] = accountId;
+            contactProperties[History::FieldIdentifier] = contact->id();
+            contactProperties[History::FieldParticipantState] = History::ParticipantStateRegular;
+            contactProperties[History::FieldParticipantRoles] = roles[contact->handle().at(0)];
+            participantIds << contact->id();
+            participants << contactProperties;
+        }
 
-    Q_FOREACH(const Tp::ContactPtr contact, textChannel->groupRemotePendingContacts(false)) {
-        QVariantMap contactProperties;
-        contactProperties[History::FieldAlias] = contact->alias();
-        contactProperties[History::FieldAccountId] = accountId;
-        contactProperties[History::FieldIdentifier] = contact->id();
-        contactProperties[History::FieldParticipantState] = History::ParticipantStateRemotePending;
-        contactProperties[History::FieldParticipantRoles] = roles[contact->handle().at(0)];
-        participantIds << contact->id();
-        participants << contactProperties;
-    }
+        Q_FOREACH(const Tp::ContactPtr contact, textChannel->groupRemotePendingContacts(false)) {
+            QVariantMap contactProperties;
+            contactProperties[History::FieldAlias] = contact->alias();
+            contactProperties[History::FieldAccountId] = accountId;
+            contactProperties[History::FieldIdentifier] = contact->id();
+            contactProperties[History::FieldParticipantState] = History::ParticipantStateRemotePending;
+            contactProperties[History::FieldParticipantRoles] = roles[contact->handle().at(0)];
+            participantIds << contact->id();
+            participants << contactProperties;
+        }
 
-    Q_FOREACH(const Tp::ContactPtr contact, textChannel->groupLocalPendingContacts(false)) {
-        QVariantMap contactProperties;
-        contactProperties[History::FieldAlias] = contact->alias();
-        contactProperties[History::FieldAccountId] = accountId;
-        contactProperties[History::FieldIdentifier] = contact->id();
-        contactProperties[History::FieldParticipantState] = History::ParticipantStateLocalPending;
-        contactProperties[History::FieldParticipantRoles] = roles[contact->handle().at(0)];
-        participantIds << contact->id();
-        participants << contactProperties;
-    }
+        Q_FOREACH(const Tp::ContactPtr contact, textChannel->groupLocalPendingContacts(false)) {
+            QVariantMap contactProperties;
+            contactProperties[History::FieldAlias] = contact->alias();
+            contactProperties[History::FieldAccountId] = accountId;
+            contactProperties[History::FieldIdentifier] = contact->id();
+            contactProperties[History::FieldParticipantState] = History::ParticipantStateLocalPending;
+            contactProperties[History::FieldParticipantRoles] = roles[contact->handle().at(0)];
+            participantIds << contact->id();
+            participants << contactProperties;
+        }
 
-    if (participants.isEmpty() && textChannel->targetHandleType() == Tp::HandleTypeContact &&
-            textChannel->targetContact() == textChannel->connection()->selfContact()) {
-        QVariantMap contactProperties;
-        contactProperties[History::FieldAlias] = textChannel->targetContact()->alias();
-        contactProperties[History::FieldAccountId] = accountId;
-        contactProperties[History::FieldIdentifier] = textChannel->targetContact()->id();
-        contactProperties[History::FieldParticipantState] = History::ParticipantStateRegular;
-        participantIds << textChannel->targetContact()->id();
-        participants << contactProperties;
+        if (participants.isEmpty() && textChannel->targetHandleType() == Tp::HandleTypeContact &&
+                textChannel->targetContact() == textChannel->connection()->selfContact()) {
+            QVariantMap contactProperties;
+            contactProperties[History::FieldAlias] = textChannel->targetContact()->alias();
+            contactProperties[History::FieldAccountId] = accountId;
+            contactProperties[History::FieldIdentifier] = textChannel->targetContact()->id();
+            contactProperties[History::FieldParticipantState] = History::ParticipantStateRegular;
+            participantIds << textChannel->targetContact()->id();
+            participants << contactProperties;
+        }
     }
 
     // We map chatType directly from telepathy targetHandleType: None, Contact, Room
@@ -985,9 +987,20 @@ void HistoryDaemon::updateRoomProperties(const QString &accountId, const QString
 void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, const Tp::ReceivedMessage &message)
 {
     QString eventId;
-    Tp::MessagePart header = message.header();
     QString senderId;
+
+    QString accountId = textChannel->property(History::FieldAccountId).toString();
+    QString threadId = textChannel->property(History::FieldThreadId).toString();
     QVariantMap properties = propertiesFromChannel(textChannel);
+
+    if (threadId.isNull()) {
+        threadId = threadIdForProperties(accountId,
+                                         History::EventTypeText,
+                                         properties,
+                                         matchFlagsForChannel(textChannel),
+                                         true);
+    }
+
     History::MessageStatus status = History::MessageStatusUnknown;
     if (!message.sender() || message.sender()->handle().at(0) == textChannel->connection()->selfHandle()) {
         senderId = "self";
@@ -1010,7 +1023,7 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
     if (message.isDeliveryReport() && message.deliveryDetails().hasOriginalToken()) {
         // at this point we assume the delivery report is for a message that was already
         // sent and properly saved at our database, so we can safely get it here to update
-        QVariantMap textEvent = getSingleEventFromTextChannel(textChannel, message.deliveryDetails().originalToken());
+        QVariantMap textEvent = getSingleEvent(History::EventTypeText, accountId, threadId, message.deliveryDetails().originalToken());
         if (textEvent.isEmpty()) {
             qWarning() << "Cound not find the original event to update with delivery details.";
             return;
@@ -1030,13 +1043,6 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
 
         return;
     }
-
-    QString accountId = textChannel->property(History::FieldAccountId).toString();
-    QString threadId = threadIdForProperties(accountId,
-                                             History::EventTypeText,
-                                             properties,
-                                             matchFlagsForChannel(textChannel),
-                                             true);
     int count = 1;
     QList<QVariantMap> attachments;
     History::MessageType type = History::MessageTypeText;
@@ -1355,4 +1361,22 @@ History::MessageStatus HistoryDaemon::fromTelepathyDeliveryStatus(Tp::DeliverySt
     }
 
     return status;
+}
+
+History::ChatType HistoryDaemon::fromTelepathyHandleType(const Tp::HandleType &type)
+{
+    History::ChatType chatType;
+    switch(type) {
+    case Tp::HandleTypeContact:
+        chatType = History::ChatTypeContact;
+        break;
+    case Tp::HandleTypeNone:
+        chatType = History::ChatTypeNone;
+        break;
+    case Tp::HandleTypeRoom:
+        chatType = History::ChatTypeRoom;
+        break;
+    }
+
+    return chatType;
 }

@@ -94,6 +94,7 @@ protected:
     void writeRolesChangesInformationEvents(const QVariantMap &thread, const Tp::ChannelPtr &channel, const RolesMap &rolesMap);
 
     static History::MessageStatus fromTelepathyDeliveryStatus(Tp::DeliveryStatus deliveryStatus);
+    static History::ChatType fromTelepathyHandleType(const Tp::HandleType &type);
 private:
     HistoryDaemon(QObject *parent = 0);
 
