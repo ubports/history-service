@@ -27,7 +27,15 @@ bool checkApplicationRunning()
 {
     QString lockPath = qgetenv("HISTORY_LOCK_FILE");
     if (lockPath.isEmpty()) {
-        lockPath = QDir::temp().absoluteFilePath("history-daemon.lock");
+        lockPath = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation);
+        QDir dir(lockPath);
+        if (!dir.exists("history-service") && !dir.mkpath("history-service")) {
+            qCritical() << "Failed to create dir";
+            // in case we fail to create the lock, better not even start the application
+            return true;
+        }
+        dir.cd("history-service");
+        lockPath = dir.absoluteFilePath("history-daemon.lock");
     }
 
     static QLockFile *lockFile = new QLockFile(lockPath);
