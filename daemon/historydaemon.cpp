@@ -85,10 +85,11 @@ bool foundAsMemberInThread(const Tp::ContactPtr& contact, QVariantMap thread)
 {
     Q_FOREACH (QVariant participant, thread[History::FieldParticipants].toList()) {
         // found if same identifier and as member into thread info
+        QVariantMap participantMap = participant.toMap();
         if (History::Utils::compareIds(thread[History::FieldAccountId].toString(),
                                        contact->id(),
-                                       participant.toMap()[History::FieldIdentifier].toString()) &&
-                participant.toMap()[History::FieldParticipantState].toUInt() == History::ParticipantStateRegular)
+                                       participantMap[History::FieldIdentifier].toString()) &&
+                participantMap[History::FieldParticipantState].toUInt() == History::ParticipantStateRegular)
         {
             return true;
         }
@@ -675,6 +676,24 @@ void HistoryDaemon::onCallEnded(const Tp::CallChannelPtr &channel, bool missed)
 void HistoryDaemon::onTextChannelInvalidated(const Tp::TextChannelPtr channel)
 {
     mRolesMap.remove(channel->objectPath());
+    QString accountId = channel->property(History::FieldAccountId).toString();
+    QVariantMap properties = propertiesFromChannel(channel);
+
+    // first try to fetch the existing thread to see if there is any.
+    QVariantMap thread = threadForProperties(accountId,
+                                             History::EventTypeText,
+                                             properties,
+                                             matchFlagsForChannel(channel),
+                                             false);
+
+    QVariantMap roomInfo = thread[History::FieldChatRoomInfo].toMap();
+    if ((roomInfo.contains("Persistent") && !roomInfo["Persistent"].toBool()) && History::TelepathyHelper::instance()->accountForId(accountId)->protocolName() != "ofono") {
+        writeInformationEvent(thread, History::InformationTypeSelfLeaving);
+        // update backend
+        updateRoomProperties(channel, QVariantMap{{"Joined", false}});
+    }
+
+    channel->disconnect(this);
 }
 
 void HistoryDaemon::onTextChannelAvailable(const Tp::TextChannelPtr channel)
@@ -801,7 +820,8 @@ void HistoryDaemon::onGroupMembersChanged(const Tp::Contacts &groupMembersAdded,
             if (hasMembersAdded) {
                 Q_FOREACH (const Tp::ContactPtr& contact, groupMembersAdded) {
                     // if this member was not previously regular member in thread, notify about his join
-                    if (!foundAsMemberInThread(contact, thread)) {
+                    if (!foundAsMemberInThread(contact, thread) && contact->id() != channel->groupSelfContact()->id()) {
+
                         writeInformationEvent(thread, History::InformationTypeJoined, contact->alias(), QString(), QString(), true);
 
                         QVariantMap participant;
@@ -827,9 +847,11 @@ void HistoryDaemon::onGroupMembersChanged(const Tp::Contacts &groupMembersAdded,
                             break;
                         }
                     }
-                    writeInformationEvent(thread, type);
-                    // update backend
-                    updateRoomProperties(channel, QVariantMap{{"Joined", false}}, true);
+                    if (thread[History::FieldChatRoomInfo].toMap()["Joined"].toBool()) {
+                        writeInformationEvent(thread, type);
+                        // update backend
+                        updateRoomProperties(channel, QVariantMap{{"Joined", false}}, true);
+                    }
                 }
                 else // don't notify any other group member removal if we are leaving the group
                 {
