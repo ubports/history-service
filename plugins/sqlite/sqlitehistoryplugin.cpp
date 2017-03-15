@@ -315,13 +315,31 @@ QVariantMap SQLiteHistoryPlugin::markThreadAsRead(const QVariantMap &thread)
         return QVariantMap();
     }
 
-    query.prepare("UPDATE text_events SET newEvent=:newEvent WHERE accountId=:accountId AND threadId=:threadId AND newEvent=1");
+    // first check if the thread actually has anything to change
+    query.prepare("SELECT unreadCount from threads WHERE accountId=:accountId AND threadId=:threadId AND type=:type");
+    query.bindValue(":accountId", thread[History::FieldAccountId].toString());
+    query.bindValue(":threadId", thread[History::FieldThreadId].toString());
+    query.bindValue(":type", (uint)History::EventTypeText);
+    if (!query.exec() || !query.next()) {
+        qCritical() << "Failed to verify the unread messages of the thread. Error:" << query.lastError();
+        return QVariantMap();
+    }
+
+
+    int unreadCount = query.value(0).toUInt();
+    if (unreadCount == 0) {
+        // no messages to ack, so no need to update anything
+        return QVariantMap();
+    }
+
+    query.prepare("UPDATE text_events SET newEvent=:newEvent WHERE accountId=:accountId AND threadId=:threadId AND newEvent=1 AND type=:type");
     query.bindValue(":accountId", thread[History::FieldAccountId].toString());
     query.bindValue(":threadId", thread[History::FieldThreadId].toString());
     query.bindValue(":newEvent", false);
+    query.bindValue(":type", (uint)History::EventTypeText);
 
     if (!query.exec()) {
-        qCritical() << "Failed to mark thread as read: Error:" << query.lastError() << query.lastQuery() << query.executedQuery();
+        qCritical() << "Failed to mark thread as read: Error:" << query.lastError();
         return QVariantMap();
     }
 
