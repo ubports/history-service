@@ -332,11 +332,10 @@ QVariantMap SQLiteHistoryPlugin::markThreadAsRead(const QVariantMap &thread)
         return QVariantMap();
     }
 
-    query.prepare("UPDATE text_events SET newEvent=:newEvent WHERE accountId=:accountId AND threadId=:threadId AND newEvent=1 AND type=:type");
+    query.prepare("UPDATE text_events SET newEvent=:newEvent WHERE accountId=:accountId AND threadId=:threadId AND newEvent=1");
     query.bindValue(":accountId", thread[History::FieldAccountId].toString());
     query.bindValue(":threadId", thread[History::FieldThreadId].toString());
     query.bindValue(":newEvent", false);
-    query.bindValue(":type", (uint)History::EventTypeText);
 
     if (!query.exec()) {
         qCritical() << "Failed to mark thread as read: Error:" << query.lastError();
