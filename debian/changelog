@@ -1,3 +1,23 @@
+history-service (0.1+17.04.20161130-0ubuntu1) zesty; urgency=medium
+
+  [ Gustavo Pichorim Boiko ]
+  * Improve group chat support.
+
+ -- Tiago Salem Herrmann <tiago.herrmann@canonical.com>  Wed, 30 Nov 2016 15:14:35 +0000
+
+history-service (0.1+17.04.20161124.1-0ubuntu1) zesty; urgency=medium
+
+  * Append "SNAP" prefix into the path to the plugins dir if none is
+    set.
+
+ -- Renato Araujo Oliveira Filho <renato.filho@canonical.com>  Thu, 24 Nov 2016 18:54:43 +0000
+
+history-service (0.1+16.10.20160909.1-0ubuntu1) yakkety; urgency=medium
+
+  * Temporarily disable DaemonTest until we get QtDBus fixed.
+
+ -- Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>  Fri, 09 Sep 2016 14:53:42 +0000
+
 history-service (0.1+16.04.20160425-0ubuntu1) xenial; urgency=medium
 
   * Make sure Telepathy types are always initialized. (LP: #1563050)

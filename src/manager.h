@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Canonical, Ltd.
+ * Copyright (C) 2013-2016 Canonical, Ltd.
  *
  * Authors:
  *  Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>
@@ -61,11 +61,19 @@ public:
                                  const QStringList &participants,
                                  History::MatchFlags matchFlags = History::MatchCaseSensitive,
                                  bool create = false);
+    Thread threadForProperties(const QString &accountId,
+                               EventType type,
+                               const QVariantMap &properties,
+                               History::MatchFlags matchFlags = History::MatchCaseSensitive,
+                               bool create = false);
+    void requestThreadParticipants(const History::Threads &threads);
     Thread getSingleThread(EventType type, const QString &accountId, const QString &threadId, const QVariantMap &properties = QVariantMap());
 
     bool writeEvents(const History::Events &events);
     bool removeThreads(const Threads &threads);
     bool removeEvents(const Events &events);
+
+    void markThreadsAsRead(const History::Threads &thread);
 
     bool isServiceRunning() const;
 
@@ -73,6 +81,7 @@ Q_SIGNALS:
     void threadsAdded(const History::Threads &threads);
     void threadsModified(const History::Threads &threads);
     void threadsRemoved(const History::Threads &threads);
+    void threadParticipantsChanged(const History::Thread &thread, const History::Participants &added, const History::Participants &removed, const History::Participants &modified);
 
     void eventsAdded(const History::Events &events);
     void eventsModified(const History::Events &events);

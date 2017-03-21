@@ -189,7 +189,6 @@ void SqlitePluginTest::testThreadForParticipants()
     QCOMPARE(retrievedThread[History::FieldType], thread[History::FieldType]);
     QCOMPARE(retrievedThread[History::FieldCount], thread[History::FieldCount]);
     QCOMPARE(retrievedThread[History::FieldUnreadCount], thread[History::FieldUnreadCount]);
-    QCOMPARE(retrievedThread[History::FieldParticipants], thread[History::FieldParticipants]);
 }
 
 void SqlitePluginTest::testEmptyThreadForParticipants()
@@ -219,7 +218,6 @@ void SqlitePluginTest::testGetSingleThread()
     QCOMPARE(retrievedThread[History::FieldType], thread[History::FieldType]);
     QCOMPARE(retrievedThread[History::FieldCount], thread[History::FieldCount]);
     QCOMPARE(retrievedThread[History::FieldUnreadCount], thread[History::FieldUnreadCount]);
-    QCOMPARE(retrievedThread[History::FieldParticipants], thread[History::FieldParticipants]);
 
     // FIXME: check that the last event data is also present
 }
@@ -249,36 +247,35 @@ void SqlitePluginTest::testBatchOperation()
 {
     // clear the database
     SQLiteDatabase::instance()->reopen();
+    QSqlQuery query(SQLiteDatabase::instance()->database());
 
     QVERIFY(mPlugin->beginBatchOperation());
-    mPlugin->createThreadForParticipants("accountOne", History::EventTypeText, QStringList() << "participantOne");
-    mPlugin->createThreadForParticipants("accountTwo", History::EventTypeText, QStringList() << "participantTwo");
-    mPlugin->createThreadForParticipants("accountThree", History::EventTypeText, QStringList() << "participantThree");
+    QVERIFY(query.exec("UPDATE schema_version SET version=123"));
     QVERIFY(mPlugin->endBatchOperation());
 
     // check that the data was actually written
-    QSqlQuery query(SQLiteDatabase::instance()->database());
-    QVERIFY(query.exec("SELECT count(*) FROM threads"));
+    QVERIFY(query.exec("SELECT version FROM schema_version"));
     QVERIFY(query.next());
-    QCOMPARE(query.value(0).toInt(), 3);
+    QCOMPARE(query.value(0).toInt(), 123);
 }
 
 void SqlitePluginTest::testRollback()
 {
     // clear the database
     SQLiteDatabase::instance()->reopen();
+    QSqlQuery query(SQLiteDatabase::instance()->database());
+    QVERIFY(query.exec("SELECT version FROM schema_version"));
+    QVERIFY(query.next());
+    int version = query.value(0).toInt();
 
     QVERIFY(mPlugin->beginBatchOperation());
-    mPlugin->createThreadForParticipants("accountOne", History::EventTypeText, QStringList() << "participantOne");
-    mPlugin->createThreadForParticipants("accountTwo", History::EventTypeText, QStringList() << "participantTwo");
-    mPlugin->createThreadForParticipants("accountThree", History::EventTypeText, QStringList() << "participantThree");
+    QVERIFY(query.exec("UPDATE schema_version SET version=255"));
     QVERIFY(mPlugin->rollbackBatchOperation());
 
     // check that the steps were reverted
-    QSqlQuery query(SQLiteDatabase::instance()->database());
-    QVERIFY(query.exec("SELECT count(*) FROM threads"));
+    QVERIFY(query.exec("SELECT version FROM schema_version"));
     QVERIFY(query.next());
-    QCOMPARE(query.value(0).toInt(), 0);
+    QCOMPARE(query.value(0).toInt(), version);
 }
 
 void SqlitePluginTest::testQueryThreads()
@@ -319,7 +316,7 @@ void SqlitePluginTest::testWriteTextEvent_data()
     QTest::newRow("text event with attachments") << History::TextEvent("mmsAccountId", "mmsSender", "mmsEventId", "mmsSender",
                                                                        QDateTime::currentDateTime(), false, "Hello with attachments",
                                                                        History::MessageTypeMultiPart, History::MessageStatusDelivered,
-                                                                       QDateTime::currentDateTime(), "The Subject", attachments).properties();
+                                                                       QDateTime::currentDateTime(), "The Subject", History::InformationTypeNone, attachments).properties();
 }
 
 void SqlitePluginTest::testWriteTextEvent()
@@ -406,7 +403,7 @@ void SqlitePluginTest::testModifyTextEvent()
                                             thread[History::FieldEventId].toString(), "theAttachmentId", "text/plain", "/file/path");
     History::TextEvent textEvent(thread[History::FieldAccountId].toString(), thread[History::FieldThreadId].toString(), "theEventId",
                                  "theParticipant", QDateTime::currentDateTime(), true, "Hi there!", History::MessageTypeMultiPart,
-                                 History::MessageStatusPending, QDateTime::currentDateTime(), "theSubject",
+                                 History::MessageStatusPending, QDateTime::currentDateTime(), "theSubject", History::InformationTypeNone,
                                  History::TextEventAttachments() << attachment);
     QCOMPARE(mPlugin->writeTextEvent(textEvent.properties()), History::EventWriteCreated);
 
@@ -606,7 +603,7 @@ void SqlitePluginTest::testEventsForThread()
                                      QString("textEventId%1").arg(QString::number(i)), "textParticipant",
                                      QDateTime::currentDateTime(), true, "Hello World!", History::MessageTypeMultiPart,
                                      History::MessageStatusPending, QDateTime::currentDateTime(),
-                                     "theSubject", History::TextEventAttachments() << attachment);
+                                     "theSubject", History::InformationTypeNone, History::TextEventAttachments() << attachment);
         QCOMPARE(mPlugin->writeTextEvent(textEvent.properties()), History::EventWriteCreated);
     }
 
@@ -659,7 +656,7 @@ void SqlitePluginTest::testGetSingleEvent_data()
     QTest::newRow("text event with attachments") << History::TextEvent("mmsAccountId", "mmsSender", "mmsEventId", "mmsSender",
                                                                        QDateTime::currentDateTime(), false, "Hello with attachments",
                                                                        History::MessageTypeMultiPart, History::MessageStatusDelivered,
-                                                                       QDateTime::currentDateTime(), "The Subject", attachments).properties();
+                                                                       QDateTime::currentDateTime(), "The Subject", History::InformationTypeNone, attachments).properties();
     QTest::newRow("missed call") << History::VoiceEvent("theAccountId", "theSenderId", "theEventId", "theSenderId",
                                                         QDateTime::currentDateTime(), true, true).properties();
     QTest::newRow("incoming call") << History::VoiceEvent("otherAccountId", "otherSenderId", "otherEventId", "otherSenderId",

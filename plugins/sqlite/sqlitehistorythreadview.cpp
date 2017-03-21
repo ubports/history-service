@@ -35,7 +35,6 @@ SQLiteHistoryThreadView::SQLiteHistoryThreadView(SQLiteHistoryPlugin *plugin,
     : History::PluginThreadView(), mPlugin(plugin), mType(type), mSort(sort),
       mFilter(filter), mPageSize(15), mQuery(SQLiteDatabase::instance()->database()), mOffset(0), mValid(true), mQueryProperties(properties)
 {
-    qDebug() << __PRETTY_FUNCTION__;
     mTemporaryTable = QString("threadview%1%2").arg(QString::number((qulonglong)this), QDateTime::currentDateTimeUtc().toString("yyyyMMddhhmmsszzz"));
     mQuery.setForwardOnly(true);
 
@@ -44,7 +43,14 @@ SQLiteHistoryThreadView::SQLiteHistoryThreadView(SQLiteHistoryPlugin *plugin,
     QString condition = mPlugin->filterToString(filter, filterValues);
     QString order;
     if (!sort.sortField().isNull()) {
-        order = QString("ORDER BY %1 %2").arg(sort.sortField(), sort.sortOrder() == Qt::AscendingOrder ? "ASC" : "DESC");
+        // WORKAROUND: Supports multiple fields by split it using ','
+        Q_FOREACH(const QString& field, sort.sortField().split(",")) {
+            order += QString("%1 %2, ")
+                    .arg(field.trimmed())
+                    .arg(sort.sortOrder() == Qt::AscendingOrder ? "ASC" : "DESC");
+        }
+
+        order = QString("ORDER BY %1").arg(order.mid(0, order.lastIndexOf(",")));
         // FIXME: check case sensitiviy
     }
 
@@ -69,9 +75,6 @@ SQLiteHistoryThreadView::SQLiteHistoryThreadView(SQLiteHistoryPlugin *plugin,
         Q_EMIT Invalidated();
         return;
     }
-
-    mQuery.exec(QString("SELECT count(*) FROM %1").arg(mTemporaryTable));
-    mQuery.next();
 }
 
 SQLiteHistoryThreadView::~SQLiteHistoryThreadView()
@@ -84,7 +87,6 @@ SQLiteHistoryThreadView::~SQLiteHistoryThreadView()
 
 QList<QVariantMap> SQLiteHistoryThreadView::NextPage()
 {
-    qDebug() << __PRETTY_FUNCTION__;
     QList<QVariantMap> threads;
 
     // now prepare for selecting from it

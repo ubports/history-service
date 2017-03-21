@@ -4,6 +4,7 @@ set(qt_SRCS
     historydaemon.cpp
     historyservicedbus.cpp
     pluginmanager.cpp
+    rolesinterface.cpp
     textchannelobserver.cpp
     )
 

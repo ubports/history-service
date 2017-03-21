@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 Canonical, Ltd.
+ * Copyright (C) 2013-2016 Canonical, Ltd.
  *
  * Authors:
  *  Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>
@@ -40,6 +40,8 @@ public:
     enum ThreadRole {
         CountRole = HistoryModel::LastRole,
         UnreadCountRole,
+        ChatType,
+        ChatRoomInfo,
         LastEventIdRole,
         LastEventSenderIdRole,
         LastEventTimestampRole,
@@ -74,8 +76,10 @@ protected Q_SLOTS:
     virtual void onThreadsAdded(const History::Threads &threads);
     virtual void onThreadsModified(const History::Threads &threads);
     virtual void onThreadsRemoved(const History::Threads &threads);
+    virtual void onThreadParticipantsChanged(const History::Thread &thread, const History::Participants &added, const History::Participants &removed, const History::Participants &modified);
 
 protected:
+    void fetchParticipantsIfNeeded(const History::Threads &threads);
     History::Threads fetchNextPage();
     bool mCanFetchMore;
     bool mGroupThreads;

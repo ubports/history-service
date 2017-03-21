@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Canonical, Ltd.
+ * Copyright (C) 2015-2016 Canonical, Ltd.
  *
  * Authors:
  *  Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>
@@ -36,9 +36,11 @@ ParticipantPrivate::ParticipantPrivate(const QString &theAccountId,
                                        const QString &theContactId,
                                        const QString &theAlias,
                                        const QString &theAvatar,
+                                       const uint theState,
+                                       const uint theRoles,
                                        const QVariantMap &theDetailProperties) :
     accountId(theAccountId), identifier(theIdentifier), contactId(theContactId),
-    alias(theAlias), avatar(theAvatar), detailProperties(theDetailProperties)
+    alias(theAlias), avatar(theAvatar), state(theState), roles(theRoles), detailProperties(theDetailProperties)
 {
 }
 
@@ -51,8 +53,8 @@ Participant::Participant()
 {
 }
 
-Participant::Participant(const QString &accountId, const QString &identifier, const QString &contactId, const QString &alias, const QString &avatar, const QVariantMap &detailProperties)
-    : d_ptr(new ParticipantPrivate(accountId, identifier, contactId, alias, avatar, detailProperties))
+Participant::Participant(const QString &accountId, const QString &identifier, const QString &contactId, const QString &alias, const QString &avatar, uint state, uint roles, const QVariantMap &detailProperties)
+    : d_ptr(new ParticipantPrivate(accountId, identifier, contactId, alias, avatar, state, roles, detailProperties))
 {
 }
 
@@ -104,6 +106,18 @@ QString Participant::avatar() const
     return d->avatar;
 }
 
+uint Participant::state() const
+{
+    Q_D(const Participant);
+    return d->state;
+}
+
+uint Participant::roles() const
+{
+    Q_D(const Participant);
+    return d->roles;
+}
+
 QVariantMap Participant::detailProperties() const
 {
     Q_D(const Participant);
@@ -140,6 +154,8 @@ QVariantMap Participant::properties() const
     map[FieldContactId] = d->contactId;
     map[FieldAlias] = d->alias;
     map[FieldAvatar] = d->avatar;
+    map[FieldParticipantState] = d->state;
+    map[FieldParticipantRoles] = d->roles;
     map[FieldDetailProperties] = d->detailProperties;
 
     return map;
@@ -157,6 +173,8 @@ Participant Participant::fromProperties(const QVariantMap &properties)
     QString contactId = properties[FieldContactId].toString();
     QString alias = properties[FieldAlias].toString();
     QString avatar = properties[FieldAvatar].toString();
+    uint state = properties[FieldParticipantState].toUInt();
+    uint roles = properties[FieldParticipantRoles].toUInt();
     QVariantMap detailProperties;
     QVariant detailPropertiesVariant = properties[FieldDetailProperties];
     if (detailPropertiesVariant.canConvert<QVariantMap>()) {
@@ -169,7 +187,7 @@ Participant Participant::fromProperties(const QVariantMap &properties)
         }
     }
 
-    return Participant(accountId, identifier, contactId, alias, avatar, detailProperties);
+    return Participant(accountId, identifier, contactId, alias, avatar, state, roles, detailProperties);
 }
 
 QStringList Participants::identifiers() const
@@ -184,11 +202,24 @@ QStringList Participants::identifiers() const
 Participants Participants::fromVariant(const QVariant &variant)
 {
     Participants participants;
-    if (variant.canConvert<QVariantList>()) {
+    if (variant.type() == QVariant::StringList) {
+        participants = Participants::fromStringList(variant.toStringList());
+    } else if (variant.canConvert<QVariantList>()) {
         participants = Participants::fromVariantList(variant.toList());
     } else if (variant.canConvert<QDBusArgument>()) {
         QDBusArgument argument = variant.value<QDBusArgument>();
         argument >> participants;
+    }
+    return participants;
+}
+
+Participants Participants::fromStringList(const QStringList &list)
+{
+    Participants participants;
+    Q_FOREACH(const QString& participantId, list) {
+        QVariantMap properties;
+        properties[FieldIdentifier] = participantId;
+        participants << Participant::fromProperties(properties);
     }
     return participants;
 }
@@ -202,6 +233,15 @@ Participants Participants::fromVariantList(const QVariantList &list)
     return participants;
 }
 
+Participants Participants::fromVariantMapList(const QList<QVariantMap> &list)
+{
+    Participants participants;
+    Q_FOREACH(const QVariantMap& entry, list) {
+        participants << Participant::fromProperties(entry);
+    }
+    return participants;
+}
+
 QVariantList Participants::toVariantList() const
 {
     QVariantList list;
@@ -209,6 +249,17 @@ QVariantList Participants::toVariantList() const
         list << participant.properties();
     }
     return list;
+}
+
+Participants Participants::filterByState(uint state) const
+{
+    Participants filtered;
+    Q_FOREACH(const Participant &participant, *this) {
+        if (participant.state() == state) {
+            filtered << participant;
+        }
+    }
+    return filtered;
 }
 
 const QDBusArgument &operator>>(const QDBusArgument &argument, Participants &participants)

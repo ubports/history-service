@@ -17,6 +17,7 @@ find_package(Qt5DBus)
 find_package(Qt5Qml)
 find_package(Qt5Quick)
 find_package(Qt5Test)
+find_package(Qt5Network)
 find_package(LibPhoneNumber REQUIRED)
 
 include(qt5)

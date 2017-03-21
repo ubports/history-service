@@ -141,8 +141,6 @@ void DaemonTest::testMessageReceived()
     History::Threads threads = threadsAddedSpy.first().first().value<History::Threads>();
     QCOMPARE(threads.count(), 1);
     History::Thread thread = threads.first();
-    QCOMPARE(thread.participants().count(), 1);
-    QCOMPARE(thread.participants().first().identifier(), sender);
 
     QTRY_COMPARE(threadsModifiedSpy.count(), 1);
     threads = threadsModifiedSpy.first().first().value<History::Threads>();
@@ -252,8 +250,6 @@ void DaemonTest::testMessageSent()
     History::Threads threads = threadsAddedSpy.first().first().value<History::Threads>();
     QCOMPARE(threads.count(), 1);
     History::Thread thread = threads.first();
-    QCOMPARE(thread.participants().count(), 1);
-    QCOMPARE(thread.participants().first().identifier(), recipient);
 
     QTRY_COMPARE(threadsModifiedSpy.count(), 1);
     threads = threadsModifiedSpy.first().first().value<History::Threads>();
@@ -296,8 +292,6 @@ void DaemonTest::testMissedCall()
     History::Threads threads = threadsAddedSpy.first().first().value<History::Threads>();
     QCOMPARE(threads.count(), 1);
     History::Thread thread = threads.first();
-    QCOMPARE(thread.participants().count(), 1);
-    QCOMPARE(thread.participants().first().identifier(), callerId);
 
     QTRY_COMPARE(threadsModifiedSpy.count(), 1);
     threads = threadsModifiedSpy.first().first().value<History::Threads>();
@@ -324,7 +318,7 @@ void DaemonTest::testOutgoingCall()
     connect(mAccount->connection()->contactManager()->contactsForIdentifiers(QStringList() << phoneNumber),
             SIGNAL(finished(Tp::PendingOperation*)),
             SLOT(onPendingContactsFinished(Tp::PendingOperation*)));
-    QTRY_COMPARE(spy.count(), 1);
+    QVERIFY(spy.wait());
 
     QList<Tp::ContactPtr> contacts = spy.first().first().value<QList<Tp::ContactPtr> >();
     QCOMPARE(contacts.count(), 1);
@@ -335,7 +329,7 @@ void DaemonTest::testOutgoingCall()
     Q_FOREACH(Tp::ContactPtr contact, contacts) {
         mAccount->ensureAudioCall(contact, "audio", QDateTime::currentDateTime(), TP_QT_IFACE_CLIENT + ".HistoryTestHandler");
     }
-    QTRY_COMPARE(spyCallChannel.count(), 1);
+    QVERIFY(spyCallChannel.wait());
 
     Tp::CallChannelPtr channel = spyCallChannel.first().first().value<Tp::CallChannelPtr>();
     QVERIFY(channel);
@@ -357,8 +351,6 @@ void DaemonTest::testOutgoingCall()
     History::Threads threads = threadsAddedSpy.first().first().value<History::Threads>();
     QCOMPARE(threads.count(), 1);
     History::Thread thread = threads.first();
-    QCOMPARE(thread.participants().count(), 1);
-    QCOMPARE(thread.participants().first().identifier(), phoneNumber);
 
     QTRY_COMPARE(threadsModifiedSpy.count(), 1);
     threads = threadsModifiedSpy.first().first().value<History::Threads>();

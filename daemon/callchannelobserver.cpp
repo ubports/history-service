@@ -40,6 +40,7 @@ void CallChannelObserver::onCallChannelAvailable(Tp::CallChannelPtr callChannel)
                 SLOT(onCallStateChanged(Tp::CallState)));
 
     mChannels.append(callChannel);
+    mCallStates[callChannel.data()] = callChannel->callState();
 }
 
 
@@ -51,11 +52,24 @@ void CallChannelObserver::onCallStateChanged(Tp::CallState state)
     }
 
     switch (state) {
-    case Tp::CallStateEnded:
-        Q_EMIT callEnded(Tp::CallChannelPtr(channel));
+    case Tp::CallStateEnded: {
+        bool incoming = !channel->isRequested();
+        bool missed = incoming && channel->callStateReason().reason == Tp::CallStateChangeReasonNoAnswer;
+
+        // If the call state is not missed at this point, we need to check from which state we transitioned to ended,
+        // if from Initialised, it means it was indeed missed
+        if (incoming && !missed) {
+            missed = mCallStates[channel] == Tp::CallStateInitialised;
+        }
+        mCallStates.remove(channel);
+        mChannels.removeOne(Tp::CallChannelPtr(channel));
+        Q_EMIT callEnded(Tp::CallChannelPtr(channel), missed);
         break;
+    }
     case Tp::CallStateActive:
         channel->setProperty("activeTimestamp", QDateTime::currentDateTime());
+    default:
+        mCallStates[channel] = state;
         break;
     }
 }

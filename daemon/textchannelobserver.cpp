@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012-2013 Canonical, Ltd.
+ * Copyright (C) 2012-2016 Canonical, Ltd.
  *
  * Authors:
  *  Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>
@@ -39,9 +39,7 @@ void TextChannelObserver::onTextChannelAvailable(Tp::TextChannelPtr textChannel)
     connect(textChannel.data(),
             SIGNAL(messageSent(Tp::Message,Tp::MessageSendingFlags,QString)),
             SLOT(onMessageSent(Tp::Message,Tp::MessageSendingFlags,QString)));
-    connect(textChannel.data(),
-            SIGNAL(pendingMessageRemoved(const Tp::ReceivedMessage&)),
-            SLOT(onPendingMessageRemoved(const Tp::ReceivedMessage&)));
+    Q_EMIT channelAvailable(textChannel);
 
     // process the messages that are already pending in the channel
     Q_FOREACH(const Tp::ReceivedMessage &message, textChannel->messageQueue()) {
@@ -55,6 +53,7 @@ void TextChannelObserver::onTextChannelInvalidated()
 {
     Tp::TextChannelPtr textChannel(qobject_cast<Tp::TextChannel*>(sender()));
     mChannels.removeAll(textChannel);
+    Q_EMIT textChannelInvalidated(textChannel);
 }
 
 void TextChannelObserver::onMessageReceived(const Tp::ReceivedMessage &message)
@@ -79,14 +78,4 @@ void TextChannelObserver::onMessageSent(const Tp::Message &message, Tp::MessageS
     }
  
     Q_EMIT messageSent(textChannel, message, sentMessageToken);
-}
-
-void TextChannelObserver::onPendingMessageRemoved(const Tp::ReceivedMessage &message)
-{
-    Tp::TextChannelPtr textChannel(qobject_cast<Tp::TextChannel*>(sender()));
-    if (textChannel.isNull()) {
-        return;
-    }
-
-    Q_EMIT messageRead(textChannel, message);
 }

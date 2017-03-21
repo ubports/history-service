@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2015 Canonical, Ltd.
+ * Copyright (C) 2014-2016 Canonical, Ltd.
  *
  * Authors:
  *  Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>
@@ -45,11 +45,13 @@ class ContactMatcher : public QObject
     Q_OBJECT
 public:
     static ContactMatcher *instance(QContactManager *manager = 0);
-    QVariantMap contactInfo(const QString &accountId, const QString &identifier, bool synchronous = false);
+    QVariantMap contactInfo(const QString &accountId, const QString &identifier, bool synchronous = false, const QVariantMap &properties = QVariantMap());
     QVariantList contactInfo(const QString &accountId, const QStringList &identifiers, bool synchronous = false);
 
     // this will only watch for contact changes affecting the identifier, but won't fetch contact info
     void watchIdentifier(const QString &accountId, const QString &identifier, const QVariantMap &currentInfo = QVariantMap());
+
+    static QString normalizeId(const QString &id);
 
 Q_SIGNALS:
     void contactInfoChanged(const QString &acountId, const QString &identifier, const QVariantMap &contactInfo);

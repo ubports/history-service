@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Canonical, Ltd.
+ * Copyright (C) 2015-2016 Canonical, Ltd.
  *
  * Authors:
  *  Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>
@@ -23,6 +23,7 @@
 #define UTILS_P_H
 
 #include "types.h"
+#include "thread.h"
 
 namespace History {
 
@@ -34,8 +35,11 @@ public:
     static bool compareIds(const QString &accountId, const QString &id1, const QString & id2);
     static bool compareParticipants(const QStringList &participants1, const QStringList &participants2, MatchFlags flags);
     static bool compareNormalizedParticipants(const QStringList &participants1, const QStringList &participants2, MatchFlags flags);
-    static bool shouldGroupAccount(const QString &accountId);
+    static bool shouldGroupThread(const Thread &thread);
+    static bool shouldIncludeParticipants(const Thread &thread);
+    static bool shouldIncludeParticipants(const QString &accountId, const History::ChatType &type);
     static QString normalizeId(const QString &accountId, const QString &id);
+    static QVariant getUserValue(const QString &interface, const QString &propName);
 
 private:
     Utils();

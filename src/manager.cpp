@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Canonical, Ltd.
+ * Copyright (C) 2013-2016 Canonical, Ltd.
  *
  * Authors:
  *  Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>
@@ -65,6 +65,9 @@ Manager::Manager()
             SIGNAL(threadsRemoved(History::Threads)),
             SIGNAL(threadsRemoved(History::Threads)));
     connect(d->dbus.data(),
+            SIGNAL(threadParticipantsChanged(History::Thread, History::Participants, History::Participants, History::Participants)),
+            SIGNAL(threadParticipantsChanged(History::Thread, History::Participants, History::Participants, History::Participants)));
+    connect(d->dbus.data(),
             SIGNAL(eventsAdded(History::Events)),
             SIGNAL(eventsAdded(History::Events)));
     connect(d->dbus.data(),
@@ -104,6 +107,13 @@ Manager *Manager::instance()
     return self;
 }
 
+void Manager::markThreadsAsRead(const History::Threads &threads)
+{
+    Q_D(Manager);
+
+    d->dbus->markThreadsAsRead(threads);
+}
+
 ThreadViewPtr Manager::queryThreads(EventType type,
                                     const Sort &sort,
                                     const Filter &filter,
@@ -135,7 +145,37 @@ Thread Manager::threadForParticipants(const QString &accountId,
 {
     Q_D(Manager);
 
-    return d->dbus->threadForParticipants(accountId, type, participants, matchFlags, create);
+    QVariantMap properties;
+    properties[History::FieldParticipantIds] = participants;
+    if (participants.size() == 1) {
+        properties[History::FieldChatType] = History::ChatTypeContact;
+    }
+    return d->dbus->threadForProperties(accountId, type, properties, matchFlags, create);
+}
+
+Thread Manager::threadForProperties(const QString &accountId,
+                                    EventType type,
+                                    const QVariantMap &properties,
+                                    MatchFlags matchFlags,
+                                    bool create)
+{
+    Q_D(Manager);
+
+    return d->dbus->threadForProperties(accountId, type, properties, matchFlags, create);
+}
+
+/**
+ * @brief Request the list of participants of the given threads to the service
+ * @param threads The threads to be filled
+ *
+ * This is an asychronous request. When finished, the signal @ref threadParticipantsChanged
+ * will be emitted for the given threads.
+ */
+void Manager::requestThreadParticipants(const Threads &threads)
+{
+    Q_D(Manager);
+
+    d->dbus->requestThreadParticipants(threads);
 }
 
 Thread Manager::getSingleThread(EventType type, const QString &accountId, const QString &threadId, const QVariantMap &properties)

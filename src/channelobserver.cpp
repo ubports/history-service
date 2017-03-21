@@ -40,6 +40,8 @@ Tp::ChannelClassSpecList ChannelObserver::channelFilters() const
     Tp::ChannelClassSpecList specList;
     specList << Tp::ChannelClassSpec::audioCall();
     specList << Tp::ChannelClassSpec::textChat();
+    specList << Tp::ChannelClassSpec::textChatroom();
+    specList << Tp::ChannelClassSpec::unnamedTextChat();
 
     return specList;
 }
@@ -58,7 +60,6 @@ void ChannelObserver::observeChannels(const Tp::MethodInvocationContextPtr<> &co
     Q_UNUSED(requestsSatisfied)
     Q_UNUSED(observerInfo)
 
-    qDebug() << __PRETTY_FUNCTION__;
     Q_FOREACH (Tp::ChannelPtr channel, channels) {
         // tp-qt has not support for the SMS interface
         if (channel->immutableProperties().contains(TP_QT_IFACE_CHANNEL_INTERFACE_SMS + QLatin1String(".Flash"))) {

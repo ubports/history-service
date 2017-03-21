@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 Canonical, Ltd.
+ * Copyright (C) 2013-2016 Canonical, Ltd.
  *
  * Authors:
  *  Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>
@@ -51,10 +51,13 @@ public:
            const QString &threadId,
            EventType type,
            const Participants &participants,
+           const QDateTime &timestamp = QDateTime(),
            const Event &lastEvent = Event(),
            int count = 0,
            int unreadCount = 0,
-           const Threads &groupedThreads = Threads());
+           const Threads &groupedThreads = Threads(),
+           ChatType chatType = ChatTypeNone,
+           const QVariantMap &chatRoomInfo = QVariantMap());
     Thread(const Thread &other);
     virtual ~Thread();
     Thread& operator=(const Thread &other);
@@ -63,10 +66,15 @@ public:
     QString threadId() const;
     EventType type() const;
     Participants participants() const;
+    QDateTime timestamp() const;
     Event lastEvent() const;
     int count() const;
     int unreadCount() const;
+    ChatType chatType() const;
     Threads groupedThreads() const;
+    QVariantMap chatRoomInfo() const;
+    void addParticipants(const History::Participants &participants);
+    void removeParticipants(const History::Participants &participants);
 
     bool isNull() const;
     bool operator==(const Thread &other) const;

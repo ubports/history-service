@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Canonical, Ltd.
+ * Copyright (C) 2013-2016 Canonical, Ltd.
  *
  * Authors:
  *  Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>
@@ -28,6 +28,8 @@
 #include <QDBusReply>
 #include <QDBusMetaType>
 
+#include <QDebug>
+
 Q_DECLARE_METATYPE(QList< QVariantMap >)
 
 namespace History
@@ -50,6 +52,12 @@ ManagerDBus::ManagerDBus(QObject *parent) :
     connection.connect(DBusService, DBusObjectPath, DBusInterface, "ThreadsRemoved",
                        this, SLOT(onThreadsRemoved(QList<QVariantMap>)));
 
+    connection.connect(DBusService, DBusObjectPath, DBusInterface, "ThreadParticipantsChanged",
+                       this, SLOT(onThreadParticipantsChanged(QVariantMap,
+                                                        QList<QVariantMap>,
+                                                        QList<QVariantMap>,
+                                                        QList<QVariantMap>)));
+
     connection.connect(DBusService, DBusObjectPath, DBusInterface, "EventsAdded",
                        this, SLOT(onEventsAdded(QList<QVariantMap>)));
     connection.connect(DBusService, DBusObjectPath, DBusInterface, "EventsModified",
@@ -64,15 +72,60 @@ Thread ManagerDBus::threadForParticipants(const QString &accountId,
                                           MatchFlags matchFlags,
                                           bool create)
 {
+    QVariantMap properties;
+    properties[History::FieldParticipantIds] = participants;
+
+    return threadForProperties(accountId, type, properties, matchFlags, create);
+}
+
+void ManagerDBus::markThreadsAsRead(const History::Threads &threads)
+{
+    QList<QVariantMap> threadMap = threadsToProperties(threads);
+    if (threadMap.isEmpty()) {
+        return;
+    }
+
+    mInterface.asyncCall("MarkThreadsAsRead", QVariant::fromValue(threadMap));
+}
+
+Thread ManagerDBus::threadForProperties(const QString &accountId,
+                                        EventType type,
+                                        const QVariantMap &properties,
+                                        MatchFlags matchFlags,
+                                        bool create)
+{
     Thread thread;
     // FIXME: move to async call if possible
-    QDBusReply<QVariantMap> reply = mInterface.call("ThreadForParticipants", accountId, (int) type, participants, (int)matchFlags, create);
+    QDBusReply<QVariantMap> reply = mInterface.call("ThreadForProperties", accountId, (int) type, properties, (int)matchFlags, create);
     if (reply.isValid()) {
         QVariantMap properties = reply.value();
         thread = Thread::fromProperties(properties);
     }
 
     return thread;
+}
+
+void ManagerDBus::requestThreadParticipants(const Threads &threads)
+{
+    QList<QVariantMap> ids;
+    Q_FOREACH(const Thread &thread, threads) {
+        QVariantMap id;
+        id[History::FieldAccountId] = thread.accountId();
+        id[History::FieldThreadId] = thread.threadId();
+        id[History::FieldType] = thread.type();
+        ids << id;
+    }
+
+    QDBusPendingCall call = mInterface.asyncCall("ParticipantsForThreads", QVariant::fromValue(ids));
+    QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(call, this);
+    connect(watcher, &QDBusPendingCallWatcher::finished, [this, threads](QDBusPendingCallWatcher *watcher) {
+        QDBusPendingReply<QList<QVariantMap> > reply = *watcher;
+        Q_FOREACH(const QVariantMap &map, reply.value()) {
+            History::Thread thread = History::Thread::fromProperties(map);
+            Q_EMIT threadParticipantsChanged(thread, History::Participants(), History::Participants(), thread.participants());
+            watcher->deleteLater();
+        }
+    });
 }
 
 bool ManagerDBus::writeEvents(const Events &events)
@@ -96,11 +149,8 @@ bool ManagerDBus::removeThreads(const Threads &threads)
         return false;
     }
 
-    QDBusReply<bool> reply = mInterface.call("RemoveThreads", QVariant::fromValue(threadMap));
-    if (!reply.isValid()) {
-        return false;
-    }
-    return reply.value();
+    mInterface.asyncCall("RemoveThreads", QVariant::fromValue(threadMap));
+    return true;
 }
 
 bool ManagerDBus::removeEvents(const Events &events)
@@ -110,11 +160,7 @@ bool ManagerDBus::removeEvents(const Events &events)
         return false;
     }
 
-    QDBusReply<bool> reply = mInterface.call("RemoveEvents", QVariant::fromValue(eventMap));
-    if (!reply.isValid()) {
-        return false;
-    }
-    return reply.value();
+    mInterface.asyncCall("RemoveEvents", QVariant::fromValue(eventMap));
 }
 
 Thread ManagerDBus::getSingleThread(EventType type, const QString &accountId, const QString &threadId, const QVariantMap &properties)
@@ -154,6 +200,17 @@ void ManagerDBus::onThreadsModified(const QList<QVariantMap> &threads)
 void ManagerDBus::onThreadsRemoved(const QList<QVariantMap> &threads)
 {
     Q_EMIT threadsRemoved(threadsFromProperties(threads));
+}
+
+void ManagerDBus::onThreadParticipantsChanged(const QVariantMap &thread,
+                                        const QList<QVariantMap> &added,
+                                        const QList<QVariantMap> &removed,
+                                        const QList<QVariantMap> &modified)
+{
+    Q_EMIT threadParticipantsChanged(threadsFromProperties(QList<QVariantMap>() << thread).first(),
+                               Participants::fromVariantMapList(added),
+                               Participants::fromVariantMapList(removed),
+                               Participants::fromVariantMapList(modified));
 }
 
 void ManagerDBus::onEventsAdded(const QList<QVariantMap> &events)

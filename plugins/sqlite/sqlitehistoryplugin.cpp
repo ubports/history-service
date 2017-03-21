@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 Canonical, Ltd.
+ * Copyright (C) 2013-2016 Canonical, Ltd.
  *
  * Authors:
  *  Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>
@@ -35,15 +35,18 @@
 #include <QStringList>
 #include <QSqlError>
 #include <QDBusMetaType>
+#include <QCryptographicHash>
 
-QString generateThreadMapKey(const History::Thread &thread)
-{
-    return thread.accountId() + thread.threadId();
-}
+static const QLatin1String timestampFormat("yyyy-MM-ddTHH:mm:ss.zzz");
 
 QString generateThreadMapKey(const QString &accountId, const QString &threadId)
 {
     return accountId + threadId;
+}
+
+QString generateThreadMapKey(const History::Thread &thread)
+{
+    return generateThreadMapKey(thread.accountId(), thread.threadId());
 }
 
 SQLiteHistoryPlugin::SQLiteHistoryPlugin(QObject *parent) :
@@ -81,18 +84,18 @@ void SQLiteHistoryPlugin::addThreadsToCache(const QList<QVariantMap> &threads)
         // so instead we just convert to UTC here on the cache and convert back to local time
         // when returning
         QDateTime timestamp = QDateTime::fromString(properties[History::FieldTimestamp].toString(), Qt::ISODate);
-        properties[History::FieldTimestamp] = timestamp.toUTC().toString("yyyy-MM-ddTHH:mm:ss.zzz");
+        properties[History::FieldTimestamp] = timestamp.toUTC().toString(timestampFormat);
 
         // the same for readTimestamp
         timestamp = QDateTime::fromString(properties[History::FieldReadTimestamp].toString(), Qt::ISODate);
-        properties[History::FieldReadTimestamp] = timestamp.toUTC().toString("yyyy-MM-ddTHH:mm:ss.zzz");
+        properties[History::FieldReadTimestamp] = timestamp.toUTC().toString(timestampFormat);
 
         History::Thread thread = History::Thread::fromProperties(properties);
         const QString &threadKey = generateThreadMapKey(thread);
 
         if (thread.type() != History::EventTypeText) {
              continue;
-        } else if (!History::Utils::shouldGroupAccount(thread.accountId())) {
+        } else if (!History::Utils::shouldGroupThread(thread)) {
             // never group non phone accounts
             mConversationsCache[threadKey] = History::Threads() << thread;
             mConversationsCacheKeys[threadKey] = threadKey;
@@ -119,6 +122,9 @@ void SQLiteHistoryPlugin::addThreadsToCache(const QList<QVariantMap> &threads)
             const QString &conversationKey = it.key();
             History::Threads groupedThreads = it.value();
             Q_FOREACH(const History::Thread &groupedThread, groupedThreads) {
+                if (!History::Utils::shouldGroupThread(groupedThread) || thread.chatType() != groupedThread.chatType()) {
+                    continue;
+                }
                 found = History::Utils::compareNormalizedParticipants(thread.participants().identifiers(), groupedThread.participants().identifiers(), History::MatchPhoneNumber);
                 if (found) {
                     Q_FOREACH(const History::Thread &groupedThread, groupedThreads) {
@@ -176,7 +182,7 @@ void SQLiteHistoryPlugin::removeThreadFromCache(const QVariantMap &properties)
     History::Thread thread = History::Thread::fromProperties(properties);
     QString threadKey = generateThreadMapKey(thread);
  
-    if (thread.type() != History::EventTypeText || !History::Utils::shouldGroupAccount(thread.accountId())) {
+    if (thread.type() != History::EventTypeText || !History::Utils::shouldGroupThread(thread)) {
         mConversationsCache.remove(threadKey);
         mConversationsCacheKeys.remove(threadKey);
         return;
@@ -259,7 +265,7 @@ void SQLiteHistoryPlugin::generateContactCache()
     time.start();
     qDebug() << "---- HistoryService: start generating cached content";
     QSqlQuery query(SQLiteDatabase::instance()->database());
-    if (!query.exec("SELECT DISTINCT accountId, normalizedId FROM thread_participants")) {
+    if (!query.exec("SELECT DISTINCT accountId, normalizedId, alias, state FROM thread_participants")) {
         qWarning() << "Failed to generate contact cache:" << query.lastError().text();
         return;
     }
@@ -267,9 +273,14 @@ void SQLiteHistoryPlugin::generateContactCache()
     while (query.next()) {
         QString accountId = query.value(0).toString();
         QString participantId = query.value(1).toString();
+        QString alias = query.value(2).toString();
+        QVariantMap properties;
+        if (!alias.isEmpty()) {
+            properties[History::FieldAlias] = alias;
+        }
         // we don't care about the results, as long as the contact data is present in the cache for
         // future usage.
-        History::ContactMatcher::instance()->contactInfo(accountId, participantId, true);
+        History::ContactMatcher::instance()->contactInfo(accountId, participantId, true, properties);
     }
 
     updateGroupedThreadsCache();
@@ -295,6 +306,134 @@ History::PluginEventView *SQLiteHistoryPlugin::queryEvents(History::EventType ty
     return new SQLiteHistoryEventView(this, type, sort, filter);
 }
 
+QVariantMap SQLiteHistoryPlugin::markThreadAsRead(const QVariantMap &thread)
+{
+    QSqlQuery query(SQLiteDatabase::instance()->database());
+
+    if (thread[History::FieldAccountId].toString().isEmpty() ||
+           thread[History::FieldThreadId].toString().isEmpty()) {
+        return QVariantMap();
+    }
+
+    // first check if the thread actually has anything to change
+    query.prepare("SELECT unreadCount from threads WHERE accountId=:accountId AND threadId=:threadId AND type=:type");
+    query.bindValue(":accountId", thread[History::FieldAccountId].toString());
+    query.bindValue(":threadId", thread[History::FieldThreadId].toString());
+    query.bindValue(":type", (uint)History::EventTypeText);
+    if (!query.exec() || !query.next()) {
+        qCritical() << "Failed to verify the unread messages of the thread. Error:" << query.lastError();
+        return QVariantMap();
+    }
+
+
+    int unreadCount = query.value(0).toUInt();
+    if (unreadCount == 0) {
+        // no messages to ack, so no need to update anything
+        return QVariantMap();
+    }
+
+    query.prepare("UPDATE text_events SET newEvent=:newEvent WHERE accountId=:accountId AND threadId=:threadId AND newEvent=1");
+    query.bindValue(":accountId", thread[History::FieldAccountId].toString());
+    query.bindValue(":threadId", thread[History::FieldThreadId].toString());
+    query.bindValue(":newEvent", false);
+
+    if (!query.exec()) {
+        qCritical() << "Failed to mark thread as read: Error:" << query.lastError();
+        return QVariantMap();
+    }
+
+    QVariantMap existingThread = getSingleThread((History::EventType) thread[History::FieldType].toInt(),
+                                                 thread[History::FieldAccountId].toString(),
+                                                 thread[History::FieldThreadId].toString(),
+                                                 QVariantMap());
+    if (!existingThread.isEmpty()) {
+        addThreadsToCache(QList<QVariantMap>() << existingThread);
+        return existingThread;
+    }
+
+    return QVariantMap();
+}
+
+QVariantMap SQLiteHistoryPlugin::threadForProperties(const QString &accountId,
+                                                       History::EventType type,
+                                                       const QVariantMap &properties,
+                                                       History::MatchFlags matchFlags)
+{
+    if (properties.isEmpty()) {
+        return QVariantMap();
+    }
+
+    History::ChatType chatType = (History::ChatType)properties[History::FieldChatType].toUInt();
+
+    if (chatType == History::ChatTypeRoom) {
+        QString threadId = properties[History::FieldThreadId].toString();
+        if (threadId.isEmpty()) {
+            return QVariantMap();
+        }
+        return getSingleThread(type, accountId, threadId);
+    }
+
+    History::Participants participants = History::Participants::fromVariant(properties[History::FieldParticipantIds]);
+    // if chatType != Room, then we select the thread based on the participant list.
+    return threadForParticipants(accountId, type, participants.identifiers(), matchFlags);
+}
+
+QString SQLiteHistoryPlugin::threadIdForProperties(const QString &accountId, History::EventType type, const QVariantMap &properties, History::MatchFlags matchFlags)
+{
+    if (properties.isEmpty()) {
+        return QString::null;
+    }
+
+    // if chat type is room, just get the threadId directly
+    History::ChatType chatType = (History::ChatType)properties[History::FieldChatType].toUInt();
+    if (chatType == History::ChatTypeRoom) {
+          QString threadId = properties[History::FieldThreadId].toString();
+          return threadId;
+    }
+
+    // if chat type is anything else, fallback to returning the threadId from the participants list
+    History::Participants participants = History::Participants::fromVariant(properties[History::FieldParticipantIds]);
+    return threadForParticipants(accountId, type, participants.identifiers(), matchFlags)[History::FieldThreadId].toString();
+}
+
+QList<QVariantMap> SQLiteHistoryPlugin::participantsForThreads(const QList<QVariantMap> &threadIds)
+{
+    QList<QVariantMap> results;
+    Q_FOREACH(const QVariantMap &thread, threadIds) {
+        QString accountId = thread[History::FieldAccountId].toString();
+        QString threadId = thread[History::FieldThreadId].toString();
+        History::EventType type = (History::EventType)thread[History::FieldType].toUInt();
+        QVariantMap result = thread;
+
+        QSqlQuery query;
+        query.prepare("SELECT normalizedId, alias, state, roles FROM thread_participants "
+                      "WHERE accountId=:accountId AND threadId=:threadId AND type=:type");
+        query.bindValue(":accountId", accountId);
+        query.bindValue(":threadId", threadId);
+        query.bindValue(":type", type);
+        QVariantList participants;
+        if (!query.exec()) {
+            qWarning() << "Failed to retrieve participants. Error:" << query.lastError().text() << query.lastQuery();
+            results << result;
+            continue;
+        }
+
+        while (query.next()) {
+            QVariantMap participant;
+            QString identifier = query.value(0).toString();
+            participant[History::FieldIdentifier] = identifier;
+            participant[History::FieldAlias] = query.value(1);
+            participant[History::FieldParticipantState] = query.value(2);
+            participant[History::FieldParticipantRoles] = query.value(3);
+            participants << History::ContactMatcher::instance()->contactInfo(accountId, identifier, true, participant);
+        }
+
+        result[History::FieldParticipants] = participants;
+        results << result;
+    }
+    return results;
+}
+
 QVariantMap SQLiteHistoryPlugin::threadForParticipants(const QString &accountId,
                                                        History::EventType type,
                                                        const QStringList &participants,
@@ -310,7 +449,9 @@ QVariantMap SQLiteHistoryPlugin::threadForParticipants(const QString &accountId,
     // select all the threads the first participant is listed in, and from that list
     // check if any of the threads has all the other participants listed
     // FIXME: find a better way to do this
-    QString queryString("SELECT threadId FROM thread_participants WHERE %1 AND type=:type AND accountId=:accountId");
+    QString queryString("SELECT threadId FROM thread_participants WHERE %1 AND type=:type AND accountId=:accountId "
+                        "AND (SELECT chatType FROM threads WHERE threads.threadId=thread_participants.threadId AND "
+                        "      threads.type=thread_participants.type)!=:chatType");
 
     // FIXME: for now we just compare differently when using MatchPhoneNumber
     QString firstParticipant = participants.first();
@@ -324,6 +465,9 @@ QVariantMap SQLiteHistoryPlugin::threadForParticipants(const QString &accountId,
     query.bindValue(":participantId", firstParticipant);
     query.bindValue(":type", type);
     query.bindValue(":accountId", accountId);
+    // we don't want to accidentally return a chat room for a multi-recipient conversation
+    query.bindValue(":chatType", (int)History::ChatTypeRoom);
+
     if (!query.exec()) {
         qCritical() << "Error:" << query.lastError() << query.lastQuery();
         return QVariantMap();
@@ -469,56 +613,343 @@ QVariantMap SQLiteHistoryPlugin::getSingleEvent(History::EventType type, const Q
     return result;
 }
 
-// Writer
-QVariantMap SQLiteHistoryPlugin::createThreadForParticipants(const QString &accountId, History::EventType type, const QStringList &participants)
+bool SQLiteHistoryPlugin::updateRoomParticipants(const QString &accountId, const QString &threadId, History::EventType type, const QVariantList &participants)
+{
+    QSqlQuery query(SQLiteDatabase::instance()->database());
+    if (accountId.isEmpty() || threadId.isEmpty()) {
+        return false;
+    }
+
+    SQLiteDatabase::instance()->beginTransation();
+    QString deleteString("DELETE FROM thread_participants WHERE threadId=:threadId AND type=:type AND accountId=:accountId");
+    query.prepare(deleteString);
+    query.bindValue(":accountId", accountId);
+    query.bindValue(":threadId", threadId);
+    query.bindValue(":type", type);
+    if (!query.exec()) {
+        qCritical() << "Error removing old participants:" << query.lastError() << query.lastQuery();
+        SQLiteDatabase::instance()->rollbackTransaction();
+        return false;
+    }
+
+    // and insert the participants
+    Q_FOREACH(const QVariant &participantVariant, participants) {
+        QVariantMap participant = participantVariant.toMap();
+        query.prepare("INSERT INTO thread_participants (accountId, threadId, type, participantId, normalizedId, alias, state, roles)"
+                      "VALUES (:accountId, :threadId, :type, :participantId, :normalizedId, :alias, :state, :roles)");
+        query.bindValue(":accountId", accountId);
+        query.bindValue(":threadId", threadId);
+        query.bindValue(":type", type);
+        query.bindValue(":participantId", participant["identifier"].toString());
+        query.bindValue(":normalizedId", participant["identifier"].toString());
+        query.bindValue(":alias", participant["alias"].toString());
+        query.bindValue(":state", participant["state"].toUInt());
+        query.bindValue(":roles", participant["roles"].toUInt());
+        if (!query.exec()) {
+            qCritical() << "Error:" << query.lastError() << query.lastQuery();
+            SQLiteDatabase::instance()->rollbackTransaction();
+            return false;
+        }
+    }
+
+    if (!SQLiteDatabase::instance()->finishTransaction()) {
+        qCritical() << "Failed to commit the transaction.";
+        return false;
+    }
+
+    QVariantMap existingThread = getSingleThread(type,
+                                                 accountId,
+                                                 threadId,
+                                                 QVariantMap());
+
+    if (!existingThread.isEmpty()) {
+        addThreadsToCache(QList<QVariantMap>() << existingThread);
+    }
+
+    return true;
+}
+
+bool SQLiteHistoryPlugin::updateRoomParticipantsRoles(const QString &accountId, const QString &threadId, History::EventType type, const QVariantMap &participantsRoles)
+{
+    QSqlQuery query(SQLiteDatabase::instance()->database());
+    if (accountId.isEmpty() || threadId.isEmpty()) {
+        return false;
+    }
+
+    SQLiteDatabase::instance()->beginTransation();
+    Q_FOREACH(const QString &participantId, participantsRoles.keys()) {
+        query.prepare("UPDATE thread_participants SET roles=:roles WHERE accountId=:accountId AND threadId=:threadId AND type=:type AND participantId=:participantId");
+        query.bindValue(":roles", participantsRoles.value(participantId).toUInt());
+        query.bindValue(":accountId", accountId);
+        query.bindValue(":threadId", threadId);
+        query.bindValue(":type", type);
+        query.bindValue(":participantId", participantId);
+        if (!query.exec()) {
+            qCritical() << "Error:" << query.lastError() << query.lastQuery();
+            SQLiteDatabase::instance()->rollbackTransaction();
+            return false;
+        }
+    }
+
+    if (!SQLiteDatabase::instance()->finishTransaction()) {
+        qCritical() << "Failed to commit the transaction.";
+        return false;
+    }
+
+    QVariantMap existingThread = getSingleThread(type,
+                                                 accountId,
+                                                 threadId,
+                                                 QVariantMap());
+
+    if (!existingThread.isEmpty()) {
+        addThreadsToCache(QList<QVariantMap>() << existingThread);
+    }
+
+    return true;
+}
+
+bool SQLiteHistoryPlugin::updateRoomInfo(const QString &accountId, const QString &threadId, History::EventType type, const QVariantMap &properties, const QStringList &invalidated)
+{
+    QSqlQuery query(SQLiteDatabase::instance()->database());
+
+    if (threadId.isEmpty() || accountId.isEmpty()) {
+        return false;
+    }
+
+    SQLiteDatabase::instance()->beginTransation();
+
+    QDateTime creationTimestamp = QDateTime::fromTime_t(properties["CreationTimestamp"].toUInt());
+    QDateTime timestamp = QDateTime::fromTime_t(properties["Timestamp"].toUInt());
+
+    QVariantMap propertyMapping;
+    propertyMapping["RoomName"] = "roomName";
+    propertyMapping["Server"] = "server";
+    propertyMapping["Creator"] = "creator";
+    propertyMapping["CreationTimestamp"] = "creationTimestamp";
+    propertyMapping["Anonymous"] = "anonymous";
+    propertyMapping["InviteOnly"] = "inviteOnly";
+    propertyMapping["Limit"] = "participantLimit";
+    propertyMapping["Moderated"] = "moderated";
+    propertyMapping["Title"] = "title";
+    propertyMapping["Description"] = "description";
+    propertyMapping["Persistent"] = "persistent";
+    propertyMapping["Private"] = "private";
+    propertyMapping["PasswordProtected"] = "passwordProtected";
+    propertyMapping["Password"] = "password";
+    propertyMapping["PasswordHint"] = "passwordHint";
+    propertyMapping["CanUpdateConfiguration"] = "canUpdateConfiguration";
+    propertyMapping["Subject"] = "subject";
+    propertyMapping["Actor"] = "actor";
+    propertyMapping["Timestamp"] = "timestamp";
+    propertyMapping["Joined"] = "joined";
+    propertyMapping["SelfRoles"] = "selfRoles";
+
+    QStringList changedPropListValues;
+    // populate sql query
+    Q_FOREACH (const QString &key, properties.keys()) {
+        if (propertyMapping.contains(key)) {
+            QString prop = propertyMapping[key].toString();
+            changedPropListValues << QString(prop+"=:"+ prop);
+        }
+    }
+    if (changedPropListValues.isEmpty()) {
+       return false;
+    }
+
+    query.prepare("UPDATE chat_room_info SET "+ changedPropListValues.join(", ")+" WHERE accountId=:accountId AND threadId=:threadId AND type=:type");
+    query.bindValue(":accountId", accountId);
+    query.bindValue(":threadId", threadId);
+    query.bindValue(":type", (int) type);
+    query.bindValue(":roomName", properties["RoomName"].toString());
+    query.bindValue(":server", properties["Server"].toString());
+    query.bindValue(":creator", properties["Creator"].toString());
+    query.bindValue(":creationTimestamp", creationTimestamp.toUTC().toString(timestampFormat));
+    query.bindValue(":anonymous", properties["Anonymous"].toBool());
+    query.bindValue(":inviteOnly", properties["InviteOnly"].toBool());
+    query.bindValue(":participantLimit", properties["Limit"].toInt());
+    query.bindValue(":moderated", properties["Moderated"].toBool());
+    query.bindValue(":title", properties["Title"].toString());
+    query.bindValue(":description", properties["Description"].toString());
+    query.bindValue(":persistent", properties["Persistent"].toBool());
+    query.bindValue(":private", properties["Private"].toBool());
+    query.bindValue(":passwordProtected", properties["PasswordProtected"].toBool());
+    query.bindValue(":password", properties["Password"].toString());
+    query.bindValue(":passwordHint", properties["PasswordHint"].toString());
+    query.bindValue(":canUpdateConfiguration", properties["CanUpdateConfiguration"].toBool());
+    query.bindValue(":subject", properties["Subject"].toString());
+    query.bindValue(":actor", properties["Actor"].toString());
+    query.bindValue(":timestamp", timestamp.toUTC().toString(timestampFormat));
+    query.bindValue(":joined", properties["Joined"].toBool());
+    query.bindValue(":selfRoles", properties["SelfRoles"].toInt());
+
+    if (!query.exec()) {
+        qCritical() << "Error:" << query.lastError() << query.lastQuery();
+        SQLiteDatabase::instance()->rollbackTransaction();
+        return false;
+    }
+
+    if (!SQLiteDatabase::instance()->finishTransaction()) {
+        qCritical() << "Failed to commit the transaction.";
+        return false;
+    }
+
+    QVariantMap existingThread = getSingleThread(type,
+                                                 accountId,
+                                                 threadId,
+                                                 QVariantMap());
+
+    if (!existingThread.isEmpty()) {
+        addThreadsToCache(QList<QVariantMap>() << existingThread);
+    }
+
+    return true;
+}
+
+QVariantMap SQLiteHistoryPlugin::createThreadForProperties(const QString &accountId, History::EventType type, const QVariantMap &properties)
 {
     // WARNING: this function does NOT test to check if the thread is already created, you should check using HistoryReader::threadForParticipants()
 
     QVariantMap thread;
+    History::Participants participants = History::Participants::fromVariant(properties[History::FieldParticipantIds]);
 
     // Create a new thread
     // FIXME: define what the threadId will be
-    QString threadId = participants.join("%");
+    QString threadId;
+    History::ChatType chatType = (History::ChatType)properties[History::FieldChatType].toInt();
+    QVariantMap chatRoomInfo;
+
+    SQLiteDatabase::instance()->beginTransation();
+
+    if (chatType == History::ChatTypeRoom) {
+        threadId = properties[History::FieldThreadId].toString();
+        // we cannot save chat room without threadId
+        if (accountId.isEmpty() || threadId.isEmpty()) {
+            SQLiteDatabase::instance()->rollbackTransaction();
+            return thread;
+        }
+        chatRoomInfo = properties[History::FieldChatRoomInfo].toMap();
+        QSqlQuery query(SQLiteDatabase::instance()->database());
+
+        QDateTime creationTimestamp = QDateTime::fromTime_t(chatRoomInfo["CreationTimestamp"].toUInt());
+        QDateTime timestamp = QDateTime::fromTime_t(chatRoomInfo["Timestamp"].toUInt());
+
+        query.prepare("INSERT INTO chat_room_info (accountId, threadId, type, roomName, server, creator, creationTimestamp, anonymous, inviteOnly, participantLimit, moderated, title, description, persistent, private, passwordProtected, password, passwordHint, canUpdateConfiguration, subject, actor, timestamp, joined, selfRoles) "
+                      "VALUES (:accountId, :threadId, :type, :roomName, :server, :creator, :creationTimestamp, :anonymous, :inviteOnly, :participantLimit, :moderated, :title, :description, :persistent, :private, :passwordProtected, :password, :passwordHint, :canUpdateConfiguration, :subject, :actor, :timestamp, :joined, :selfRoles)");
+        query.bindValue(":accountId", accountId);
+        query.bindValue(":threadId", threadId);
+        query.bindValue(":type", (int) type);
+        query.bindValue(":roomName", chatRoomInfo["RoomName"].toString());
+        query.bindValue(":server", chatRoomInfo["Server"].toString());
+        query.bindValue(":creator", chatRoomInfo["Creator"].toString());
+        query.bindValue(":creationTimestamp", creationTimestamp.toUTC().toString(timestampFormat));
+        query.bindValue(":anonymous", chatRoomInfo["Anonymous"].toBool());
+        query.bindValue(":inviteOnly", chatRoomInfo["InviteOnly"].toBool());
+        query.bindValue(":participantLimit", chatRoomInfo["Limit"].toInt());
+        query.bindValue(":moderated", chatRoomInfo["Moderated"].toBool());
+        query.bindValue(":title", chatRoomInfo["Title"].toString());
+        query.bindValue(":description", chatRoomInfo["Description"].toString());
+        query.bindValue(":persistent", chatRoomInfo["Persistent"].toBool());
+        query.bindValue(":private", chatRoomInfo["Private"].toBool());
+        query.bindValue(":passwordProtected", chatRoomInfo["PasswordProtected"].toBool());
+        query.bindValue(":password", chatRoomInfo["Password"].toString());
+        query.bindValue(":passwordHint", chatRoomInfo["PasswordHint"].toString());
+        query.bindValue(":canUpdateConfiguration", chatRoomInfo["CanUpdateConfiguration"].toBool());
+        query.bindValue(":subject", chatRoomInfo["Subject"].toString());
+        query.bindValue(":actor", chatRoomInfo["Actor"].toString());
+        query.bindValue(":timestamp", timestamp.toUTC().toString(timestampFormat));
+        query.bindValue(":joined", chatRoomInfo["Joined"].toBool());
+        query.bindValue(":selfRoles", chatRoomInfo["SelfRoles"].toInt());
+
+        if (!query.exec()) {
+            qCritical() << "Error:" << query.lastError() << query.lastQuery();
+            SQLiteDatabase::instance()->rollbackTransaction();
+            return QVariantMap();
+        }
+        for (QVariantMap::iterator iter = chatRoomInfo.begin(); iter != chatRoomInfo.end();) {
+            if (!iter.value().isValid()) {
+                iter = chatRoomInfo.erase(iter);
+            } else {
+                iter++;
+            }
+        }
+        thread[History::FieldChatRoomInfo] = chatRoomInfo;
+    } else if (chatType == History::ChatTypeContact) {
+        threadId = participants.identifiers().join("%");
+    } else {
+        threadId = QString("broadcast:%1").arg(QString(QCryptographicHash::hash(participants.identifiers().join(";").toLocal8Bit(),QCryptographicHash::Md5).toHex()));;
+    }
 
     QSqlQuery query(SQLiteDatabase::instance()->database());
-    query.prepare("INSERT INTO threads (accountId, threadId, type, count, unreadCount)"
-                  "VALUES (:accountId, :threadId, :type, :count, :unreadCount)");
+    query.prepare("INSERT INTO threads (accountId, threadId, type, count, unreadCount, chatType, lastEventTimestamp)"
+                  "VALUES (:accountId, :threadId, :type, :count, :unreadCount, :chatType, :lastEventTimestamp)");
     query.bindValue(":accountId", accountId);
     query.bindValue(":threadId", threadId);
     query.bindValue(":type", (int) type);
     query.bindValue(":count", 0);
     query.bindValue(":unreadCount", 0);
+    query.bindValue(":chatType", (int) chatType);
+    // make sure threads are created with an up-to-date timestamp
+    query.bindValue(":lastEventTimestamp", QDateTime::currentDateTimeUtc().toString(timestampFormat));
     if (!query.exec()) {
         qCritical() << "Error:" << query.lastError() << query.lastQuery();
+        SQLiteDatabase::instance()->rollbackTransaction();
         return QVariantMap();
     }
 
     // and insert the participants
-    Q_FOREACH(const QString &participant, participants) {
-        query.prepare("INSERT INTO thread_participants (accountId, threadId, type, participantId, normalizedId)"
-                      "VALUES (:accountId, :threadId, :type, :participantId, :normalizedId)");
+    Q_FOREACH(const History::Participant &participant, participants) {
+        query.prepare("INSERT INTO thread_participants (accountId, threadId, type, participantId, normalizedId, alias, state, roles)"
+                      "VALUES (:accountId, :threadId, :type, :participantId, :normalizedId, :alias, :state, :roles)");
         query.bindValue(":accountId", accountId);
         query.bindValue(":threadId", threadId);
         query.bindValue(":type", type);
-        query.bindValue(":participantId", participant);
-        query.bindValue(":normalizedId", History::Utils::normalizeId(accountId, participant));
+        query.bindValue(":participantId", participant.identifier());
+        query.bindValue(":normalizedId", History::Utils::normalizeId(accountId, participant.identifier()));
+        query.bindValue(":alias", participant.alias());
+        query.bindValue(":state", participant.state());
+        query.bindValue(":roles", participant.roles());
         if (!query.exec()) {
             qCritical() << "Error:" << query.lastError() << query.lastQuery();
+            SQLiteDatabase::instance()->rollbackTransaction();
             return QVariantMap();
         }
+    }
+
+    if (!SQLiteDatabase::instance()->finishTransaction()) {
+        qCritical() << "Failed to commit the transaction.";
+        return QVariantMap();
     }
 
     // and finally create the thread
     thread[History::FieldAccountId] = accountId;
     thread[History::FieldThreadId] = threadId;
     thread[History::FieldType] = (int) type;
-    thread[History::FieldParticipants] = History::ContactMatcher::instance()->contactInfo(accountId, participants, true);
+    QVariantList contactList;
+    QVariantList contactInfo = History::ContactMatcher::instance()->contactInfo(accountId, participants.identifiers(), true);
+    for (int i = 0; i < participants.count(); ++i) {
+        QVariantMap map = contactInfo[i].toMap();
+        History::Participant participant = participants[i];
+        map["state"] = participant.state();
+        map["roles"] = participant.roles();
+        contactList << map;
+    }
+    thread[History::FieldParticipants] = contactList;
     thread[History::FieldCount] = 0;
     thread[History::FieldUnreadCount] = 0;
+    thread[History::FieldChatType] = (int)chatType;
 
     addThreadsToCache(QList<QVariantMap>() << thread);
 
     return thread;
+}
+
+// Writer
+QVariantMap SQLiteHistoryPlugin::createThreadForParticipants(const QString &accountId, History::EventType type, const QStringList &participants)
+{
+    QVariantMap properties;
+    properties[History::FieldParticipantIds] = participants;
+    properties[History::FieldChatType] = participants.size() != 1 ? History::ChatTypeNone : History::ChatTypeContact;
+    return createThreadForProperties(accountId, type, properties);
 }
 
 bool SQLiteHistoryPlugin::removeThread(const QVariantMap &thread)
@@ -550,16 +981,18 @@ History::EventWriteResult SQLiteHistoryPlugin::writeTextEvent(const QVariantMap 
                                                event[History::FieldThreadId].toString(),
                                                event[History::FieldEventId].toString());
 
+    SQLiteDatabase::instance()->beginTransation();
+
     History::EventWriteResult result;
     if (existingEvent.isEmpty()) {
         // create new
-        query.prepare("INSERT INTO text_events (accountId, threadId, eventId, senderId, timestamp, newEvent, message, messageType, messageStatus, readTimestamp, subject) "
-                      "VALUES (:accountId, :threadId, :eventId, :senderId, :timestamp, :newEvent, :message, :messageType, :messageStatus, :readTimestamp, :subject)");
+        query.prepare("INSERT INTO text_events (accountId, threadId, eventId, senderId, timestamp, newEvent, message, messageType, messageStatus, readTimestamp, subject, informationType)"
+                      "VALUES (:accountId, :threadId, :eventId, :senderId, :timestamp, :newEvent, :message, :messageType, :messageStatus, :readTimestamp, :subject, :informationType)");
         result = History::EventWriteCreated;
     } else {
         // update existing event
-        query.prepare("UPDATE text_events SET senderId=:senderId, timestamp=:timestamp, newEvent=:newEvent, message=:message, messageType=:messageType,"
-                      "messageStatus=:messageStatus, readTimestamp=:readTimestamp, subject=:subject WHERE accountId=:accountId AND threadId=:threadId AND eventId=:eventId");
+        query.prepare("UPDATE text_events SET senderId=:senderId, timestamp=:timestamp, newEvent=:newEvent, message=:message, messageType=:messageType, informationType=:informationType, "
+                      "messageStatus=:messageStatus, readTimestamp=:readTimestamp, subject=:subject, informationType=:informationType WHERE accountId=:accountId AND threadId=:threadId AND eventId=:eventId");
         result = History::EventWriteModified;
     }
 
@@ -574,9 +1007,11 @@ History::EventWriteResult SQLiteHistoryPlugin::writeTextEvent(const QVariantMap 
     query.bindValue(":messageStatus", event[History::FieldMessageStatus]);
     query.bindValue(":readTimestamp", event[History::FieldReadTimestamp].toDateTime().toUTC());
     query.bindValue(":subject", event[History::FieldSubject].toString());
+    query.bindValue(":informationType", event[History::FieldInformationType].toInt());
 
     if (!query.exec()) {
         qCritical() << "Failed to save the text event: Error:" << query.lastError() << query.lastQuery();
+        SQLiteDatabase::instance()->rollbackTransaction();
         return History::EventWriteError;
     }
 
@@ -592,6 +1027,7 @@ History::EventWriteResult SQLiteHistoryPlugin::writeTextEvent(const QVariantMap 
             query.bindValue(":eventId", event[History::FieldEventId]);
             if (!query.exec()) {
                 qCritical() << "Could not erase previous attachments. Error:" << query.lastError() << query.lastQuery();
+                SQLiteDatabase::instance()->rollbackTransaction();
                 return History::EventWriteError;
             }
         }
@@ -608,9 +1044,15 @@ History::EventWriteResult SQLiteHistoryPlugin::writeTextEvent(const QVariantMap 
             query.bindValue(":status", attachment[History::FieldStatus]);
             if (!query.exec()) {
                 qCritical() << "Failed to save attachment to database" << query.lastError() << attachment;
+                SQLiteDatabase::instance()->rollbackTransaction();
                 return History::EventWriteError;
             }
         }
+    }
+
+    if (!SQLiteDatabase::instance()->finishTransaction()) {
+        qCritical() << "Failed to commit transaction.";
+        return History::EventWriteError;
     }
 
     if (result == History::EventWriteModified || result == History::EventWriteCreated) {
@@ -750,13 +1192,8 @@ QString SQLiteHistoryPlugin::sqlQueryForThreads(History::EventType type, const Q
            << "threads.threadId"
            << "threads.lastEventId"
            << "threads.count"
-           << "threads.unreadCount";
-
-    // get the participants in the query already
-    fields << "(SELECT group_concat(thread_participants.participantId,  \"|,|\") "
-              "FROM thread_participants WHERE thread_participants.accountId=threads.accountId "
-              "AND thread_participants.threadId=threads.threadId "
-              "AND thread_participants.type=threads.type GROUP BY accountId,threadId,type) as participants";
+           << "threads.unreadCount"
+           << "threads.lastEventTimestamp";
 
     QStringList extraFields;
     QString table;
@@ -764,7 +1201,7 @@ QString SQLiteHistoryPlugin::sqlQueryForThreads(History::EventType type, const Q
     switch (type) {
     case History::EventTypeText:
         table = "text_events";
-        extraFields << "text_events.message" << "text_events.messageType" << "text_events.messageStatus" << "text_events.readTimestamp";
+        extraFields << "text_events.message" << "text_events.messageType" << "text_events.messageStatus" << "text_events.readTimestamp" << "chatType" << "text_events.subject" << "text_events.informationType";
         break;
     case History::EventTypeVoice:
         table = "voice_events";
@@ -773,7 +1210,6 @@ QString SQLiteHistoryPlugin::sqlQueryForThreads(History::EventType type, const Q
     }
 
     fields << QString("%1.senderId").arg(table)
-           << QString("%1.timestamp").arg(table)
            << QString("%1.newEvent").arg(table);
     fields << extraFields;
 
@@ -786,6 +1222,7 @@ QString SQLiteHistoryPlugin::sqlQueryForThreads(History::EventType type, const Q
 QList<QVariantMap> SQLiteHistoryPlugin::parseThreadResults(History::EventType type, QSqlQuery &query, const QVariantMap &properties)
 {
     QList<QVariantMap> threads;
+    QList<QVariantMap> threadsWithoutParticipants;
     QSqlQuery attachmentsQuery(SQLiteDatabase::instance()->database());
     QList<QVariantMap> attachments;
     bool grouped = false;
@@ -820,13 +1257,11 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseThreadResults(History::EventType ty
         thread[History::FieldEventId] = query.value(2);
         thread[History::FieldCount] = query.value(3);
         thread[History::FieldUnreadCount] = query.value(4);
-        QStringList participants = query.value(5).toString().split("|,|");
-        thread[History::FieldParticipants] = History::ContactMatcher::instance()->contactInfo(accountId, participants, true);
 
         // the generic event fields
         thread[History::FieldSenderId] = query.value(6);
-        thread[History::FieldTimestamp] = toLocalTimeString(query.value(7).toDateTime());
-        thread[History::FieldNewEvent] = query.value(8).toBool();
+        thread[History::FieldTimestamp] = toLocalTimeString(query.value(5).toDateTime());
+        thread[History::FieldNewEvent] = query.value(7).toBool();
 
         // the next step is to get the last event
         switch (type) {
@@ -857,19 +1292,94 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseThreadResults(History::EventType ty
                 thread[History::FieldAttachments] = QVariant::fromValue(attachments);
                 attachments.clear();
             }
-            thread[History::FieldMessage] = query.value(9);
-            thread[History::FieldMessageType] = query.value(10);
-            thread[History::FieldMessageStatus] = query.value(11);
-            thread[History::FieldReadTimestamp] = toLocalTimeString(query.value(12).toDateTime());
+            thread[History::FieldMessage] = query.value(8);
+            thread[History::FieldMessageType] = query.value(9);
+            thread[History::FieldMessageStatus] = query.value(10);
+            thread[History::FieldReadTimestamp] = toLocalTimeString(query.value(11).toDateTime());
+            thread[History::FieldChatType] = query.value(12).toUInt();
+
+            if (thread[History::FieldChatType].toInt() == History::ChatTypeRoom) {
+                QVariantMap chatRoomInfo;
+                QSqlQuery query1(SQLiteDatabase::instance()->database());
+
+                query1.prepare("SELECT roomName, server, creator, creationTimestamp, anonymous, inviteOnly, participantLimit, moderated, title, description, persistent, private, passwordProtected, password, passwordHint, canUpdateConfiguration, subject, actor, timestamp, joined, selfRoles FROM chat_room_info WHERE accountId=:accountId AND threadId=:threadId AND type=:type LIMIT 1");
+                query1.bindValue(":accountId", thread[History::FieldAccountId]);
+                query1.bindValue(":threadId", thread[History::FieldThreadId]);
+                query1.bindValue(":type", thread[History::FieldType].toInt());
+
+                if (!query1.exec()) {
+                    qCritical() << "Failed to get chat room info for thread: Error:" << query1.lastError() << query1.lastQuery();
+                    break;
+                }
+                query1.next();
+
+                if (query1.value(0).isValid())
+                    chatRoomInfo["RoomName"] = query1.value(0);
+                if (query1.value(1).isValid())
+                    chatRoomInfo["Server"] = query1.value(1);
+                if (query1.value(2).isValid())
+                    chatRoomInfo["Creator"] = query1.value(2);
+                if (query1.value(3).isValid())
+                    chatRoomInfo["CreationTimestamp"] = toLocalTimeString(query1.value(3).toDateTime());
+                if (query1.value(4).isValid())
+                    chatRoomInfo["Anonymous"] = query1.value(4).toBool();
+                if (query1.value(5).isValid())
+                    chatRoomInfo["InviteOnly"] = query1.value(5).toBool();
+                if (query1.value(6).isValid())
+                    chatRoomInfo["Limit"] = query1.value(6).toInt();
+                if (query1.value(7).isValid())
+                    chatRoomInfo["Moderated"] = query1.value(7).toBool();
+                if (query1.value(8).isValid())
+                    chatRoomInfo["Title"] = query1.value(8);
+                if (query1.value(9).isValid())
+                    chatRoomInfo["Description"] = query1.value(9);
+                if (query1.value(10).isValid())
+                    chatRoomInfo["Persistent"] = query1.value(10).toBool();
+                if (query1.value(11).isValid())
+                    chatRoomInfo["Private"] = query1.value(11).toBool();
+                if (query1.value(12).isValid())
+                    chatRoomInfo["PasswordProtected"] = query1.value(12).toBool();
+                if (query1.value(13).isValid())
+                    chatRoomInfo["Password"] = query1.value(13);
+                if (query1.value(14).isValid())
+                    chatRoomInfo["PasswordHint"] = query1.value(14);
+                if (query1.value(15).isValid())
+                    chatRoomInfo["CanUpdateConfiguration"] = query1.value(15).toBool();
+                if (query1.value(16).isValid())
+                    chatRoomInfo["Subject"] = query1.value(16);
+                if (query1.value(17).isValid())
+                    chatRoomInfo["Actor"] = query1.value(17);
+                if (query1.value(18).isValid())
+                    chatRoomInfo["Timestamp"] = toLocalTimeString(query1.value(18).toDateTime());
+                if (query1.value(19).isValid())
+                    chatRoomInfo["Joined"] = query1.value(19).toBool();
+                if (query1.value(20).isValid())
+                    chatRoomInfo["SelfRoles"] = query1.value(20).toInt();
+
+                thread[History::FieldChatRoomInfo] = chatRoomInfo;
+            }
+            if (!History::Utils::shouldIncludeParticipants(History::Thread::fromProperties(thread))) {
+                thread.remove(History::FieldParticipants);
+                threadsWithoutParticipants << thread;
+            } else {
+                threads << thread;
+            }
             break;
         case History::EventTypeVoice:
-            thread[History::FieldMissed] = query.value(10);
-            thread[History::FieldDuration] = query.value(9);
-            thread[History::FieldRemoteParticipant] = History::ContactMatcher::instance()->contactInfo(accountId, query.value(11).toString(), true);
+            thread[History::FieldMissed] = query.value(9);
+            thread[History::FieldDuration] = query.value(8);
+            thread[History::FieldRemoteParticipant] = History::ContactMatcher::instance()->contactInfo(accountId, query.value(10).toString(), true);
+            threads << thread;
             break;
         }
-        threads << thread;
     }
+
+    // get the participants
+    threads = participantsForThreads(threads);
+
+    // and append the threads with no participants
+    threads << threadsWithoutParticipants;
+
     return threads;
 }
 
@@ -887,9 +1397,10 @@ QString SQLiteHistoryPlugin::sqlQueryForEvents(History::EventType type, const QS
     QString queryText;
     switch (type) {
     case History::EventTypeText:
-        participantsField = participantsField.arg("text_events", QString::number(type));
+        // for text events we don't need the participants at all
+        participantsField = "\"\" as participants";
         queryText = QString("SELECT accountId, threadId, eventId, senderId, timestamp, newEvent, %1, "
-                            "message, messageType, messageStatus, readTimestamp, subject FROM text_events %2 %3").arg(participantsField, modifiedCondition, order);
+                            "message, messageType, messageStatus, readTimestamp, subject, informationType FROM text_events %2 %3").arg(participantsField, modifiedCondition, order);
         break;
     case History::EventTypeVoice:
         participantsField = participantsField.arg("voice_events", QString::number(type));
@@ -923,8 +1434,10 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseEventResults(History::EventType typ
         event[History::FieldSenderId] = query.value(3);
         event[History::FieldTimestamp] = toLocalTimeString(query.value(4).toDateTime());
         event[History::FieldNewEvent] = query.value(5).toBool();
-        QStringList participants = query.value(6).toString().split("|,|");
-        event[History::FieldParticipants] = History::ContactMatcher::instance()->contactInfo(accountId, participants, true);
+        if (type != History::EventTypeText) {
+            QStringList participants = query.value(6).toString().split("|,|");
+            event[History::FieldParticipants] = History::ContactMatcher::instance()->contactInfo(accountId, participants, true);
+        }
 
         switch (type) {
         case History::EventTypeText:
@@ -960,6 +1473,10 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseEventResults(History::EventType typ
             event[History::FieldMessageType] = query.value(8);
             event[History::FieldMessageStatus] = query.value(9);
             event[History::FieldReadTimestamp] = toLocalTimeString(query.value(10).toDateTime());
+            if (!query.value(11).toString().isEmpty()) {
+                event[History::FieldSubject] = query.value(11).toString();
+            }
+            event[History::FieldInformationType] = query.value(12).toInt();
             break;
         case History::EventTypeVoice:
             event[History::FieldDuration] = query.value(7).toInt();
@@ -975,7 +1492,7 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseEventResults(History::EventType typ
 
 QString SQLiteHistoryPlugin::toLocalTimeString(const QDateTime &timestamp)
 {
-    return QDateTime(timestamp.date(), timestamp.time(), Qt::UTC).toLocalTime().toString("yyyy-MM-ddTHH:mm:ss.zzz");
+    return QDateTime(timestamp.date(), timestamp.time(), Qt::UTC).toLocalTime().toString(timestampFormat);
 }
 
 QString SQLiteHistoryPlugin::filterToString(const History::Filter &filter, QVariantMap &bindValues, const QString &propertyPrefix) const

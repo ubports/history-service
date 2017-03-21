@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Canonical, Ltd.
+ * Copyright (C) 2016-2017 Canonical, Ltd.
  *
  * This file is part of history-service.
  *
@@ -68,6 +68,7 @@ void HistoryEventModelTest::testTelepathyInitializedCorrectly()
                              History::MessageStatusRead,
                              QDateTime::currentDateTime(),
                              "The subject",
+                             History::InformationTypeNone,
                              History::TextEventAttachments(),
                              textThread.participants());
     QVERIFY(mManager->writeEvents(History::Events() << event));

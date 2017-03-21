@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 Canonical, Ltd.
+ * Copyright (C) 2013-2016 Canonical, Ltd.
  *
  * Authors:
  *  Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>
@@ -38,20 +38,26 @@ public:
                          const QString &theThreadId,
                          EventType theType,
                          const Participants &theParticipants,
+                         const QDateTime &theTimestamp,
                          const Event &theLastEvent,
                          int theCount,
                          int theUnreadCount,
-                         const Threads &theGroupedThreads);
+                         const Threads &theGroupedThreads,
+                         ChatType chatType,
+                         const QVariantMap &chatRoomInfo);
     virtual ~ThreadPrivate();
 
     QString accountId;
     QString threadId;
     Participants participants;
     EventType type;
+    QDateTime timestamp;
     Event lastEvent;
     int count;
     int unreadCount;
     Threads groupedThreads;
+    ChatType chatType;
+    QVariantMap chatRoomInfo;
 };
 
 }

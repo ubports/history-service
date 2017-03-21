@@ -56,7 +56,6 @@ PluginThreadView::~PluginThreadView()
 
 void PluginThreadView::Destroy()
 {
-    qDebug() << __PRETTY_FUNCTION__;
     Q_D(PluginThreadView);
     deleteLater();
 }
