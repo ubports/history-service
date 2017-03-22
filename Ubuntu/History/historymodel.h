@@ -23,6 +23,8 @@
 #define HISTORYMODEL_H
 
 #include "types.h"
+#include "event.h"
+#include "thread.h"
 #include "historyqmlfilter.h"
 #include "historyqmlsort.h"
 #include <QAbstractListModel>
@@ -175,6 +177,10 @@ public:
 
     Q_INVOKABLE virtual QVariant get(int row) const;
 
+    // Marking events and threads as read
+    Q_INVOKABLE bool markEventAsRead(const QVariantMap &eventProperties);
+    Q_INVOKABLE void markThreadsAsRead(const QVariantList &threadsProperties);
+
     // QML parser status things
     void classBegin();
     void componentComplete();
@@ -206,6 +212,10 @@ protected:
 
 private:
     QHash<int, QByteArray> mRoles;
+    History::Events mEventWritingQueue;
+    int mEventWritingTimer;
+    History::Threads mThreadWritingQueue;
+    int mThreadWritingTimer;
     int mUpdateTimer;
     bool mWaitingForQml;
 };

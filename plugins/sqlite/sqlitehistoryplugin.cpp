@@ -315,7 +315,7 @@ QVariantMap SQLiteHistoryPlugin::markThreadAsRead(const QVariantMap &thread)
         return QVariantMap();
     }
 
-    query.prepare("UPDATE text_events SET newEvent=:newEvent WHERE accountId=:accountId AND threadId=:threadId");
+    query.prepare("UPDATE text_events SET newEvent=:newEvent WHERE accountId=:accountId AND threadId=:threadId AND newEvent=1");
     query.bindValue(":accountId", thread[History::FieldAccountId].toString());
     query.bindValue(":threadId", thread[History::FieldThreadId].toString());
     query.bindValue(":newEvent", false);
@@ -1337,7 +1337,7 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseThreadResults(History::EventType ty
                     chatRoomInfo["SelfRoles"] = query1.value(20).toInt();
 
                 thread[History::FieldChatRoomInfo] = chatRoomInfo;
-                if (!History::Utils::shouldIncludeParticipants(thread)) {
+                if (!History::Utils::shouldIncludeParticipants(History::Thread::fromProperties(thread))) {
                     thread.remove(History::FieldParticipants);
                 }
             }

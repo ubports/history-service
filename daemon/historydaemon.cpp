@@ -140,9 +140,6 @@ HistoryDaemon::HistoryDaemon(QObject *parent)
             SIGNAL(messageSent(Tp::TextChannelPtr,Tp::Message,QString)),
             SLOT(onMessageSent(Tp::TextChannelPtr,Tp::Message,QString)));
     connect(&mTextObserver,
-            SIGNAL(messageRead(Tp::TextChannelPtr,Tp::ReceivedMessage)),
-            SLOT(onMessageRead(Tp::TextChannelPtr,Tp::ReceivedMessage)));
-    connect(&mTextObserver,
             SIGNAL(channelAvailable(Tp::TextChannelPtr)),
             SLOT(onTextChannelAvailable(Tp::TextChannelPtr)));
     connect(&mTextObserver,
@@ -590,38 +587,17 @@ bool HistoryDaemon::removeThreads(const QList<QVariantMap> &threads)
         return false;
     }
 
-    // In order to remove a thread all we have to do is to remove all its items
-    // then it is going to be removed by removeEvents() once it detects the thread is
-    // empty.
-    QList<QVariantMap> events;
-    QMap<QString, QVariantMap> removedEmptyThreads;
+    // If the thread has events
+    mBackend->beginBatchOperation();
     Q_FOREACH(const QVariantMap &thread, threads) {
-        QList<QVariantMap> thisEvents = mBackend->eventsForThread(thread);
-        if (thisEvents.isEmpty()) {
-            mBackend->beginBatchOperation();
-            if (!mBackend->removeThread(thread)) {
-                mBackend->rollbackBatchOperation();
-                return false;
-            }
-            mBackend->endBatchOperation();
-            QString hash = hashThread(thread);
-            removedEmptyThreads[hash] = thread;
-            continue;
-        }
-        events += thisEvents;
-    }
-
-    if (!removedEmptyThreads.isEmpty()) {
-        mDBus.notifyThreadsRemoved(removedEmptyThreads.values());
-    }
-
-    if (events.size() > 0) {
-        if(removeEvents(events)) {
-            return true;
+        if (!mBackend->removeThread(thread)) {
+            mBackend->rollbackBatchOperation();
+            return false;
         }
     }
-
-    return false;
+    mBackend->endBatchOperation();
+    mDBus.notifyThreadsRemoved(threads);
+    return true;
 }
 
 void HistoryDaemon::onObserverCreated()
@@ -1039,32 +1015,7 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
             return;
         }
 
-        History::MessageStatus status;
-        switch (message.deliveryDetails().status()) {
-        case Tp::DeliveryStatusAccepted:
-            status = History::MessageStatusAccepted;
-            break;
-        case Tp::DeliveryStatusDeleted:
-            status = History::MessageStatusDeleted;
-            break;
-        case Tp::DeliveryStatusDelivered:
-            status = History::MessageStatusDelivered;
-            break;
-        case Tp::DeliveryStatusPermanentlyFailed:
-            status = History::MessageStatusPermanentlyFailed;
-            break;
-        case Tp::DeliveryStatusRead:
-            status = History::MessageStatusRead;
-            break;
-        case Tp::DeliveryStatusTemporarilyFailed:
-            status = History::MessageStatusTemporarilyFailed;
-            break;
-        case Tp::DeliveryStatusUnknown:
-            status = History::MessageStatusUnknown;
-            break;
-        }
-
-        textEvent[History::FieldMessageStatus] = (int) status;
+        textEvent[History::FieldMessageStatus] = (int) fromTelepathyDeliveryStatus(message.deliveryDetails().status());
         if (!writeEvents(QList<QVariantMap>() << textEvent, properties)) {
             qWarning() << "Failed to save the new message status!";
         }
@@ -1174,22 +1125,6 @@ QVariantMap HistoryDaemon::getSingleEventFromTextChannel(const Tp::TextChannelPt
 
     return textEvent;
 
-}
-
-void HistoryDaemon::onMessageRead(const Tp::TextChannelPtr textChannel, const Tp::ReceivedMessage &message)
-{
-    QVariantMap textEvent = getSingleEventFromTextChannel(textChannel, message.messageToken());
-    QVariantMap properties = propertiesFromChannel(textChannel);
-
-    if (textEvent.isEmpty()) {
-        qWarning() << "Cound not find the original event to update with newEvent = false.";
-        return;
-    }
-
-    textEvent[History::FieldNewEvent] = false;
-    if (!writeEvents(QList<QVariantMap>() << textEvent, properties)) {
-        qWarning() << "Failed to save the new message status!";
-    }
 }
 
 void HistoryDaemon::onMessageSent(const Tp::TextChannelPtr textChannel, const Tp::Message &message, const QString &messageToken)
@@ -1382,4 +1317,34 @@ void HistoryDaemon::writeRolesInformationEvents(const QVariantMap &thread, const
             writeInformationEvent(thread, History::InformationTypeSelfAdminGranted);
         }
     }
+}
+
+History::MessageStatus HistoryDaemon::fromTelepathyDeliveryStatus(Tp::DeliveryStatus deliveryStatus)
+{
+    History::MessageStatus status;
+    switch (deliveryStatus) {
+    case Tp::DeliveryStatusAccepted:
+        status = History::MessageStatusAccepted;
+        break;
+    case Tp::DeliveryStatusDeleted:
+        status = History::MessageStatusDeleted;
+        break;
+    case Tp::DeliveryStatusDelivered:
+        status = History::MessageStatusDelivered;
+        break;
+    case Tp::DeliveryStatusPermanentlyFailed:
+        status = History::MessageStatusPermanentlyFailed;
+        break;
+    case Tp::DeliveryStatusRead:
+        status = History::MessageStatusRead;
+        break;
+    case Tp::DeliveryStatusTemporarilyFailed:
+        status = History::MessageStatusTemporarilyFailed;
+        break;
+    case Tp::DeliveryStatusUnknown:
+        status = History::MessageStatusUnknown;
+        break;
+    }
+
+    return status;
 }

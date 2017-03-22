@@ -232,25 +232,6 @@ QHash<int, QByteArray> HistoryThreadModel::roleNames() const
     return mRoles;
 }
 
-void HistoryThreadModel::markThreadsAsRead(const QVariantList &threadsProperties)
-{
-    History::Threads threads;
-    Q_FOREACH(const QVariant &entry, threadsProperties) {
-        QVariantMap threadProperties = entry.toMap();
-        History::Thread thread = History::Thread::fromProperties(threadProperties);
-
-        if (!thread.isNull()) {
-            threads << thread;
-        }
-    }
-
-    if (threads.isEmpty()) {
-        return;
-    }
-
-    History::Manager::instance()->markThreadsAsRead(threads);
-}
-
 bool HistoryThreadModel::removeThreads(const QVariantList &threadsProperties)
 {
     History::Threads threads;

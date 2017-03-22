@@ -27,7 +27,7 @@
 Q_DECLARE_METATYPE(QList< QVariantMap >)
 
 HistoryServiceDBus::HistoryServiceDBus(QObject *parent) :
-    QObject(parent), mAdaptor(0)
+    QObject(parent), mAdaptor(0), mSignalsTimer(-1)
 {
     qDBusRegisterMetaType<QList<QVariantMap> >();
 }
@@ -47,32 +47,38 @@ bool HistoryServiceDBus::connectToBus()
 
 void HistoryServiceDBus::notifyThreadsAdded(const QList<QVariantMap> &threads)
 {
-    Q_EMIT ThreadsAdded(threads);
+    mThreadsAdded << threads;
+    triggerSignals();
 }
 
 void HistoryServiceDBus::notifyThreadsModified(const QList<QVariantMap> &threads)
 {
-    Q_EMIT ThreadsModified(threads);
+    mThreadsModified << threads;
+    triggerSignals();
 }
 
 void HistoryServiceDBus::notifyThreadsRemoved(const QList<QVariantMap> &threads)
 {
-    Q_EMIT ThreadsRemoved(threads);
+    mThreadsRemoved << threads;
+    triggerSignals();
 }
 
 void HistoryServiceDBus::notifyEventsAdded(const QList<QVariantMap> &events)
 {
-    Q_EMIT EventsAdded(events);
+    mEventsAdded << events;
+    triggerSignals();
 }
 
 void HistoryServiceDBus::notifyEventsModified(const QList<QVariantMap> &events)
 {
-    Q_EMIT EventsModified(events);
+    mEventsModified << events;
+    triggerSignals();
 }
 
 void HistoryServiceDBus::notifyEventsRemoved(const QList<QVariantMap> &events)
 {
-    Q_EMIT EventsRemoved(events);
+    mEventsRemoved << events;
+    triggerSignals();
 }
 
 void HistoryServiceDBus::notifyThreadParticipantsChanged(const QVariantMap &thread,
@@ -150,5 +156,75 @@ QVariantMap HistoryServiceDBus::GetSingleThread(int type, const QString &account
 QVariantMap HistoryServiceDBus::GetSingleEvent(int type, const QString &accountId, const QString &threadId, const QString &eventId)
 {
     return HistoryDaemon::instance()->getSingleEvent(type, accountId, threadId, eventId);
+}
+
+void HistoryServiceDBus::timerEvent(QTimerEvent *event)
+{
+    if (event->timerId() == mSignalsTimer) {
+        killTimer(mSignalsTimer);
+        mSignalsTimer = -1;
+        processSignals();
+    }
+}
+
+void HistoryServiceDBus::filterDuplicatesAndAdd(QList<QVariantMap> &targetList, const QList<QVariantMap> newItems, const QStringList &propertiesToCompare)
+{
+    Q_FOREACH (const QVariantMap &item, newItems) {
+        Q_FOREACH(const QVariantMap &existing, targetList) {
+            bool found = true;
+            Q_FOREACH(const QString &prop, propertiesToCompare) {
+                if (item[prop] != existing[prop]) {
+                    found = false;
+                    break;
+                }
+            }
+
+            if (!found) {
+                targetList << item;
+            }
+        }
+    }
+}
+
+void HistoryServiceDBus::triggerSignals()
+{
+    if (mSignalsTimer >= 0) {
+        killTimer(mSignalsTimer);
+    }
+
+    mSignalsTimer = startTimer(100);
+}
+
+void HistoryServiceDBus::processSignals()
+{
+    if (!mThreadsAdded.isEmpty()) {
+        Q_EMIT ThreadsAdded(mThreadsAdded);
+        mThreadsAdded.clear();
+    }
+
+    if (!mThreadsModified.isEmpty()) {
+        Q_EMIT ThreadsModified(mThreadsModified);
+        mThreadsModified.clear();
+    }
+
+    if (!mThreadsRemoved.isEmpty()) {
+        Q_EMIT ThreadsRemoved(mThreadsRemoved);
+        mThreadsRemoved.clear();
+    }
+
+    if (!mEventsAdded.isEmpty()) {
+        Q_EMIT EventsAdded(mEventsAdded);
+        mEventsAdded.clear();
+    }
+
+    if (!mEventsModified.isEmpty()) {
+        Q_EMIT EventsModified(mEventsModified);
+        mEventsModified.clear();
+    }
+
+    if (!mEventsRemoved.isEmpty()) {
+        Q_EMIT EventsRemoved(mEventsRemoved);
+        mEventsRemoved.clear();
+    }
 }
 

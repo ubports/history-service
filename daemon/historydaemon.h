@@ -68,7 +68,6 @@ private Q_SLOTS:
     void onObserverCreated();
     void onCallEnded(const Tp::CallChannelPtr &channel, bool missed);
     void onMessageReceived(const Tp::TextChannelPtr textChannel, const Tp::ReceivedMessage &message);
-    void onMessageRead(const Tp::TextChannelPtr textChannel, const Tp::ReceivedMessage &message);
     void onMessageSent(const Tp::TextChannelPtr textChannel, const Tp::Message &message, const QString &messageToken);
     void onTextChannelAvailable(const Tp::TextChannelPtr channel);
     void onTextChannelInvalidated(const Tp::TextChannelPtr channel);
@@ -92,6 +91,8 @@ protected:
     void writeRoomChangesInformationEvents(const QVariantMap &thread, const QVariantMap &interfaceProperties);
     void writeRolesInformationEvents(const QVariantMap &thread, const Tp::ChannelPtr &channel, const RolesMap &rolesMap);
     void writeRolesChangesInformationEvents(const QVariantMap &thread, const Tp::ChannelPtr &channel, const RolesMap &rolesMap);
+
+    static History::MessageStatus fromTelepathyDeliveryStatus(Tp::DeliveryStatus deliveryStatus);
 private:
     HistoryDaemon(QObject *parent = 0);
 
