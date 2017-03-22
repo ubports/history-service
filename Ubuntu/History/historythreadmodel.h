@@ -76,6 +76,7 @@ protected Q_SLOTS:
     virtual void onThreadsAdded(const History::Threads &threads);
     virtual void onThreadsModified(const History::Threads &threads);
     virtual void onThreadsRemoved(const History::Threads &threads);
+    virtual void onThreadParticipantsChanged(const History::Thread &thread, const History::Participants &added, const History::Participants &removed, const History::Participants &modified);
 
 protected:
     History::Threads fetchNextPage();

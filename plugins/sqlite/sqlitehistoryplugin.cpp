@@ -1290,6 +1290,9 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseThreadResults(History::EventType ty
                     chatRoomInfo["SelfRoles"] = query1.value(20).toInt();
 
                 thread[History::FieldChatRoomInfo] = chatRoomInfo;
+                if (!History::Utils::shouldIncludeParticipants(thread)) {
+                    thread.remove(History::FieldParticipants);
+                }
             }
             break;
         case History::EventTypeVoice:
@@ -1353,8 +1356,10 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseEventResults(History::EventType typ
         event[History::FieldSenderId] = query.value(3);
         event[History::FieldTimestamp] = toLocalTimeString(query.value(4).toDateTime());
         event[History::FieldNewEvent] = query.value(5).toBool();
-        QStringList participants = query.value(6).toString().split("|,|");
-        event[History::FieldParticipants] = History::ContactMatcher::instance()->contactInfo(accountId, participants, true);
+        if (type != History::EventTypeText) {
+            QStringList participants = query.value(6).toString().split("|,|");
+            event[History::FieldParticipants] = History::ContactMatcher::instance()->contactInfo(accountId, participants, true);
+        }
 
         switch (type) {
         case History::EventTypeText:

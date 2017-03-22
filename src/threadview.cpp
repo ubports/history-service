@@ -89,6 +89,18 @@ void ThreadViewPrivate::_d_threadsRemoved(const Threads &threads)
     }
 }
 
+void ThreadViewPrivate::_d_threadParticipantsChanged(const History::Thread &thread,
+                                   const History::Participants &added,
+                                   const History::Participants &removed,
+                                   const History::Participants &modified)
+{
+    Q_Q(ThreadView);
+    Threads filtered = filteredThreads(History::Threads() << thread);
+    if (!filtered.isEmpty()) {
+        Q_EMIT q->threadParticipantsChanged(filtered.first(), added, removed, modified);
+    }
+}
+
 // ------------- ThreadView -------------------------------------------------------
 
 ThreadView::ThreadView(History::EventType type,
@@ -132,6 +144,9 @@ ThreadView::ThreadView(History::EventType type,
     connect(Manager::instance(),
             SIGNAL(threadsRemoved(History::Threads)),
             SLOT(_d_threadsRemoved(History::Threads)));
+    connect(Manager::instance(),
+            SIGNAL(threadParticipantsChanged(History::Thread, History::Participants, History::Participants, History::Participants)),
+            SLOT(_d_threadParticipantsChanged(History::Thread, History::Participants, History::Participants, History::Participants)));
 }
 
 ThreadView::~ThreadView()

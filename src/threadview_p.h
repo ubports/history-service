@@ -50,6 +50,10 @@ namespace History
         void _d_threadsAdded(const History::Threads &threads);
         void _d_threadsModified(const History::Threads &threads);
         void _d_threadsRemoved(const History::Threads &threads);
+        void _d_threadParticipantsChanged(const History::Thread &thread,
+                                   const History::Participants &added,
+                                   const History::Participants &removed,
+                                   const History::Participants &modified);
 
         ThreadView *q_ptr;
     };

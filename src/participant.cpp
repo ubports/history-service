@@ -233,6 +233,15 @@ Participants Participants::fromVariantList(const QVariantList &list)
     return participants;
 }
 
+Participants Participants::fromVariantMapList(const QList<QVariantMap> &list)
+{
+    Participants participants;
+    Q_FOREACH(const QVariantMap& entry, list) {
+        participants << Participant::fromProperties(entry);
+    }
+    return participants;
+}
+
 QVariantList Participants::toVariantList() const
 {
     QVariantList list;
