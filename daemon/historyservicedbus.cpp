@@ -47,42 +47,36 @@ bool HistoryServiceDBus::connectToBus()
 
 void HistoryServiceDBus::notifyThreadsAdded(const QList<QVariantMap> &threads)
 {
-    qDebug() << __PRETTY_FUNCTION__ << threads.count();
     mThreadsAdded << threads;
     triggerSignals();
 }
 
 void HistoryServiceDBus::notifyThreadsModified(const QList<QVariantMap> &threads)
 {
-    qDebug() << __PRETTY_FUNCTION__ << threads.count();
     mThreadsModified << threads;
     triggerSignals();
 }
 
 void HistoryServiceDBus::notifyThreadsRemoved(const QList<QVariantMap> &threads)
 {
-    qDebug() << __PRETTY_FUNCTION__ << threads.count();
     mThreadsRemoved << threads;
     triggerSignals();
 }
 
 void HistoryServiceDBus::notifyEventsAdded(const QList<QVariantMap> &events)
 {
-    qDebug() << __PRETTY_FUNCTION__ << events.count();
     mEventsAdded << events;
     triggerSignals();
 }
 
 void HistoryServiceDBus::notifyEventsModified(const QList<QVariantMap> &events)
 {
-    qDebug() << __PRETTY_FUNCTION__ << events.count();
     mEventsModified << events;
     triggerSignals();
 }
 
 void HistoryServiceDBus::notifyEventsRemoved(const QList<QVariantMap> &events)
 {
-    qDebug() << __PRETTY_FUNCTION__ << events.count();
     mEventsRemoved << events;
     triggerSignals();
 }
@@ -166,7 +160,6 @@ QVariantMap HistoryServiceDBus::GetSingleEvent(int type, const QString &accountI
 
 void HistoryServiceDBus::timerEvent(QTimerEvent *event)
 {
-    qDebug() << __PRETTY_FUNCTION__ << event->timerId();
     if (event->timerId() == mSignalsTimer) {
         killTimer(mSignalsTimer);
         mSignalsTimer = -1;
@@ -195,7 +188,6 @@ void HistoryServiceDBus::filterDuplicatesAndAdd(QList<QVariantMap> &targetList, 
 
 void HistoryServiceDBus::triggerSignals()
 {
-    qDebug() << __PRETTY_FUNCTION__;
     if (mSignalsTimer >= 0) {
         killTimer(mSignalsTimer);
     }
@@ -205,7 +197,6 @@ void HistoryServiceDBus::triggerSignals()
 
 void HistoryServiceDBus::processSignals()
 {
-    qDebug() << __PRETTY_FUNCTION__;
     if (!mThreadsAdded.isEmpty()) {
         Q_EMIT ThreadsAdded(mThreadsAdded);
         mThreadsAdded.clear();

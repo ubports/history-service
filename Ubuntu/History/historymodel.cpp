@@ -421,9 +421,7 @@ void HistoryModel::timerEvent(QTimerEvent *event)
             return;
         }
 
-        qDebug() << "Goint to update" << mEventWritingQueue.count() << "events.";
         if (History::Manager::instance()->writeEvents(mEventWritingQueue)) {
-            qDebug() << "... succeeded!";
             mEventWritingQueue.clear();
         }
     } else if (event->timerId() == mThreadWritingTimer) {
