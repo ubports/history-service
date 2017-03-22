@@ -79,6 +79,7 @@ function(generate_test TESTNAME)
                 set(ARG_ENVIRONMENT HOME=${TMPDIR}
                                     HISTORY_PLUGIN_PATH=${CMAKE_BINARY_DIR}/plugins/sqlite
                                     HISTORY_SQLITE_DBPATH=:memory:
+                                    HISTORY_LOCK_FILE=${TMPDIR}/history-service.lock
                                     MC_ACCOUNT_DIR=${TMPDIR}
                                     MC_MANAGER_DIR=${TMPDIR})
             endif ()
