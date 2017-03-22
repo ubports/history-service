@@ -70,6 +70,7 @@ public:
     virtual QHash<int, QByteArray> roleNames() const;
 
     Q_INVOKABLE bool removeThreads(const QVariantList &threadsProperties);
+    Q_INVOKABLE void markThreadsAsRead(const QVariantList &threadsProperties);
 
 protected Q_SLOTS:
     virtual void updateQuery();

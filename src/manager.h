@@ -73,6 +73,8 @@ public:
     bool removeThreads(const Threads &threads);
     bool removeEvents(const Events &events);
 
+    void markThreadsAsRead(const History::Threads &thread);
+
     bool isServiceRunning() const;
 
 Q_SIGNALS:

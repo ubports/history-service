@@ -561,6 +561,29 @@ bool HistoryDaemon::removeEvents(const QList<QVariantMap> &events)
     return true;
 }
 
+void HistoryDaemon::markThreadsAsRead(const QList<QVariantMap> &threads)
+{
+    if (!mBackend) {
+        return;
+    }
+
+    QList<QVariantMap> modifiedThreads;
+   
+    Q_FOREACH(const QVariantMap &thread, threads) {
+        mBackend->beginBatchOperation();
+        QVariantMap newThread = mBackend->markThreadAsRead(thread);
+        if (!newThread.isEmpty()) {
+            modifiedThreads << newThread;
+        }
+
+        mBackend->endBatchOperation();
+    }
+
+    if (!modifiedThreads.isEmpty()) {
+        mDBus.notifyThreadsModified(modifiedThreads);
+    }
+}
+
 bool HistoryDaemon::removeThreads(const QList<QVariantMap> &threads)
 {
     if (!mBackend) {
