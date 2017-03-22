@@ -59,11 +59,11 @@ public:
                                       History::EventType type,
                                       const QVariantMap &properties,
                                       History::MatchFlags matchFlags = History::MatchCaseSensitive);
-    virtual QString threadIdForProperties(const QString &accountId,
-                                          History::EventType type,
-                                          const QVariantMap &properties,
-                                          History::MatchFlags matchFlags = History::MatchCaseSensitive) override;
-
+    QString threadIdForProperties(const QString &accountId,
+                                  History::EventType type,
+                                  const QVariantMap &properties,
+                                  History::MatchFlags matchFlags = History::MatchCaseSensitive) override;
+    QList<QVariantMap> participantsForThreads(const QList<QVariantMap> &threadIds) override;
     QList<QVariantMap> eventsForThread(const QVariantMap &thread);
 
     QVariantMap getSingleThread(History::EventType type, const QString &accountId, const QString &threadId, const QVariantMap &properties = QVariantMap());

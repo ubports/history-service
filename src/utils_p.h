@@ -37,6 +37,7 @@ public:
     static bool compareNormalizedParticipants(const QStringList &participants1, const QStringList &participants2, MatchFlags flags);
     static bool shouldGroupThread(const Thread &thread);
     static bool shouldIncludeParticipants(const Thread &thread);
+    static bool shouldIncludeParticipants(const QString &accountId, const History::ChatType &type);
     static QString normalizeId(const QString &accountId, const QString &id);
     static QVariant getUserValue(const QString &interface, const QString &propName);
 

@@ -335,7 +335,7 @@ void HistoryEventModel::updateQuery()
         mView->disconnect(this);
     }
 
-    if (mFilter) {
+    if (mFilter && mFilter->filter().isValid()) {
         queryFilter = mFilter->filter();
     } else {
         // we should not return anything if there is no filter

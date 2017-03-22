@@ -26,6 +26,8 @@
 #include "voiceevent.h"
 #include <QDBusMetaType>
 
+#include <QDebug>
+
 Q_DECLARE_METATYPE(History::TextEventAttachments)
 Q_DECLARE_METATYPE(QList<QVariantMap>)
 
@@ -190,7 +192,6 @@ QVariant HistoryThreadModel::threadData(const History::Thread &thread, int role)
         }
         break;
     }
-
     return result;
 }
 
@@ -214,13 +215,6 @@ void HistoryThreadModel::fetchMore(const QModelIndex &parent)
         mCanFetchMore = false;
         Q_EMIT canFetchMoreChanged();
     } else {
-        Q_FOREACH(const History::Thread &thread, threads) {
-            // insert the identifiers in the contact map
-            Q_FOREACH(const History::Participant &participant, thread.participants()) {
-                watchContactInfo(thread.accountId(), participant.identifier(), participant.properties());
-            }
-        }
-
         beginInsertRows(QModelIndex(), mThreads.count(), mThreads.count() + threads.count() - 1);
         mThreads << threads;
         endInsertRows();
@@ -327,6 +321,29 @@ void HistoryThreadModel::onThreadParticipantsChanged(const History::Thread &thre
         QModelIndex idx = index(pos);
         Q_EMIT dataChanged(idx, idx);
     }
+
+    // watch the contact info for the received participants
+    Q_FOREACH(const History::Participant &participant, added) {
+        watchContactInfo(thread.accountId(), participant.identifier(), participant.properties());
+    }
+    Q_FOREACH(const History::Participant &participant, modified) {
+        watchContactInfo(thread.accountId(), participant.identifier(), participant.properties());
+    }
+}
+
+void HistoryThreadModel::fetchParticipantsIfNeeded(const History::Threads &threads)
+{
+    History::Threads filtered;
+    Q_FOREACH(const History::Thread &thread, threads) {
+        if (thread.type() == History::EventTypeText && thread.participants().isEmpty() &&
+            (thread.chatType() != History::ChatTypeRoom || thread.accountId().startsWith("ofono"))) {
+            filtered << thread;
+        }
+    }
+    if (filtered.isEmpty()) {
+        return;
+    }
+    History::Manager::instance()->requestThreadParticipants(filtered);
 }
 
 void HistoryThreadModel::onThreadsAdded(const History::Threads &threads)
@@ -346,6 +363,7 @@ void HistoryThreadModel::onThreadsAdded(const History::Threads &threads)
         mThreads.insert(pos, thread);
         endInsertRows();
     }
+    fetchParticipantsIfNeeded(threads);
 }
 
 void HistoryThreadModel::onThreadsModified(const History::Threads &threads)
@@ -367,6 +385,7 @@ void HistoryThreadModel::onThreadsModified(const History::Threads &threads)
     if (!newThreads.isEmpty()) {
         onThreadsAdded(newThreads);
     }
+    fetchParticipantsIfNeeded(threads);
 }
 
 void HistoryThreadModel::onThreadsRemoved(const History::Threads &threads)
@@ -387,5 +406,7 @@ void HistoryThreadModel::onThreadsRemoved(const History::Threads &threads)
 
 History::Threads HistoryThreadModel::fetchNextPage()
 {
-    return mThreadView->nextPage();
+    History::Threads threads = mThreadView->nextPage();
+    fetchParticipantsIfNeeded(threads);
+    return threads;
 }

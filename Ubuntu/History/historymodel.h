@@ -168,6 +168,7 @@ public:
                                                 const QStringList &participants,
                                                 int matchFlags = (int)History::MatchCaseSensitive,
                                                 bool create = false);
+    Q_INVOKABLE void requestThreadParticipants(const QVariantList &threads);
     Q_INVOKABLE bool writeTextInformationEvent(const QString &accountId,
                                    const QString &threadId,
                                    const QStringList &participants,

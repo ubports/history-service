@@ -342,6 +342,20 @@ QString HistoryModel::threadIdForParticipants(const QString &accountId, int even
     return QString::null;
 }
 
+void HistoryModel::requestThreadParticipants(const QVariantList &threads)
+{
+    History::Threads theThreads;
+    Q_FOREACH(const QVariant &threadVariant, threads) {
+        History::Thread theThread = History::Thread::fromProperties(threadVariant.toMap());
+        // if the given thread already has the list of participants, there is no point
+        // in fetching it again
+        if (theThread.participants().isEmpty()) {
+            theThreads << theThread;
+        }
+    }
+    History::Manager::instance()->requestThreadParticipants(theThreads);
+}
+
 bool HistoryModel::writeTextInformationEvent(const QString &accountId, const QString &threadId, const QStringList &participants, const QString &message, int informationType, const QString &subject)
 {
     if (participants.isEmpty() || threadId.isEmpty() || accountId.isEmpty()) {

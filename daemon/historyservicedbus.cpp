@@ -99,7 +99,12 @@ QVariantMap HistoryServiceDBus::ThreadForProperties(const QString &accountId,
                                                             (History::EventType) type,
                                                             properties,
                                                             (History::MatchFlags) matchFlags,
-                                                            create);
+                                                          create);
+}
+
+QList<QVariantMap> HistoryServiceDBus::ParticipantsForThreads(const QList<QVariantMap> &threadIds)
+{
+    return HistoryDaemon::instance()->participantsForThreads(threadIds);
 }
 
 QVariantMap HistoryServiceDBus::ThreadForParticipants(const QString &accountId,

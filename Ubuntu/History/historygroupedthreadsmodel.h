@@ -67,12 +67,17 @@ protected:
     int existingPositionForEntry(const History::Thread &thread) const;
     void removeGroup(const HistoryThreadGroup &group);
     void updateDisplayedThread(HistoryThreadGroup &group);
+    History::Threads restoreParticipants(const History::Threads &oldThreads, const History::Threads &newThreads);
 
 protected Q_SLOTS:
     virtual void updateQuery();
     virtual void onThreadsAdded(const History::Threads &threads);
     virtual void onThreadsModified(const History::Threads &threads);
     virtual void onThreadsRemoved(const History::Threads &threads);
+    void onThreadParticipantsChanged(const History::Thread &thread,
+                                     const History::Participants &added,
+                                     const History::Participants &removed,
+                                     const History::Participants &modified) override;
 
 private Q_SLOTS:
     void processThreadGrouping(const History::Thread &thread);

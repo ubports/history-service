@@ -53,7 +53,7 @@ Events EventViewPrivate::filteredEvents(const Events &events)
         }
 
         if (filterNull || filter.match(event.properties())) {
-            filtered << events;
+            filtered << event;
         }
     }
 

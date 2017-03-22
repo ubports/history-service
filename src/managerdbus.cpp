@@ -28,6 +28,8 @@
 #include <QDBusReply>
 #include <QDBusMetaType>
 
+#include <QDebug>
+
 Q_DECLARE_METATYPE(QList< QVariantMap >)
 
 namespace History
@@ -101,6 +103,29 @@ Thread ManagerDBus::threadForProperties(const QString &accountId,
     }
 
     return thread;
+}
+
+void ManagerDBus::requestThreadParticipants(const Threads &threads)
+{
+    QList<QVariantMap> ids;
+    Q_FOREACH(const Thread &thread, threads) {
+        QVariantMap id;
+        id[History::FieldAccountId] = thread.accountId();
+        id[History::FieldThreadId] = thread.threadId();
+        id[History::FieldType] = thread.type();
+        ids << id;
+    }
+
+    QDBusPendingCall call = mInterface.asyncCall("ParticipantsForThreads", QVariant::fromValue(ids));
+    QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(call, this);
+    connect(watcher, &QDBusPendingCallWatcher::finished, [this, threads](QDBusPendingCallWatcher *watcher) {
+        QDBusPendingReply<QList<QVariantMap> > reply = *watcher;
+        Q_FOREACH(const QVariantMap &map, reply.value()) {
+            History::Thread thread = History::Thread::fromProperties(map);
+            Q_EMIT threadParticipantsChanged(thread, History::Participants(), History::Participants(), thread.participants());
+            watcher->deleteLater();
+        }
+    });
 }
 
 bool ManagerDBus::writeEvents(const Events &events)

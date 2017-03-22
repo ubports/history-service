@@ -50,7 +50,7 @@ public:
                                const QVariantMap &properties,
                                History::MatchFlags matchFlags,
                                bool create);
-
+    void requestThreadParticipants(const History::Threads &threads);
     bool writeEvents(const History::Events &events);
     bool removeThreads(const Threads &threads);
     bool removeEvents(const Events &events);
@@ -80,7 +80,6 @@ protected Q_SLOTS:
                                const QList<QVariantMap> &added,
                                const QList<QVariantMap> &removed,
                                const QList<QVariantMap> &modified);
-
     void onEventsAdded(const QList<QVariantMap> &events);
     void onEventsModified(const QList<QVariantMap> &events);
     void onEventsRemoved(const QList<QVariantMap> &events);
