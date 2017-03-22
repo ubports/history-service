@@ -37,6 +37,7 @@ public Q_SLOTS:
 
 Q_SIGNALS:
     void channelAvailable(const Tp::TextChannelPtr textChannel);
+    void textChannelInvalidated(const Tp::TextChannelPtr textChannel);
     void messageReceived(const Tp::TextChannelPtr textChannel, const Tp::ReceivedMessage &message);
     void messageRead(const Tp::TextChannelPtr textChannel, const Tp::ReceivedMessage &message);
     void messageSent(const Tp::TextChannelPtr textChannel, const Tp::Message &message, const QString &messageToken);

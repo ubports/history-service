@@ -42,7 +42,7 @@ public:
 
     static HistoryDaemon *instance();
 
-    static QVariantMap propertiesFromChannel(const Tp::ChannelPtr &textChannel);
+    QVariantMap propertiesFromChannel(const Tp::ChannelPtr &textChannel);
     QVariantMap threadForProperties(const QString &accountId,
                                     History::EventType type,
                                     const QVariantMap &properties,
@@ -70,6 +70,7 @@ private Q_SLOTS:
     void onMessageRead(const Tp::TextChannelPtr textChannel, const Tp::ReceivedMessage &message);
     void onMessageSent(const Tp::TextChannelPtr textChannel, const Tp::Message &message, const QString &messageToken);
     void onTextChannelAvailable(const Tp::TextChannelPtr channel);
+    void onTextChannelInvalidated(const Tp::TextChannelPtr channel);
     void onRoomPropertiesChanged(const QVariantMap &properties,const QStringList &invalidated);
     void onGroupMembersChanged(const Tp::Contacts &groupMembersAdded, const Tp::Contacts &groupLocalPendingMembersAdded,
                                const Tp::Contacts &groupRemotePendingMembersAdded, const Tp::Contacts &groupMembersRemoved,
@@ -98,6 +99,7 @@ private:
     QMap<QString, History::MatchFlags> mProtocolFlags;
     History::PluginPtr mBackend;
     HistoryServiceDBus mDBus;
+    QMap<QString, RolesMap> mRolesMap;
 };
 
 #endif

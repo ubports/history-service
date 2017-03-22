@@ -145,6 +145,9 @@ HistoryDaemon::HistoryDaemon(QObject *parent)
     connect(&mTextObserver,
             SIGNAL(channelAvailable(Tp::TextChannelPtr)),
             SLOT(onTextChannelAvailable(Tp::TextChannelPtr)));
+    connect(&mTextObserver,
+            SIGNAL(textChannelInvalidated(Tp::TextChannelPtr)),
+            SLOT(onTextChannelInvalidated(Tp::TextChannelPtr)));
 
     // FIXME: we need to do this in a better way, but for now this should do
     mProtocolFlags["ofono"] = History::MatchPhoneNumber;
@@ -163,23 +166,39 @@ HistoryDaemon *HistoryDaemon::instance()
 
 void HistoryDaemon::onRolesChanged(const HandleRolesMap &added, const HandleRolesMap &removed)
 {
-    Q_UNUSED(added);
-    Q_UNUSED(removed);
-
     ChannelInterfaceRolesInterface *roles_interface = qobject_cast<ChannelInterfaceRolesInterface*>(sender());
-    RolesMap roles = roles_interface->getRoles();
-
     Tp::TextChannelPtr channel(qobject_cast<Tp::TextChannel*>(sender()->parent()));
+    RolesMap rolesMap;
+    if (!mRolesMap.contains(channel->objectPath())) {
+        rolesMap = roles_interface->getRoles();
+    } else {
+        rolesMap = mRolesMap[channel->objectPath()];
+    }
+
+    QMapIterator<uint, uint> it(removed);
+    while (it.hasNext()) {
+        it.next();
+        rolesMap.remove(it.key());
+    }
+
+    QMapIterator<uint, uint> it2(added);
+    while (it2.hasNext()) {
+        it2.next();
+        rolesMap[it2.key()] = it2.value();
+    }
+        
+    mRolesMap[channel->objectPath()] = rolesMap;
+
     QVariantMap properties = propertiesFromChannel(channel);
     QVariantMap thread = threadForProperties(channel->property(History::FieldAccountId).toString(),
                                              History::EventTypeText,
                                              properties,
                                              matchFlagsForChannel(channel),
                                              false);
-
-    writeRolesInformationEvents(thread, channel, roles);
-
-    updateRoomRoles(channel, roles);
+    if (!thread.isEmpty()) {
+        writeRolesInformationEvents(thread, channel, rolesMap);
+        updateRoomRoles(channel, rolesMap);
+    }
 }
 
 QVariantMap HistoryDaemon::propertiesFromChannel(const Tp::ChannelPtr &textChannel)
@@ -192,7 +211,9 @@ QVariantMap HistoryDaemon::propertiesFromChannel(const Tp::ChannelPtr &textChann
     ChannelInterfaceRolesInterface *roles_interface = textChannel->optionalInterface<ChannelInterfaceRolesInterface>();
     RolesMap roles;
     if (roles_interface) {
-        roles = roles_interface->getRoles();
+        if (mRolesMap.contains(textChannel->objectPath())) {
+            roles = mRolesMap[textChannel->objectPath()];
+        }
     }
 
     Q_FOREACH(const Tp::ContactPtr contact, textChannel->groupContacts(false)) {
@@ -642,6 +663,11 @@ void HistoryDaemon::onCallEnded(const Tp::CallChannelPtr &channel, bool missed)
     writeEvents(QList<QVariantMap>() << event, properties);
 }
 
+void HistoryDaemon::onTextChannelInvalidated(const Tp::TextChannelPtr channel)
+{
+    mRolesMap.remove(channel->objectPath());
+}
+
 void HistoryDaemon::onTextChannelAvailable(const Tp::TextChannelPtr channel)
 {
     // for Rooms we need to explicitly create the thread to allow users to send messages to groups even
@@ -828,8 +854,14 @@ void HistoryDaemon::updateRoomParticipants(const Tp::TextChannelPtr channel, boo
 
     ChannelInterfaceRolesInterface *roles_interface = channel->optionalInterface<ChannelInterfaceRolesInterface>();
     RolesMap roles;
+
     if (roles_interface) {
-        roles = roles_interface->getRoles();
+        if (!mRolesMap.contains(channel->objectPath())) {
+            roles = roles_interface->getRoles();
+            mRolesMap[channel->objectPath()] = roles;
+        } else {
+            roles = mRolesMap[channel->objectPath()];
+        }
     }
 
     Q_FOREACH(const Tp::ContactPtr contact, channel->groupRemotePendingContacts(false)) {
