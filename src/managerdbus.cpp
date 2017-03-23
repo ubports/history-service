@@ -161,6 +161,7 @@ bool ManagerDBus::removeEvents(const Events &events)
     }
 
     mInterface.asyncCall("RemoveEvents", QVariant::fromValue(eventMap));
+    return true;
 }
 
 Thread ManagerDBus::getSingleThread(EventType type, const QString &accountId, const QString &threadId, const QVariantMap &properties)
