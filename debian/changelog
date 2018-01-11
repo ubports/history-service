@@ -1,3 +1,9 @@
+history-service (0.2+ubports) xenial; urgency=medium
+
+  * Imported to UBports
+
+ -- UBports auto importer <infra@ubports.com>  Thu, 11 Jan 2018 10:22:35 +0000
+
 history-service (0.1+17.04.20161130-0ubuntu1) zesty; urgency=medium
 
   [ Gustavo Pichorim Boiko ]
