@@ -1,3 +1,18 @@
+history-service (0.2+0ubports1) xenial; urgency=medium
+
+  * Adapt to support VOIP accounts.
+  * Improve the notifications of participants changing
+  * Only start saving information events about contacts joining and leaving after the self contact is in the local list of participants. 
+  * Improve Roles management performance by caching the retrieved data.
+  * Mark entire conversations as read.
+  * Allow pass multiple fields on sort clause.
+  * Reduce the dbus traffic when marking messages and threads as read.
+  * Use a QLockFile to ensure there will be only one instance of the daemon per user. As we now delay the registration on dbus, sometimes we ended up having two instances of the daeon running (because of dbus activation). This change makes sure that won't happen.
+  * Do not load the participants from threads automatically. If the client really needs it, it can use the newly added API to fetch the participants.
+  * Make it possible to debug sqlite commands.
+
+ -- Marius Gripsgard <marius@ubports.com>  Tue, 06 Mar 2018 08:18:08 +0100
+
 history-service (0.2+ubports) xenial; urgency=medium
 
   * Imported to UBports
