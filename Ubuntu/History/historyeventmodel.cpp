@@ -107,9 +107,6 @@ QVariant HistoryEventModel::eventData(const History::Event &event, int role) con
             result = map;
         }
         break;
-    case SenderRole:
-        result = History::ContactMatcher::instance()->contactInfo(event.accountId(), event.senderId());
-        break;
     case TimestampRole:
         result = event.timestamp();
         break;
@@ -193,16 +190,6 @@ QVariant HistoryEventModel::eventData(const History::Event &event, int role) con
 
             }
             return textEvent.subject();
-        }
-        break;
-    case SubjectAsAliasRole:
-        if (!textEvent.isNull()) {
-            QVariantMap contactInfo = History::ContactMatcher::instance()->contactInfo(event.accountId(), textEvent.subject());
-            QString returnValue = contactInfo[History::FieldAlias].toString();
-            if (returnValue.isEmpty()) {
-                returnValue = contactInfo[History::FieldIdentifier].toString();
-            }
-            return returnValue;
         }
         break;
     }

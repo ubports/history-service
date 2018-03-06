@@ -41,8 +41,6 @@ void TextChannelObserver::onTextChannelAvailable(Tp::TextChannelPtr textChannel)
             SLOT(onMessageSent(Tp::Message,Tp::MessageSendingFlags,QString)));
     Q_EMIT channelAvailable(textChannel);
 
-    Q_EMIT channelAvailable(textChannel);
-
     // process the messages that are already pending in the channel
     Q_FOREACH(const Tp::ReceivedMessage &message, textChannel->messageQueue()) {
         Q_EMIT messageReceived(textChannel, message);
