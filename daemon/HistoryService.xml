@@ -35,6 +35,15 @@
             <arg type="a{sv}" direction="out"/>
             <annotation name="org.qtproject.QtDBus.QtTypeName.Out0" value="QVariantMap"/>
         </method>
+        <method name="ParticipantsForThreads">
+            <dox:d><![CDATA[
+                Return the participants for the given threads
+            ]]></dox:d>
+            <arg name="threadIds" type="a(a{sv})" direction="in"/>
+            <annotation name="org.qtproject.QtDBus.QtTypeName.In0" value="QList &lt; QVariantMap &gt;"/>
+            <arg name="participants" type="a(a{sv})" direction="out"/>
+            <annotation name="org.qtproject.QtDBus.QtTypeName.Out0" value="QList &lt; QVariantMap &gt;"/>
+        </method>
         <method name="WriteEvents">
             <dox:d><![CDATA[
                 Write the given events to the storage.
@@ -60,6 +69,13 @@
             ]]></dox:d>
             <arg name="events" type="a(a{sv})" direction="in"/>
             <arg type="b" direction="out"/>
+            <annotation name="org.qtproject.QtDBus.QtTypeName.In0" value="QList &lt; QVariantMap &gt;"/>
+        </method>
+        <method name="MarkThreadsAsRead">
+            <dox:d><![CDATA[
+                Mark an entire thread as read
+            ]]></dox:d>
+            <arg name="threads" type="a(a{sv})" direction="in"/>
             <annotation name="org.qtproject.QtDBus.QtTypeName.In0" value="QList &lt; QVariantMap &gt;"/>
         </method>
         <method name="QueryThreads">
@@ -158,6 +174,19 @@
             ]]></dox:d>
             <arg name="events" type="a(a{sv})"/>
             <annotation name="org.qtproject.QtDBus.QtTypeName.In0" value="QList &lt; QVariantMap &gt;"/>
+        </signal>
+        <signal name="ThreadParticipantsChanged">
+            <dox:d><![CDATA[
+                Participants changed in a certain thread changed.
+            ]]></dox:d>
+            <arg name="thread" type="a{sv}"/>
+            <arg name="added" type="a(a{sv})"/>
+            <arg name="removed" type="a(a{sv})"/>
+            <arg name="modified" type="a(a{sv})"/>
+            <annotation name="org.qtproject.QtDBus.QtTypeName.In0" value="QVariantMap"/>
+            <annotation name="org.qtproject.QtDBus.QtTypeName.In1" value="QList &lt; QVariantMap &gt;"/>
+            <annotation name="org.qtproject.QtDBus.QtTypeName.In2" value="QList &lt; QVariantMap &gt;"/>
+            <annotation name="org.qtproject.QtDBus.QtTypeName.In3" value="QList &lt; QVariantMap &gt;"/>
         </signal>
     </interface>
 </node>

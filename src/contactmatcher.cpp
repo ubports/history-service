@@ -99,21 +99,22 @@ QVariantMap ContactMatcher::contactInfo(const QString &accountId, const QString 
 {
     InternalContactMap &internalMap = mContactMap[accountId];
 
-    // first do a simple string match on the map
-    if (internalMap.contains(identifier)) {
-        return internalMap[identifier];
-    }
-    
-    QVariantMap map;
 
-    // and if there was no match, asynchronously request the info, and return an empty map for now
-    if (History::TelepathyHelper::instance()->ready()) {
-        map = requestContactInfo(accountId, identifier, synchronous);
+    QString normalizedId = normalizeId(identifier);
+
+    QVariantMap map;
+    // first do a simple string match on the map
+    if (internalMap.contains(normalizedId)) {
+        map = internalMap[normalizedId];
+    } else if (History::TelepathyHelper::instance()->ready()) {
+        // and if there was no match, asynchronously request the info, and return an empty map for now
+        map = requestContactInfo(accountId, normalizedId, synchronous);
     } else if (!synchronous) {
-        RequestInfo info{accountId, identifier};
+        RequestInfo info{accountId, normalizedId};
         mPendingRequests.append(info);
     }
-    map[History::FieldIdentifier] = identifier;
+
+    map[History::FieldIdentifier] = normalizedId;
     map[History::FieldAccountId] = accountId;
 
     QMapIterator<QString, QVariant> i(properties);
@@ -124,7 +125,7 @@ QVariantMap ContactMatcher::contactInfo(const QString &accountId, const QString 
         }
     }
 
-    mContactMap[accountId][identifier] = map;
+    mContactMap[accountId][normalizedId] = map;
     return map;
 }
 
@@ -309,10 +310,17 @@ void ContactMatcher::onRequestStateChanged(QContactAbstractRequest::State state)
  */
 QVariantMap ContactMatcher::requestContactInfo(const QString &accountId, const QString &identifier, bool synchronous)
 {
+    QString normalizedId = normalizeId(identifier);
     QStringList addressableVCardFields = addressableFields(accountId);
+
+    QVariantMap contactInfo;
+    contactInfo[History::FieldIdentifier] = identifier;
+    contactInfo[History::FieldAccountId] = accountId;
+
     if (addressableVCardFields.isEmpty()) {
+        mContactMap[accountId][identifier] = contactInfo;
         // FIXME: add support for generic accounts
-        return QVariantMap();
+        return contactInfo;
     }
 
     bool phoneCompare = addressableVCardFields.contains("tel");
@@ -328,7 +336,7 @@ QVariantMap ContactMatcher::requestContactInfo(const QString &accountId, const Q
     QContactUnionFilter topLevelFilter;
     Q_FOREACH(const QString &field, addressableVCardFields) {
         if (field == "tel") {
-            topLevelFilter.append(QContactPhoneNumber::match(identifier));
+            topLevelFilter.append(QContactPhoneNumber::match(normalizedId));
         } else {
             // FIXME: handle more fields
             // rely on a generic field filter
@@ -340,7 +348,7 @@ QVariantMap ContactMatcher::requestContactInfo(const QString &accountId, const Q
             QContactDetailFilter valueFilter = QContactDetailFilter();
             valueFilter.setDetailType(QContactExtendedDetail::Type, QContactExtendedDetail::FieldData);
             valueFilter.setMatchFlags(QContactFilter::MatchExactly);
-            valueFilter.setValue(identifier);
+            valueFilter.setValue(normalizedId);
 
             QContactIntersectionFilter intersectionFilter;
             intersectionFilter.append(nameFilter);
@@ -353,10 +361,11 @@ QVariantMap ContactMatcher::requestContactInfo(const QString &accountId, const Q
     if (synchronous) {
         QList<QContact> contacts = mManager->contacts(topLevelFilter, QList<QContactSortOrder>(), hint);
         if (contacts.isEmpty()) {
-            return QVariantMap();
+            mContactMap[accountId][identifier] = contactInfo;
+            return contactInfo;
         }
         // for synchronous requests, return the results right away.
-        return matchAndUpdate(accountId, identifier, contacts.first());
+        return matchAndUpdate(accountId, normalizedId, contacts.first());
     } else {
         // check if there is a request already going on for the given contact
         Q_FOREACH(const RequestInfo &info, mRequests.values()) {
@@ -365,7 +374,7 @@ QVariantMap ContactMatcher::requestContactInfo(const QString &accountId, const Q
                 continue;
             }
 
-            if (info.identifier == identifier) {
+            if (info.identifier == normalizedId) {
                 // if so, just wait for it to finish
                 return QVariantMap();
             }
@@ -381,7 +390,7 @@ QVariantMap ContactMatcher::requestContactInfo(const QString &accountId, const Q
 
         RequestInfo info;
         info.accountId = accountId;
-        info.identifier = identifier;
+        info.identifier = normalizedId;
         mRequests[request] = info;
         request->start();
     }
@@ -414,7 +423,6 @@ QVariantMap ContactMatcher::matchAndUpdate(const QString &accountId, const QStri
     QStringList fields = addressableFields(accountId);
     bool match = false;
 
-    int fieldsCount = fields.count();
     Q_FOREACH(const QString &field, fields) {
         if (field == "tel") {
             QList<QContactDetail> details = contact.details(QContactDetail::TypePhoneNumber);
@@ -463,12 +471,26 @@ QStringList ContactMatcher::addressableFields(const QString &accountId)
         return mAddressableFields[accountId];
     }
 
+    // FIXME: hardcoding account IDs here is not a good idea, we have to fix addressable fields on
+    // the protocols themselves
+    if (accountId.startsWith("irc/irc")) {
+        QStringList empty;
+        mAddressableFields[accountId] = empty;
+        return empty;
+    }
+
     Tp::AccountPtr account = History::TelepathyHelper::instance()->accountForId(accountId);
     QStringList fields;
     if (!account.isNull()) {
         fields = account->protocolInfo().addressableVCardFields();
-        mAddressableFields[accountId] = fields;
     }
+
+    // fallback to phone number matching in case everything else fails
+    if (fields.isEmpty()) {
+        fields << "tel";
+    }
+
+    mAddressableFields[accountId] = fields;
 
     return fields;
 }
@@ -477,5 +499,18 @@ bool ContactMatcher::hasMatch(const QVariantMap &map) const
 {
     return (map.contains(History::FieldContactId) && !map[History::FieldContactId].toString().isEmpty());
 }
+
+QString ContactMatcher::normalizeId(const QString &id)
+{
+    QString normalizedId = id;
+
+    // FIXME: this is a hack so that SIP URIs get converted into phone numbers for contact matching
+    if (normalizedId.startsWith("sip:")) {
+        normalizedId.remove("sip:").remove(QRegularExpression("@.*$"));
+    }
+
+    return normalizedId;
+}
+
 
 }

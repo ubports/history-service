@@ -52,12 +52,20 @@ Q_SIGNALS:
     void threadsAdded(const History::Threads &threads);
     void threadsModified(const History::Threads &threads);
     void threadsRemoved(const History::Threads &threads);
+    void threadParticipantsChanged(const History::Thread &thread,
+                                   const History::Participants &added,
+                                   const History::Participants &removed,
+                                   const History::Participants &modified);
     void invalidated();
 
 private:
     Q_PRIVATE_SLOT(d_func(), void _d_threadsAdded(const History::Threads &threads))
     Q_PRIVATE_SLOT(d_func(), void _d_threadsModified(const History::Threads &threads))
     Q_PRIVATE_SLOT(d_func(), void _d_threadsRemoved(const History::Threads &threads))
+    Q_PRIVATE_SLOT(d_func(), void _d_threadParticipantsChanged(const History::Thread &thread,
+                                   const History::Participants &added,
+                                   const History::Participants &removed,
+                                   const History::Participants &modified))
     QScopedPointer<ThreadViewPrivate> d_ptr;
 
 };

@@ -199,6 +199,21 @@ void HistoryGroupedThreadsModel::updateDisplayedThread(HistoryThreadGroup &group
     }
 }
 
+History::Threads HistoryGroupedThreadsModel::restoreParticipants(const History::Threads &oldThreads, const History::Threads &newThreads)
+{
+    History::Threads updated = newThreads;
+    for(History::Thread &thread : updated) {
+        if (!thread.participants().isEmpty()) {
+            continue;
+        }
+        int i = oldThreads.indexOf(thread);
+        if (i >=0) {
+            thread.addParticipants(oldThreads[i].participants());
+        }
+    }
+    return updated;
+}
+
 void HistoryGroupedThreadsModel::updateQuery()
 {
     // remove all entries and call the query update
@@ -217,6 +232,7 @@ void HistoryGroupedThreadsModel::onThreadsAdded(const History::Threads &threads)
         processThreadGrouping(thread);
     }
 
+    fetchParticipantsIfNeeded(threads);
     notifyDataChanged();
 }
 
@@ -225,7 +241,7 @@ void HistoryGroupedThreadsModel::onThreadsModified(const History::Threads &threa
     Q_FOREACH(const History::Thread &thread, threads) {
         processThreadGrouping(thread);
     }
-
+    fetchParticipantsIfNeeded(threads);
     notifyDataChanged();
 }
 
@@ -236,6 +252,42 @@ void HistoryGroupedThreadsModel::onThreadsRemoved(const History::Threads &thread
     }
 
     notifyDataChanged();
+}
+
+void HistoryGroupedThreadsModel::onThreadParticipantsChanged(const History::Thread &thread, const History::Participants &added, const History::Participants &removed, const History::Participants &modified)
+{
+    int pos = existingPositionForEntry(thread);
+    if (pos >= 0) {
+        HistoryThreadGroup &group = mGroups[pos];
+        if (group.displayedThread == thread) {
+            group.displayedThread.removeParticipants(removed);
+            group.displayedThread.removeParticipants(modified);
+            group.displayedThread.addParticipants(added);
+            group.displayedThread.addParticipants(modified);
+        }
+
+        Q_FOREACH(const History::Thread &existingThread, group.threads) {
+            if (existingThread == thread) {
+                History::Thread modifiedThread = existingThread;
+                group.threads.removeOne(existingThread);
+                modifiedThread.removeParticipants(removed);
+                modifiedThread.removeParticipants(modified);
+                modifiedThread.addParticipants(added);
+                modifiedThread.addParticipants(modified);
+                group.threads.append(modifiedThread);
+            }
+        }
+        QModelIndex idx = index(pos);
+        Q_EMIT dataChanged(idx, idx);
+    }
+
+    // watch the contact info for the received participants
+    Q_FOREACH(const History::Participant &participant, added) {
+        watchContactInfo(thread.accountId(), participant.identifier(), participant.properties());
+    }
+    Q_FOREACH(const History::Participant &participant, modified) {
+        watchContactInfo(thread.accountId(), participant.identifier(), participant.properties());
+    }
 }
 
 void HistoryGroupedThreadsModel::processThreadGrouping(const History::Thread &thread)
@@ -262,7 +314,7 @@ void HistoryGroupedThreadsModel::processThreadGrouping(const History::Thread &th
     }
 
     HistoryThreadGroup &group = mGroups[pos];
-    group.threads = groupedThread.groupedThreads();
+    group.threads = restoreParticipants(group.threads, groupedThread.groupedThreads());
 
     updateDisplayedThread(group);
     markGroupAsChanged(group);

@@ -50,6 +50,7 @@ MatchFlags Utils::matchFlagsForAccount(const QString &accountId)
     if (protocolFlags.isEmpty()) {
         protocolFlags["ofono"] = MatchPhoneNumber;
         protocolFlags["multimedia"] = MatchPhoneNumber;
+        protocolFlags["sip"] = MatchPhoneNumber;
     }
 
     QString protocol = protocolFromAccountId(accountId);
@@ -57,7 +58,7 @@ MatchFlags Utils::matchFlagsForAccount(const QString &accountId)
         return protocolFlags[protocol];
     }
 
-    // default to this value
+    // default to phone number matching for now
     return History::MatchCaseSensitive;
 }
 
@@ -173,6 +174,20 @@ QVariant Utils::getUserValue(const QString &interface, const QString &propName)
         qWarning() << "Failed to get user property " << propName << " from AccountsService:" << reply.error().message();
     }
     return QVariant();
+}
+
+bool Utils::shouldIncludeParticipants(const Thread &thread)
+{
+    return shouldIncludeParticipants(thread.accountId(), thread.chatType());
+}
+
+bool Utils::shouldIncludeParticipants(const QString &accountId, const ChatType &type)
+{
+    // FIXME: this is obviously incorrect. we have to query the protocol files as a final solution
+    if (protocolFromAccountId(accountId) == "irc") {
+        return type != ChatTypeRoom;
+    }
+    return true;
 }
 
 }

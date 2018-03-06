@@ -79,6 +79,7 @@ public:
     QStringList identifiers() const;
     static Participants fromVariant(const QVariant &variant);
     static Participants fromVariantList(const QVariantList &list);
+    static Participants fromVariantMapList(const QList<QVariantMap> &list);
     static Participants fromStringList(const QStringList &list);
     QVariantList toVariantList() const;
     History::Participants filterByState(uint state) const;

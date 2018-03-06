@@ -50,18 +50,23 @@ public:
                                const QVariantMap &properties,
                                History::MatchFlags matchFlags,
                                bool create);
-
+    void requestThreadParticipants(const History::Threads &threads);
     bool writeEvents(const History::Events &events);
     bool removeThreads(const Threads &threads);
     bool removeEvents(const Events &events);
     Thread getSingleThread(EventType type, const QString &accountId, const QString &threadId, const QVariantMap &properties = QVariantMap());
     Event getSingleEvent(EventType type, const QString &accountId, const QString &threadId, const QString &eventId);
+    void markThreadsAsRead(const History::Threads &threads);
 
 Q_SIGNALS:
     // signals that will be triggered after processing bus signals
     void threadsAdded(const History::Threads &threads);
     void threadsModified(const History::Threads &threads);
     void threadsRemoved(const History::Threads &threads);
+    void threadParticipantsChanged(const History::Thread &thread,
+                             const History::Participants &added,
+                             const History::Participants &removed,
+                             const History::Participants &modified);
 
     void eventsAdded(const History::Events &events);
     void eventsModified(const History::Events &events);
@@ -71,7 +76,10 @@ protected Q_SLOTS:
     void onThreadsAdded(const QList<QVariantMap> &threads);
     void onThreadsModified(const QList<QVariantMap> &threads);
     void onThreadsRemoved(const QList<QVariantMap> &threads);
-
+    void onThreadParticipantsChanged(const QVariantMap &thread,
+                               const QList<QVariantMap> &added,
+                               const QList<QVariantMap> &removed,
+                               const QList<QVariantMap> &modified);
     void onEventsAdded(const QList<QVariantMap> &events);
     void onEventsModified(const QList<QVariantMap> &events);
     void onEventsRemoved(const QList<QVariantMap> &events);
