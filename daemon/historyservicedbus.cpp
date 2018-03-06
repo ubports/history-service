@@ -89,19 +89,6 @@ void HistoryServiceDBus::notifyThreadParticipantsChanged(const QVariantMap &thre
     Q_EMIT ThreadParticipantsChanged(thread, added, removed, modified);
 }
 
-QVariantMap HistoryServiceDBus::ThreadForProperties(const QString &accountId,
-                                                    int type,
-                                                    const QVariantMap &properties,
-                                                    int matchFlags,
-                                                    bool create)
-{
-    return HistoryDaemon::instance()->threadForProperties(accountId,
-                                                            (History::EventType) type,
-                                                            properties,
-                                                            (History::MatchFlags) matchFlags,
-                                                          create);
-}
-
 QList<QVariantMap> HistoryServiceDBus::ParticipantsForThreads(const QList<QVariantMap> &threadIds)
 {
     return HistoryDaemon::instance()->participantsForThreads(threadIds);
