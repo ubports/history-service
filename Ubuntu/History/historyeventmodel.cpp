@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 Canonical, Ltd.
+ * Copyright (C) 2013-2017 Canonical, Ltd.
  *
  * Authors:
  *  Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>
@@ -29,7 +29,7 @@
 #include <QTimerEvent>
 
 HistoryEventModel::HistoryEventModel(QObject *parent) :
-    HistoryModel(parent), mCanFetchMore(true), mEventWritingTimer(0)
+    HistoryModel(parent), mCanFetchMore(true)
 {
     // configure the roles
     mRoles = HistoryModel::roleNames();
@@ -95,7 +95,17 @@ QVariant HistoryEventModel::eventData(const History::Event &event, int role) con
         result = event.eventId();
         break;
     case SenderIdRole:
-        result = event.senderId();
+        result = History::ContactMatcher::normalizeId(event.senderId());
+        break;
+    case SenderRole:
+        if (mMatchContacts) {
+            result = History::ContactMatcher::instance()->contactInfo(event.accountId(), event.senderId());
+        } else {
+            QVariantMap map;
+            map[History::FieldIdentifier] = event.senderId();
+            map[History::FieldAccountId] = event.accountId();
+            result = map;
+        }
         break;
     case SenderRole:
         result = History::ContactMatcher::instance()->contactInfo(event.accountId(), event.senderId());
@@ -168,7 +178,21 @@ QVariant HistoryEventModel::eventData(const History::Event &event, int role) con
         break;
     case RemoteParticipantRole:
         if (!voiceEvent.isNull()) {
-            result = voiceEvent.remoteParticipant();
+            result = History::ContactMatcher::normalizeId(voiceEvent.remoteParticipant());
+        }
+        break;
+    case SubjectAsAliasRole:
+        if (!textEvent.isNull()) {
+            if (mMatchContacts) {
+                QVariantMap contactInfo = History::ContactMatcher::instance()->contactInfo(event.accountId(), textEvent.subject());
+                QString returnValue = contactInfo[History::FieldAlias].toString();
+                if (returnValue.isEmpty()) {
+                    returnValue = contactInfo[History::FieldIdentifier].toString();
+                }
+                return returnValue;
+
+            }
+            return textEvent.subject();
         }
         break;
     case SubjectAsAliasRole:
@@ -307,23 +331,6 @@ bool HistoryEventModel::removeEventAttachment(const QString &accountId, const QS
     return History::Manager::instance()->writeEvents(History::Events() << textEvent);
 }
 
-bool HistoryEventModel::markEventAsRead(const QString &accountId, const QString &threadId, const QString &eventId, int eventType)
-{
-    History::Event event = History::Manager::instance()->getSingleEvent((History::EventType)eventType, accountId, threadId, eventId);
-    event.setNewEvent(false);
-    if (event.type() == History::EventTypeText) {
-        History::TextEvent textEvent = event;
-        textEvent.setReadTimestamp(QDateTime::currentDateTime());
-        event = textEvent;
-    }
-    mEventWritingQueue << event;
-    if (mEventWritingTimer != 0) {
-        killTimer(mEventWritingTimer);
-    }
-    mEventWritingTimer  = startTimer(500);
-    return true;
-}
-
 void HistoryEventModel::updateQuery()
 {
     // remove all events from the model
@@ -341,7 +348,7 @@ void HistoryEventModel::updateQuery()
         mView->disconnect(this);
     }
 
-    if (mFilter) {
+    if (mFilter && mFilter->filter().isValid()) {
         queryFilter = mFilter->filter();
     } else {
         // we should not return anything if there is no filter
@@ -362,6 +369,9 @@ void HistoryEventModel::updateQuery()
     connect(mView.data(),
             SIGNAL(eventsRemoved(History::Events)),
             SLOT(onEventsRemoved(History::Events)));
+    connect(mView.data(),
+            SIGNAL(threadsRemoved(History::Threads)),
+            SLOT(onThreadsRemoved(History::Threads)));
     connect(mView.data(),
             SIGNAL(invalidated()),
             SLOT(triggerQueryUpdate()));
@@ -439,21 +449,21 @@ void HistoryEventModel::onEventsRemoved(const History::Events &events)
     // should be handle internally in History::EventView?
 }
 
-void HistoryEventModel::timerEvent(QTimerEvent *event)
+void HistoryEventModel::onThreadsRemoved(const History::Threads &threads)
 {
-    HistoryModel::timerEvent(event);
-    if (event->timerId() == mEventWritingTimer) {
-        killTimer(mEventWritingTimer);
-        mEventWritingTimer = 0;
-
-        if (mEventWritingQueue.isEmpty()) {
-            return;
-        }
-
-        qDebug() << "Goint to update" << mEventWritingQueue.count() << "events.";
-        if (History::Manager::instance()->writeEvents(mEventWritingQueue)) {
-            qDebug() << "... succeeded!";
-            mEventWritingQueue.clear();
+    // When a thread is removed we don't get event removed signals,
+    // so we compare and find if we have an event matching that thread.
+    // in case we find it, we invalidate the whole view as there might be
+    // out of date cached data on the daemon side
+    int count = rowCount();
+    Q_FOREACH(const History::Thread &thread, threads) {
+        for (int i = 0; i < count; ++i) {
+            QModelIndex idx = index(i);
+            if (idx.data(AccountIdRole).toString() == thread.accountId() &&
+                idx.data(ThreadIdRole).toString() == thread.threadId()) {
+                triggerQueryUpdate();
+                return;
+            }
         }
     }
 }

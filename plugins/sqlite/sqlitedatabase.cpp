@@ -183,6 +183,12 @@ bool SQLiteDatabase::runMultipleStatements(const QStringList &statements, bool u
     return true;
 }
 
+
+void trace(void *something, const char *query)
+{
+    qDebug() << "SQLITE TRACE:" << query;
+}
+
 bool SQLiteDatabase::createOrUpdateDatabase()
 {
     bool create = !QFile(mDatabasePath).exists();
@@ -198,6 +204,10 @@ bool SQLiteDatabase::createOrUpdateDatabase()
 
     // and also create the normalizeId function
     sqlite3_create_function(handle, "normalizeId", 2, SQLITE_ANY, NULL, &normalizeId, NULL, NULL);
+
+#ifdef TRACE_SQLITE
+    sqlite3_trace(handle, &trace, NULL);
+#endif
 
     parseVersionInfo();
 

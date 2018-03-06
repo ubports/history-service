@@ -65,6 +65,11 @@ public:
                                               EventType type,
                                               const QVariantMap &properties,
                                               History::MatchFlags matchFlags = History::MatchCaseSensitive) = 0;
+    virtual QString threadIdForProperties(const QString &accountId,
+                                          EventType type,
+                                          const QVariantMap &properties,
+                                          History::MatchFlags matchFlags = History::MatchCaseSensitive) = 0;
+    virtual QList<QVariantMap> participantsForThreads(const QList<QVariantMap> &threadIds) = 0;
 
     virtual QList<QVariantMap> eventsForThread(const QVariantMap &thread) = 0;
 
@@ -75,6 +80,7 @@ public:
     virtual bool updateRoomParticipantsRoles(const QString &accountId, const QString &threadId, History::EventType type, const QVariantMap &participantsRoles) { return false; };
     virtual bool updateRoomInfo(const QString &accountId, const QString &threadId, EventType type, const QVariantMap &properties, const QStringList &invalidated = QStringList()) { return false; };
     virtual bool removeThread(const QVariantMap &thread) { return false; }
+    virtual QVariantMap markThreadAsRead(const QVariantMap &thread) { return QVariantMap(); }
 
     virtual EventWriteResult writeTextEvent(const QVariantMap &event) { return EventWriteError; }
     virtual bool removeTextEvent(const QVariantMap &event) { return false; }

@@ -39,6 +39,10 @@ public:
     void notifyThreadsAdded(const QList<QVariantMap> &threads);
     void notifyThreadsModified(const QList<QVariantMap> &threads);
     void notifyThreadsRemoved(const QList<QVariantMap> &threads);
+    void notifyThreadParticipantsChanged(const QVariantMap &thread,
+                                   const QList<QVariantMap> &added,
+                                   const QList<QVariantMap> &removed,
+                                   const QList<QVariantMap> &modified);
 
     void notifyEventsAdded(const QList<QVariantMap> &events);
     void notifyEventsModified(const QList<QVariantMap> &events);
@@ -55,9 +59,11 @@ public:
                                     const QVariantMap &properties,
                                     int matchFlags,
                                     bool create);
+    QList<QVariantMap> ParticipantsForThreads(const QList<QVariantMap> &threadIds);
     bool WriteEvents(const QList <QVariantMap> &events);
     bool RemoveThreads(const QList <QVariantMap> &threads);
     bool RemoveEvents(const QList <QVariantMap> &events);
+    void MarkThreadsAsRead(const QList <QVariantMap> &threads);
 
     // views
     QString QueryThreads(int type, const QVariantMap &sort, const QVariantMap &filter, const QVariantMap &properties);
@@ -70,13 +76,32 @@ Q_SIGNALS:
     void ThreadsAdded(const QList<QVariantMap> &threads);
     void ThreadsModified(const QList<QVariantMap> &threads);
     void ThreadsRemoved(const QList<QVariantMap> &threads);
+    void ThreadParticipantsChanged(const QVariantMap &thread,
+                             const QList<QVariantMap> &added,
+                             const QList<QVariantMap> &removed,
+                             const QList<QVariantMap> &modified);
 
     void EventsAdded(const QList<QVariantMap> &events);
     void EventsModified(const QList<QVariantMap> &events);
     void EventsRemoved(const QList<QVariantMap> &events);
 
+protected:
+    void timerEvent(QTimerEvent *event) override;
+
+protected Q_SLOTS:
+    void filterDuplicatesAndAdd(QList<QVariantMap> &targetList, const QList<QVariantMap> newItems, const QStringList &propertiesToCompare);
+    void triggerSignals();
+    void processSignals();
+
 private:
     HistoryServiceAdaptor *mAdaptor;
+    QList<QVariantMap> mThreadsAdded;
+    QList<QVariantMap> mThreadsModified;
+    QList<QVariantMap> mThreadsRemoved;
+    QList<QVariantMap> mEventsAdded;
+    QList<QVariantMap> mEventsModified;
+    QList<QVariantMap> mEventsRemoved;
+    int mSignalsTimer;
 };
 
 #endif // HISTORYSERVICEDBUS_H

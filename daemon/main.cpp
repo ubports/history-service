@@ -20,16 +20,26 @@
  */
 
 #include "historydaemon.h"
+#include <QLockFile>
+#include <QDir>
 
 bool checkApplicationRunning()
 {
-    bool result = false;
-    QDBusReply<bool> reply = QDBusConnection::sessionBus().interface()->isServiceRegistered(History::DBusService);
-    if (reply.isValid()) {
-        result = reply.value();
+    QString lockPath = qgetenv("HISTORY_LOCK_FILE");
+    if (lockPath.isEmpty()) {
+        lockPath = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation);
+        QDir dir(lockPath);
+        if (!dir.exists("history-service") && !dir.mkpath("history-service")) {
+            qCritical() << "Failed to create dir";
+            // in case we fail to create the lock, better not even start the application
+            return true;
+        }
+        dir.cd("history-service");
+        lockPath = dir.absoluteFilePath("history-daemon.lock");
     }
 
-    return result;
+    static QLockFile *lockFile = new QLockFile(lockPath);
+    return !lockFile->tryLock();
 }
 int main(int argc, char **argv)
 {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Canonical, Ltd.
+ * Copyright (C) 2013-2017 Canonical, Ltd.
  *
  * Authors:
  *  Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>
@@ -24,6 +24,7 @@
 
 #include "types.h"
 #include "event.h"
+#include "thread.h"
 #include "filter.h"
 #include "sort.h"
 #include <QObject>
@@ -50,6 +51,7 @@ Q_SIGNALS:
     void eventsAdded(const History::Events &events);
     void eventsModified(const History::Events &events);
     void eventsRemoved(const History::Events &events);
+    void threadsRemoved(const History::Threads &threads);
     void invalidated();
 
 private:
