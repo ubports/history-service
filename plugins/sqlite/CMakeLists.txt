@@ -22,7 +22,7 @@ include_directories(
 qt5_add_resources(plugin_RES sqlitehistoryplugin.qrc)
 
 add_library(sqlitehistoryplugin SHARED ${plugin_SRCS} ${plugin_HDRS} ${plugin_RES})
-qt5_use_modules(sqlitehistoryplugin Core DBus Sql)
+target_link_libraries(sqlitehistoryplugin Qt5::Core Qt5::DBus Qt5::Sql)
 
 # update the .qrc file automatically when there are new schema files
 file(GLOB QRC_RESOURCE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/schema/*.sql ${CMAKE_CURRENT_SOURCE_DIR}/schema/*.info)

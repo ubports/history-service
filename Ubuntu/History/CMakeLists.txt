@@ -34,7 +34,7 @@ include_directories(
 
 add_library(history-qml SHARED ${plugin_SRCS} ${plugin_HDRS})
 
-qt5_use_modules(history-qml Contacts Core Qml Quick)
+target_link_libraries(history-qml Qt5::Contacts Qt5::Core Qt5::Qml Qt5::Quick)
 
 target_link_libraries(history-qml
     historyservice

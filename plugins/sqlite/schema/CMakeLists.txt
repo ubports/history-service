@@ -13,7 +13,7 @@ add_custom_command(
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/..)
 add_executable(generate_schema generate_schema.cpp ${CMAKE_CURRENT_SOURCE_DIR}/../sqlitedatabase.cpp)
-qt5_use_modules(generate_schema Core DBus Sql)
+target_link_libraries(generate_schema Qt5::Core Qt5::DBus Qt5::Sql)
 target_link_libraries(generate_schema historyservice ${SQLITE3_LIBRARIES})
 
 add_custom_target(schema_update DEPENDS ${SCHEMA_FILE} ${VERSION_FILE})
