@@ -99,7 +99,7 @@ set_target_properties(historyservice PROPERTIES
                       VERSION ${HISTORY_VERSION_MAJOR}.${HISTORY_VERSION_MINOR}.${HISTORY_VERSION_PATCH})
 
 target_link_libraries(historyservice ${LibPhoneNumber_LIBRARIES} ${TP_QT5_LIBRARIES})
-qt5_use_modules(historyservice Contacts Core DBus)
+target_link_libraries(historyservice Qt5::Contacts Qt5::Core Qt5::DBus)
 
 install(TARGETS historyservice DESTINATION ${CMAKE_INSTALL_LIBDIR})
 

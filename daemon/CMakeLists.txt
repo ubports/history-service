@@ -20,7 +20,7 @@ include_directories(
 qt5_add_dbus_adaptor(daemon_SRCS HistoryService.xml historyservicedbus.h HistoryServiceDBus)
 
 add_executable(history-daemon ${daemon_SRCS} ${daemon_HDRS})
-qt5_use_modules(history-daemon Core DBus)
+target_link_libraries(history-daemon Qt5::Core Qt5::DBus)
 
 target_link_libraries(history-daemon
     ${TP_QT5_LIBRARIES}

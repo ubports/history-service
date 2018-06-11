@@ -43,7 +43,7 @@ function(generate_test TESTNAME)
     endif ()
 
     if (NOT DEFINED ARG_QT5_MODULES)
-        set(ARG_QT5_MODULES Core Test)
+        set(ARG_QT5_MODULES Qt5::Core Qt5::Test)
     endif ()
 
     if (${ARG_USE_UI})
@@ -69,7 +69,7 @@ function(generate_test TESTNAME)
 
         # No QML test, regular binary compiled test.
         add_executable(${TESTNAME} ${ARG_SOURCES})
-        qt5_use_modules(${TESTNAME} ${ARG_QT5_MODULES})
+        target_link_libraries(${TESTNAME} ${ARG_QT5_MODULES})
 
         if (${ARG_USE_DBUS})
             execute_process(COMMAND mktemp -d OUTPUT_VARIABLE TMPDIR)
@@ -127,7 +127,7 @@ function(generate_telepathy_test TESTNAME)
     endif(NOT DEFINED ARG_LIBRARIES)
 
     if (NOT DEFINED ARG_QT5_MODULES)
-        set(ARG_QT5_MODULES Core DBus Test Qml)
+        set(ARG_QT5_MODULES Qt5::Core Qt5::DBus Qt5::Test Qt5::Qml)
     endif (NOT DEFINED ARG_QT5_MODULES)
     generate_test(${TESTNAME} ${ARGN}
                   TASKS ${TASKS}

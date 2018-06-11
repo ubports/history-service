@@ -5,7 +5,7 @@ include_directories(
     )
 
 add_executable(history-maketextevents ${maketextevents_SRCS})
-qt5_use_modules(history-maketextevents Core)
+target_link_libraries(history-maketextevents Qt5::Core)
 
 target_link_libraries(history-maketextevents historyservice)
 install(TARGETS history-maketextevents RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
