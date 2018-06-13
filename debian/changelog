@@ -1,3 +1,9 @@
+history-service (0.2+0ubports2) xenial; urgency=medium
+
+  * No-change rebuild to handle changes to qtpim5
+
+ -- Dalton Durst <dalton@ubports.com>  Wed, 13 Jun 2018 09:55:51 -0500
+
 history-service (0.2+0ubports1) xenial; urgency=medium
 
   * Adapt to support VOIP accounts.
