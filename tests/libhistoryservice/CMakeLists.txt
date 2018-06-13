@@ -39,4 +39,4 @@ generate_test(EventViewTest
 # Telepathy-based tests
 generate_telepathy_test(ContactMatcherTest
                         SOURCES ContactMatcherTest.cpp
-                        QT5_MODULES Core DBus Test Qml Contacts)
+                        QT5_MODULES Qt5::Core Qt5::DBus Qt5::Test Qt5::Qml Qt5::Contacts)
