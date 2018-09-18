@@ -49,18 +49,14 @@ ContactMatcher::ContactMatcher(QContactManager *manager, QObject *parent) :
     // just trigger the creation of TelepathyHelper
     connect(History::TelepathyHelper::instance(), SIGNAL(setupReady()), SLOT(onSetupReady()));
 
-    connect(mManager,
-            SIGNAL(contactsAdded(QList<QContactId>)),
-            SLOT(onContactsAdded(QList<QContactId>)));
-    connect(mManager,
-            SIGNAL(contactsChanged(QList<QContactId>)),
-            SLOT(onContactsChanged(QList<QContactId>)));
-    connect(mManager,
-            SIGNAL(contactsRemoved(QList<QContactId>)),
-            SLOT(onContactsRemoved(QList<QContactId>)));
-    connect(mManager,
-            SIGNAL(dataChanged()),
-            SLOT(onDataChanged()));
+    QObject::connect(mManager, &QContactManager::contactsAdded,
+                     this, &ContactMatcher::onContactsAdded);
+    QObject::connect(mManager, &QContactManager::contactsChanged,
+                     this, &ContactMatcher::onContactsChanged);
+    QObject::connect(mManager, &QContactManager::contactsRemoved,
+                     this, &ContactMatcher::onContactsRemoved);
+    QObject::connect(mManager, &QContactManager::dataChanged,
+                     this, &ContactMatcher::onDataChanged);
 }
 
 void ContactMatcher::onSetupReady()
@@ -384,9 +380,8 @@ QVariantMap ContactMatcher::requestContactInfo(const QString &accountId, const Q
         request->setFetchHint(hint);
         request->setFilter(topLevelFilter);
         request->setManager(mManager);
-        connect(request,
-                SIGNAL(stateChanged(QContactAbstractRequest::State)),
-                SLOT(onRequestStateChanged(QContactAbstractRequest::State)));
+        QObject::connect(request, &QContactFetchRequest::stateChanged,
+                         this, &ContactMatcher::onRequestStateChanged);
 
         RequestInfo info;
         info.accountId = accountId;
