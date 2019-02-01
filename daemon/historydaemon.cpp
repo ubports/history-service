@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2016 Canonical, Ltd.
+ * Copyright (C) 2013-2017 Canonical, Ltd.
  *
  * Authors:
  *  Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>
@@ -85,10 +85,11 @@ bool foundAsMemberInThread(const Tp::ContactPtr& contact, QVariantMap thread)
 {
     Q_FOREACH (QVariant participant, thread[History::FieldParticipants].toList()) {
         // found if same identifier and as member into thread info
+        QVariantMap participantMap = participant.toMap();
         if (History::Utils::compareIds(thread[History::FieldAccountId].toString(),
                                        contact->id(),
-                                       participant.toMap()[History::FieldIdentifier].toString()) &&
-                participant.toMap()[History::FieldParticipantState].toUInt() == History::ParticipantStateRegular)
+                                       participantMap[History::FieldIdentifier].toString()) &&
+                participantMap[History::FieldParticipantState].toUInt() == History::ParticipantStateRegular)
         {
             return true;
         }
@@ -131,8 +132,8 @@ HistoryDaemon::HistoryDaemon(QObject *parent)
     History::TelepathyHelper::instance()->registerChannelObserver();
 
     connect(&mCallObserver,
-            SIGNAL(callEnded(Tp::CallChannelPtr)),
-            SLOT(onCallEnded(Tp::CallChannelPtr)));
+            SIGNAL(callEnded(Tp::CallChannelPtr, bool)),
+            SLOT(onCallEnded(Tp::CallChannelPtr, bool)));
     connect(&mTextObserver,
             SIGNAL(messageReceived(Tp::TextChannelPtr,Tp::ReceivedMessage)),
             SLOT(onMessageReceived(Tp::TextChannelPtr,Tp::ReceivedMessage)));
@@ -140,11 +141,11 @@ HistoryDaemon::HistoryDaemon(QObject *parent)
             SIGNAL(messageSent(Tp::TextChannelPtr,Tp::Message,QString)),
             SLOT(onMessageSent(Tp::TextChannelPtr,Tp::Message,QString)));
     connect(&mTextObserver,
-            SIGNAL(messageRead(Tp::TextChannelPtr,Tp::ReceivedMessage)),
-            SLOT(onMessageRead(Tp::TextChannelPtr,Tp::ReceivedMessage)));
-    connect(&mTextObserver,
             SIGNAL(channelAvailable(Tp::TextChannelPtr)),
             SLOT(onTextChannelAvailable(Tp::TextChannelPtr)));
+    connect(&mTextObserver,
+            SIGNAL(textChannelInvalidated(Tp::TextChannelPtr)),
+            SLOT(onTextChannelInvalidated(Tp::TextChannelPtr)));
 
     // FIXME: we need to do this in a better way, but for now this should do
     mProtocolFlags["ofono"] = History::MatchPhoneNumber;
@@ -163,23 +164,39 @@ HistoryDaemon *HistoryDaemon::instance()
 
 void HistoryDaemon::onRolesChanged(const HandleRolesMap &added, const HandleRolesMap &removed)
 {
-    Q_UNUSED(added);
-    Q_UNUSED(removed);
-
     ChannelInterfaceRolesInterface *roles_interface = qobject_cast<ChannelInterfaceRolesInterface*>(sender());
-    RolesMap roles = roles_interface->getRoles();
-
     Tp::TextChannelPtr channel(qobject_cast<Tp::TextChannel*>(sender()->parent()));
+    RolesMap rolesMap;
+    if (!mRolesMap.contains(channel->objectPath())) {
+        rolesMap = roles_interface->getRoles();
+    } else {
+        rolesMap = mRolesMap[channel->objectPath()];
+    }
+
+    QMapIterator<uint, uint> it(removed);
+    while (it.hasNext()) {
+        it.next();
+        rolesMap.remove(it.key());
+    }
+
+    QMapIterator<uint, uint> it2(added);
+    while (it2.hasNext()) {
+        it2.next();
+        rolesMap[it2.key()] = it2.value();
+    }
+        
+    mRolesMap[channel->objectPath()] = rolesMap;
+
     QVariantMap properties = propertiesFromChannel(channel);
     QVariantMap thread = threadForProperties(channel->property(History::FieldAccountId).toString(),
                                              History::EventTypeText,
                                              properties,
                                              matchFlagsForChannel(channel),
                                              false);
-
-    writeRolesInformationEvents(thread, channel, roles);
-
-    updateRoomRoles(channel, roles);
+    if (!thread.isEmpty()) {
+        writeRolesInformationEvents(thread, channel, rolesMap);
+        updateRoomRoles(channel, rolesMap);
+    }
 }
 
 QVariantMap HistoryDaemon::propertiesFromChannel(const Tp::ChannelPtr &textChannel)
@@ -187,55 +204,60 @@ QVariantMap HistoryDaemon::propertiesFromChannel(const Tp::ChannelPtr &textChann
     QVariantMap properties;
     QVariantList participants;
     QStringList participantIds;
+    QString accountId = textChannel->property(History::FieldAccountId).toString();
 
-    ChannelInterfaceRolesInterface *roles_interface = textChannel->optionalInterface<ChannelInterfaceRolesInterface>();
-    RolesMap roles;
-    if (roles_interface) {
-        roles = roles_interface->getRoles();
-    }
+    if (History::Utils::shouldIncludeParticipants(accountId, fromTelepathyHandleType(textChannel->targetHandleType()))) {
+        ChannelInterfaceRolesInterface *roles_interface = textChannel->optionalInterface<ChannelInterfaceRolesInterface>();
+        RolesMap roles;
+        if (roles_interface) {
+            if (mRolesMap.contains(textChannel->objectPath())) {
+                roles = mRolesMap[textChannel->objectPath()];
+            }
+        }
 
-    Q_FOREACH(const Tp::ContactPtr contact, textChannel->groupContacts(false)) {
-        QVariantMap contactProperties;
-        contactProperties[History::FieldAlias] = contact->alias();
-        contactProperties[History::FieldAccountId] = textChannel->property(History::FieldAccountId).toString();
-        contactProperties[History::FieldIdentifier] = contact->id();
-        contactProperties[History::FieldParticipantState] = History::ParticipantStateRegular;
-        contactProperties[History::FieldParticipantRoles] = roles[contact->handle().at(0)];
-        participantIds << contact->id();
-        participants << contactProperties;
-    }
+        Q_FOREACH(const Tp::ContactPtr contact, textChannel->groupContacts(false)) {
+            QVariantMap contactProperties;
+            contactProperties[History::FieldAlias] = contact->alias();
+            contactProperties[History::FieldAccountId] = accountId;
+            contactProperties[History::FieldIdentifier] = contact->id();
+            contactProperties[History::FieldParticipantState] = History::ParticipantStateRegular;
+            contactProperties[History::FieldParticipantRoles] = roles[contact->handle().at(0)];
+            participantIds << contact->id();
+            participants << contactProperties;
+        }
 
-    Q_FOREACH(const Tp::ContactPtr contact, textChannel->groupRemotePendingContacts(false)) {
-        QVariantMap contactProperties;
-        contactProperties[History::FieldAlias] = contact->alias();
-        contactProperties[History::FieldAccountId] = textChannel->property(History::FieldAccountId).toString();
-        contactProperties[History::FieldIdentifier] = contact->id();
-        contactProperties[History::FieldParticipantState] = History::ParticipantStateRemotePending;
-        contactProperties[History::FieldParticipantRoles] = roles[contact->handle().at(0)];
-        participantIds << contact->id();
-        participants << contactProperties;
-    }
+        Q_FOREACH(const Tp::ContactPtr contact, textChannel->groupRemotePendingContacts(false)) {
+            QVariantMap contactProperties;
+            contactProperties[History::FieldAlias] = contact->alias();
+            contactProperties[History::FieldAccountId] = accountId;
+            contactProperties[History::FieldIdentifier] = contact->id();
+            contactProperties[History::FieldParticipantState] = History::ParticipantStateRemotePending;
+            contactProperties[History::FieldParticipantRoles] = roles[contact->handle().at(0)];
+            participantIds << contact->id();
+            participants << contactProperties;
+        }
 
-    Q_FOREACH(const Tp::ContactPtr contact, textChannel->groupLocalPendingContacts(false)) {
-        QVariantMap contactProperties;
-        contactProperties[History::FieldAlias] = contact->alias();
-        contactProperties[History::FieldAccountId] = textChannel->property(History::FieldAccountId).toString();
-        contactProperties[History::FieldIdentifier] = contact->id();
-        contactProperties[History::FieldParticipantState] = History::ParticipantStateLocalPending;
-        contactProperties[History::FieldParticipantRoles] = roles[contact->handle().at(0)];
-        participantIds << contact->id();
-        participants << contactProperties;
-    }
+        Q_FOREACH(const Tp::ContactPtr contact, textChannel->groupLocalPendingContacts(false)) {
+            QVariantMap contactProperties;
+            contactProperties[History::FieldAlias] = contact->alias();
+            contactProperties[History::FieldAccountId] = accountId;
+            contactProperties[History::FieldIdentifier] = contact->id();
+            contactProperties[History::FieldParticipantState] = History::ParticipantStateLocalPending;
+            contactProperties[History::FieldParticipantRoles] = roles[contact->handle().at(0)];
+            participantIds << contact->id();
+            participants << contactProperties;
+        }
 
-    if (participants.isEmpty() && textChannel->targetHandleType() == Tp::HandleTypeContact &&
-            textChannel->targetContact() == textChannel->connection()->selfContact()) {
-        QVariantMap contactProperties;
-        contactProperties[History::FieldAlias] = textChannel->targetContact()->alias();
-        contactProperties[History::FieldAccountId] = textChannel->property(History::FieldAccountId).toString();
-        contactProperties[History::FieldIdentifier] = textChannel->targetContact()->id();
-        contactProperties[History::FieldParticipantState] = History::ParticipantStateRegular;
-        participantIds << textChannel->targetContact()->id();
-        participants << contactProperties;
+        if (participants.isEmpty() && textChannel->targetHandleType() == Tp::HandleTypeContact &&
+                textChannel->targetContact() == textChannel->connection()->selfContact()) {
+            QVariantMap contactProperties;
+            contactProperties[History::FieldAlias] = textChannel->targetContact()->alias();
+            contactProperties[History::FieldAccountId] = accountId;
+            contactProperties[History::FieldIdentifier] = textChannel->targetContact()->id();
+            contactProperties[History::FieldParticipantState] = History::ParticipantStateRegular;
+            participantIds << textChannel->targetContact()->id();
+            participants << contactProperties;
+        }
     }
 
     // We map chatType directly from telepathy targetHandleType: None, Contact, Room
@@ -314,6 +336,39 @@ QVariantMap HistoryDaemon::threadForProperties(const QString &accountId,
     return thread;
 }
 
+QString HistoryDaemon::threadIdForProperties(const QString &accountId, History::EventType type, const QVariantMap &properties, History::MatchFlags matchFlags, bool create)
+{
+    if (!mBackend) {
+        return QString::null;
+    }
+
+    QString threadId = mBackend->threadIdForProperties(accountId,
+                                                       type,
+                                                       properties,
+                                                       matchFlags);
+    if (threadId.isEmpty() && create) {
+        QVariantMap thread = mBackend->createThreadForProperties(accountId, type, properties);
+        if (!thread.isEmpty()) {
+            if (properties.contains("Requested") && properties[History::FieldChatType].toInt() == History::ChatTypeRoom) {
+                QVariantMap map = thread[History::FieldChatRoomInfo].toMap();
+                map["Requested"] = properties["Requested"];
+                thread[History::FieldChatRoomInfo] = map;
+            }
+            mDBus.notifyThreadsAdded(QList<QVariantMap>() << thread);
+            threadId = thread[History::FieldThreadId].toString();
+        }
+    }
+    return threadId;
+}
+
+QList<QVariantMap> HistoryDaemon::participantsForThreads(const QList<QVariantMap> &threadIds)
+{
+    if (!mBackend) {
+        return QList<QVariantMap>();
+    }
+    return mBackend->participantsForThreads(threadIds);
+}
+
 QString HistoryDaemon::queryThreads(int type, const QVariantMap &sort, const QVariantMap &filter, const QVariantMap &properties)
 {
     if (!mBackend) {
@@ -370,7 +425,7 @@ QVariantMap HistoryDaemon::getSingleEvent(int type, const QString &accountId, co
     return mBackend->getSingleEvent((History::EventType)type, accountId, threadId, eventId);
 }
 
-bool HistoryDaemon::writeEvents(const QList<QVariantMap> &events, const QVariantMap &properties)
+bool HistoryDaemon::writeEvents(const QList<QVariantMap> &events, const QVariantMap &properties, bool notify)
 {
     if (!mBackend) {
         return false;
@@ -407,7 +462,9 @@ bool HistoryDaemon::writeEvents(const QList<QVariantMap> &events, const QVariant
         threads[hash] = thread;
 
         // set the participants field in the event
-        savedEvent[History::FieldParticipants] = thread[History::FieldParticipants];
+        if (type == History::EventTypeVoice) {
+            savedEvent[History::FieldParticipants] = thread[History::FieldParticipants];
+        }
 
 
         // check if the event was a new one or a modification to an existing one
@@ -427,13 +484,13 @@ bool HistoryDaemon::writeEvents(const QList<QVariantMap> &events, const QVariant
     mBackend->endBatchOperation();
 
     // and last but not least, notify the results
-    if (!newEvents.isEmpty()) {
+    if (!newEvents.isEmpty() && notify) {
         mDBus.notifyEventsAdded(newEvents);
     }
-    if (!modifiedEvents.isEmpty()) {
+    if (!modifiedEvents.isEmpty() && notify) {
         mDBus.notifyEventsModified(modifiedEvents);
     }
-    if (!threads.isEmpty()) {
+    if (!threads.isEmpty() && notify) {
         mDBus.notifyThreadsModified(threads.values());
     }
     return true;
@@ -512,44 +569,46 @@ bool HistoryDaemon::removeEvents(const QList<QVariantMap> &events)
     return true;
 }
 
+void HistoryDaemon::markThreadsAsRead(const QList<QVariantMap> &threads)
+{
+    if (!mBackend) {
+        return;
+    }
+
+    QList<QVariantMap> modifiedThreads;
+   
+    Q_FOREACH(const QVariantMap &thread, threads) {
+        mBackend->beginBatchOperation();
+        QVariantMap newThread = mBackend->markThreadAsRead(thread);
+        if (!newThread.isEmpty()) {
+            modifiedThreads << newThread;
+        }
+
+        mBackend->endBatchOperation();
+    }
+
+    if (!modifiedThreads.isEmpty()) {
+        mDBus.notifyThreadsModified(modifiedThreads);
+    }
+}
+
 bool HistoryDaemon::removeThreads(const QList<QVariantMap> &threads)
 {
     if (!mBackend) {
         return false;
     }
 
-    // In order to remove a thread all we have to do is to remove all its items
-    // then it is going to be removed by removeEvents() once it detects the thread is
-    // empty.
-    QList<QVariantMap> events;
-    QMap<QString, QVariantMap> removedEmptyThreads;
+    // If the thread has events
+    mBackend->beginBatchOperation();
     Q_FOREACH(const QVariantMap &thread, threads) {
-        QList<QVariantMap> thisEvents = mBackend->eventsForThread(thread);
-        if (thisEvents.isEmpty()) {
-            mBackend->beginBatchOperation();
-            if (!mBackend->removeThread(thread)) {
-                mBackend->rollbackBatchOperation();
-                return false;
-            }
-            mBackend->endBatchOperation();
-            QString hash = hashThread(thread);
-            removedEmptyThreads[hash] = thread;
-            continue;
-        }
-        events += thisEvents;
-    }
-
-    if (!removedEmptyThreads.isEmpty()) {
-        mDBus.notifyThreadsRemoved(removedEmptyThreads.values());
-    }
-
-    if (events.size() > 0) {
-        if(removeEvents(events)) {
-            return true;
+        if (!mBackend->removeThread(thread)) {
+            mBackend->rollbackBatchOperation();
+            return false;
         }
     }
-
-    return false;
+    mBackend->endBatchOperation();
+    mDBus.notifyThreadsRemoved(threads);
+    return true;
 }
 
 void HistoryDaemon::onObserverCreated()
@@ -562,7 +621,7 @@ void HistoryDaemon::onObserverCreated()
             &mTextObserver, SLOT(onTextChannelAvailable(Tp::TextChannelPtr)));
 }
 
-void HistoryDaemon::onCallEnded(const Tp::CallChannelPtr &channel)
+void HistoryDaemon::onCallEnded(const Tp::CallChannelPtr &channel, bool missed)
 {
     QVariantMap properties = propertiesFromChannel(channel);
     QVariantList participants;
@@ -592,7 +651,6 @@ void HistoryDaemon::onCallEnded(const Tp::CallChannelPtr &channel)
     // FIXME: check if checking for isRequested() is enough
     bool incoming = !channel->isRequested();
     int duration;
-    bool missed = incoming && channel->callStateReason().reason == Tp::CallStateChangeReasonNoAnswer;
 
     if (!missed) {
         QDateTime activeTime = channel->property("activeTimestamp").toDateTime();
@@ -615,11 +673,35 @@ void HistoryDaemon::onCallEnded(const Tp::CallChannelPtr &channel)
     writeEvents(QList<QVariantMap>() << event, properties);
 }
 
+void HistoryDaemon::onTextChannelInvalidated(const Tp::TextChannelPtr channel)
+{
+    mRolesMap.remove(channel->objectPath());
+    QString accountId = channel->property(History::FieldAccountId).toString();
+    QVariantMap properties = propertiesFromChannel(channel);
+
+    // first try to fetch the existing thread to see if there is any.
+    QVariantMap thread = threadForProperties(accountId,
+                                             History::EventTypeText,
+                                             properties,
+                                             matchFlagsForChannel(channel),
+                                             false);
+
+    QVariantMap roomInfo = thread[History::FieldChatRoomInfo].toMap();
+    if ((roomInfo.contains("Persistent") && !roomInfo["Persistent"].toBool()) && History::TelepathyHelper::instance()->accountForId(accountId)->protocolName() != "ofono") {
+        writeInformationEvent(thread, History::InformationTypeSelfLeaving);
+        // update backend
+        updateRoomProperties(channel, QVariantMap{{"Joined", false}});
+    }
+
+    channel->disconnect(this);
+}
+
 void HistoryDaemon::onTextChannelAvailable(const Tp::TextChannelPtr channel)
 {
     // for Rooms we need to explicitly create the thread to allow users to send messages to groups even
     // before they receive any message.
     // for other types, we can wait until messages are received
+    bool notify = false;
     if (channel->targetHandleType() == Tp::HandleTypeRoom) {
         QString accountId = channel->property(History::FieldAccountId).toString();
         QVariantMap properties = propertiesFromChannel(channel);
@@ -641,12 +723,13 @@ void HistoryDaemon::onTextChannelAvailable(const Tp::TextChannelPtr channel)
 
             // write information event including all initial invitees
             Q_FOREACH(const Tp::ContactPtr contact, channel->groupRemotePendingContacts(false)) {
-                writeInformationEvent(thread, History::InformationTypeInvitationSent, contact->alias());
+                writeInformationEvent(thread, History::InformationTypeInvitationSent, contact->alias(), QString(), QString(), false);
             }
 
             // update participants only if the thread is not available previously. Otherwise we'll wait for membersChanged event
             // for reflect in conversation information events for modified participants.
-            updateRoomParticipants(channel);
+            updateRoomParticipants(channel, false);
+            notify = true;
         }
 
         // write an entry saying you joined the group if 'joined' flag in thread is false and modify that flag.
@@ -657,7 +740,8 @@ void HistoryDaemon::onTextChannelAvailable(const Tp::TextChannelPtr channel)
                 writeInformationEvent(thread, History::InformationTypeSelfJoined);
             }
             // update backend
-            updateRoomProperties(channel, QVariantMap{{"Joined", true}});
+            updateRoomProperties(channel, QVariantMap{{"Joined", true}}, false);
+            notify = true;
         }
 
         Tp::AbstractInterface *room_interface = channel->optionalInterface<Tp::Client::ChannelInterfaceRoomInterface>();
@@ -685,6 +769,10 @@ void HistoryDaemon::onTextChannelAvailable(const Tp::TextChannelPtr channel)
 
         connect(roles_interface, SIGNAL(RolesChanged(const HandleRolesMap&, const HandleRolesMap&)), SLOT(onRolesChanged(const HandleRolesMap&, const HandleRolesMap&)));
     }
+
+    if (notify) {
+        updateRoomParticipants(channel, true);
+    }
 }
 
 void HistoryDaemon::onGroupMembersChanged(const Tp::Contacts &groupMembersAdded,
@@ -702,6 +790,8 @@ void HistoryDaemon::onGroupMembersChanged(const Tp::Contacts &groupMembersAdded,
     bool hasRemotePendingMembersAdded = groupRemotePendingMembersAdded.size() > 0;
     bool hasMembersAdded = groupMembersAdded.size() > 0;
     bool hasMembersRemoved = groupMembersRemoved.size() > 0;
+    Tp::ContactPtr selfContact = channel->connection()->selfContact();
+    bool selfContactIsPending = channel->groupRemotePendingContacts(true).contains(selfContact);
 
     if (hasRemotePendingMembersAdded || hasMembersAdded || hasMembersRemoved) {
         properties = propertiesFromChannel(channel);
@@ -710,19 +800,35 @@ void HistoryDaemon::onGroupMembersChanged(const Tp::Contacts &groupMembersAdded,
                                                        properties,
                                                        matchFlagsForChannel(channel),
                                                        false);
-        if (!thread.isEmpty()) {
+        if (!thread.isEmpty() && !selfContactIsPending) {
+            QList<QVariantMap> added;
+            QList<QVariantMap> removed;
+            QList<QVariantMap> modified;
             if (hasRemotePendingMembersAdded) {
                 Q_FOREACH (const Tp::ContactPtr& contact, groupRemotePendingMembersAdded) {
                     if (!foundInThread(contact, thread)) {
-                        writeInformationEvent(thread, History::InformationTypeInvitationSent, contact->alias());
+                        writeInformationEvent(thread, History::InformationTypeInvitationSent, contact->alias(), QString(), QString(), true);
+                        QVariantMap participant;
+                        participant[History::FieldIdentifier] = contact->id();
+                        participant[History::FieldAlias] = contact->alias();
+                        participant[History::FieldParticipantState] = History::ParticipantStateRemotePending;
+                        added << participant;
                     }
                 }
+
             }
             if (hasMembersAdded) {
                 Q_FOREACH (const Tp::ContactPtr& contact, groupMembersAdded) {
                     // if this member was not previously regular member in thread, notify about his join
-                    if (!foundAsMemberInThread(contact, thread)) {
-                        writeInformationEvent(thread, History::InformationTypeJoined, contact->alias());
+                    if (!foundAsMemberInThread(contact, thread) && contact->id() != channel->groupSelfContact()->id()) {
+
+                        writeInformationEvent(thread, History::InformationTypeJoined, contact->alias(), QString(), QString(), true);
+
+                        QVariantMap participant;
+                        participant[History::FieldIdentifier] = contact->id();
+                        participant[History::FieldAlias] = contact->alias();
+                        participant[History::FieldParticipantState] = History::ParticipantStateRegular;
+                        added << participant;
                     }
                 }
             }
@@ -741,27 +847,34 @@ void HistoryDaemon::onGroupMembersChanged(const Tp::Contacts &groupMembersAdded,
                             break;
                         }
                     }
-                    writeInformationEvent(thread, type);
-                    // update backend
-                    updateRoomProperties(channel, QVariantMap{{"Joined", false}});
+                    if (thread[History::FieldChatRoomInfo].toMap()["Joined"].toBool()) {
+                        writeInformationEvent(thread, type);
+                        // update backend
+                        updateRoomProperties(channel, QVariantMap{{"Joined", false}}, true);
+                    }
                 }
                 else // don't notify any other group member removal if we are leaving the group
                 {
                     Q_FOREACH (const Tp::ContactPtr& contact, groupMembersRemoved) {
                         // inform about removed members other than us
                         if (contact->id() != channel->groupSelfContact()->id()) {
-                            writeInformationEvent(thread, History::InformationTypeLeaving, contact->alias());
+                            writeInformationEvent(thread, History::InformationTypeLeaving, contact->alias(), QString(), QString(), true);
                         }
+                        QVariantMap participant;
+                        participant[History::FieldIdentifier] = contact->id();
+                        participant[History::FieldAlias] = contact->alias();
+                        removed << participant;
                     }
                 }
             }
+            mDBus.notifyThreadParticipantsChanged(thread, added, removed, QList<QVariantMap>());
         }
     }
 
-    updateRoomParticipants(channel);
+    updateRoomParticipants(channel, !selfContactIsPending);
 }
 
-void HistoryDaemon::updateRoomParticipants(const Tp::TextChannelPtr channel)
+void HistoryDaemon::updateRoomParticipants(const Tp::TextChannelPtr channel, bool notify)
 {
     if (!channel) {
         return;
@@ -772,8 +885,14 @@ void HistoryDaemon::updateRoomParticipants(const Tp::TextChannelPtr channel)
 
     ChannelInterfaceRolesInterface *roles_interface = channel->optionalInterface<ChannelInterfaceRolesInterface>();
     RolesMap roles;
+
     if (roles_interface) {
-        roles = roles_interface->getRoles();
+        if (!mRolesMap.contains(channel->objectPath())) {
+            roles = roles_interface->getRoles();
+            mRolesMap[channel->objectPath()] = roles;
+        } else {
+            roles = mRolesMap[channel->objectPath()];
+        }
     }
 
     Q_FOREACH(const Tp::ContactPtr contact, channel->groupRemotePendingContacts(false)) {
@@ -811,12 +930,14 @@ void HistoryDaemon::updateRoomParticipants(const Tp::TextChannelPtr channel)
     QString accountId = channel->property(History::FieldAccountId).toString();
     QString threadId = channel->targetId();
     if (mBackend->updateRoomParticipants(accountId, threadId, History::EventTypeText, participants)) {
-        QVariantMap updatedThread = getSingleThread(History::EventTypeText, accountId, threadId, QVariantMap());
-        mDBus.notifyThreadsModified(QList<QVariantMap>() << updatedThread);
+        if (notify) {
+            QVariantMap updatedThread = getSingleThread(History::EventTypeText, accountId, threadId, QVariantMap());
+            mDBus.notifyThreadsModified(QList<QVariantMap>() << updatedThread);
+        }
     }
 }
 
-void HistoryDaemon::updateRoomRoles(const Tp::TextChannelPtr &channel, const RolesMap &rolesMap)
+void HistoryDaemon::updateRoomRoles(const Tp::TextChannelPtr &channel, const RolesMap &rolesMap, bool notify)
 {
     if (!channel) {
         return;
@@ -841,8 +962,10 @@ void HistoryDaemon::updateRoomRoles(const Tp::TextChannelPtr &channel, const Rol
     QString accountId = channel->property(History::FieldAccountId).toString();
     QString threadId = channel->targetId();
     if (mBackend->updateRoomParticipantsRoles(accountId, threadId, History::EventTypeText, participantsRoles)) {
-        QVariantMap updatedThread = getSingleThread(History::EventTypeText, accountId, threadId, QVariantMap());
-        mDBus.notifyThreadsModified(QList<QVariantMap>() << updatedThread);
+        if (notify) {
+            QVariantMap updatedThread = getSingleThread(History::EventTypeText, accountId, threadId, QVariantMap());
+            mDBus.notifyThreadsModified(QList<QVariantMap>() << updatedThread);
+        }
     }
 
     // update self roles in room properties
@@ -865,28 +988,41 @@ void HistoryDaemon::onRoomPropertiesChanged(const QVariantMap &properties,const 
     updateRoomProperties(accountId, threadId, type, properties, invalidated);
 }
 
-void HistoryDaemon::updateRoomProperties(const Tp::TextChannelPtr &channel, const QVariantMap &properties)
+void HistoryDaemon::updateRoomProperties(const Tp::TextChannelPtr &channel, const QVariantMap &properties, bool notify)
 {
     QString accountId = channel->property(History::FieldAccountId).toString();
     QString threadId = channel->targetId();
     History::EventType type = History::EventTypeText;
-    updateRoomProperties(accountId, threadId, type, properties, QStringList());
+    updateRoomProperties(accountId, threadId, type, properties, QStringList(), notify);
 }
 
-void HistoryDaemon::updateRoomProperties(const QString &accountId, const QString &threadId, History::EventType type, const QVariantMap &properties, const QStringList &invalidated)
+void HistoryDaemon::updateRoomProperties(const QString &accountId, const QString &threadId, History::EventType type, const QVariantMap &properties, const QStringList &invalidated, bool notify)
 {
     if (mBackend->updateRoomInfo(accountId, threadId, type, properties, invalidated)) {
-        QVariantMap thread = getSingleThread(type, accountId, threadId, QVariantMap());
-        mDBus.notifyThreadsModified(QList<QVariantMap>() << thread);
+        if (notify) {
+            QVariantMap thread = getSingleThread(type, accountId, threadId, QVariantMap());
+            mDBus.notifyThreadsModified(QList<QVariantMap>() << thread);
+        }
     }
 }
 
 void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, const Tp::ReceivedMessage &message)
 {
     QString eventId;
-    Tp::MessagePart header = message.header();
     QString senderId;
+
+    QString accountId = textChannel->property(History::FieldAccountId).toString();
+    QString threadId = textChannel->property(History::FieldThreadId).toString();
     QVariantMap properties = propertiesFromChannel(textChannel);
+
+    if (threadId.isNull()) {
+        threadId = threadIdForProperties(accountId,
+                                         History::EventTypeText,
+                                         properties,
+                                         matchFlagsForChannel(textChannel),
+                                         true);
+    }
+
     History::MessageStatus status = History::MessageStatusUnknown;
     if (!message.sender() || message.sender()->handle().at(0) == textChannel->connection()->selfHandle()) {
         senderId = "self";
@@ -909,7 +1045,7 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
     if (message.isDeliveryReport() && message.deliveryDetails().hasOriginalToken()) {
         // at this point we assume the delivery report is for a message that was already
         // sent and properly saved at our database, so we can safely get it here to update
-        QVariantMap textEvent = getSingleEventFromTextChannel(textChannel, message.deliveryDetails().originalToken());
+        QVariantMap textEvent = getSingleEvent(History::EventTypeText, accountId, threadId, message.deliveryDetails().originalToken());
         if (textEvent.isEmpty()) {
             qWarning() << "Cound not find the original event to update with delivery details.";
             return;
@@ -922,52 +1058,21 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
             return;
         }
 
-        History::MessageStatus status;
-        switch (message.deliveryDetails().status()) {
-        case Tp::DeliveryStatusAccepted:
-            status = History::MessageStatusAccepted;
-            break;
-        case Tp::DeliveryStatusDeleted:
-            status = History::MessageStatusDeleted;
-            break;
-        case Tp::DeliveryStatusDelivered:
-            status = History::MessageStatusDelivered;
-            break;
-        case Tp::DeliveryStatusPermanentlyFailed:
-            status = History::MessageStatusPermanentlyFailed;
-            break;
-        case Tp::DeliveryStatusRead:
-            status = History::MessageStatusRead;
-            break;
-        case Tp::DeliveryStatusTemporarilyFailed:
-            status = History::MessageStatusTemporarilyFailed;
-            break;
-        case Tp::DeliveryStatusUnknown:
-            status = History::MessageStatusUnknown;
-            break;
-        }
-
-        textEvent[History::FieldMessageStatus] = (int) status;
+        textEvent[History::FieldMessageStatus] = (int) fromTelepathyDeliveryStatus(message.deliveryDetails().status());
         if (!writeEvents(QList<QVariantMap>() << textEvent, properties)) {
             qWarning() << "Failed to save the new message status!";
         }
 
         return;
     }
-
-    QVariantMap thread = threadForProperties(textChannel->property(History::FieldAccountId).toString(),
-                                                                   History::EventTypeText,
-                                                                   properties,
-                                                                   matchFlagsForChannel(textChannel),
-                                                                   true);
     int count = 1;
     QList<QVariantMap> attachments;
     History::MessageType type = History::MessageTypeText;
     QString subject;
 
     if (message.hasNonTextContent()) {
-        QString normalizedAccountId = QString(QCryptographicHash::hash(thread[History::FieldAccountId].toString().toLatin1(), QCryptographicHash::Md5).toHex());
-        QString normalizedThreadId = QString(QCryptographicHash::hash(thread[History::FieldThreadId].toString().toLatin1(), QCryptographicHash::Md5).toHex());
+        QString normalizedAccountId = QString(QCryptographicHash::hash(accountId.toLatin1(), QCryptographicHash::Md5).toHex());
+        QString normalizedThreadId = QString(QCryptographicHash::hash(threadId.toLatin1(), QCryptographicHash::Md5).toHex());
         QString normalizedEventId = QString(QCryptographicHash::hash(eventId.toLatin1(), QCryptographicHash::Md5).toHex());
         QString mmsStoragePath = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation);
 
@@ -1000,8 +1105,8 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
             file.close();
 
             QVariantMap attachment;
-            attachment[History::FieldAccountId] = thread[History::FieldAccountId];
-            attachment[History::FieldThreadId] = thread[History::FieldThreadId];
+            attachment[History::FieldAccountId] = accountId;
+            attachment[History::FieldThreadId] = threadId;
             attachment[History::FieldEventId] = eventId;
             attachment[History::FieldAttachmentId] = part["identifier"].variant();
             attachment[History::FieldContentType] = part["content-type"].variant();
@@ -1013,8 +1118,8 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
 
     QVariantMap event;
     event[History::FieldType] = History::EventTypeText;
-    event[History::FieldAccountId] = thread[History::FieldAccountId];
-    event[History::FieldThreadId] = thread[History::FieldThreadId];
+    event[History::FieldAccountId] = accountId;
+    event[History::FieldThreadId] = threadId;
     event[History::FieldEventId] = eventId;
     event[History::FieldSenderId] = senderId;
     event[History::FieldTimestamp] = message.received().toString("yyyy-MM-ddTHH:mm:ss.zzz");
@@ -1056,22 +1161,6 @@ QVariantMap HistoryDaemon::getSingleEventFromTextChannel(const Tp::TextChannelPt
 
     return textEvent;
 
-}
-
-void HistoryDaemon::onMessageRead(const Tp::TextChannelPtr textChannel, const Tp::ReceivedMessage &message)
-{
-    QVariantMap textEvent = getSingleEventFromTextChannel(textChannel, message.messageToken());
-    QVariantMap properties = propertiesFromChannel(textChannel);
-
-    if (textEvent.isEmpty()) {
-        qWarning() << "Cound not find the original event to update with newEvent = false.";
-        return;
-    }
-
-    textEvent[History::FieldNewEvent] = false;
-    if (!writeEvents(QList<QVariantMap>() << textEvent, properties)) {
-        qWarning() << "Failed to save the new message status!";
-    }
 }
 
 void HistoryDaemon::onMessageSent(const Tp::TextChannelPtr textChannel, const Tp::Message &message, const QString &messageToken)
@@ -1191,7 +1280,7 @@ QVariantMap HistoryDaemon::getInterfaceProperties(const Tp::AbstractInterface *i
     return reply.value();
 }
 
-void HistoryDaemon::writeInformationEvent(const QVariantMap &thread, History::InformationType type, const QString &subject, const QString &sender, const QString &text)
+void HistoryDaemon::writeInformationEvent(const QVariantMap &thread, History::InformationType type, const QString &subject, const QString &sender, const QString &text, bool notify)
 {
     History::TextEvent historyEvent = History::TextEvent(thread[History::FieldAccountId].toString(),
                                                          thread[History::FieldThreadId].toString(),
@@ -1207,7 +1296,7 @@ void HistoryDaemon::writeInformationEvent(const QVariantMap &thread, History::In
                                                          QDateTime::currentDateTime(),
                                                          subject,
                                                          type);
-    writeEvents(QList<QVariantMap>() << historyEvent.properties(), thread);
+    writeEvents(QList<QVariantMap>() << historyEvent.properties(), thread, notify);
 }
 
 void HistoryDaemon::writeRoomChangesInformationEvents(const QVariantMap &thread, const QVariantMap &interfaceProperties)
@@ -1264,4 +1353,52 @@ void HistoryDaemon::writeRolesInformationEvents(const QVariantMap &thread, const
             writeInformationEvent(thread, History::InformationTypeSelfAdminGranted);
         }
     }
+}
+
+History::MessageStatus HistoryDaemon::fromTelepathyDeliveryStatus(Tp::DeliveryStatus deliveryStatus)
+{
+    History::MessageStatus status;
+    switch (deliveryStatus) {
+    case Tp::DeliveryStatusAccepted:
+        status = History::MessageStatusAccepted;
+        break;
+    case Tp::DeliveryStatusDeleted:
+        status = History::MessageStatusDeleted;
+        break;
+    case Tp::DeliveryStatusDelivered:
+        status = History::MessageStatusDelivered;
+        break;
+    case Tp::DeliveryStatusPermanentlyFailed:
+        status = History::MessageStatusPermanentlyFailed;
+        break;
+    case Tp::DeliveryStatusRead:
+        status = History::MessageStatusRead;
+        break;
+    case Tp::DeliveryStatusTemporarilyFailed:
+        status = History::MessageStatusTemporarilyFailed;
+        break;
+    case Tp::DeliveryStatusUnknown:
+        status = History::MessageStatusUnknown;
+        break;
+    }
+
+    return status;
+}
+
+History::ChatType HistoryDaemon::fromTelepathyHandleType(const Tp::HandleType &type)
+{
+    History::ChatType chatType;
+    switch(type) {
+    case Tp::HandleTypeContact:
+        chatType = History::ChatTypeContact;
+        break;
+    case Tp::HandleTypeNone:
+        chatType = History::ChatTypeNone;
+        break;
+    case Tp::HandleTypeRoom:
+        chatType = History::ChatTypeRoom;
+        break;
+    }
+
+    return chatType;
 }

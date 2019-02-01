@@ -59,7 +59,11 @@ public:
                                       History::EventType type,
                                       const QVariantMap &properties,
                                       History::MatchFlags matchFlags = History::MatchCaseSensitive);
-
+    QString threadIdForProperties(const QString &accountId,
+                                  History::EventType type,
+                                  const QVariantMap &properties,
+                                  History::MatchFlags matchFlags = History::MatchCaseSensitive) override;
+    QList<QVariantMap> participantsForThreads(const QList<QVariantMap> &threadIds) override;
     QList<QVariantMap> eventsForThread(const QVariantMap &thread);
 
     QVariantMap getSingleThread(History::EventType type, const QString &accountId, const QString &threadId, const QVariantMap &properties = QVariantMap());
@@ -73,6 +77,7 @@ public:
     bool updateRoomParticipantsRoles(const QString &accountId, const QString &threadId, History::EventType type, const QVariantMap &participantsRoles);
     bool updateRoomInfo(const QString &accountId, const QString &threadId, History::EventType type, const QVariantMap &properties, const QStringList &invalidated = QStringList());
     bool removeThread(const QVariantMap &thread);
+    QVariantMap markThreadAsRead(const QVariantMap &thread);
 
     History::EventWriteResult writeTextEvent(const QVariantMap &event);
     bool removeTextEvent(const QVariantMap &event);

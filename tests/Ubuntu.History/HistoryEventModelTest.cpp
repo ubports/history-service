@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Canonical, Ltd.
+ * Copyright (C) 2016-2017 Canonical, Ltd.
  *
  * This file is part of history-service.
  *

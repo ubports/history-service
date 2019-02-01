@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 Canonical, Ltd.
+ * Copyright (C) 2013-2017 Canonical, Ltd.
  *
  * Authors:
  *  Gustavo Pichorim Boiko <gustavo.boiko@canonical.com>
@@ -66,7 +66,6 @@ public:
 
     Q_INVOKABLE bool removeEvents(const QVariantList &eventsProperties);
     Q_INVOKABLE bool writeEvents(const QVariantList &eventsProperties);
-    Q_INVOKABLE bool markEventAsRead(const QString &accountId, const QString &threadId, const QString &eventId, int eventType);
     Q_INVOKABLE bool removeEventAttachment(const QString &accountId, const QString &threadId, const QString &eventId, int eventType, const QString &attachmentId);
 
 protected Q_SLOTS:
@@ -74,9 +73,9 @@ protected Q_SLOTS:
     virtual void onEventsAdded(const History::Events &events);
     virtual void onEventsModified(const History::Events &events);
     virtual void onEventsRemoved(const History::Events &events);
+    virtual void onThreadsRemoved(const History::Threads &threads);
 
 protected:
-    void timerEvent(QTimerEvent *event);
     History::Events fetchNextPage();
 
 private:
@@ -85,8 +84,6 @@ private:
     bool mCanFetchMore;
     QHash<int, QByteArray> mRoles;
     mutable QMap<History::TextEvent, QList<QVariant> > mAttachmentCache;
-    History::Events mEventWritingQueue;
-    int mEventWritingTimer;
 };
 
 #endif // HISTORYEVENTMODEL_H

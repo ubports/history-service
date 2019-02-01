@@ -96,7 +96,6 @@ void ManagerTest::testThreadForParticipants()
 
     QCOMPARE(thread.accountId(), accountId);
     QCOMPARE(thread.type(), type);
-    QCOMPARE(thread.participants().identifiers(), participants);
 
     // now try to get the thread again to see if it is returned correctly
     History::Thread sameThread = mManager->threadForParticipants(accountId, type, participantsToMatch, matchFlags, false);
@@ -137,14 +136,16 @@ void ManagerTest::testGetSingleThread()
 
 void ManagerTest::testWriteEvents()
 {
+    QString textParticipant("textParticipant");
+    QString voiceParticipant("voiceParticipant");
     // create two threads, one for voice and one for text
     History::Thread textThread = mManager->threadForParticipants("textAccountId",
                                                                  History::EventTypeText,
-                                                                 QStringList()<< "textParticipant",
+                                                                 QStringList()<< textParticipant,
                                                                  History::MatchCaseSensitive, true);
     History::Thread voiceThread = mManager->threadForParticipants("voiceAccountId",
                                                                   History::EventTypeVoice,
-                                                                  QStringList()<< "voiceParticipant",
+                                                                  QStringList()<< voiceParticipant,
                                                                   History::MatchCaseSensitive, true);
     // insert some text and voice events
     History::Events events;
@@ -152,7 +153,7 @@ void ManagerTest::testWriteEvents()
         History::TextEvent textEvent(textThread.accountId(),
                                      textThread.threadId(),
                                      QString("eventId%1").arg(i),
-                                     textThread.participants().first().identifier(),
+                                     textParticipant,
                                      QDateTime::currentDateTime(),
                                      true,
                                      QString("Hello world %1").arg(i),
@@ -163,7 +164,7 @@ void ManagerTest::testWriteEvents()
         History::VoiceEvent voiceEvent(voiceThread.accountId(),
                                        voiceThread.threadId(),
                                        QString("eventId%1").arg(i),
-                                       voiceThread.participants().first().identifier(),
+                                       voiceParticipant,
                                        QDateTime::currentDateTime(),
                                        true,
                                        true);
@@ -214,14 +215,16 @@ void ManagerTest::testWriteEvents()
 
 void ManagerTest::testRemoveEvents()
 {
+    QString textParticipant("textParticipant");
+    QString voiceParticipant("voiceParticipant");
     // create two threads, one for voice and one for text
     History::Thread textThread = mManager->threadForParticipants("textRemovableAccount",
                                                                  History::EventTypeText,
-                                                                 QStringList()<< "textParticipant",
+                                                                 QStringList()<< textParticipant,
                                                                  History::MatchCaseSensitive, true);
     History::Thread voiceThread = mManager->threadForParticipants("voiceRemovableAccount",
                                                                   History::EventTypeVoice,
-                                                                  QStringList()<< "voiceParticipant",
+                                                                  QStringList()<< voiceParticipant,
                                                                   History::MatchCaseSensitive, true);
     // insert some text and voice events
     History::Events events;
@@ -229,7 +232,7 @@ void ManagerTest::testRemoveEvents()
         History::TextEvent textEvent(textThread.accountId(),
                                      textThread.threadId(),
                                      QString("eventToBeRemoved%1").arg(i),
-                                     textThread.participants().first().identifier(),
+                                     textParticipant,
                                      QDateTime::currentDateTime(),
                                      true,
                                      QString("Hello world %1").arg(i),
@@ -239,7 +242,7 @@ void ManagerTest::testRemoveEvents()
         History::VoiceEvent voiceEvent(voiceThread.accountId(),
                                        voiceThread.threadId(),
                                        QString("eventToBeRemoved%1").arg(i),
-                                       voiceThread.participants().first().identifier(),
+                                       voiceParticipant,
                                        QDateTime::currentDateTime(),
                                        true,
                                        true);
@@ -280,14 +283,16 @@ void ManagerTest::testRemoveEvents()
 
 void ManagerTest::testGetSingleEvent()
 {
+    QString textParticipant("textSingleParticipant");
+    QString voiceParticipant("voiceSingleParticipant");
     // create two threads, one for voice and one for text
     History::Thread textThread = mManager->threadForParticipants("textSingleAccount",
                                                                  History::EventTypeText,
-                                                                 QStringList()<< "textSingleParticipant",
+                                                                 QStringList()<< textParticipant,
                                                                  History::MatchCaseSensitive, true);
     History::Thread voiceThread = mManager->threadForParticipants("voiceSingleAccount",
                                                                   History::EventTypeVoice,
-                                                                  QStringList()<< "voiceSingleParticipant",
+                                                                  QStringList()<< voiceParticipant,
                                                                   History::MatchCaseSensitive, true);
 
     // now add two events
@@ -348,42 +353,10 @@ void ManagerTest::testRemoveThreads()
     History::Threads threads;
     threads << textThread << voiceThread;
 
-    // insert some text and voice events
-    History::Events events;
-    for (int i = 0; i < 50; ++i) {
-        History::TextEvent textEvent(textThread.accountId(),
-                                     textThread.threadId(),
-                                     QString("eventToBeRemoved%1").arg(i),
-                                     textThread.participants().first().identifier(),
-                                     QDateTime::currentDateTime(),
-                                     true,
-                                     QString("Hello world %1").arg(i),
-                                     History::MessageTypeText);
-        events.append(textEvent);
-
-        History::VoiceEvent voiceEvent(voiceThread.accountId(),
-                                       voiceThread.threadId(),
-                                       QString("eventToBeRemoved%1").arg(i),
-                                       voiceThread.participants().first().identifier(),
-                                       QDateTime::currentDateTime(),
-                                       true,
-                                       true);
-        events.append(voiceEvent);
-    }
-
-    QVERIFY(mManager->writeEvents(events));
-
-    QSignalSpy eventsRemovedSpy(mManager, SIGNAL(eventsRemoved(History::Events)));
     QSignalSpy threadsRemovedSpy(mManager, SIGNAL(threadsRemoved(History::Threads)));
 
     QVERIFY(mManager->removeThreads(threads));
-    QTRY_COMPARE(eventsRemovedSpy.count(), 1);
     QTRY_COMPARE(threadsRemovedSpy.count(), 1);
-
-    History::Events removedEvents = eventsRemovedSpy.first().first().value<History::Events>();
-    qSort(removedEvents);
-    qSort(events);
-    QCOMPARE(removedEvents, events);
 
     History::Threads removedThreads = threadsRemovedSpy.first().first().value<History::Threads>();
     qSort(removedThreads);
