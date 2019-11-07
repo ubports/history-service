@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<calls date="1537869838354" count="3">
+    <call formatted_number="+49 173 1111111"
+    matched_number="+49 173 1111111" number="+491731111111"
+    type="1" date="1537619563685"
+    lookup_uri="content://com.android.contacts/contacts/lookup/3585r395-4B27492735532F372B352F494D/404"
+    geocoded_location="Deutschland" countryiso="DE" numbertype="2"
+    new="0" duration="96" subscription="0" presentation="1"
+    name="Max Muster" normalized_number="+491731111111"
+    photo_id="0" duration_type="0"></call>
+    <call number="+4917622222222" type="2" date="1537803571220"
+    geocoded_location="Deutschland" countryiso="DE" numbertype="2"
+    new="1" duration="195" subscription="0" presentation="1"
+    name="Bruno" photo_id="0" duration_type="0"></call>
+    <call number="+491731111111" type="3" date="1537867104982"
+    geocoded_location="Deutschland" countryiso="DE" numbertype="2"
+    new="0" duration="0" subscription="0" presentation="1"
+    name="Max Muster" is_read="1" photo_id="0"
+    duration_type="0"></call>
+</calls>
