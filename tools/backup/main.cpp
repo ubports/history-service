@@ -25,7 +25,7 @@ QList<QMap<QString, QString> >readMessages(QString path) {
     int line, column;
 
     if (!dom.setContent(&file, &error, &line, &column)) {
-        qDebug() << "Error:" << error << "in line " << line << "column" << column;
+        qCritical() << "Error:" << error << "in line " << line << "column" << column;
         return messages;
     }
 
@@ -54,7 +54,6 @@ QList<QMap<QString, QString> >readMessages(QString path) {
             map["number"]   = number;
             map["message"]  = message;
 
-            // qDebug() << "Entry: " << map;
             messages.append(map);
         }
     }
@@ -74,7 +73,7 @@ QList<QMap<QString, QString> >readCalls(QString path) {
     int line, column;
 
     if (!dom.setContent(&file, &error, &line, &column)) {
-        qDebug() << "Error:" << error << "in line " << line << "column" << column;
+        qCritical() << "Error:" << error << "in line " << line << "column" << column;
         return calls;
     }
 
@@ -104,7 +103,6 @@ QList<QMap<QString, QString> >readCalls(QString path) {
             map["duration"] = duration;
             map["missed"]   = missed;
 
-            // qDebug() << "Entry: " << map;
             calls.append(map);
         }
     }
@@ -185,11 +183,11 @@ int main(int argc, char *argv[]) {
     QCoreApplication app(argc, argv);
     QStringList args = QCoreApplication::arguments();
     if (args.size() == 1) {
-        qDebug() << "Usage: import-backup ofono/ofono/account1 calllogs_export.xml messages_export.xml";
+        qInfo() << "Usage: import-backup ofono/ofono/account1 calllogs_export.xml messages_export.xml";
         return 1;
     }
     else if (args.size() != 4) {
-        qDebug() << "Usage: import-backup ofono/ofono/account1 calllogs_export.xml messages_export.xml";
+        qInfo() << "Usage: import-backup ofono/ofono/account1 calllogs_export.xml messages_export.xml";
         return 1;
     }
 
@@ -199,16 +197,16 @@ int main(int argc, char *argv[]) {
 
     auto calls = readCalls(QString(call_export));
 
-    qDebug() << "Extracted:" << calls.count() << "calls";
-    qDebug() << "Writing calls into db ...";
+    qInfo() << "Extracted:" << calls.count() << "calls";
+    qInfo() << "Writing calls into db ...";
     writeCalls(accountId, calls);
 
     auto messages =
         readMessages(QString(message_export));
 
-    qDebug() << "Extracted:" << messages.count() << "messages";
-    qDebug() << "Writing messages into db ...";
+    qInfo() << "Extracted:" << messages.count() << "messages";
+    qInfo() << "Writing messages into db ...";
     writeMessages(accountId, messages);
-    qDebug() << "Finished!";
+    qInfo() << "Finished!";
     return 0;
 }

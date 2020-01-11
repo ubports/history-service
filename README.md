@@ -36,6 +36,6 @@ are here assuming `account0` that is the first sim slot on your phone.
 $ adb pull /home/phablet/.local/share/history-service/history.sqlite ~/.local/share/history-service/
 $ cd tools/backup
 $ cmake && make
-$ ./import-backup ofono/ofono/account0 calllogs_export.xml messages_export.xml
+$ ./import-backup ofono/ofono/account0 calllogs_example.xml messages_example.xml
 $ adb push ~/.local/share/history-service/history.sqlite /home/phablet/.local/share/history-service/
 ```
