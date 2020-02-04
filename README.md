@@ -22,15 +22,20 @@ Under `tools` are some examples:
 - Add text events `tools/maketextevents`
 - Add voice events `tools/makevoiceevents`
 - Convenient manager to access the entries `tools/reader`
-- Import android exported voice and text events `tools/backup` [1]
+- Restore Android voice calls and text history `tools/backup`
 
-[1] Using https://github.com/handschuh/Slight-backup on the android side to
-export.
+### Restore Android voice calls and text history
 
-### Backup
+On Android download slightbackup from [fdroid](https://f-droid.org/en/packages/de.shandschuh.slightbackup/)
+or use the source code from [github](https://github.com/handschuh/Slight-backup).
+The backups (xml files) are stored unencrypted in an editable location on the SD card.
+Copy these xml files to your desktop. We assume here the names
+`calllogs_example.xml` and `messages_example.xml`
 
-Copy & backup first your existing `history.sqlite` from your phone to your desktop. We
-are here assuming `account0` that is the first sim slot on your phone.
+On ubuntu phone copy & backup your existing `history.sqlite` to your desktop. We
+are assuming `account0` that is the first sim slot on your phone.
+
+Now run the commands:
 
 ```
 $ adb pull /home/phablet/.local/share/history-service/history.sqlite ~/.local/share/history-service/
