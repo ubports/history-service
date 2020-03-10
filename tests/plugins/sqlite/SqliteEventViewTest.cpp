@@ -40,6 +40,7 @@ private Q_SLOTS:
     void testFilter();
     void testSort();
     void testSortWithMultipleFields();
+    void testFilterWithValueToExclude();
 
 private:
     SQLiteHistoryPlugin *mPlugin;
@@ -97,6 +98,28 @@ void SqliteEventViewTest::testFilter()
 
     // make sure no more items are returned
     QVERIFY(view->NextPage().isEmpty());
+    delete view;
+}
+
+void SqliteEventViewTest::testFilterWithValueToExclude()
+{
+    History::Sort ascendingSort(History::FieldEventId, Qt::AscendingOrder);
+    History::IntersectionFilter filter;
+    filter.append(History::Filter(History::FieldAccountId, "account0"));
+    filter.append(History::Filter(History::FieldMessageStatus, History::MessageStatusTemporarilyFailed, History::MatchNotEquals));
+    History::PluginEventView *view = mPlugin->queryEvents(History::EventTypeText, ascendingSort, filter);
+    QVERIFY(view->IsValid());
+    QList<QVariantMap> events = view->NextPage();
+    while (!events.isEmpty()) {
+
+        for (const auto& event : events)
+        {
+            QVERIFY(event[History::FieldMessageStatus].toInt() != (int) History::MessageStatusTemporarilyFailed);
+        }
+
+        events = view->NextPage();
+    }
+
     delete view;
 }
 
@@ -188,7 +211,7 @@ void SqliteEventViewTest::populateDatabase()
                                          j % 2,
                                          QString("Hello %1").arg(j),
                                          History::MessageTypeText,
-                                         History::MessageStatusDelivered);
+                                         j % 2 ? History::MessageStatusDelivered : History::MessageStatusTemporarilyFailed);
             QCOMPARE(mPlugin->writeTextEvent(textEvent.properties()), History::EventWriteCreated);
 
         }

@@ -39,6 +39,7 @@ private Q_SLOTS:
     void testSetProperties();
     void testToString_data();
     void testToString();
+    void testToStringWithNotEqualsMatch();
     void testToStringPrefix();
     void testNullToString();
     void testMatch_data();
@@ -142,6 +143,15 @@ void FilterTest::testToString()
     QCOMPARE(filter.toString(), result);
 }
 
+void FilterTest::testToStringWithNotEqualsMatch()
+{
+    QString filterProperty("someProperty");
+    QString filterValue("someValue");
+
+    History::Filter filter(filterProperty, filterValue, History::MatchNotEquals);
+    QCOMPARE(filter.toString(),QString("%1!=\"%2\"").arg(filterProperty,filterValue));
+}
+
 void FilterTest::testToStringPrefix()
 {
     QString prefix("somePrefix");
@@ -215,12 +225,15 @@ void FilterTest::testMatchFlags_data()
     MatchCaseSensitive = 0x01,
     MatchCaseInsensitive = 0x02,
     MatchContains = 0x04,
-    MatchPhoneNumber = 0x08
+    MatchPhoneNumber = 0x08,
+    MatchNotEquals = 0x16
+
     */
     QTest::newRow("null flag") << History::MatchFlags() << History::MatchCaseSensitive << false;
     QTest::newRow("case sensitive alone") << History::MatchFlags(History::MatchCaseSensitive) << History::MatchCaseSensitive << true;
     QTest::newRow("case insensitive alone") << History::MatchFlags(History::MatchCaseInsensitive) << History::MatchCaseInsensitive << true;
     QTest::newRow("contains alone") << History::MatchFlags(History::MatchContains) << History::MatchContains << true;
+    QTest::newRow("not contains alone") << History::MatchFlags(History::MatchNotEquals) << History::MatchNotEquals << true;
     QTest::newRow("phone number alone") << History::MatchFlags(History::MatchPhoneNumber) << History::MatchPhoneNumber << true;
     QTest::newRow("no mismatch") << History::MatchFlags(History::MatchPhoneNumber) << History::MatchContains << false;
     QTest::newRow("all still match one") << History::MatchFlags(History::MatchCaseInsensitive |

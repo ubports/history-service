@@ -76,7 +76,13 @@ QString FilterPrivate::toString(const QString &propertyPrefix) const
 
     QString propertyName = propertyPrefix.isNull() ? filterProperty : QString("%1.%2").arg(propertyPrefix, filterProperty);
     // FIXME2: need to check for the match flags
-    return QString("%1=%2").arg(propertyName, value);
+    QString condition;
+    if (matchFlags & History::MatchNotEquals) {
+        condition = QString("%1!=%2");
+    } else {
+        condition = QString("%1=%2");
+    }
+    return QString(condition).arg(propertyName, value);
 }
 
 bool FilterPrivate::match(const QVariantMap properties) const
@@ -87,7 +93,11 @@ bool FilterPrivate::match(const QVariantMap properties) const
     }
 
     // FIXME: use the MatchFlags
-    return properties[filterProperty] == filterValue;
+    if (matchFlags & History::MatchNotEquals) {
+        return properties[filterProperty] != filterValue;
+    } else {
+        return properties[filterProperty] == filterValue;
+    }
 }
 
 QVariantMap FilterPrivate::properties() const

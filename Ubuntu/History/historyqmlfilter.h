@@ -39,7 +39,8 @@ public:
         MatchCaseSensitive = History::MatchCaseSensitive,
         MatchCaseInsensitive = History::MatchCaseInsensitive,
         MatchContains = History::MatchContains,
-        MatchPhoneNumber = History::MatchPhoneNumber
+        MatchPhoneNumber = History::MatchPhoneNumber,
+        MatchNotEquals = History::MatchNotEquals
     };
 
     explicit HistoryQmlFilter(QObject *parent = 0);
