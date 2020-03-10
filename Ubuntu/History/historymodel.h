@@ -72,7 +72,8 @@ public:
         MatchCaseSensitive = History::MatchCaseSensitive,
         MatchCaseInsensitive = History::MatchCaseInsensitive,
         MatchContains = History::MatchContains,
-        MatchPhoneNumber = History::MatchPhoneNumber
+        MatchPhoneNumber = History::MatchPhoneNumber,
+        MatchNotEquals = History::MatchNotEquals
     };
 
     enum MessageStatus

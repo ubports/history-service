@@ -742,6 +742,11 @@ void SqlitePluginTest::testFilterToString_data()
     filterValues[":filterValue0"] = filter.filterValue();
     QTest::newRow("filter with a prefix") << filter.properties() << filterValues << QString("prefix") << "prefix.testProperty=:filterValue0";
 
+    filter.setFilterValue(12345);
+    filter.setMatchFlags(History::MatchNotEquals);
+    filterValues[":filterValue0"] = filter.filterValue();
+    QTest::newRow("filter not equals") << filter.properties() << filterValues << QString() << "testProperty!=:filterValue0";
+
     filter.setMatchFlags(History::MatchContains);
     filter.setFilterValue("partialString");
     filterValues.clear();

@@ -51,7 +51,8 @@ enum MatchFlag {
     MatchCaseSensitive = 0x01,
     MatchCaseInsensitive = 0x02,
     MatchContains = 0x04,
-    MatchPhoneNumber = 0x08
+    MatchPhoneNumber = 0x08,
+    MatchNotEquals = 0x10
 };
 
 Q_DECLARE_FLAGS(MatchFlags, MatchFlag)
