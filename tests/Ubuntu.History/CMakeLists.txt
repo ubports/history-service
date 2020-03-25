@@ -6,6 +6,10 @@ include_directories(
     ${TP_QT5_INCLUDE_DIRS}
     )
 
+find_program(XVFB_RUN_BIN
+    NAMES xvfb-run
+)
+
 set(SOURCE_DIR ${CMAKE_SOURCE_DIR}/Ubuntu/History)
 generate_test(HistoryGroupedThreadsModelTest
               SOURCES HistoryGroupedThreadsModelTest.cpp

@@ -21,6 +21,7 @@ Build-Depends: cmake,
                qtpim5-dev (>= 5),
                sqlite3,
                telepathy-mission-control-5,
+               xauth,
                xvfb <!nocheck>,
 Standards-Version: 3.9.4
 Homepage: https://launchpad.net/history-service
