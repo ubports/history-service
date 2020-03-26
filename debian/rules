@@ -13,7 +13,7 @@ override_dh_install:
 
 override_dh_auto_test:
 ifeq ($(DEB_BUILD_GNU_TYPE),$(DEB_HOST_GNU_TYPE))
-    ln -s /usr/lib/${DEB_HOST_MULTIARCH}/mesa-egl/libGLESv2.so.2 /usr/lib/${DEB_HOST_MULTIARCH}/libGLESv2.so.2
-    CTEST_OUTPUT_ON_FAILURE=1 make -C obj-$(DEB_HOST_GNU_TYPE) test
-    #cd obj-$(DEB_HOST_GNU_TYPE); ctest -V
+        ln -s /usr/lib/${DEB_HOST_MULTIARCH}/mesa-egl/libGLESv2.so.2 /usr/lib/${DEB_HOST_MULTIARCH}/libGLESv2.so.2
+        CTEST_OUTPUT_ON_FAILURE=1 make -C obj-$(DEB_HOST_GNU_TYPE) test
+        #cd obj-$(DEB_HOST_GNU_TYPE); ctest -V
 endif
