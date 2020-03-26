@@ -72,6 +72,10 @@ void HistoryGroupedThreadsModelTest::testCanFetchMore()
     QTRY_COMPARE(model.rowCount(), 1);
     mManager->removeThreads(History::Threads() << textThread);
     QTRY_COMPARE(model.rowCount(), 0);
+    
+    //Cleanup
+    delete sort;
+    delete filter;
 }
 
 void HistoryGroupedThreadsModelTest::testThreadsUpdated()
