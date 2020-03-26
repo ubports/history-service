@@ -1,3 +1,11 @@
+execute_process(
+    COMMAND dpkg-architecture -qDEB_HOST_MULTIARCH
+    OUTPUT_VARIABLE DEB_HOST_MULTIARCH
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+SET(ENV{LD_LIBRARY_PATH} "/usr/lib/${DEB_HOST_MULTIARCH}/mesa-egl:$ENV{LD_LIBRARY_PATH}")
+
 include_directories(
     ${CMAKE_CURRENT_BINARY_DIR}
     ${CMAKE_SOURCE_DIR}/Ubuntu/History
