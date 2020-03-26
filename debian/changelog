@@ -1,9 +1,3 @@
-history-service (0.3~0ubports1local~1585180045) UNRELEASED; urgency=medium
-
-  * 
-
- --  <lduboeuf@history-service-usdk-16-04-amd64-armhf-dev>  Wed, 25 Mar 2020 23:47:26 +0000
-
 history-service (0.3~0ubports1) xenial; urgency=medium
 
   * debian/control:
