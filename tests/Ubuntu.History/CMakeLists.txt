@@ -4,7 +4,7 @@ execute_process(
     OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 
-SET(ENV{LD_LIBRARY_PATH} "/usr/lib/${DEB_HOST_MULTIARCH}/mesa-egl:$ENV{LD_LIBRARY_PATH}")
+#SET(ENV{LD_LIBRARY_PATH} "/usr/lib/${DEB_HOST_MULTIARCH}/mesa-egl:$ENV{LD_LIBRARY_PATH}")
 
 include_directories(
     ${CMAKE_CURRENT_BINARY_DIR}
