@@ -29,6 +29,7 @@ private Q_SLOTS:
     void initTestCase();
     void testCanFetchMore();
     void testThreadsUpdated();
+    void cleanupTestCase();
 private:
     History::Manager *mManager;
 };
@@ -36,6 +37,11 @@ private:
 void HistoryGroupedThreadsModelTest::initTestCase()
 {
     mManager = History::Manager::instance();
+}
+
+void HistoryGroupedThreadsModelTest::cleanupTestCase()
+{
+    delete mManager;
 }
 
 void HistoryGroupedThreadsModelTest::testCanFetchMore()
