@@ -28,7 +28,7 @@ class HistoryGroupedThreadsModelTest : public QObject
 private Q_SLOTS:
     void testCanFetchMore();
     void testThreadsUpdated();
-
+};
 void HistoryGroupedThreadsModelTest::testCanFetchMore()
 {
     HistoryGroupedThreadsModel model;
