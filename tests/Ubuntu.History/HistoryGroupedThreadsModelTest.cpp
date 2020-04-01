@@ -46,7 +46,7 @@ void HistoryGroupedThreadsModelTest::cleanupTestCase()
 
 void HistoryGroupedThreadsModelTest::testCanFetchMore()
 {
-    /*
+
     HistoryGroupedThreadsModel model;
     QSignalSpy fetchMoreChanged(&model, SIGNAL(canFetchMoreChanged()));
 
@@ -79,12 +79,12 @@ void HistoryGroupedThreadsModelTest::testCanFetchMore()
     QTRY_COMPARE(model.rowCount(), 1);
     mManager->removeThreads(History::Threads() << textThread);
     QTRY_COMPARE(model.rowCount(), 0);
-    */
+
 }
 
 void HistoryGroupedThreadsModelTest::testThreadsUpdated()
 {
-    /*
+
     HistoryGroupedThreadsModel model;
     QSignalSpy dataChanged(&model, SIGNAL(dataChanged(QModelIndex, QModelIndex)));
     QSignalSpy rowsRemoved(&model, SIGNAL(rowsRemoved(QModelIndex, int, int)));
@@ -163,7 +163,7 @@ void HistoryGroupedThreadsModelTest::testThreadsUpdated()
     mManager->removeEvents(History::Events() << firstEvent);
     QTRY_COMPARE(rowsRemoved.count(), 1);
     QTRY_COMPARE(model.rowCount(), 0);
-    */
+
 }
 
 QTEST_MAIN(HistoryGroupedThreadsModelTest)
