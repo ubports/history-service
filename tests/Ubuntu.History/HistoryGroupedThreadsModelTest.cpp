@@ -18,7 +18,7 @@
 
 #include <QtCore/QObject>
 #include <QtTest/QtTest>
-#include "manager.h"
+//#include "manager.h"
 #include "historygroupedthreadsmodel.h"
 
 class HistoryGroupedThreadsModelTest : public QObject
@@ -31,17 +31,17 @@ private Q_SLOTS:
     void testThreadsUpdated();
     void cleanupTestCase();
 private:
-    History::Manager *mManager;
+    //History::Manager *mManager;
 };
 
 void HistoryGroupedThreadsModelTest::initTestCase()
 {
-    mManager = History::Manager::instance();
+    //mManager = History::Manager::instance();
 }
 
 void HistoryGroupedThreadsModelTest::cleanupTestCase()
 {
-    delete mManager;
+    //delete mManager;
 }
 
 void HistoryGroupedThreadsModelTest::testCanFetchMore()
