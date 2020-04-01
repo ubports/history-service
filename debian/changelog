@@ -1,6 +1,6 @@
-history-service (0.3~1ubports1) xenial; urgency=medium
+history-service (0.3~0ubports2) xenial; urgency=medium
 
-  * Add MessageStatus Draft Enum
+  * Add MessageStatusDraft Enum
 
  -- Lionel Duboeuf <lduboeuf@ouvaton.org>  Tue, 31 Mar 2020 20:44:04 +0200
 
