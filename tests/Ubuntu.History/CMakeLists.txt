@@ -1,12 +1,12 @@
 include_directories(
-    ${CMAKE_CURRENT_BINARY_DIR}
-    ${CMAKE_SOURCE_DIR}/Ubuntu/History
     ${CMAKE_SOURCE_DIR}/src
     ${CMAKE_SOURCE_DIR}/tests/common
+    ${CMAKE_CURRENT_BINARY_DIR}
+    ${CMAKE_SOURCE_DIR}/Ubuntu/History
     ${TP_QT5_INCLUDE_DIRS}
-    )
+)
 
-set(SOURCE_DIR ${CMAKE_SOURCE_DIR}/Ubuntu/History)
+#set(SOURCE_DIR ${CMAKE_SOURCE_DIR}/Ubuntu/History)
 generate_test(HistoryGroupedThreadsModelTest
               SOURCES HistoryGroupedThreadsModelTest.cpp
               LIBRARIES history-qml
