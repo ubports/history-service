@@ -41,7 +41,7 @@ void HistoryEventModelTest::initTestCase()
     mManager = History::Manager::instance();
 }
 
-void HistoryGroupedThreadsModelTest::cleanupTestCase()
+void HistoryEventModelTest::cleanupTestCase()
 {
     delete mManager;
 }
