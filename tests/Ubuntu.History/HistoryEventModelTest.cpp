@@ -29,7 +29,7 @@ class HistoryEventModelTest : public TelepathyTest
 private Q_SLOTS:
     void initTestCase();
     void testTelepathyInitializedCorrectly();
-
+    void cleanupTestCase();
 private:
     History::Manager *mManager;
 };
@@ -39,6 +39,11 @@ void HistoryEventModelTest::initTestCase()
     initialize(0);
 
     mManager = History::Manager::instance();
+}
+
+void HistoryGroupedThreadsModelTest::cleanupTestCase()
+{
+    delete mManager;
 }
 
 void HistoryEventModelTest::testTelepathyInitializedCorrectly()
