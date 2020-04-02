@@ -15,5 +15,6 @@ ifeq ($(DEB_BUILD_GNU_TYPE),$(DEB_HOST_GNU_TYPE))
 	#CTEST_OUTPUT_ON_FAILURE=1 make -C obj-$(DEB_HOST_GNU_TYPE) test
 	#cd obj-$(DEB_HOST_GNU_TYPE); ctest -V
 	chmod +x tests/xvfb_wrapper.sh
+	chmod +x tests/Xwait
 	tests/xvfb_wrapper.sh `pwd`/obj-$(DEB_HOST_GNU_TYPE) || exit $?
 endif
