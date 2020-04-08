@@ -84,7 +84,6 @@ function(generate_test TESTNAME)
                                     MC_MANAGER_DIR=${TMPDIR})
             endif ()
             if (${ARG_USE_XVFB})
-                set_tests_properties(${TESTNAME} PROPERTIES ENVIRONMENT "LD_PRELOAD=/usr/lib/${HOST_ARCHITECTURE}/libeatmydata.so")
                 SET(XVFB_RUN ${XVFB_RUN_BIN} -s "-screen 0 640x480x24" -a )
             endif ()
 
@@ -95,6 +94,8 @@ function(generate_test TESTNAME)
 
             add_test(${TESTNAME} ${XVFB_RUN} ${DBUS_RUNNER} --keep-env --dbus-config=${CMAKE_BINARY_DIR}/tests/common/dbus-session.conf --max-wait=${ARG_TIMEOUT}
                                                 ${ARG_TASKS} --task ${TEST_COMMAND} --task-name ${TESTNAME})
+            set_tests_properties(${TESTNAME} PROPERTIES ENVIRONMENT "LD_PRELOAD=/usr/lib/${HOST_ARCHITECTURE}/libeatmydata.so")
+
         else ()
             add_test(${TESTNAME} ${CMAKE_CURRENT_BINARY_DIR}/${TESTNAME} ${PLATFORM} -o -,txt -o ${CMAKE_BINARY_DIR}/test_${TESTNAME}.xml,xunitxml)
         endif()
