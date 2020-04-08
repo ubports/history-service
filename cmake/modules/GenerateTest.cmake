@@ -84,6 +84,7 @@ function(generate_test TESTNAME)
                                     MC_MANAGER_DIR=${TMPDIR})
             endif ()
             if (${ARG_USE_XVFB})
+                set_tests_properties(${TESTNAME} PROPERTIES ENVIRONMENT "LD_PRELOAD=/usr/lib/${HOST_ARCHITECTURE}/libeatmydata.so")
                 SET(XVFB_RUN ${XVFB_RUN_BIN} -s "-screen 0 640x480x24" -a )
             endif ()
 
