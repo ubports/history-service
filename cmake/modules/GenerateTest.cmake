@@ -94,7 +94,7 @@ function(generate_test TESTNAME)
 
             add_test(${TESTNAME} ${XVFB_RUN} ${DBUS_RUNNER} --keep-env --dbus-config=${CMAKE_BINARY_DIR}/tests/common/dbus-session.conf --max-wait=${ARG_TIMEOUT}
                                                 ${ARG_TASKS} --task ${TEST_COMMAND} --task-name ${TESTNAME})
-            set_tests_properties(${TESTNAME} PROPERTIES ENVIRONMENT "LD_PRELOAD=/usr/lib/${HOST_ARCHITECTURE}/libeatmydata.so")
+            set_tests_properties(${TESTNAME} PROPERTIES ENVIRONMENT "LD_PRELOAD=/usr/lib/${CMAKE_LIBRARY_ARCHITECTURE}/libeatmydata.so")
 
         else ()
             add_test(${TESTNAME} ${CMAKE_CURRENT_BINARY_DIR}/${TESTNAME} ${PLATFORM} -o -,txt -o ${CMAKE_BINARY_DIR}/test_${TESTNAME}.xml,xunitxml)
