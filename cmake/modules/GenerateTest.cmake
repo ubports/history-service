@@ -39,7 +39,7 @@ function(generate_test TESTNAME)
     endif ()
 
     if (NOT DEFINED ARG_TIMEOUT)
-        set(ARG_TIMEOUT 60)
+        set(ARG_TIMEOUT 120)
     endif ()
 
     if (NOT DEFINED ARG_QT5_MODULES)
@@ -84,7 +84,7 @@ function(generate_test TESTNAME)
                                     MC_MANAGER_DIR=${TMPDIR})
             endif ()
             if (${ARG_USE_XVFB})
-                SET(XVFB_RUN ${XVFB_RUN_BIN} -a -s "-screen 0 1024x768x24")
+                SET(XVFB_RUN ${XVFB_RUN_BIN} -s "-screen 0 640x480x24" -a )
             endif ()
 
             set(TEST_COMMAND ${CMAKE_CURRENT_BINARY_DIR}/${TESTNAME} ${PLATFORM} -p -o -p -,txt -p -o -p ${CMAKE_BINARY_DIR}/test_${TESTNAME}.xml,xunitxml)
