@@ -24,7 +24,7 @@ find_program(DBUS_RUNNER dbus-test-runner)
 
 set(
   XVFB_RUN_BIN
-  ${CMAKE_BINARY_DIR}/tests/xvfb-run.sh
+  ${CMAKE_CURRENT_SOURCE_DIR}/tests/xvfb-run.sh
 )
 #find_program(XVFB_RUN_BIN
 #    NAMES xvfb-run
