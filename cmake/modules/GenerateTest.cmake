@@ -44,7 +44,7 @@ function(generate_test TESTNAME)
     endif ()
 
     if (NOT DEFINED ARG_TIMEOUT)
-        set(ARG_TIMEOUT 120)
+        set(ARG_TIMEOUT 60)
     endif ()
 
     if (NOT DEFINED ARG_QT5_MODULES)
@@ -99,8 +99,6 @@ function(generate_test TESTNAME)
 
             add_test(${TESTNAME} ${XVFB_RUN} ${DBUS_RUNNER} --keep-env --dbus-config=${CMAKE_BINARY_DIR}/tests/common/dbus-session.conf --max-wait=${ARG_TIMEOUT}
                                                 ${ARG_TASKS} --task ${TEST_COMMAND} --task-name ${TESTNAME})
-            set_tests_properties(${TESTNAME} PROPERTIES ENVIRONMENT "LD_PRELOAD=/usr/lib/${CMAKE_LIBRARY_ARCHITECTURE}/libeatmydata.so")
-
         else ()
             add_test(${TESTNAME} ${CMAKE_CURRENT_BINARY_DIR}/${TESTNAME} ${PLATFORM} -o -,txt -o ${CMAKE_BINARY_DIR}/test_${TESTNAME}.xml,xunitxml)
         endif()
