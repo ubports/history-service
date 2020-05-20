@@ -21,9 +21,14 @@
 
 include(CMakeParseArguments)
 find_program(DBUS_RUNNER dbus-test-runner)
-find_program(XVFB_RUN_BIN
-    NAMES xvfb-run
+
+set(
+  XVFB_RUN_BIN
+  ${CMAKE_BINARY_DIR}/tests/xvfb-run.sh
 )
+#find_program(XVFB_RUN_BIN
+#    NAMES xvfb-run
+#)
 
 function(generate_test TESTNAME)
     set(options USE_DBUS USE_UI USE_XVFB)
