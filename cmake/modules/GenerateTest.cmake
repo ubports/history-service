@@ -89,7 +89,7 @@ function(generate_test TESTNAME)
                                     MC_MANAGER_DIR=${TMPDIR})
             endif ()
             if (${ARG_USE_XVFB})
-                SET(XVFB_RUN ${XVFB_RUN_BIN} -s "-screen 0 640x480x24" -a )
+                SET(XVFB_RUN ${XVFB_RUN_BIN} -a -s "-screen 0 1024x768x24" -e "xvfberr.log")
             endif ()
 
             set(TEST_COMMAND ${CMAKE_CURRENT_BINARY_DIR}/${TESTNAME} ${PLATFORM} -p -o -p -,txt -p -o -p ${CMAKE_BINARY_DIR}/test_${TESTNAME}.xml,xunitxml)
