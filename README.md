@@ -1,18 +1,24 @@
 # History service
 
-The history-service is used to store voice, text events into a database.
-Applications using it are `messaging-app` and the `dialer-app`.
+Service that provides call log and conversation history.
 
-Currently a `sqlite` db is used. The path to the db file is `~/.local/share/history-service/history.sqlite`.
+## Getting Started
 
-# Building
 
-Specify the install prefix or it won't find some files. Look into
-`snapcraft.yaml` for dependencies.
+History service provide the database and an API to store/retrieve the call log (used by dialer-app ) and the sms/mms history ( used by messaging-app ).
+
+See as well telepathy-ofono for incoming message events.
+
+Database location: `~.local/share/history-service/history.sqlite`
+
+
+### Installing
+
+You can use [crossbuilder](http://docs.ubports.com/en/latest/systemdev/testing-locally.html#cross-building-with-crossbuilder)
+( you may need to add manually dh-translations, e.g `crossbuilder inst-foreign dh-translations)
 
 ```
-$ cmake -DCMAKE_INSTALL_PREFIX=/usr
-$ make
+crossbuilder
 ```
 
 ## Examples
@@ -44,3 +50,17 @@ $ cmake && make
 $ ./import-backup ofono/ofono/account0 calllogs_example.xml messages_example.xml
 $ adb push ~/.local/share/history-service/history.sqlite /home/phablet/.local/share/history-service/
 ```
+
+## Running the tests
+
+Run tests within the container `crossbuilder shell` and find the generated tests, currently on `history-service/obj-..../tests/`
+
+
+## Contributing
+
+Please read [CONTRIBUTING.md](http://docs.ubports.com/en/latest/systemdev/testing-locally.html).
+
+
+## License
+
+GPL v3.0 - see the [COPYING](COPYING) file for details

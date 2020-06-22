@@ -84,7 +84,8 @@ public:
         MessageStatusAccepted = History::MessageStatusAccepted,
         MessageStatusRead = History::MessageStatusRead,
         MessageStatusDeleted = History::MessageStatusDeleted,
-        MessageStatusPending = History::MessageStatusPending // pending attachment download
+        MessageStatusPending = History::MessageStatusPending, // pending attachment download
+        MessageStatusDraft = History::MessageStatusDraft
     };
 
     enum AttachmentFlag

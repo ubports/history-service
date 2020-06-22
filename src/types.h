@@ -65,7 +65,8 @@ enum MessageStatus
     MessageStatusAccepted,
     MessageStatusRead,
     MessageStatusDeleted,
-    MessageStatusPending // pending attachment download
+    MessageStatusPending, // pending attachment download
+    MessageStatusDraft
 };
 
 enum MessageType
