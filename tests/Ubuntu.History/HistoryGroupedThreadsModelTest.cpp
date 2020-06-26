@@ -35,11 +35,13 @@ private:
 
 void HistoryGroupedThreadsModelTest::initTestCase()
 {
+    QSKIP("Due to instability disabled ufn...");
     mManager = History::Manager::instance();
 }
 
 void HistoryGroupedThreadsModelTest::testCanFetchMore()
 {
+    QSKIP("Due to instability disabled ufn...");
     HistoryGroupedThreadsModel model;
     QSignalSpy fetchMoreChanged(&model, SIGNAL(canFetchMoreChanged()));
 
@@ -76,6 +78,7 @@ void HistoryGroupedThreadsModelTest::testCanFetchMore()
 
 void HistoryGroupedThreadsModelTest::testThreadsUpdated()
 {
+    QSKIP("Due to instability disabled ufn...");
     HistoryGroupedThreadsModel model;
     QSignalSpy dataChanged(&model, SIGNAL(dataChanged(QModelIndex, QModelIndex)));
     QSignalSpy rowsRemoved(&model, SIGNAL(rowsRemoved(QModelIndex, int, int)));
