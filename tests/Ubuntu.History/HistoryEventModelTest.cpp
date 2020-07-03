@@ -36,7 +36,6 @@ private:
 
 void HistoryEventModelTest::initTestCase()
 {
-    QSKIP("Due to instability disabled ufn...");
     initialize(0);
 
     mManager = History::Manager::instance();
@@ -44,7 +43,6 @@ void HistoryEventModelTest::initTestCase()
 
 void HistoryEventModelTest::testTelepathyInitializedCorrectly()
 {
-    QSKIP("Due to instability disabled ufn...");
     Tp::AccountPtr account = addAccount("mock", "ofono", "My Account");
     QVERIFY(!account.isNull());
 
