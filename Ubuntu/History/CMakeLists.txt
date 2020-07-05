@@ -18,7 +18,7 @@ set(plugin_HDRS
     historyeventmodel.h
     historygroupedeventsmodel.h
     historygroupedthreadsmodel.h
-    historymodel.cpp
+    historymodel.h
     historyqmlfilter.h
     historyqmlintersectionfilter.h
     historyqmlplugin.h
