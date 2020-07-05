@@ -32,7 +32,7 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/src
     )
 
-add_library(history-qml SHARED ${plugin_SRCS} ${plugin_HDRS})
+add_library(history-qml MODULE ${plugin_SRCS} ${plugin_HDRS})
 
 qt5_use_modules(history-qml Contacts Core Qml Quick)
 
