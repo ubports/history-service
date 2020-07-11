@@ -1,3 +1,9 @@
+history-service (0.3~0ubports4) xenial; urgency=medium
+
+  * Revert use of sent date instead of the received one
+
+ -- Lionel Duboeuf <lduboeuf@ouvaton.org>  Tue, 09 Jul 2020 20:44:04 +0200
+
 history-service (0.3~0ubports3) xenial; urgency=medium
 
   * Allow querying history db with NotEquals match flag
