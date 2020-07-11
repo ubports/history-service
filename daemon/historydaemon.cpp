@@ -1122,7 +1122,7 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
     event[History::FieldThreadId] = threadId;
     event[History::FieldEventId] = eventId;
     event[History::FieldSenderId] = senderId;
-    event[History::FieldTimestamp] = message.sent().toString("yyyy-MM-ddTHH:mm:ss.zzz");
+    event[History::FieldTimestamp] = message.received().toString("yyyy-MM-ddTHH:mm:ss.zzz");
     event[History::FieldNewEvent] = true; // message is always unread until it reaches HistoryDaemon::onMessageRead
     event[History::FieldMessage] = message.text();
     event[History::FieldMessageType] = (int)type;
