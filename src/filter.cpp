@@ -143,6 +143,7 @@ Filter &Filter::operator=(const Filter &other)
     }
 
     d_ptr = QSharedPointer<FilterPrivate>(other.d_ptr->clone());
+    return *this;
 }
 
 QString Filter::filterProperty() const

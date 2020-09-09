@@ -122,6 +122,7 @@ Event& Event::operator=(const Event &other)
     }
 
     d_ptr = QSharedPointer<EventPrivate>(other.d_ptr->clone());
+    return *this;
 }
 
 /*!
