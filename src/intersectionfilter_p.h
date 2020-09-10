@@ -36,7 +36,7 @@ public:
     IntersectionFilterPrivate();
     ~IntersectionFilterPrivate();
     virtual FilterType type() const { return FilterTypeIntersection; }
-    QString toString(const QString &propertyPrefix = QString::null) const;
+    QString toString(const QString &propertyPrefix = QString()) const;
     bool match(const QVariantMap properties) const;
     bool isValid() const;
 

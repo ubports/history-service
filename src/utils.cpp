@@ -66,7 +66,7 @@ QString Utils::protocolFromAccountId(const QString &accountId)
 {
     QStringList parsedId = accountId.split("/");
     if (parsedId.count() < 3) {
-        return QString::null;
+        return QString();
     }
     return parsedId[1];
 }

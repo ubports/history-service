@@ -111,7 +111,7 @@ QString MockController::serial()
 {
     QDBusReply<QString> reply = mMockInterface.call("Serial");
     if (!reply.isValid()) {
-        return QString::null;
+        return QString();
     }
 
     return reply.value();

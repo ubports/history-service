@@ -79,7 +79,7 @@ QVariantMap UnionFilterPrivate::properties() const
 QString UnionFilterPrivate::toString(const QString &propertyPrefix) const
 {
     if (filters.isEmpty()) {
-        return QString::null;
+        return QString();
     } else if (filters.count() == 1) {
         return filters.first().toString();
     }
