@@ -1521,6 +1521,7 @@ QString SQLiteHistoryPlugin::filterToString(const History::Filter &filter, QVari
     case History::FilterTypeIntersection:
         filters = History::IntersectionFilter(filter).filters();
         linking = " AND ";
+        // fall through
     case History::FilterTypeUnion:
         if (filter.type() == History::FilterTypeUnion) {
             filters = History::UnionFilter(filter).filters();
