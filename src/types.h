@@ -136,7 +136,8 @@ enum ParticipantRoles
 enum EventWriteResult {
     EventWriteCreated,
     EventWriteModified,
-    EventWriteError
+    EventWriteError,
+    EventWriteNone
 };
 
 // Since these might not get used in evey file that

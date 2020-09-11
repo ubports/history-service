@@ -439,7 +439,7 @@ bool HistoryDaemon::writeEvents(const QList<QVariantMap> &events, const QVariant
 
     Q_FOREACH(const QVariantMap &event, events) {
         History::EventType type = (History::EventType) event[History::FieldType].toInt();
-        History::EventWriteResult result;
+        History::EventWriteResult result = History::EventWriteNone;
 
         // get the threads for the events to notify their modifications
         QString accountId = event[History::FieldAccountId].toString();
@@ -456,7 +456,7 @@ bool HistoryDaemon::writeEvents(const QList<QVariantMap> &events, const QVariant
             break;
         case History::EventTypeNull:
             qWarning("HistoryDaemon::writeEvents: Got EventTypeNull, ignoring this event!");
-            break;
+            continue;
         }
 
         // only get the thread AFTER the event is written to make sure it is up-to-date
@@ -481,6 +481,8 @@ bool HistoryDaemon::writeEvents(const QList<QVariantMap> &events, const QVariant
         case History::EventWriteError:
             mBackend->rollbackBatchOperation();
             return false;
+        case History::EventWriteNone:
+            break;
         }
     }
 
@@ -656,7 +658,7 @@ void HistoryDaemon::onCallEnded(const Tp::CallChannelPtr &channel, bool missed)
 
     // FIXME: check if checking for isRequested() is enough
     bool incoming = !channel->isRequested();
-    int duration;
+    int duration = 0;
 
     if (!missed) {
         QDateTime activeTime = channel->property("activeTimestamp").toDateTime();
@@ -1369,7 +1371,7 @@ void HistoryDaemon::writeRolesInformationEvents(const QVariantMap &thread, const
 
 History::MessageStatus HistoryDaemon::fromTelepathyDeliveryStatus(Tp::DeliveryStatus deliveryStatus)
 {
-    History::MessageStatus status;
+    History::MessageStatus status = History::MessageStatusUnknown;
     switch (deliveryStatus) {
     case Tp::DeliveryStatusAccepted:
         status = History::MessageStatusAccepted;
@@ -1402,7 +1404,7 @@ History::MessageStatus HistoryDaemon::fromTelepathyDeliveryStatus(Tp::DeliverySt
 
 History::ChatType HistoryDaemon::fromTelepathyHandleType(const Tp::HandleType &type)
 {
-    History::ChatType chatType;
+    History::ChatType chatType = History::ChatTypeNone;
     switch(type) {
     case Tp::HandleTypeContact:
         chatType = History::ChatTypeContact;
