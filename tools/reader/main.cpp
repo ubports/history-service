@@ -45,6 +45,9 @@ void printEvent(const History::Event &event)
         voiceEvent = event;
         extraInfo = QString("missed: %1\n      duration: %2").arg(voiceEvent.missed() ? "yes" : "no", voiceEvent.duration().toString());
         break;
+    case History::EventTypeNull:
+        extraInfo = QString("Null event");
+        break;
     }
 
     qDebug() << qPrintable(QString("    * Event: accountId: %1\n      threadId: %2\n      eventId: %3\n      senderId: %4\n      timestamp: %5\n      newEvent: %6")
@@ -62,6 +65,9 @@ void printThread(const History::Thread &thread)
         break;
     case History::EventTypeVoice:
         type = "Voice";
+        break;
+    case History::EventTypeNull:
+        type = "Null";
         break;
     }
 

@@ -59,7 +59,7 @@ MockCallChannel::MockCallChannel(MockConnection *conn, QString phoneNumber, QStr
     QTimer::singleShot(0, this, SLOT(init()));
 }
 
-void MockCallChannel::onHangup(uint reason, const QString &detailedReason, const QString &message, Tp::DBusError *error)
+void MockCallChannel::onHangup(uint /* reason */, const QString& /* detailedReason */, const QString& /* message */, Tp::DBusError* /* error */)
 {
     // TODO: use the parameters sent by telepathy
     mRequestedHangup = true;
@@ -114,7 +114,7 @@ void MockCallChannel::onOfonoMuteChanged(bool mute)
     mMuteIface->setMuteState(state);
 }
 
-void MockCallChannel::onHoldStateChanged(const Tp::LocalHoldState &state, const Tp::LocalHoldStateReason &reason, Tp::DBusError *error)
+void MockCallChannel::onHoldStateChanged(const Tp::LocalHoldState &state, const Tp::LocalHoldStateReason& /* reason */, Tp::DBusError* /* error */)
 {
     if (state == Tp::LocalHoldStateHeld && mState == "active") {
         setCallState("held");
@@ -123,7 +123,7 @@ void MockCallChannel::onHoldStateChanged(const Tp::LocalHoldState &state, const 
     }
 }
 
-void MockCallChannel::onMuteStateChanged(const Tp::LocalMuteState &state, Tp::DBusError *error)
+void MockCallChannel::onMuteStateChanged(const Tp::LocalMuteState &state, Tp::DBusError* /* error */)
 {
 #if 0
     FIXME: reimplement
@@ -132,10 +132,12 @@ void MockCallChannel::onMuteStateChanged(const Tp::LocalMuteState &state, Tp::DB
     } else if (state == Tp::LocalMuteStateUnmuted) {
         mConnection->callVolume()->setMuted(false);
     }
+#else
+    Q_UNUSED(state);
 #endif
 }
 
-void MockCallChannel::onDTMFStartTone(uchar event, Tp::DBusError *error)
+void MockCallChannel::onDTMFStartTone(uchar event, Tp::DBusError* /* error */)
 {
     QString finalString;
     if (event == 10) {
@@ -149,11 +151,11 @@ void MockCallChannel::onDTMFStartTone(uchar event, Tp::DBusError *error)
     qDebug() << "start tone" << finalString;
 }
 
-void MockCallChannel::onDTMFStopTone(Tp::DBusError *error)
+void MockCallChannel::onDTMFStopTone(Tp::DBusError* /* error */)
 {
 }
 
-void MockCallChannel::onSplit(Tp::DBusError *error)
+void MockCallChannel::onSplit(Tp::DBusError* /* error */)
 {
     Q_EMIT splitted();
 }

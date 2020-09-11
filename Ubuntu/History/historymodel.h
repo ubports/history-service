@@ -214,13 +214,13 @@ protected:
     bool mMatchContacts;
 
 private:
-    QHash<int, QByteArray> mRoles;
     History::Events mEventWritingQueue;
-    int mEventWritingTimer;
-    History::Threads mThreadWritingQueue;
-    int mThreadWritingTimer;
     int mUpdateTimer;
+    int mEventWritingTimer;
+    int mThreadWritingTimer;
     bool mWaitingForQml;
+    History::Threads mThreadWritingQueue;
+    QHash<int, QByteArray> mRoles;
 };
 
 #endif // HISTORYMODEL_H

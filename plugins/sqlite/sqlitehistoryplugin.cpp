@@ -708,7 +708,7 @@ bool SQLiteHistoryPlugin::updateRoomParticipantsRoles(const QString &accountId, 
     return true;
 }
 
-bool SQLiteHistoryPlugin::updateRoomInfo(const QString &accountId, const QString &threadId, History::EventType type, const QVariantMap &properties, const QStringList &invalidated)
+bool SQLiteHistoryPlugin::updateRoomInfo(const QString &accountId, const QString &threadId, History::EventType type, const QVariantMap &properties, const QStringList& /* invalidated */)
 {
     QSqlQuery query(SQLiteDatabase::instance()->database());
 
@@ -1207,6 +1207,9 @@ QString SQLiteHistoryPlugin::sqlQueryForThreads(History::EventType type, const Q
         table = "voice_events";
         extraFields << "voice_events.duration" << "voice_events.missed" << "voice_events.remoteParticipant";
         break;
+    case History::EventTypeNull:
+        qWarning("SQLiteHistoryPlugin::sqlQueryForThreads: Got EventTypeNull, ignoring this event!");
+        break;
     }
 
     fields << QString("%1.senderId").arg(table)
@@ -1371,6 +1374,9 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseThreadResults(History::EventType ty
             thread[History::FieldRemoteParticipant] = History::ContactMatcher::instance()->contactInfo(accountId, query.value(10).toString(), true);
             threads << thread;
             break;
+        case History::EventTypeNull:
+            qWarning("SQLiteHistoryPlugin::parseThreadResults: Got EventTypeNull, ignoring this event!");
+            break;
         }
     }
 
@@ -1406,6 +1412,9 @@ QString SQLiteHistoryPlugin::sqlQueryForEvents(History::EventType type, const QS
         participantsField = participantsField.arg("voice_events", QString::number(type));
         queryText = QString("SELECT accountId, threadId, eventId, senderId, timestamp, newEvent, %1, "
                             "duration, missed, remoteParticipant FROM voice_events %2 %3").arg(participantsField, modifiedCondition, order);
+        break;
+    case History::EventTypeNull:
+        qWarning("SQLiteHistoryPlugin::sqlQueryForEvents: Got EventTypeNull, ignoring this event!");
         break;
     }
 
@@ -1482,6 +1491,9 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseEventResults(History::EventType typ
             event[History::FieldDuration] = query.value(7).toInt();
             event[History::FieldMissed] = query.value(8);
             event[History::FieldRemoteParticipant] = query.value(9).toString();
+            break;
+        case History::EventTypeNull:
+            qWarning("SQLiteHistoryPlugin::parseEventResults: Got EventTypeNull, ignoring this event!");
             break;
         }
 

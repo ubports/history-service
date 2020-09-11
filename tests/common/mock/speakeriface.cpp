@@ -111,7 +111,7 @@ ChannelInterfaceSpeakerAdaptor::~ChannelInterfaceSpeakerAdaptor()
 
 void ChannelInterfaceSpeakerAdaptor::turnOnSpeaker(bool active, const QDBusMessage& dbusMessage)
 {
-    if (!adaptee()->metaObject()->indexOfMethod("turnOnSpeaker(bool,ChannelInterfaceSpeakerAdaptor::turnOnSpeakerContextPtr)") == -1) {
+    if (!adaptee()->metaObject()->indexOfMethod("turnOnSpeaker(bool,ChannelInterfaceSpeakerAdaptor::turnOnSpeakerContextPtr)")) {
         dbusConnection().send(dbusMessage.createErrorReply(TP_QT_ERROR_NOT_IMPLEMENTED, QLatin1String("Not implemented")));
         return;
     }
@@ -128,4 +128,3 @@ bool ChannelInterfaceSpeakerAdaptor::SpeakerMode() const
 {
     return qvariant_cast< bool >(adaptee()->property("speakerMode"));
 }
-

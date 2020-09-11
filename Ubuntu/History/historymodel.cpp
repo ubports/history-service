@@ -59,7 +59,7 @@ HistoryModel::HistoryModel(QObject *parent) :
     triggerQueryUpdate();
 }
 
-bool HistoryModel::canFetchMore(const QModelIndex &parent) const
+bool HistoryModel::canFetchMore(const QModelIndex& /* parent */) const
 {
     return false;
 }
@@ -526,6 +526,9 @@ bool HistoryModel::markEventAsRead(const QVariantMap &eventProperties)
         break;
     case History::EventTypeVoice:
         event = History::VoiceEvent::fromProperties(eventProperties);
+        break;
+    case History::EventTypeNull:
+        qWarning("HistoryModel::markEventAsRead: Got EventTypeNull, ignoring this event!");
         break;
     }
 

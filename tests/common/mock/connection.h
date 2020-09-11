@@ -150,8 +150,8 @@ private:
     MockConferenceCallChannel *mConferenceCall;
 
     QStringList mEmergencyNumbers;
-    int mVoicemailCount;
     bool mVoicemailIndicator;
+    int mVoicemailCount;
     QString mVoicemailNumber;
 };
 

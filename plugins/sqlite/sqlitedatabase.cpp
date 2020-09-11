@@ -37,21 +37,21 @@ Q_DECLARE_OPAQUE_POINTER(sqlite3*)
 Q_DECLARE_METATYPE(sqlite3*)
 
 // custom sqlite function "comparePhoneNumbers" used to compare IDs if necessary
-void comparePhoneNumbers(sqlite3_context *context, int argc, sqlite3_value **argv)
+void comparePhoneNumbers(sqlite3_context *context, int /* argc */, sqlite3_value **argv)
 {
     QString arg1((const char*)sqlite3_value_text(argv[0]));
     QString arg2((const char*)sqlite3_value_text(argv[1]));
     sqlite3_result_int(context, (int)History::PhoneUtils::comparePhoneNumbers(arg1, arg2));
 }
 
-void compareNormalizedPhoneNumbers(sqlite3_context *context, int argc, sqlite3_value **argv)
+void compareNormalizedPhoneNumbers(sqlite3_context *context, int /* argc */, sqlite3_value **argv)
 {
     QString arg1((const char*)sqlite3_value_text(argv[0]));
     QString arg2((const char*)sqlite3_value_text(argv[1]));
     sqlite3_result_int(context, (int)History::PhoneUtils::compareNormalizedPhoneNumbers(arg1, arg2));
 }
 
-void normalizeId(sqlite3_context *context, int argc, sqlite3_value **argv)
+void normalizeId(sqlite3_context *context, int /* argc */, sqlite3_value **argv)
 {
     QString accountId((const char*)sqlite3_value_text(argv[0]));
     QString id((const char*)sqlite3_value_text(argv[1]));
@@ -131,7 +131,7 @@ bool SQLiteDatabase::reopen()
 
     // make sure the database is up-to-date after reopening.
     // this is mainly required for the memory backend used for testing
-    createOrUpdateDatabase();
+    return createOrUpdateDatabase();
 }
 
 QString SQLiteDatabase::dumpSchema() const
@@ -184,7 +184,7 @@ bool SQLiteDatabase::runMultipleStatements(const QStringList &statements, bool u
 }
 
 
-void trace(void *something, const char *query)
+void trace(void* /* something */, const char *query)
 {
     qDebug() << "SQLITE TRACE:" << query;
 }
@@ -454,5 +454,6 @@ bool SQLiteDatabase::convertOfonoGroupChatToRoom()
         queryInsertRoom.clear();
     }
     query.clear();
-}
 
+    return true;
+}

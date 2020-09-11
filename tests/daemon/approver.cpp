@@ -171,9 +171,7 @@ Tp::ChannelDispatchOperationPtr Approver::dispatchOperation(Tp::PendingOperation
     return Tp::ChannelDispatchOperationPtr();
 }
 
-void Approver::onChannelReady(Tp::PendingOperation *op)
+void Approver::onChannelReady(Tp::PendingOperation* /* op */)
 {
     Q_EMIT newCall();
 }
-
-

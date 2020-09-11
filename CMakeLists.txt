@@ -77,6 +77,13 @@ enable_testing()
 
 add_definitions(-std=c++11)
 
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu99 -Wall -Werror -Wextra")
+# TODO remove the need for -Wno-unused-variable
+# unused-variable currently fails because of public headers includes static char's
+# there is also a gcc bug that makes it not possable to rely on diagnostic pragmas
+# https://gcc.gnu.org/bugzilla/show_bug.cgi?id=69967
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror -Wextra -Wno-unused-variable")
+
 # Define the version to be used in the library
 set(HISTORY_VERSION_MAJOR 0)
 set(HISTORY_VERSION_MINOR 0)
@@ -107,5 +114,3 @@ IF(CMAKE_BUILD_TYPE MATCHES [cC][oO][vV][eE][rR][aA][gG][eE])
   GET_DIRECTORY_PROPERTY(COVERAGE_TARGETS DIRECTORY ${CMAKE_SOURCE_DIR} COVERAGE_TARGETS)
   ENABLE_COVERAGE_REPORT(TARGETS ${COVERAGE_TARGETS})
 ENDIF(CMAKE_BUILD_TYPE MATCHES [cC][oO][vV][eE][rR][aA][gG][eE])
-
-

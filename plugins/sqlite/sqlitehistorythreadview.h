@@ -45,12 +45,12 @@ public:
     bool IsValid() const;
 
 private:
+    SQLiteHistoryPlugin *mPlugin;
     History::EventType mType;
     History::Sort mSort;
     History::Filter mFilter;
-    QSqlQuery mQuery;
     int mPageSize;
-    SQLiteHistoryPlugin *mPlugin;
+    QSqlQuery mQuery;
     QString mTemporaryTable;
     int mOffset;
     bool mValid;

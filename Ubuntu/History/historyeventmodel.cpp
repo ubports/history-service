@@ -86,6 +86,9 @@ QVariant HistoryEventModel::eventData(const History::Event &event, int role) con
     case History::EventTypeVoice:
         voiceEvent = event;
         break;
+    case History::EventTypeNull:
+        qWarning("HistoryEventModel::eventData: Got EventTypeNull, ignoring this event!");
+        break;
     }
 
     QVariant result;

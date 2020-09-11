@@ -67,7 +67,8 @@ enum MessageStatus
     MessageStatusRead,
     MessageStatusDeleted,
     MessageStatusPending, // pending attachment download
-    MessageStatusDraft
+    MessageStatusDraft,
+    _MessageStatusPadding
 };
 
 enum MessageType
@@ -100,7 +101,10 @@ enum ChatType
 {
     ChatTypeNone = 0,
     ChatTypeContact = 1,
-    ChatTypeRoom = 2
+    ChatTypeRoom = 2,
+    ChatTypeGroup = 3,
+    ChatTypeList = 4,
+    _ChatTypePadding = 5
 };
 
 // FIXME (boiko): I think this needs to be changed to a simple enum and not flags,
@@ -134,6 +138,12 @@ enum EventWriteResult {
     EventWriteModified,
     EventWriteError
 };
+
+// Since these might not get used in evey file that
+// includes this file, lets ignore the unused-variable
+// warning
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
 
 // dbus service, object path and interface
 static const char* DBusService = "com.canonical.HistoryService";
@@ -225,6 +235,8 @@ static const char* FieldIdentifier = "identifier";
 static const char* FieldDetailProperties = "detailProperties";
 static const char* FieldParticipantState = "state";
 static const char* FieldParticipantRoles = "roles";
+
+#pragma GCC diagnostic pop
 
 }
 

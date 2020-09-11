@@ -454,6 +454,9 @@ bool HistoryDaemon::writeEvents(const QList<QVariantMap> &events, const QVariant
         case History::EventTypeVoice:
             result = mBackend->writeVoiceEvent(savedEvent);
             break;
+        case History::EventTypeNull:
+            qWarning("HistoryDaemon::writeEvents: Got EventTypeNull, ignoring this event!");
+            break;
         }
 
         // only get the thread AFTER the event is written to make sure it is up-to-date
@@ -513,6 +516,9 @@ bool HistoryDaemon::removeEvents(const QList<QVariantMap> &events)
             break;
         case History::EventTypeVoice:
             success = mBackend->removeVoiceEvent(event);
+            break;
+        case History::EventTypeNull:
+            qWarning("HistoryDaemon::removeEvents: Got EventTypeNull, ignoring this event!");
             break;
         }
 
@@ -776,10 +782,10 @@ void HistoryDaemon::onTextChannelAvailable(const Tp::TextChannelPtr channel)
 }
 
 void HistoryDaemon::onGroupMembersChanged(const Tp::Contacts &groupMembersAdded,
-                                          const Tp::Contacts &groupLocalPendingMembersAdded,
+                                          const Tp::Contacts& /* groupLocalPendingMembersAdded */,
                                           const Tp::Contacts &groupRemotePendingMembersAdded,
                                           const Tp::Contacts &groupMembersRemoved,
-                                          const Tp::Channel::GroupMemberChangeDetails &details)
+                                          const Tp::Channel::GroupMemberChangeDetails& /* details */)
 {
     Tp::TextChannelPtr channel(qobject_cast<Tp::TextChannel*>(sender()));
 
@@ -842,8 +848,14 @@ void HistoryDaemon::onGroupMembersChanged(const Tp::Contacts &groupMembersAdded,
                         case ChannelGroupChangeReasonKicked:
                             type = History::InformationTypeSelfKicked;
                             break;
+// As ChannelGroupChangeReasonGone is not in telepathy, we need to ignore the warning
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch"
                         case ChannelGroupChangeReasonGone:
                             type = History::InformationTypeGroupGone;
+                            break;
+#pragma GCC diagnostic pop
+                        default:
                             break;
                         }
                     }
@@ -1380,6 +1392,9 @@ History::MessageStatus HistoryDaemon::fromTelepathyDeliveryStatus(Tp::DeliverySt
     case Tp::DeliveryStatusUnknown:
         status = History::MessageStatusUnknown;
         break;
+    case Tp::_DeliveryStatusPadding:
+        status = History::_MessageStatusPadding;
+        break;
     }
 
     return status;
@@ -1397,6 +1412,15 @@ History::ChatType HistoryDaemon::fromTelepathyHandleType(const Tp::HandleType &t
         break;
     case Tp::HandleTypeRoom:
         chatType = History::ChatTypeRoom;
+        break;
+    case Tp::HandleTypeGroup:
+        chatType = History::ChatTypeGroup;
+        break;
+    case Tp::HandleTypeList:
+        chatType = History::ChatTypeList;
+        break;
+    case Tp::_HandleTypePadding:
+        chatType = History::_ChatTypePadding;
         break;
     }
 
