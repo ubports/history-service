@@ -62,6 +62,7 @@ void HistoryEventModelTest::testTelepathyInitializedCorrectly()
                              "theEventId",
                              participant,
                              QDateTime::currentDateTime(),
+                             QDateTime::currentDateTime().addSecs(-10),
                              true,
                              "Hi there",
                              History::MessageTypeText,

@@ -93,7 +93,7 @@ void ThreadTest::testCreateNewThread()
     case History::EventTypeText:
         // the eventId doesn´t really matter here, just faking a random one to not use always the same
         event = History::TextEvent(accountId, threadId, QString("eventId%1").arg(QString::number(qrand() % 1024)),
-                                   participants[0], QDateTime::currentDateTime(), false, "Random Message",
+                                   participants[0], QDateTime::currentDateTime(),QDateTime::currentDateTime().addSecs(-10), false, "Random Message",
                                    History::MessageTypeText);
         break;
     case History::EventTypeVoice:
@@ -151,7 +151,7 @@ void ThreadTest::testFromProperties()
     case History::EventTypeText:
         // the eventId doesn´t really matter here, just faking a random one to not use always the same
         event = History::TextEvent(accountId, threadId, QString("eventId%1").arg(QString::number(qrand() % 1024)),
-                                   participants[0], QDateTime::currentDateTime(), false, "Random Message",
+                                   participants[0], QDateTime::currentDateTime(), QDateTime::currentDateTime().addSecs(-10), false, "Random Message",
                                    History::MessageTypeText);
         break;
     case History::EventTypeVoice:
@@ -222,7 +222,7 @@ void ThreadTest::testProperties()
     case History::EventTypeText:
         // the eventId doesn´t really matter here, just faking a random one to not use always the same
         event = History::TextEvent(accountId, threadId, QString("eventId%1").arg(QString::number(qrand() % 1024)),
-                                   participants[0], QDateTime::currentDateTime(), false, "Random Message",
+                                   participants[0], QDateTime::currentDateTime(), QDateTime::currentDateTime().addSecs(-10), false, "Random Message",
                                    History::MessageTypeText);
         break;
     case History::EventTypeVoice:

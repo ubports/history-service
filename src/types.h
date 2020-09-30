@@ -153,6 +153,7 @@ static const char* FieldCount = "count";
 static const char* FieldUnreadCount = "unreadCount";
 static const char* FieldSenderId = "senderId";
 static const char* FieldTimestamp = "timestamp";
+static const char* FieldSentTime = "sentTime";
 static const char* FieldDate = "date";
 static const char* FieldNewEvent = "newEvent";
 static const char* FieldChatType = "chatType";

@@ -155,6 +155,7 @@ void ManagerTest::testWriteEvents()
                                      QString("eventId%1").arg(i),
                                      textParticipant,
                                      QDateTime::currentDateTime(),
+                                     QDateTime::currentDateTime().addSecs(-10),
                                      true,
                                      QString("Hello world %1").arg(i),
                                      History::MessageTypeText,
@@ -234,6 +235,7 @@ void ManagerTest::testRemoveEvents()
                                      QString("eventToBeRemoved%1").arg(i),
                                      textParticipant,
                                      QDateTime::currentDateTime(),
+                                     QDateTime::currentDateTime().addSecs(-10),
                                      true,
                                      QString("Hello world %1").arg(i),
                                      History::MessageTypeText);
@@ -301,6 +303,7 @@ void ManagerTest::testGetSingleEvent()
                                  "singleEventId",
                                  "self",
                                  QDateTime::currentDateTime(),
+                                 QDateTime::currentDateTime().addSecs(-10),
                                  true,
                                  "Hello big world!",
                                  History::MessageTypeText,
@@ -323,6 +326,7 @@ void ManagerTest::testGetSingleEvent()
     QVERIFY(retrievedTextEvent == textEvent);
     QCOMPARE(retrievedTextEvent.newEvent(), textEvent.newEvent());
     QCOMPARE(retrievedTextEvent.message(), textEvent.message());
+    QCOMPARE(retrievedTextEvent.sentTime(), textEvent.sentTime());
     QCOMPARE(retrievedTextEvent.messageType(), textEvent.messageType());
     QCOMPARE(retrievedTextEvent.messageStatus(), textEvent.messageStatus());
 

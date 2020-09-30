@@ -46,6 +46,7 @@ int main(int argc, char *argv[])
     QString number;
     int idx = 0;
     QDateTime datetime = QDateTime::currentDateTime();
+    QDateTime sentTime = datetime.addSecs(-10);
     int control = 0;
     while (idx < 50) {
         idx ++;
@@ -79,6 +80,7 @@ int main(int argc, char *argv[])
                      eventId,
                      sender,
                      datetime,
+                     sentTime,
                      true,
                      QString::fromStdString("the text message"),
                      MessageTypeText,

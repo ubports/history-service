@@ -125,6 +125,7 @@ public:
         ParticipantIdsRole,
         TypeRole,
         TimestampRole,
+        SentTimeRole,
         PropertiesRole,
         LastRole
     };

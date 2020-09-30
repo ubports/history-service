@@ -41,6 +41,7 @@ TextEventPrivate::TextEventPrivate(const QString &theAccountId,
                                  const QString &theEventId,
                                  const QString &theSender,
                                  const QDateTime &theTimestamp,
+                                 const QDateTime &theSentTime,
                                  bool theNewEvent,
                                  const QString &theMessage,
                                  MessageType theMessageType,
@@ -51,7 +52,7 @@ TextEventPrivate::TextEventPrivate(const QString &theAccountId,
                                  const TextEventAttachments &theAttachments, const Participants &theParticipants) :
     EventPrivate(theAccountId, theThreadId, theEventId, theSender, theTimestamp, theNewEvent, theParticipants),
     message(theMessage), messageType(theMessageType), messageStatus(theMessageStatus),
-    readTimestamp(theReadTimestamp), subject(theSubject), informationType(theInformationType), attachments(theAttachments)
+    readTimestamp(theReadTimestamp), subject(theSubject), informationType(theInformationType), attachments(theAttachments), sentTime(theSentTime)
 {
 }
 
@@ -72,6 +73,7 @@ QVariantMap TextEventPrivate::properties() const
     map[FieldMessageType] = (int)messageType;
     map[FieldMessageStatus] = (int)messageStatus;
     map[FieldReadTimestamp] = readTimestamp.toString("yyyy-MM-ddTHH:mm:ss.zzz");
+    map[FieldSentTime] = sentTime.toString("yyyy-MM-ddTHH:mm:ss.zzz");
     map[FieldSubject] = subject;
     map[FieldInformationType] = informationType;
 
@@ -98,6 +100,7 @@ TextEvent::TextEvent(const QString &accountId,
                    const QString &eventId,
                    const QString &sender,
                    const QDateTime &timestamp,
+                    const QDateTime &sentTime,
                    bool newEvent,
                    const QString &message,
                    MessageType messageType,
@@ -107,7 +110,29 @@ TextEvent::TextEvent(const QString &accountId,
                    InformationType informationType,
                    const TextEventAttachments &attachments,
                    const Participants &participants)
-    : Event(*new TextEventPrivate(accountId, threadId, eventId, sender, timestamp, newEvent,
+    : Event(*new TextEventPrivate(accountId, threadId, eventId, sender, timestamp, sentTime, newEvent,
+                                  message, messageType, messageStatus, readTimestamp, subject, informationType,
+                                  attachments, participants))
+{
+    qDBusRegisterMetaType<QList<QVariantMap> >();
+    qRegisterMetaType<QList<QVariantMap> >();
+}
+
+TextEvent::TextEvent(const QString &accountId,
+                   const QString &threadId,
+                   const QString &eventId,
+                   const QString &sender,
+                   const QDateTime &timestamp,
+                   bool newEvent,
+                   const QString &message,
+                   MessageType messageType,
+                   MessageStatus messageStatus,
+                   const QDateTime &readTimestamp,
+                   const QString &subject,
+                   InformationType informationType,
+                   const TextEventAttachments &attachments,
+                   const Participants &participants)
+    : Event(*new TextEventPrivate(accountId, threadId, eventId, sender, timestamp, timestamp, newEvent,
                                   message, messageType, messageStatus, readTimestamp, subject, informationType,
                                   attachments, participants))
 {
@@ -141,6 +166,18 @@ void TextEvent::setMessageStatus(const MessageStatus &value)
 {
     Q_D(TextEvent);
     d->messageStatus = value;
+}
+
+QDateTime TextEvent::sentTime() const
+{
+    Q_D(const TextEvent);
+    return d->sentTime;
+}
+
+void TextEvent::setSentTime(const QDateTime &value)
+{
+    Q_D(TextEvent);
+    d->sentTime = value;
 }
 
 QDateTime TextEvent::readTimestamp() const
@@ -185,6 +222,7 @@ Event TextEvent::fromProperties(const QVariantMap &properties)
     QString eventId = properties[FieldEventId].toString();
     QString senderId = properties[FieldSenderId].toString();
     QDateTime timestamp = QDateTime::fromString(properties[FieldTimestamp].toString(), Qt::ISODate);
+    QDateTime sentTime = QDateTime::fromString(properties[FieldSentTime].toString(), Qt::ISODate);
     bool newEvent = properties[FieldNewEvent].toBool();
     Participants participants = Participants::fromVariant(properties[FieldParticipants]);
     QString message = properties[FieldMessage].toString();
@@ -212,7 +250,7 @@ Event TextEvent::fromProperties(const QVariantMap &properties)
     }
 
     // and finally create the event
-    event = TextEvent(accountId, threadId, eventId, senderId, timestamp, newEvent,
+    event = TextEvent(accountId, threadId, eventId, senderId, timestamp, sentTime, newEvent,
                       message, messageType, messageStatus, readTimestamp, subject, informationType, attachments, participants);
     return event;
 }
