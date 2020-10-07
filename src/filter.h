@@ -37,7 +37,7 @@ class Filter
 {
     Q_DECLARE_PRIVATE(Filter)
 public:
-    Filter(const QString &filterProperty = QString::null,
+    Filter(const QString &filterProperty = QString(),
                   const QVariant &filterValue = QVariant(),
                   MatchFlags matchFlags = MatchCaseSensitive);
     Filter(const Filter &other);
@@ -52,7 +52,7 @@ public:
 
     MatchFlags matchFlags() const;
     void setMatchFlags(const MatchFlags &flags);
-    QString toString(const QString &propertyPrefix = QString::null) const;
+    QString toString(const QString &propertyPrefix = QString()) const;
 
     bool match(const QVariantMap properties) const;
 

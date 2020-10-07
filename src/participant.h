@@ -41,9 +41,9 @@ public:
     explicit Participant();
     Participant(const QString &accountId,
                 const QString &identifier,
-                const QString &contactId = QString::null,
-                const QString &alias = QString::null,
-                const QString &avatar = QString::null,
+                const QString &contactId = QString(),
+                const QString &alias = QString(),
+                const QString &avatar = QString(),
                 uint state = 0,
                 uint roles = 0,
                 const QVariantMap &detailProperties = QVariantMap());

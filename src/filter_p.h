@@ -60,7 +60,7 @@ public:
 
     static const QSharedPointer<FilterPrivate>& getD(const Filter& other) { return other.d_ptr; }
 
-    virtual QString toString(const QString &propertyPrefix = QString::null) const;
+    virtual QString toString(const QString &propertyPrefix = QString()) const;
     virtual bool match(const QVariantMap properties) const;
     virtual FilterType type() const { return History::FilterTypeStandard; }
     virtual bool isValid() const { return (!filterProperty.isNull()) && (!filterValue.isNull()); }

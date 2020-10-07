@@ -45,7 +45,7 @@ public:
                bool newEvent,
                bool missed,
                const QTime &duration = QTime(),
-               const QString &remoteParticipant = QString::null,
+               const QString &remoteParticipant = QString(),
                const Participants &participants = Participants());
     ~VoiceEvent();
 
@@ -68,4 +68,3 @@ public:
 }
 
 #endif
-

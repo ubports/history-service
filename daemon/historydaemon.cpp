@@ -339,7 +339,7 @@ QVariantMap HistoryDaemon::threadForProperties(const QString &accountId,
 QString HistoryDaemon::threadIdForProperties(const QString &accountId, History::EventType type, const QVariantMap &properties, History::MatchFlags matchFlags, bool create)
 {
     if (!mBackend) {
-        return QString::null;
+        return QString();
     }
 
     QString threadId = mBackend->threadIdForProperties(accountId,
@@ -372,7 +372,7 @@ QList<QVariantMap> HistoryDaemon::participantsForThreads(const QList<QVariantMap
 QString HistoryDaemon::queryThreads(int type, const QVariantMap &sort, const QVariantMap &filter, const QVariantMap &properties)
 {
     if (!mBackend) {
-        return QString::null;
+        return QString();
     }
 
     History::Sort theSort = History::Sort::fromProperties(sort);
@@ -380,7 +380,7 @@ QString HistoryDaemon::queryThreads(int type, const QVariantMap &sort, const QVa
     History::PluginThreadView *view = mBackend->queryThreads((History::EventType)type, theSort, theFilter, properties);
 
     if (!view) {
-        return QString::null;
+        return QString();
     }
 
     // FIXME: maybe we should keep a list of views to manually remove them at some point?
@@ -391,7 +391,7 @@ QString HistoryDaemon::queryThreads(int type, const QVariantMap &sort, const QVa
 QString HistoryDaemon::queryEvents(int type, const QVariantMap &sort, const QVariantMap &filter)
 {
     if (!mBackend) {
-        return QString::null;
+        return QString();
     }
 
     History::Sort theSort = History::Sort::fromProperties(sort);
@@ -399,7 +399,7 @@ QString HistoryDaemon::queryEvents(int type, const QVariantMap &sort, const QVar
     History::PluginEventView *view = mBackend->queryEvents((History::EventType)type, theSort, theFilter);
 
     if (!view) {
-        return QString::null;
+        return QString();
     }
 
     // FIXME: maybe we should keep a list of views to manually remove them at some point?

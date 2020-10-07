@@ -145,7 +145,7 @@ QString SQLiteDatabase::dumpSchema() const
                     "   SELECT sql, type, tbl_name, name, rowid FROM sqlite_temp_master) "
                     "WHERE type!='meta' AND sql NOTNULL AND name NOT LIKE 'sqlite_%' "
                     "ORDER BY rowid")) {
-        return QString::null;
+        return QString();
     }
 
     QString schema;
@@ -455,4 +455,3 @@ bool SQLiteDatabase::convertOfonoGroupChatToRoom()
     }
     query.clear();
 }
-
