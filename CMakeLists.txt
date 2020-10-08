@@ -97,7 +97,8 @@ add_subdirectory(tools)
 add_subdirectory(Ubuntu)
 add_subdirectory(tests)
 
-include(EnableCoverageReport)
+find_package(CoverageReport)
+# Coverage
 #####################################################################
 # Enable code coverage calculation with gcov/gcovr/lcov
 # Usage:
