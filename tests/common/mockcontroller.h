@@ -63,9 +63,9 @@ public Q_SLOTS:
     QString serial();
 
 private:
-    QDBusInterface mMockInterface;
     QString mProtocol;
     QString mMockObject;
+    QDBusInterface mMockInterface;
 };
 
 #endif // MOCKCONTROLLER_H

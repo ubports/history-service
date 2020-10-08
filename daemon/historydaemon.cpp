@@ -439,7 +439,7 @@ bool HistoryDaemon::writeEvents(const QList<QVariantMap> &events, const QVariant
 
     Q_FOREACH(const QVariantMap &event, events) {
         History::EventType type = (History::EventType) event[History::FieldType].toInt();
-        History::EventWriteResult result;
+        History::EventWriteResult result = History::EventWriteNone;
 
         // get the threads for the events to notify their modifications
         QString accountId = event[History::FieldAccountId].toString();
@@ -454,6 +454,9 @@ bool HistoryDaemon::writeEvents(const QList<QVariantMap> &events, const QVariant
         case History::EventTypeVoice:
             result = mBackend->writeVoiceEvent(savedEvent);
             break;
+        case History::EventTypeNull:
+            qWarning("HistoryDaemon::writeEvents: Got EventTypeNull, ignoring this event!");
+            continue;
         }
 
         // only get the thread AFTER the event is written to make sure it is up-to-date
@@ -478,6 +481,8 @@ bool HistoryDaemon::writeEvents(const QList<QVariantMap> &events, const QVariant
         case History::EventWriteError:
             mBackend->rollbackBatchOperation();
             return false;
+        case History::EventWriteNone:
+            break;
         }
     }
 
@@ -513,6 +518,9 @@ bool HistoryDaemon::removeEvents(const QList<QVariantMap> &events)
             break;
         case History::EventTypeVoice:
             success = mBackend->removeVoiceEvent(event);
+            break;
+        case History::EventTypeNull:
+            qWarning("HistoryDaemon::removeEvents: Got EventTypeNull, ignoring this event!");
             break;
         }
 
@@ -650,7 +658,7 @@ void HistoryDaemon::onCallEnded(const Tp::CallChannelPtr &channel, bool missed)
 
     // FIXME: check if checking for isRequested() is enough
     bool incoming = !channel->isRequested();
-    int duration;
+    int duration = 0;
 
     if (!missed) {
         QDateTime activeTime = channel->property("activeTimestamp").toDateTime();
@@ -776,10 +784,10 @@ void HistoryDaemon::onTextChannelAvailable(const Tp::TextChannelPtr channel)
 }
 
 void HistoryDaemon::onGroupMembersChanged(const Tp::Contacts &groupMembersAdded,
-                                          const Tp::Contacts &groupLocalPendingMembersAdded,
+                                          const Tp::Contacts& /* groupLocalPendingMembersAdded */,
                                           const Tp::Contacts &groupRemotePendingMembersAdded,
                                           const Tp::Contacts &groupMembersRemoved,
-                                          const Tp::Channel::GroupMemberChangeDetails &details)
+                                          const Tp::Channel::GroupMemberChangeDetails& /* details */)
 {
     Tp::TextChannelPtr channel(qobject_cast<Tp::TextChannel*>(sender()));
 
@@ -842,8 +850,14 @@ void HistoryDaemon::onGroupMembersChanged(const Tp::Contacts &groupMembersAdded,
                         case ChannelGroupChangeReasonKicked:
                             type = History::InformationTypeSelfKicked;
                             break;
+// As ChannelGroupChangeReasonGone is not in telepathy, we need to ignore the warning
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch"
                         case ChannelGroupChangeReasonGone:
                             type = History::InformationTypeGroupGone;
+                            break;
+#pragma GCC diagnostic pop
+                        default:
                             break;
                         }
                     }
@@ -1357,7 +1371,7 @@ void HistoryDaemon::writeRolesInformationEvents(const QVariantMap &thread, const
 
 History::MessageStatus HistoryDaemon::fromTelepathyDeliveryStatus(Tp::DeliveryStatus deliveryStatus)
 {
-    History::MessageStatus status;
+    History::MessageStatus status = History::MessageStatusUnknown;
     switch (deliveryStatus) {
     case Tp::DeliveryStatusAccepted:
         status = History::MessageStatusAccepted;
@@ -1380,6 +1394,9 @@ History::MessageStatus HistoryDaemon::fromTelepathyDeliveryStatus(Tp::DeliverySt
     case Tp::DeliveryStatusUnknown:
         status = History::MessageStatusUnknown;
         break;
+    case Tp::_DeliveryStatusPadding:
+        status = History::_MessageStatusPadding;
+        break;
     }
 
     return status;
@@ -1387,7 +1404,7 @@ History::MessageStatus HistoryDaemon::fromTelepathyDeliveryStatus(Tp::DeliverySt
 
 History::ChatType HistoryDaemon::fromTelepathyHandleType(const Tp::HandleType &type)
 {
-    History::ChatType chatType;
+    History::ChatType chatType = History::ChatTypeNone;
     switch(type) {
     case Tp::HandleTypeContact:
         chatType = History::ChatTypeContact;
@@ -1397,6 +1414,15 @@ History::ChatType HistoryDaemon::fromTelepathyHandleType(const Tp::HandleType &t
         break;
     case Tp::HandleTypeRoom:
         chatType = History::ChatTypeRoom;
+        break;
+    case Tp::HandleTypeGroup:
+        chatType = History::ChatTypeGroup;
+        break;
+    case Tp::HandleTypeList:
+        chatType = History::ChatTypeList;
+        break;
+    case Tp::_HandleTypePadding:
+        chatType = History::_ChatTypePadding;
         break;
     }
 

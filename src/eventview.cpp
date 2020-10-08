@@ -169,6 +169,9 @@ QList<Event> EventView::nextPage()
         case EventTypeVoice:
             event = VoiceEvent::fromProperties(properties);
             break;
+        case EventTypeNull:
+            qWarning("EventView::nextPage(): Got EventTypeNull, ignoring this event!");
+            break;
         }
 
         if (!event.isNull()) {

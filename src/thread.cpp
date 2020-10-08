@@ -286,6 +286,9 @@ Thread Thread::fromProperties(const QVariantMap &properties)
         case EventTypeVoice:
             event = VoiceEvent::fromProperties(properties);
             break;
+        case EventTypeNull:
+            qWarning("Thread::fromProperties: Got EventTypeNull, using NULL event!");
+            break;
     }
     return Thread(accountId, threadId, type, participants, timestamp, event, count, unreadCount, groupedThreads, chatType, chatRoomInfo);
 }

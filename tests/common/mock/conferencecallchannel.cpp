@@ -22,7 +22,7 @@
 #include "callchannel.h"
 
 
-MockConferenceCallChannel::MockConferenceCallChannel(MockConnection *conn, QList<QDBusObjectPath> callChannels, QObject *parent):
+MockConferenceCallChannel::MockConferenceCallChannel(MockConnection *conn, QList<QDBusObjectPath> callChannels, QObject* /* parent */):
     mRequestedHangup(false),
     mConnection(conn),
     mDtmfLock(false),
@@ -89,7 +89,7 @@ Tp::BaseChannelPtr MockConferenceCallChannel::baseChannel()
     return mBaseChannel;
 }
 
-void MockConferenceCallChannel::onMerge(const QDBusObjectPath &channel, Tp::DBusError *error)
+void MockConferenceCallChannel::onMerge(const QDBusObjectPath &channel, Tp::DBusError* /* error */)
 {
     if (!mCallChannels.contains(channel)) {
         mCallChannels << channel;
@@ -120,13 +120,13 @@ void MockConferenceCallChannel::onChannelSplitted(const QDBusObjectPath &path)
     }
 }
 
-void MockConferenceCallChannel::onTurnOnSpeaker(bool active, Tp::DBusError *error)
+void MockConferenceCallChannel::onTurnOnSpeaker(bool /* active */, Tp::DBusError* /* error */)
 {
     //mConnection->setSpeakerMode(active);
     // FIXME: reimplement
 }
 
-void MockConferenceCallChannel::onHangup(uint reason, const QString &detailedReason, const QString &message, Tp::DBusError *error)
+void MockConferenceCallChannel::onHangup(uint reason, const QString& /* detailedReason */, const QString &message, Tp::DBusError* /* error */)
 {
     //FIXME: reimplement
     Tp::CallStateReason theReason;
@@ -186,7 +186,7 @@ void MockConferenceCallChannel::setConferenceActive(bool active)
     }
 }
 
-void MockConferenceCallChannel::onHoldStateChanged(const Tp::LocalHoldState &state, const Tp::LocalHoldStateReason &reason, Tp::DBusError *error)
+void MockConferenceCallChannel::onHoldStateChanged(const Tp::LocalHoldState& /* state */, const Tp::LocalHoldStateReason& /* reason */, Tp::DBusError* /* error */)
 {
     /*if (state == Tp::LocalHoldStateHeld && mHoldIface->getHoldState() == Tp::LocalHoldStateUnheld) {
         mConnection->voiceCallManager()->swapCalls();
@@ -197,7 +197,7 @@ void MockConferenceCallChannel::onHoldStateChanged(const Tp::LocalHoldState &sta
     // FIXME: reimplement
 }
 
-void MockConferenceCallChannel::onMuteStateChanged(const Tp::LocalMuteState &state, Tp::DBusError *error)
+void MockConferenceCallChannel::onMuteStateChanged(const Tp::LocalMuteState& /* state */, Tp::DBusError* /* error */)
 {
     /*if (state == Tp::LocalMuteStateMuted) {
         mConnection->callVolume()->setMuted(true);
@@ -234,7 +234,7 @@ void MockConferenceCallChannel::onDtmfComplete(bool success)
     }
 }
 
-void MockConferenceCallChannel::onDTMFStartTone(uchar event, Tp::DBusError *error)
+void MockConferenceCallChannel::onDTMFStartTone(uchar event, Tp::DBusError* /* error */)
 {
     QString finalString;
     if (event == 10) {
@@ -256,7 +256,7 @@ void MockConferenceCallChannel::onDTMFStartTone(uchar event, Tp::DBusError *erro
     sendNextDtmf();
 }
 
-void MockConferenceCallChannel::onDTMFStopTone(Tp::DBusError *error)
+void MockConferenceCallChannel::onDTMFStopTone(Tp::DBusError* /* error */)
 {
 }
 

@@ -74,23 +74,23 @@ public:
     virtual QList<QVariantMap> eventsForThread(const QVariantMap &thread) = 0;
 
     // Writer part of the plugin
-    virtual QVariantMap createThreadForParticipants(const QString &accountId, EventType type, const QStringList &participants) { return QVariantMap(); }
-    virtual QVariantMap createThreadForProperties(const QString &accountId, EventType type, const QVariantMap &properties) { return QVariantMap(); }
-    virtual bool updateRoomParticipants(const QString &accountId, const QString &threadId, History::EventType type, const QVariantList &participants) { return false; };
-    virtual bool updateRoomParticipantsRoles(const QString &accountId, const QString &threadId, History::EventType type, const QVariantMap &participantsRoles) { return false; };
-    virtual bool updateRoomInfo(const QString &accountId, const QString &threadId, EventType type, const QVariantMap &properties, const QStringList &invalidated = QStringList()) { return false; };
-    virtual bool removeThread(const QVariantMap &thread) { return false; }
-    virtual QVariantMap markThreadAsRead(const QVariantMap &thread) { return QVariantMap(); }
+    virtual QVariantMap createThreadForParticipants(const QString& /* accountId */, EventType /* type */, const QStringList& /* participants */) { return QVariantMap(); }
+    virtual QVariantMap createThreadForProperties(const QString& /* accountId */, EventType /* type */, const QVariantMap& /* properties */) { return QVariantMap(); }
+    virtual bool updateRoomParticipants(const QString& /* accountId */, const QString& /* threadId */, History::EventType /* type */, const QVariantList& /* participants */) { return false; };
+    virtual bool updateRoomParticipantsRoles(const QString& /* accountId */, const QString& /* threadId */, History::EventType /* type */, const QVariantMap& /* participantsRoles */) { return false; };
+    virtual bool updateRoomInfo(const QString& /* accountId */, const QString& /* threadId */, EventType /* type */, const QVariantMap& /* properties */, const QStringList& /* invalidated */ = QStringList()) { return false; };
+    virtual bool removeThread(const QVariantMap& /* thread */) { return false; }
+    virtual QVariantMap markThreadAsRead(const QVariantMap& /* thread */) { return QVariantMap(); }
 
-    virtual EventWriteResult writeTextEvent(const QVariantMap &event) { return EventWriteError; }
-    virtual bool removeTextEvent(const QVariantMap &event) { return false; }
+    virtual EventWriteResult writeTextEvent(const QVariantMap& /* event */) { return EventWriteError; }
+    virtual bool removeTextEvent(const QVariantMap& /* event */) { return false; }
 
-    virtual EventWriteResult writeVoiceEvent(const QVariantMap &event) { return EventWriteError; }
-    virtual bool removeVoiceEvent(const QVariantMap &event) { return false; }
+    virtual EventWriteResult writeVoiceEvent(const QVariantMap& /* event */) { return EventWriteError; }
+    virtual bool removeVoiceEvent(const QVariantMap& /* event */) { return false; }
 
-    virtual bool beginBatchOperation() {}
-    virtual bool endBatchOperation() {}
-    virtual bool rollbackBatchOperation() {}
+    virtual bool beginBatchOperation() { return false; }
+    virtual bool endBatchOperation() { return false; }
+    virtual bool rollbackBatchOperation() { return false; }
 
     // FIXME: this is hackish, but changing it required a broad refactory of HistoryDaemon
     virtual void generateContactCache() {}

@@ -68,6 +68,7 @@ void CallChannelObserver::onCallStateChanged(Tp::CallState state)
     }
     case Tp::CallStateActive:
         channel->setProperty("activeTimestamp", QDateTime::currentDateTime());
+        // fall through
     default:
         mCallStates[channel] = state;
         break;

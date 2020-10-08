@@ -261,7 +261,13 @@ Event ManagerDBus::eventFromProperties(const QVariantMap &properties)
         return TextEvent::fromProperties(properties);
     case EventTypeVoice:
         return VoiceEvent::fromProperties(properties);
+    case EventTypeNull:
+        qWarning("ManagerDBus::eventFromProperties: Got EventTypeNull, returning NULL event!");
+        return Event();
     }
+
+    // We should NEVER reach this
+    return Event();
 }
 
 Events ManagerDBus::eventsFromProperties(const QList<QVariantMap> &eventsProperties)
@@ -288,4 +294,3 @@ QList<QVariantMap> ManagerDBus::eventsToProperties(const Events &events)
 
 
 }
-

@@ -63,14 +63,14 @@ Q_SIGNALS:
     void splitted();
 
 private:
-    QString mObjPath;
-    QString mState;
     bool mIncoming;
     bool mRequestedHangup;
-    Tp::BaseChannelPtr mBaseChannel;
-    QString mPhoneNumber;
     MockConnection *mConnection;
+    QString mPhoneNumber;
     uint mTargetHandle;
+    QString mState;
+    QString mObjPath;
+    Tp::BaseChannelPtr mBaseChannel;
     Tp::BaseChannelHoldInterfacePtr mHoldIface;
     Tp::BaseCallMuteInterfacePtr mMuteIface;
     Tp::BaseChannelSplittableInterfacePtr mSplittableIface;

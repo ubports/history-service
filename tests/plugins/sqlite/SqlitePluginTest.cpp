@@ -686,6 +686,8 @@ void SqlitePluginTest::testGetSingleEvent()
     case History::EventTypeVoice:
         QCOMPARE(mPlugin->writeVoiceEvent(event), History::EventWriteCreated);
         break;
+    case History::EventTypeNull:
+        break;
     }
 
     QVariantMap retrievedEvent = mPlugin->getSingleEvent(type, event[History::FieldAccountId].toString(),
@@ -708,6 +710,8 @@ void SqlitePluginTest::testGetSingleEvent()
     case History::EventTypeVoice:
         QCOMPARE(retrievedEvent[History::FieldMissed], event[History::FieldMissed]);
         QCOMPARE(retrievedEvent[History::FieldDuration], event[History::FieldDuration]);
+        break;
+    case History::EventTypeNull:
         break;
     }
 }
@@ -820,4 +824,3 @@ void SqlitePluginTest::testEscapeFilterValue()
 
 QTEST_MAIN(SqlitePluginTest)
 #include "SqlitePluginTest.moc"
-

@@ -31,8 +31,8 @@ SQLiteHistoryEventView::SQLiteHistoryEventView(SQLiteHistoryPlugin *plugin,
                                              History::EventType type,
                                              const History::Sort &sort,
                                              const History::Filter &filter)
-    : History::PluginEventView(), mType(type), mSort(sort), mFilter(filter),
-      mQuery(SQLiteDatabase::instance()->database()), mPageSize(15), mPlugin(plugin), mOffset(0), mValid(true)
+    : History::PluginEventView(),  mPlugin(plugin), mType(type), mSort(sort), mFilter(filter),
+      mQuery(SQLiteDatabase::instance()->database()), mPageSize(15), mOffset(0), mValid(true)
 {
     mTemporaryTable = QString("eventview%1%2").arg(QString::number((qulonglong)this), QDateTime::currentDateTimeUtc().toString("yyyyMMddhhmmsszzz"));
     mQuery.setForwardOnly(true);

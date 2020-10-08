@@ -66,7 +66,7 @@ void TextChannelObserver::onMessageReceived(const Tp::ReceivedMessage &message)
     Q_EMIT messageReceived(textChannel, message);
 }
 
-void TextChannelObserver::onMessageSent(const Tp::Message &message, Tp::MessageSendingFlags flags, const QString &sentMessageToken)
+void TextChannelObserver::onMessageSent(const Tp::Message &message, Tp::MessageSendingFlags /* flags */, const QString &sentMessageToken)
 {
     Tp::TextChannelPtr textChannel(qobject_cast<Tp::TextChannel*>(sender()));
     if (textChannel.isNull()) {
