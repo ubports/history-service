@@ -281,7 +281,7 @@ QString HistoryModel::threadIdForProperties(const QString &accountId, int eventT
 {
     QVariantMap newProperties = properties;
     if (properties.isEmpty()) {
-        return QString::null;
+        return QString();
     }
 
     if (newProperties.contains(History::FieldParticipantIds)) {
@@ -297,7 +297,7 @@ QString HistoryModel::threadIdForProperties(const QString &accountId, int eventT
         return thread.threadId();
     }
 
-    return QString::null;
+    return QString();
 }
 
 QVariantMap HistoryModel::threadForParticipants(const QString &accountId, int eventType, const QStringList &participants, int matchFlags, bool create)
@@ -324,7 +324,7 @@ QVariantMap HistoryModel::threadForParticipants(const QString &accountId, int ev
 QString HistoryModel::threadIdForParticipants(const QString &accountId, int eventType, const QStringList &participants, int matchFlags, bool create)
 {
     if (participants.isEmpty()) {
-        return QString::null;
+        return QString();
     }
 
     QVariantMap properties;
@@ -339,7 +339,7 @@ QString HistoryModel::threadIdForParticipants(const QString &accountId, int even
         return thread.threadId();
     }
 
-    return QString::null;
+    return QString();
 }
 
 void HistoryModel::requestThreadParticipants(const QVariantList &threads)

@@ -381,7 +381,7 @@ QVariantMap SQLiteHistoryPlugin::threadForProperties(const QString &accountId,
 QString SQLiteHistoryPlugin::threadIdForProperties(const QString &accountId, History::EventType type, const QVariantMap &properties, History::MatchFlags matchFlags)
 {
     if (properties.isEmpty()) {
-        return QString::null;
+        return QString();
     }
 
     // if chat type is room, just get the threadId directly
@@ -572,7 +572,7 @@ QVariantMap SQLiteHistoryPlugin::getSingleThread(History::EventType type, const 
     }
 
     QString condition = QString("accountId=\"%1\" AND threadId=\"%2\"").arg(accountId, threadId);
-    QString queryText = sqlQueryForThreads(type, condition, QString::null);
+    QString queryText = sqlQueryForThreads(type, condition, QString());
     queryText += " LIMIT 1";
 
     QSqlQuery query(SQLiteDatabase::instance()->database());
@@ -595,7 +595,7 @@ QVariantMap SQLiteHistoryPlugin::getSingleEvent(History::EventType type, const Q
     QVariantMap result;
 
     QString condition = QString("accountId=\"%1\" AND threadId=\"%2\" AND eventId=\"%3\"").arg(accountId, threadId, eventId);
-    QString queryText = sqlQueryForEvents(type, condition, QString::null);
+    QString queryText = sqlQueryForEvents(type, condition, QString());
     queryText += " LIMIT 1";
 
     QSqlQuery query(SQLiteDatabase::instance()->database());
