@@ -68,7 +68,8 @@ enum MessageStatus
     MessageStatusDeleted,
     MessageStatusPending, // pending attachment download
     MessageStatusDraft,
-    _MessageStatusPadding
+    _MessageStatusPadding,
+    MessageStatusReceivedFailed
 };
 
 enum MessageType

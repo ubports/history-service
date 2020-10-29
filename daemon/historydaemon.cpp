@@ -1128,6 +1128,11 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
             attachment[History::FieldStatus] = (int) History::AttachmentDownloaded;
             attachments << attachment;
         }
+
+        // no attachments found, mark that MMS has failed
+        if (message.parts().size() == 0) {
+            status = History::MessageStatusReceivedFailed;
+        }
     }
 
     QVariantMap event;
