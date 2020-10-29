@@ -12,5 +12,6 @@ override_dh_install:
 
 override_dh_auto_test:
 ifeq ($(DEB_BUILD_GNU_TYPE),$(DEB_HOST_GNU_TYPE))
-	CTEST_OUTPUT_ON_FAILURE=1 make -j1 -C obj-$(DEB_HOST_GNU_TYPE) test
+	#CTEST_OUTPUT_ON_FAILURE=1 make -j1 -C obj-$(DEB_HOST_GNU_TYPE) test
+	cd obj-$(DEB_HOST_GNU_TYPE); ctest
 endif
