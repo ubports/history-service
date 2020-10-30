@@ -39,6 +39,8 @@ Q_DECLARE_METATYPE(sqlite3*)
 // custom sqlite function "comparePhoneNumbers" used to compare IDs if necessary
 void comparePhoneNumbers(sqlite3_context *context, int argc, sqlite3_value **argv)
 {
+    Q_ASSERT(argc >= 2);
+
     QString arg1((const char*)sqlite3_value_text(argv[0]));
     QString arg2((const char*)sqlite3_value_text(argv[1]));
     sqlite3_result_int(context, (int)History::PhoneUtils::comparePhoneNumbers(arg1, arg2));
@@ -46,6 +48,8 @@ void comparePhoneNumbers(sqlite3_context *context, int argc, sqlite3_value **arg
 
 void compareNormalizedPhoneNumbers(sqlite3_context *context, int argc, sqlite3_value **argv)
 {
+    Q_ASSERT(argc >= 2);
+
     QString arg1((const char*)sqlite3_value_text(argv[0]));
     QString arg2((const char*)sqlite3_value_text(argv[1]));
     sqlite3_result_int(context, (int)History::PhoneUtils::compareNormalizedPhoneNumbers(arg1, arg2));
@@ -53,6 +57,8 @@ void compareNormalizedPhoneNumbers(sqlite3_context *context, int argc, sqlite3_v
 
 void normalizeId(sqlite3_context *context, int argc, sqlite3_value **argv)
 {
+    Q_ASSERT(argc >= 2);
+
     QString accountId((const char*)sqlite3_value_text(argv[0]));
     QString id((const char*)sqlite3_value_text(argv[1]));
     QString normalizedId = History::Utils::normalizeId(accountId, id);
@@ -131,7 +137,7 @@ bool SQLiteDatabase::reopen()
 
     // make sure the database is up-to-date after reopening.
     // this is mainly required for the memory backend used for testing
-    createOrUpdateDatabase();
+    return createOrUpdateDatabase();
 }
 
 QString SQLiteDatabase::dumpSchema() const
@@ -145,7 +151,7 @@ QString SQLiteDatabase::dumpSchema() const
                     "   SELECT sql, type, tbl_name, name, rowid FROM sqlite_temp_master) "
                     "WHERE type!='meta' AND sql NOTNULL AND name NOT LIKE 'sqlite_%' "
                     "ORDER BY rowid")) {
-        return QString::null;
+        return QString();
     }
 
     QString schema;
@@ -184,7 +190,7 @@ bool SQLiteDatabase::runMultipleStatements(const QStringList &statements, bool u
 }
 
 
-void trace(void *something, const char *query)
+void trace(void* /* something */, const char *query)
 {
     qDebug() << "SQLITE TRACE:" << query;
 }
@@ -454,5 +460,6 @@ bool SQLiteDatabase::convertOfonoGroupChatToRoom()
         queryInsertRoom.clear();
     }
     query.clear();
-}
 
+    return true;
+}

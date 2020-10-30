@@ -101,7 +101,7 @@ void MockTextChannel::messageAcknowledged(const QString &id)
     Q_EMIT messageRead(id);
 }
 
-QString MockTextChannel::sendMessage(const Tp::MessagePartList& message, uint flags, Tp::DBusError* error)
+QString MockTextChannel::sendMessage(const Tp::MessagePartList& message, uint /* flags */, Tp::DBusError* /* error */)
 {
     Tp::MessagePart header = message.at(0);
     Tp::MessagePart body = message.at(1);
@@ -248,12 +248,12 @@ Tp::UIntList MockTextChannel::members()
     return mMembers;
 }
 
-void MockTextChannel::onAddMembers(const Tp::UIntList &handles, const QString &message, Tp::DBusError *error)
+void MockTextChannel::onAddMembers(const Tp::UIntList &handles, const QString& /* message */, Tp::DBusError *error)
 {
     addMembers(mConnection->inspectHandles(Tp::HandleTypeContact, handles, error));
 }
 
-void MockTextChannel::onRemoveMembers(const Tp::UIntList &handles, const QString &message, uint reason, Tp::DBusError *error)
+void MockTextChannel::onRemoveMembers(const Tp::UIntList &handles, const QString& /* message */, uint /* reason */, Tp::DBusError *error)
 {
     Q_FOREACH(uint handle, handles) {
         Q_FOREACH(const QString &recipient, mConnection->inspectHandles(Tp::HandleTypeContact, Tp::UIntList() << handle, error)) {

@@ -280,7 +280,7 @@ void FilterTest::testIsValid_data()
     QTest::addColumn<bool>("isValid");
 
     QTest::newRow("null filter") << History::Filter() << false;
-    QTest::newRow("null property") << History::Filter(QString::null, "Foobar") << false;
+    QTest::newRow("null property") << History::Filter(QString(), "Foobar") << false;
     QTest::newRow("null value") << History::Filter("oneProperty") << false;
     QTest::newRow("valid filter") << History::Filter("oneProperty", "oneValue") << true;
 }

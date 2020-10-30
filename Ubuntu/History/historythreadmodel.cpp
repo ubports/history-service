@@ -97,6 +97,9 @@ QVariant HistoryThreadModel::threadData(const History::Thread &thread, int role)
         case History::EventTypeVoice:
             voiceEvent = event;
             break;
+        case History::EventTypeNull:
+            qWarning("HistoryThreadModel::threadData: Got EventTypeNull, ignoring this event!");
+            break;
         }
     }
 

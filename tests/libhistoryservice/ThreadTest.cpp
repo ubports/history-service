@@ -100,6 +100,8 @@ void ThreadTest::testCreateNewThread()
         event = History::VoiceEvent(accountId, threadId, QString("eventId%1").arg(QString::number(qrand() % 1024)),
                                     participants[0], QDateTime::currentDateTime(), false, false, QTime(1,2,3));
         break;
+    case History::EventTypeNull:
+        break;
     }
 
     History::Thread threadItem(accountId, threadId, type, participantsFromIdentifiers(accountId, participants), event.timestamp(), event, count, unreadCount);
@@ -157,6 +159,8 @@ void ThreadTest::testFromProperties()
     case History::EventTypeVoice:
         event = History::VoiceEvent(accountId, threadId, QString("eventId%1").arg(QString::number(qrand() % 1024)),
                                     participants[0], QDateTime::currentDateTime(), false, false, QTime(1,2,3));
+        break;
+    case History::EventTypeNull:
         break;
     }
 
@@ -228,6 +232,8 @@ void ThreadTest::testProperties()
     case History::EventTypeVoice:
         event = History::VoiceEvent(accountId, threadId, QString("eventId%1").arg(QString::number(qrand() % 1024)),
                                     participants[0], QDateTime::currentDateTime(), false, false, QTime(1,2,3));
+        break;
+    case History::EventTypeNull:
         break;
     }
 

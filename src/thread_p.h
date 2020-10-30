@@ -49,8 +49,8 @@ public:
 
     QString accountId;
     QString threadId;
-    Participants participants;
     EventType type;
+    Participants participants;
     QDateTime timestamp;
     Event lastEvent;
     int count;

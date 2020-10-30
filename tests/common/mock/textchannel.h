@@ -57,14 +57,14 @@ Q_SIGNALS:
 
 private:
     ~MockTextChannel();
-    Tp::BaseChannelPtr mBaseChannel;
-    QStringList mRecipients;
     MockConnection *mConnection;
+    QStringList mRecipients;
     uint mTargetHandle;
+    uint mMessageCounter;
+    Tp::BaseChannelPtr mBaseChannel;
     Tp::BaseChannelMessagesInterfacePtr mMessagesIface;
     Tp::BaseChannelGroupInterfacePtr mGroupIface;
     Tp::BaseChannelTextTypePtr mTextChannel;
-    uint mMessageCounter;
     Tp::UIntList mMembers;
 };
 

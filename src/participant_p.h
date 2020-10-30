@@ -36,9 +36,9 @@ public:
     explicit ParticipantPrivate();
     ParticipantPrivate(const QString &theAccountId,
                        const QString &theIdentifier,
-                       const QString &theContactId = QString::null,
-                       const QString &theAlias = QString::null,
-                       const QString &theAvatar = QString::null,
+                       const QString &theContactId = QString(),
+                       const QString &theAlias = QString(),
+                       const QString &theAvatar = QString(),
                        uint theState = 0,
                        uint theRoles = 0,
                        const QVariantMap &theDetailProperties = QVariantMap());

@@ -63,12 +63,13 @@ private Q_SLOTS:
     void onChannelSplitted(const QDBusObjectPath &path);
 
 private:
+    bool mRequestedHangup;
+    MockConnection *mConnection;
+    bool mDtmfLock;
+    QList<QDBusObjectPath> mCallChannels;
     QString mObjPath;
     QString mPreviousState;
     bool mIncoming;
-    bool mRequestedHangup;
-    MockConnection *mConnection;
-    QList<QDBusObjectPath> mCallChannels;
     Tp::BaseChannelPtr mBaseChannel;
     Tp::BaseChannelHoldInterfacePtr mHoldIface;
     Tp::BaseChannelConferenceInterfacePtr mConferenceIface;
@@ -77,7 +78,6 @@ private:
     BaseChannelSpeakerInterfacePtr mSpeakerIface;
     Tp::BaseChannelCallTypePtr mCallChannel;
     Tp::BaseCallContentDTMFInterfacePtr mDTMFIface;
-    bool mDtmfLock;
     QStringList mDtmfPendingStrings;
 };
 

@@ -383,7 +383,7 @@ QVariantMap SQLiteHistoryPlugin::threadForProperties(const QString &accountId,
 QString SQLiteHistoryPlugin::threadIdForProperties(const QString &accountId, History::EventType type, const QVariantMap &properties, History::MatchFlags matchFlags)
 {
     if (properties.isEmpty()) {
-        return QString::null;
+        return QString();
     }
 
     // if chat type is room, just get the threadId directly
@@ -574,7 +574,7 @@ QVariantMap SQLiteHistoryPlugin::getSingleThread(History::EventType type, const 
     }
 
     QString condition = QString("accountId=\"%1\" AND threadId=\"%2\"").arg(accountId, threadId);
-    QString queryText = sqlQueryForThreads(type, condition, QString::null);
+    QString queryText = sqlQueryForThreads(type, condition, QString());
     queryText += " LIMIT 1";
 
     QSqlQuery query(SQLiteDatabase::instance()->database());
@@ -597,7 +597,7 @@ QVariantMap SQLiteHistoryPlugin::getSingleEvent(History::EventType type, const Q
     QVariantMap result;
 
     QString condition = QString("accountId=\"%1\" AND threadId=\"%2\" AND eventId=\"%3\"").arg(accountId, threadId, eventId);
-    QString queryText = sqlQueryForEvents(type, condition, QString::null);
+    QString queryText = sqlQueryForEvents(type, condition, QString());
     queryText += " LIMIT 1";
 
     QSqlQuery query(SQLiteDatabase::instance()->database());
@@ -710,7 +710,7 @@ bool SQLiteHistoryPlugin::updateRoomParticipantsRoles(const QString &accountId, 
     return true;
 }
 
-bool SQLiteHistoryPlugin::updateRoomInfo(const QString &accountId, const QString &threadId, History::EventType type, const QVariantMap &properties, const QStringList &invalidated)
+bool SQLiteHistoryPlugin::updateRoomInfo(const QString &accountId, const QString &threadId, History::EventType type, const QVariantMap &properties, const QStringList& /* invalidated */)
 {
     QSqlQuery query(SQLiteDatabase::instance()->database());
 
@@ -1210,6 +1210,9 @@ QString SQLiteHistoryPlugin::sqlQueryForThreads(History::EventType type, const Q
         table = "voice_events";
         extraFields << "voice_events.duration" << "voice_events.missed" << "voice_events.remoteParticipant";
         break;
+    case History::EventTypeNull:
+        qWarning("SQLiteHistoryPlugin::sqlQueryForThreads: Got EventTypeNull, ignoring this event!");
+        break;
     }
 
     fields << QString("%1.senderId").arg(table)
@@ -1374,6 +1377,9 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseThreadResults(History::EventType ty
             thread[History::FieldRemoteParticipant] = History::ContactMatcher::instance()->contactInfo(accountId, query.value(10).toString(), true);
             threads << thread;
             break;
+        case History::EventTypeNull:
+            qWarning("SQLiteHistoryPlugin::parseThreadResults: Got EventTypeNull, ignoring this event!");
+            break;
         }
     }
 
@@ -1409,6 +1415,9 @@ QString SQLiteHistoryPlugin::sqlQueryForEvents(History::EventType type, const QS
         participantsField = participantsField.arg("voice_events", QString::number(type));
         queryText = QString("SELECT accountId, threadId, eventId, senderId, timestamp, newEvent, %1, "
                             "duration, missed, remoteParticipant FROM voice_events %2 %3").arg(participantsField, modifiedCondition, order);
+        break;
+    case History::EventTypeNull:
+        qWarning("SQLiteHistoryPlugin::sqlQueryForEvents: Got EventTypeNull, ignoring this event!");
         break;
     }
 
@@ -1487,6 +1496,9 @@ QList<QVariantMap> SQLiteHistoryPlugin::parseEventResults(History::EventType typ
             event[History::FieldMissed] = query.value(8);
             event[History::FieldRemoteParticipant] = query.value(9).toString();
             break;
+        case History::EventTypeNull:
+            qWarning("SQLiteHistoryPlugin::parseEventResults: Got EventTypeNull, ignoring this event!");
+            break;
         }
 
         events << event;
@@ -1513,6 +1525,7 @@ QString SQLiteHistoryPlugin::filterToString(const History::Filter &filter, QVari
     case History::FilterTypeIntersection:
         filters = History::IntersectionFilter(filter).filters();
         linking = " AND ";
+        // fall through
     case History::FilterTypeUnion:
         if (filter.type() == History::FilterTypeUnion) {
             filters = History::UnionFilter(filter).filters();

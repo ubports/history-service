@@ -60,7 +60,7 @@ HistoryModel::HistoryModel(QObject *parent) :
     triggerQueryUpdate();
 }
 
-bool HistoryModel::canFetchMore(const QModelIndex &parent) const
+bool HistoryModel::canFetchMore(const QModelIndex& /* parent */) const
 {
     return false;
 }
@@ -285,7 +285,7 @@ QString HistoryModel::threadIdForProperties(const QString &accountId, int eventT
 {
     QVariantMap newProperties = properties;
     if (properties.isEmpty()) {
-        return QString::null;
+        return QString();
     }
 
     if (newProperties.contains(History::FieldParticipantIds)) {
@@ -301,7 +301,7 @@ QString HistoryModel::threadIdForProperties(const QString &accountId, int eventT
         return thread.threadId();
     }
 
-    return QString::null;
+    return QString();
 }
 
 QVariantMap HistoryModel::threadForParticipants(const QString &accountId, int eventType, const QStringList &participants, int matchFlags, bool create)
@@ -328,7 +328,7 @@ QVariantMap HistoryModel::threadForParticipants(const QString &accountId, int ev
 QString HistoryModel::threadIdForParticipants(const QString &accountId, int eventType, const QStringList &participants, int matchFlags, bool create)
 {
     if (participants.isEmpty()) {
-        return QString::null;
+        return QString();
     }
 
     QVariantMap properties;
@@ -343,7 +343,7 @@ QString HistoryModel::threadIdForParticipants(const QString &accountId, int even
         return thread.threadId();
     }
 
-    return QString::null;
+    return QString();
 }
 
 void HistoryModel::requestThreadParticipants(const QVariantList &threads)
@@ -531,6 +531,9 @@ bool HistoryModel::markEventAsRead(const QVariantMap &eventProperties)
         break;
     case History::EventTypeVoice:
         event = History::VoiceEvent::fromProperties(eventProperties);
+        break;
+    case History::EventTypeNull:
+        qWarning("HistoryModel::markEventAsRead: Got EventTypeNull, ignoring this event!");
         break;
     }
 

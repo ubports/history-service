@@ -298,7 +298,7 @@ QStringList MockConnection::inspectHandles(uint handleType, const Tp::UIntList& 
     return identifiers;
 }
 
-void MockConnection::connect(Tp::DBusError *error) {
+void MockConnection::connect(Tp::DBusError* /* error */) {
     qDebug() << "MockConnection::connect";
     setStatus(Tp::ConnectionStatusConnected, Tp::ConnectionStatusReasonRequested);
 }
@@ -350,6 +350,7 @@ Tp::BaseChannelPtr MockConnection::createTextChannel(uint targetHandleType,
     }
 
     // FIXME: test flash messages
+    Q_UNUSED(flash);
     MockTextChannel *channel = new MockTextChannel(this, recipients, targetHandle);
     QObject::connect(channel, SIGNAL(messageRead(QString)), SLOT(onMessageRead(QString)));
     QObject::connect(channel, SIGNAL(destroyed()), SLOT(onTextChannelClosed()));
@@ -587,7 +588,7 @@ QString MockConnection::placeCall(const QVariantMap &properties)
     return channel->objectPath();
 }
 
-QStringList MockConnection::emergencyNumbers(Tp::DBusError *error)
+QStringList MockConnection::emergencyNumbers(Tp::DBusError* /* error */)
 {
     return mEmergencyNumbers;
 }
@@ -598,7 +599,7 @@ void MockConnection::setEmergencyNumbers(const QStringList &emergencyNumbers)
     emergencyModeIface->setEmergencyNumbers(emergencyNumbers);
 }
 
-bool MockConnection::voicemailIndicator(Tp::DBusError *error)
+bool MockConnection::voicemailIndicator(Tp::DBusError* /* error */)
 {
     return mVoicemailIndicator;
 }
@@ -609,7 +610,7 @@ void MockConnection::setVoicemailIndicator(bool visible)
     voicemailIface->setVoicemailIndicator(visible);
 }
 
-QString MockConnection::voicemailNumber(Tp::DBusError *error)
+QString MockConnection::voicemailNumber(Tp::DBusError* /* error */)
 {
     return mVoicemailNumber;
 }
@@ -620,7 +621,7 @@ void MockConnection::setVoicemailNumber(const QString &number)
     voicemailIface->setVoicemailNumber(mVoicemailNumber);
 }
 
-uint MockConnection::voicemailCount(Tp::DBusError *error)
+uint MockConnection::voicemailCount(Tp::DBusError* /* error */)
 {
     return mVoicemailCount;
 }
@@ -631,17 +632,17 @@ void MockConnection::setVoicemailCount(int count)
     voicemailIface->setVoicemailCount(mVoicemailCount);
 }
 
-void MockConnection::USSDInitiate(const QString &command, Tp::DBusError *error)
+void MockConnection::USSDInitiate(const QString& /* command */, Tp::DBusError* /* error */)
 {
     // FIXME: implement
 }
 
-void MockConnection::USSDRespond(const QString &reply, Tp::DBusError *error)
+void MockConnection::USSDRespond(const QString& /* reply */, Tp::DBusError* /* error */)
 {
     // FIXME: implement
 }
 
-void MockConnection::USSDCancel(Tp::DBusError *error)
+void MockConnection::USSDCancel(Tp::DBusError* /* error */)
 {
     // FIXME: implement
 }

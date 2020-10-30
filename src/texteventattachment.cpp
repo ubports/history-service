@@ -83,6 +83,7 @@ TextEventAttachment::~TextEventAttachment()
 TextEventAttachment& TextEventAttachment::operator=(const TextEventAttachment &other)
 {
     d_ptr = QSharedPointer<TextEventAttachmentPrivate>(new TextEventAttachmentPrivate(*other.d_ptr));
+    return *this;
 }
 
 

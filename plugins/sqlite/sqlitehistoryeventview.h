@@ -48,15 +48,15 @@ protected:
 
 
 private:
+    SQLiteHistoryPlugin *mPlugin;
     History::EventType mType;
     History::Sort mSort;
     History::Filter mFilter;
     QSqlQuery mQuery;
     int mPageSize;
-    SQLiteHistoryPlugin *mPlugin;
-    QString mTemporaryTable;
     int mOffset;
     bool mValid;
+    QString mTemporaryTable;
 };
 
 #endif // SQLITEHISTORYEVENTVIEW_H

@@ -50,7 +50,7 @@ QString FilterPrivate::toString(const QString &propertyPrefix) const
 {
     // FIXME: remove the toString() functionality or replace it by a better implementation
     if (filterProperty.isEmpty() || filterValue.isNull()) {
-        return QString::null;
+        return QString();
     }
 
     QString value;
@@ -143,6 +143,7 @@ Filter &Filter::operator=(const Filter &other)
     }
 
     d_ptr = QSharedPointer<FilterPrivate>(other.d_ptr->clone());
+    return *this;
 }
 
 QString Filter::filterProperty() const
