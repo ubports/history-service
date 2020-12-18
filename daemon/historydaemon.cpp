@@ -1022,6 +1022,7 @@ void HistoryDaemon::updateRoomProperties(const QString &accountId, const QString
 
 void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, const Tp::ReceivedMessage &message)
 {
+    qDebug() << "jezek - HistoryDaemon::onMessageReceived";
     QString eventId;
     QString senderId;
 
@@ -1103,6 +1104,14 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
         Q_FOREACH(const Tp::MessagePart &part, message.parts()) {
             // ignore the header part
             if (part["content-type"].variant().toString().isEmpty()) {
+                qDebug() << "jezek - part[x-ubports-error].variant(): " << part["x-ubports-error"].variant();
+                qDebug() << "jezek - part[x-ubports-error].variant().isNull(): " << part["x-ubports-error"].variant().isNull();
+                qDebug() << "jezek - part[x-ubports-error].variant().toString(): " << part["x-ubports-error"].variant().toString();
+                // But first check the header if the message contains an error.
+                if (!part["x-ubports-error"].variant().toString().isEmpty()) {
+                    qDebug() << "jezek - Message header has an non-empty x-ubports-error field: " << part["x-ubports-error"].variant().toString();
+                    //status = History::MessageStatusTemporarilyFailed;
+                }
                 continue;
             }
             mmsStoragePath = dir.absoluteFilePath(QString("attachments/%1/%2/%3/").
@@ -1149,8 +1158,10 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
     writeEvents(QList<QVariantMap>() << event, properties);
 
     // if this messages supersedes another one, remove the original message
+    qDebug() << "jezek - supersededToken.isEmpty(): " << message.supersededToken().isEmpty();
     if (!message.supersededToken().isEmpty()) {
         event[History::FieldEventId] = message.supersededToken();
+        qDebug() << "jezek - remove event: " << event;
         removeEvents(QList<QVariantMap>() << event);
     }
 }
