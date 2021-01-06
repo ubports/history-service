@@ -1023,6 +1023,10 @@ void HistoryDaemon::updateRoomProperties(const QString &accountId, const QString
 void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, const Tp::ReceivedMessage &message)
 {
     qDebug() << "jezek - HistoryDaemon::onMessageReceived";
+    qDebug() << "jezek - message.messageType(): " << message.messageType();
+    qDebug() << "jezek - message.deliveryDetails().isError(): " << message.deliveryDetails().isError();
+    qDebug() << "jezek - message.header()[x-ubports-error].variant(): " << message.header()["x-ubports-error"].variant();
+    qDebug() << "jezek - message.header()[delivery-status].variant(): " << message.header()["delivery-status"].variant();
     QString eventId;
     QString senderId;
 
@@ -1104,14 +1108,6 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
         Q_FOREACH(const Tp::MessagePart &part, message.parts()) {
             // ignore the header part
             if (part["content-type"].variant().toString().isEmpty()) {
-                qDebug() << "jezek - part[x-ubports-error].variant(): " << part["x-ubports-error"].variant();
-                qDebug() << "jezek - part[x-ubports-error].variant().isNull(): " << part["x-ubports-error"].variant().isNull();
-                qDebug() << "jezek - part[x-ubports-error].variant().toString(): " << part["x-ubports-error"].variant().toString();
-                // But first check the header if the message contains an error.
-                if (!part["x-ubports-error"].variant().toString().isEmpty()) {
-                    qDebug() << "jezek - Message header has an non-empty x-ubports-error field: " << part["x-ubports-error"].variant().toString();
-                    //status = History::MessageStatusTemporarilyFailed;
-                }
                 continue;
             }
             mmsStoragePath = dir.absoluteFilePath(QString("attachments/%1/%2/%3/").
@@ -1137,6 +1133,14 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
             attachment[History::FieldStatus] = (int) History::AttachmentDownloaded;
             attachments << attachment;
         }
+    }
+
+    // Check if the message is an MMS error message.
+    //TODO:jezek Check all checks (is mms, to me, with delivery report).
+    if (!message.header()["x-ubports-error"].variant().toString().isEmpty()) {
+      qDebug() << "jezek - Message header has an non-empty x-ubports-error field: " << message.header()["x-ubports-error"].variant().toString();
+      status = History::MessageStatusTemporarilyFailed;
+      //TODO:jezek Or maybe make this the first check in this function, (re)write event and return?
     }
 
     QVariantMap event;
