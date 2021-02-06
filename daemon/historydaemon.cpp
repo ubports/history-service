@@ -1025,7 +1025,6 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
     qDebug() << "jezek - HistoryDaemon::onMessageReceived";
     qDebug() << "jezek - message.messageType(): " << message.messageType();
     qDebug() << "jezek - message.deliveryDetails().isError(): " << message.deliveryDetails().isError();
-    qDebug() << "jezek - message.header()[x-ubports-error].variant(): " << message.header()["x-ubports-error"].variant();
     qDebug() << "jezek - message.header()[delivery-status].variant(): " << message.header()["delivery-status"].variant();
     QString eventId;
     QString senderId;
@@ -1135,12 +1134,11 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
         }
     }
 
-    // Check if the message is an MMS error message.
-    //TODO:jezek Check all checks (is mms, to me, with delivery report).
-    if (!message.header()["x-ubports-error"].variant().toString().isEmpty()) {
-      qDebug() << "jezek - Message header has an non-empty x-ubports-error field: " << message.header()["x-ubports-error"].variant().toString();
-      status = History::MessageStatusTemporarilyFailed;
-      //TODO:jezek Or maybe make this the first check in this function, (re)write event and return?
+    QString text = message.text();
+    if (message.deliveryDetails().isError()) {
+      qDebug() << "jezek - Message is an delivery error message: " << message.deliveryDetails().debugMessage();
+      status = fromTelepathyDeliveryStatus(message.deliveryDetails().status());
+      text = message.deliveryDetails().debugMessage();
     }
 
     QVariantMap event;
@@ -1152,7 +1150,7 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
     event[History::FieldTimestamp] = message.received().toString("yyyy-MM-ddTHH:mm:ss.zzz");
     event[History::FieldSentTime] = message.sent().toString("yyyy-MM-ddTHH:mm:ss.zzz");
     event[History::FieldNewEvent] = true; // message is always unread until it reaches HistoryDaemon::onMessageRead
-    event[History::FieldMessage] = message.text();
+    event[History::FieldMessage] = text;
     event[History::FieldMessageType] = (int)type;
     event[History::FieldMessageStatus] = (int)status;
     event[History::FieldReadTimestamp] = QDateTime::currentDateTime().toString("yyyy-MM-ddTHH:mm:ss.zzz");
