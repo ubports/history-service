@@ -1250,7 +1250,7 @@ void HistoryDaemon::onMessageSent(const Tp::TextChannelPtr textChannel, const Tp
     event[History::FieldThreadId] = thread[History::FieldThreadId];
     event[History::FieldEventId] = eventId;
     event[History::FieldSenderId] = "self";
-    event[History::FieldTimestamp] = QDateTime::currentDateTime().toString("yyyy-MM-ddTHH:mm:ss.zzz"); // FIXME: check why message.sent() is empty
+    event[History::FieldTimestamp] = QDateTime::currentDateTime().toString("yyyy-MM-ddTHH:mm:ss.zzz");
     event[History::FieldSentTime] = QDateTime::currentDateTime().toString("yyyy-MM-ddTHH:mm:ss.zzz");
     event[History::FieldNewEvent] =  false; // outgoing messages are never new (unseen)
     event[History::FieldMessage] = message.text();
