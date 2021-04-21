@@ -35,6 +35,7 @@ private Q_SLOTS:
     void testProperties_data();
     void testProperties();
     void testSetProperties();
+    void testNoSentDateTime();
 
 private:
     History::Participants participantsFromIdentifiers(const QString &accountId, const QStringList &identifiers);
@@ -342,6 +343,14 @@ void TextEventTest::testSetProperties()
     QCOMPARE(textEvent.messageStatus(), status);
     QCOMPARE(textEvent.newEvent(), newEvent);
     QCOMPARE(textEvent.sentTime(), sentTime);
+}
+
+void TextEventTest::testNoSentDateTime()
+{
+    History::TextEvent textEvent("oneAccountId", "oneThreadId", "oneEventId", "oneSender", QDateTime::currentDateTime(),
+                                 true, "Hello", History::MessageTypeText);
+    // expect sentTime to be equals to receivedTime if not set
+    QCOMPARE(textEvent.sentTime(), textEvent.timestamp());
 }
 
 History::Participants TextEventTest::participantsFromIdentifiers(const QString &accountId, const QStringList &identifiers)

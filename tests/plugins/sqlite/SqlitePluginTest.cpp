@@ -310,6 +310,11 @@ void SqlitePluginTest::testWriteTextEvent_data()
                                                                                 "Hi Again!", History::MessageTypeText,
                                                                                 History::MessageStatusDelivered,
                                                                                 QDateTime::currentDateTime()).properties();
+    QTest::newRow("text event with no sent time") << History::TextEvent("noSentAccountId", "noSentSender", "noSentEventId",
+                                                                                "noSentSender", QDateTime::currentDateTime(), false,
+                                                                                "Hi Again!", History::MessageTypeText,
+                                                                                History::MessageStatusDelivered,
+                                                                                QDateTime::currentDateTime()).properties();
     History::TextEventAttachments attachments;
     attachments << History::TextEventAttachment("mmsAccountId", "mmsSender", "mmsEventId", "mmsAttachment1",
                                                 "text/plain", "/the/file/path", History::AttachmentDownloaded);
@@ -651,6 +656,11 @@ void SqlitePluginTest::testGetSingleEvent_data()
                                                                             History::MessageStatusPending).properties();
     QTest::newRow("text event with valid read timestamp") << History::TextEvent("otherAccountId", "otherSender", "otherEventId",
                                                                                 "otherSender", QDateTime::currentDateTime(), QDateTime::currentDateTime(), false,
+                                                                                "Hi Again!", History::MessageTypeText,
+                                                                                History::MessageStatusDelivered,
+                                                                                QDateTime::currentDateTime()).properties();
+    QTest::newRow("text event with no sent time") << History::TextEvent("noSentAccountId", "noSentSender", "noSentEventId",
+                                                                                "noSentSender", QDateTime::currentDateTime(), false,
                                                                                 "Hi Again!", History::MessageTypeText,
                                                                                 History::MessageStatusDelivered,
                                                                                 QDateTime::currentDateTime()).properties();
