@@ -1022,10 +1022,6 @@ void HistoryDaemon::updateRoomProperties(const QString &accountId, const QString
 
 void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, const Tp::ReceivedMessage &message)
 {
-    qDebug() << "jezek - HistoryDaemon::onMessageReceived";
-    qDebug() << "jezek - message.messageType(): " << message.messageType();
-    qDebug() << "jezek - message.deliveryDetails().isError(): " << message.deliveryDetails().isError();
-    qDebug() << "jezek - message.header()[delivery-status].variant(): " << message.header()["delivery-status"].variant();
     QString eventId;
     QString senderId;
 
@@ -1136,7 +1132,6 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
 
     QString text = message.text();
     if (message.deliveryDetails().isError()) {
-      qDebug() << "jezek - Message is an delivery error message: " << message.deliveryDetails().debugMessage();
       status = fromTelepathyDeliveryStatus(message.deliveryDetails().status());
       text = message.deliveryDetails().debugMessage();
     }
@@ -1160,10 +1155,8 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
     writeEvents(QList<QVariantMap>() << event, properties);
 
     // if this messages supersedes another one, remove the original message
-    qDebug() << "jezek - supersededToken.isEmpty(): " << message.supersededToken().isEmpty();
     if (!message.supersededToken().isEmpty()) {
         event[History::FieldEventId] = message.supersededToken();
-        qDebug() << "jezek - remove event: " << event;
         removeEvents(QList<QVariantMap>() << event);
     }
 }
