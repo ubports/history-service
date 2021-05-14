@@ -100,7 +100,7 @@ void HistoryGroupedThreadsModelTest::testThreadsUpdated()
 
     // insert one event
     History::TextEvent firstEvent = History::TextEvent(textThread.accountId(), textThread.threadId(), QString("eventId1%1").arg(QString::number(qrand() % 1024)),
-                                   QString("1234567"), QDateTime::currentDateTime(), false, "Random Message",
+                                   QString("1234567"), QDateTime::currentDateTime(), QDateTime::currentDateTime().addSecs(-10), false, "Random Message",
                                    History::MessageTypeText);
     mManager->writeEvents(History::Events() << firstEvent);
     QTRY_COMPARE(dataChanged.count(), 1);
@@ -123,7 +123,7 @@ void HistoryGroupedThreadsModelTest::testThreadsUpdated()
 
     // insert another event in second thread
     History::TextEvent secondEvent = History::TextEvent(textThread.accountId(), textThread.threadId(), QString("eventId2%1").arg(QString::number(qrand() % 1024)),
-                               QString("1234567"), QDateTime::currentDateTime().addSecs(1), false, "Random Message2",
+                               QString("1234567"), QDateTime::currentDateTime().addSecs(1), QDateTime::currentDateTime().addSecs(-10), false, "Random Message2",
                                History::MessageTypeText);
     mManager->writeEvents(History::Events() << secondEvent);
     QTRY_COMPARE(dataChanged.count(), 1);

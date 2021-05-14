@@ -53,6 +53,22 @@ public:
               const TextEventAttachments &attachments = TextEventAttachments(),
               const Participants &participants = Participants());
 
+    TextEvent(const QString &accountId,
+              const QString &threadId,
+              const QString &eventId,
+              const QString &sender,
+              const QDateTime &timestamp,
+              const QDateTime &sentTime,
+              bool newEvent,
+              const QString &message,
+              MessageType messageType,
+              MessageStatus messageStatus = MessageStatusUnknown,
+              const QDateTime &readTimestamp = QDateTime(),
+              const QString &subject = QString(),
+              InformationType informationType = InformationTypeNone,
+              const TextEventAttachments &attachments = TextEventAttachments(),
+              const Participants &participants = Participants());
+
     ~TextEvent();
 
     // copy related members
@@ -63,6 +79,8 @@ public:
     MessageType messageType() const;
     MessageStatus messageStatus() const;
     void setMessageStatus(const MessageStatus &value);
+    QDateTime sentTime() const;
+    void setSentTime(const QDateTime &value);
     QDateTime readTimestamp() const;
     void setReadTimestamp(const QDateTime &value);
     QString subject() const;

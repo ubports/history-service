@@ -1137,6 +1137,7 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
     event[History::FieldEventId] = eventId;
     event[History::FieldSenderId] = senderId;
     event[History::FieldTimestamp] = message.received().toString("yyyy-MM-ddTHH:mm:ss.zzz");
+    event[History::FieldSentTime] = message.sent().toString("yyyy-MM-ddTHH:mm:ss.zzz");
     event[History::FieldNewEvent] = true; // message is always unread until it reaches HistoryDaemon::onMessageRead
     event[History::FieldMessage] = message.text();
     event[History::FieldMessageType] = (int)type;
@@ -1249,7 +1250,8 @@ void HistoryDaemon::onMessageSent(const Tp::TextChannelPtr textChannel, const Tp
     event[History::FieldThreadId] = thread[History::FieldThreadId];
     event[History::FieldEventId] = eventId;
     event[History::FieldSenderId] = "self";
-    event[History::FieldTimestamp] = QDateTime::currentDateTime().toString("yyyy-MM-ddTHH:mm:ss.zzz"); // FIXME: check why message.sent() is empty
+    event[History::FieldTimestamp] = QDateTime::currentDateTime().toString("yyyy-MM-ddTHH:mm:ss.zzz");
+    event[History::FieldSentTime] = QDateTime::currentDateTime().toString("yyyy-MM-ddTHH:mm:ss.zzz");
     event[History::FieldNewEvent] =  false; // outgoing messages are never new (unseen)
     event[History::FieldMessage] = message.text();
     event[History::FieldMessageType] = type;
@@ -1302,6 +1304,7 @@ void HistoryDaemon::writeInformationEvent(const QVariantMap &thread, History::In
                                                                  (QDateTime::currentDateTime().toString("yyyy-MM-ddTHH:mm:ss.zzz") + subject + text).toLatin1()),
                                                                  QCryptographicHash::Md5).toHex()),
                                                          sender,
+                                                         QDateTime::currentDateTime(),
                                                          QDateTime::currentDateTime(),
                                                          false,
                                                          text,

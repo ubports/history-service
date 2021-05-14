@@ -45,6 +45,7 @@ HistoryModel::HistoryModel(QObject *parent) :
     mRoles[ParticipantsLocalPendingRole] = "localPendingParticipants";
     mRoles[TypeRole] = "type";
     mRoles[TimestampRole] = "timestamp";
+    mRoles[SentTimeRole] = "sentTime";
     mRoles[PropertiesRole] = "properties";
 
     connect(this, SIGNAL(rowsInserted(QModelIndex,int,int)), this, SIGNAL(countChanged()));
@@ -163,6 +164,9 @@ QVariant HistoryModel::data(const QModelIndex &index, int role) const
         break;
     case TimestampRole:
         result = QDateTime::fromString(properties[History::FieldTimestamp].toString(), Qt::ISODate);
+        break;
+    case SentTimeRole:
+        result = QDateTime::fromString(properties[History::FieldSentTime].toString(), Qt::ISODate);
         break;
     }
 
@@ -368,6 +372,7 @@ bool HistoryModel::writeTextInformationEvent(const QString &accountId, const QSt
                                                                  QDateTime::currentDateTimeUtc().toString("yyyyMMddhhmmsszzz").toLatin1()), 
                                                                  QCryptographicHash::Md5).toHex()),
                                                          "self",
+                                                         QDateTime::currentDateTime(),
                                                          QDateTime::currentDateTime(),
                                                          false,
                                                          message,

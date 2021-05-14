@@ -37,6 +37,7 @@ HistoryEventModel::HistoryEventModel(QObject *parent) :
     mRoles[SenderIdRole] = "senderId";
     mRoles[SenderRole] = "sender";
     mRoles[TimestampRole] = "timestamp";
+    mRoles[SentTimeRole] = "sentTime";
     mRoles[DateRole] = "date";
     mRoles[NewEventRole] = "newEvent";
     mRoles[TextMessageRole] = "textMessage";
@@ -112,6 +113,11 @@ QVariant HistoryEventModel::eventData(const History::Event &event, int role) con
         break;
     case TimestampRole:
         result = event.timestamp();
+        break;
+    case SentTimeRole:
+        if (!textEvent.isNull()) {
+            result = textEvent.sentTime();
+        }
         break;
     case DateRole:
         result = event.timestamp().date();

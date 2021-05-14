@@ -208,6 +208,7 @@ void SqliteEventViewTest::populateDatabase()
                                          QString("event%1").arg(j, 2, 10, QChar('0')),
                                          j % 2 ? "self" : QString("participant%1").arg(i),
                                          QDateTime::currentDateTime(),
+                                         QDateTime::currentDateTime().addSecs(-10),
                                          j % 2,
                                          QString("Hello %1").arg(j),
                                          History::MessageTypeText,

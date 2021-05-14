@@ -39,6 +39,7 @@ public:
                     const QString &theEventId,
                     const QString &theSender,
                     const QDateTime &theTimestamp,
+                    const QDateTime &theSentTime,
                     bool theNewEvent,
                     const QString &theMessage,
                     MessageType theMessageType,
@@ -56,6 +57,7 @@ public:
     QString subject;
     InformationType informationType;
     TextEventAttachments attachments;
+    QDateTime sentTime;
 
     EventType type() const;
     QVariantMap properties() const;
