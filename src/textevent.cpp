@@ -249,6 +249,11 @@ Event TextEvent::fromProperties(const QVariantMap &properties)
         }
     }
 
+    // sentTime may be empty
+    if (!sentTime.isValid()) {
+        sentTime = timestamp;
+    }
+
     // and finally create the event
     event = TextEvent(accountId, threadId, eventId, senderId, timestamp, sentTime, newEvent,
                       message, messageType, messageStatus, readTimestamp, subject, informationType, attachments, participants);
