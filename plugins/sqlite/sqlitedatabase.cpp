@@ -250,17 +250,20 @@ bool SQLiteDatabase::createOrUpdateDatabase()
         return false;
     }
 
-    // now set the new database schema version
-    if (!query.exec("DELETE FROM schema_version")) {
-        qCritical() << "Failed to remove previous schema versions. SQL Statement:" << query.lastQuery() << "Error:" << query.lastError();
-        rollbackTransaction();
-        return false;
-    }
+    //don't downgrade database version
+    if (mSchemaVersion > existingVersion) {
+        // now set the new database schema version
+        if (!query.exec("DELETE FROM schema_version")) {
+            qCritical() << "Failed to remove previous schema versions. SQL Statement:" << query.lastQuery() << "Error:" << query.lastError();
+            rollbackTransaction();
+            return false;
+        }
 
-    if (!query.exec(QString("INSERT INTO schema_version VALUES (%1)").arg(mSchemaVersion))) {
-        qCritical() << "Failed to insert new schema version. SQL Statement:" << query.lastQuery() << "Error:" << query.lastError();
-        rollbackTransaction();
-        return false;
+        if (!query.exec(QString("INSERT INTO schema_version VALUES (%1)").arg(mSchemaVersion))) {
+            qCritical() << "Failed to insert new schema version. SQL Statement:" << query.lastQuery() << "Error:" << query.lastError();
+            rollbackTransaction();
+            return false;
+        }
     }
 
     // now check if any data updating is required
