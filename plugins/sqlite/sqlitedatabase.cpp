@@ -195,6 +195,22 @@ void trace(void* /* something */, const char *query)
     qDebug() << "SQLITE TRACE:" << query;
 }
 
+
+bool SQLiteDatabase::upgradeNeeded(int version) const
+{
+
+    QSqlQuery query(mDatabase);
+
+    if (version == 19) {
+        // check for already exist column
+        if (query.exec("SELECT sentTime FROM text_events LIMIT 1")) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 bool SQLiteDatabase::createOrUpdateDatabase()
 {
     bool create = !QFile(mDatabasePath).exists();
@@ -238,7 +254,10 @@ bool SQLiteDatabase::createOrUpdateDatabase()
         existingVersion = query.value(0).toInt();
         upgradeToVersion = existingVersion + 1;
         while (upgradeToVersion <= mSchemaVersion) {
-            statements += parseSchemaFile(QString(":/database/schema/v%1.sql").arg(QString::number(upgradeToVersion)));
+
+            if (upgradeNeeded(upgradeToVersion)) {
+                statements += parseSchemaFile(QString(":/database/schema/v%1.sql").arg(QString::number(upgradeToVersion)));
+            }
             ++upgradeToVersion;
         }
     }
