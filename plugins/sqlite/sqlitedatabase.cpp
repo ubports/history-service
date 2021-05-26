@@ -195,6 +195,22 @@ void trace(void* /* something */, const char *query)
     qDebug() << "SQLITE TRACE:" << query;
 }
 
+
+bool SQLiteDatabase::upgradeNeeded(int version) const
+{
+
+    QSqlQuery query(mDatabase);
+
+    if (version == 19) {
+        // check for already exist column
+        if (query.exec("SELECT sentTime FROM text_events LIMIT 1")) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 bool SQLiteDatabase::createOrUpdateDatabase()
 {
     bool create = !QFile(mDatabasePath).exists();
@@ -238,7 +254,10 @@ bool SQLiteDatabase::createOrUpdateDatabase()
         existingVersion = query.value(0).toInt();
         upgradeToVersion = existingVersion + 1;
         while (upgradeToVersion <= mSchemaVersion) {
-            statements += parseSchemaFile(QString(":/database/schema/v%1.sql").arg(QString::number(upgradeToVersion)));
+
+            if (upgradeNeeded(upgradeToVersion)) {
+                statements += parseSchemaFile(QString(":/database/schema/v%1.sql").arg(QString::number(upgradeToVersion)));
+            }
             ++upgradeToVersion;
         }
     }
@@ -250,17 +269,20 @@ bool SQLiteDatabase::createOrUpdateDatabase()
         return false;
     }
 
-    // now set the new database schema version
-    if (!query.exec("DELETE FROM schema_version")) {
-        qCritical() << "Failed to remove previous schema versions. SQL Statement:" << query.lastQuery() << "Error:" << query.lastError();
-        rollbackTransaction();
-        return false;
-    }
+    //don't downgrade database version
+    if (mSchemaVersion > existingVersion) {
+        // now set the new database schema version
+        if (!query.exec("DELETE FROM schema_version")) {
+            qCritical() << "Failed to remove previous schema versions. SQL Statement:" << query.lastQuery() << "Error:" << query.lastError();
+            rollbackTransaction();
+            return false;
+        }
 
-    if (!query.exec(QString("INSERT INTO schema_version VALUES (%1)").arg(mSchemaVersion))) {
-        qCritical() << "Failed to insert new schema version. SQL Statement:" << query.lastQuery() << "Error:" << query.lastError();
-        rollbackTransaction();
-        return false;
+        if (!query.exec(QString("INSERT INTO schema_version VALUES (%1)").arg(mSchemaVersion))) {
+            qCritical() << "Failed to insert new schema version. SQL Statement:" << query.lastQuery() << "Error:" << query.lastError();
+            rollbackTransaction();
+            return false;
+        }
     }
 
     // now check if any data updating is required

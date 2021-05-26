@@ -54,6 +54,7 @@ protected:
 
 private:
     explicit SQLiteDatabase(QObject *parent = 0);
+    bool upgradeNeeded(int version) const;
     QString mDatabasePath;
     QSqlDatabase mDatabase;
     int mSchemaVersion;
