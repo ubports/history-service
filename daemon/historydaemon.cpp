@@ -1130,6 +1130,12 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
         }
     }
 
+    QString text = message.text();
+    if (message.deliveryDetails().isError()) {
+      status = fromTelepathyDeliveryStatus(message.deliveryDetails().status());
+      text = message.deliveryDetails().debugMessage();
+    }
+
     QVariantMap event;
     event[History::FieldType] = History::EventTypeText;
     event[History::FieldAccountId] = accountId;
@@ -1139,7 +1145,7 @@ void HistoryDaemon::onMessageReceived(const Tp::TextChannelPtr textChannel, cons
     event[History::FieldTimestamp] = message.received().toString("yyyy-MM-ddTHH:mm:ss.zzz");
     event[History::FieldSentTime] = message.sent().toString("yyyy-MM-ddTHH:mm:ss.zzz");
     event[History::FieldNewEvent] = true; // message is always unread until it reaches HistoryDaemon::onMessageRead
-    event[History::FieldMessage] = message.text();
+    event[History::FieldMessage] = text;
     event[History::FieldMessageType] = (int)type;
     event[History::FieldMessageStatus] = (int)status;
     event[History::FieldReadTimestamp] = QDateTime::currentDateTime().toString("yyyy-MM-ddTHH:mm:ss.zzz");
