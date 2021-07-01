@@ -77,11 +77,26 @@ QString FilterPrivate::toString(const QString &propertyPrefix) const
     QString propertyName = propertyPrefix.isNull() ? filterProperty : QString("%1.%2").arg(propertyPrefix, filterProperty);
     // FIXME2: need to check for the match flags
     QString condition;
-    if (matchFlags & History::MatchNotEquals) {
+    switch (matchFlags) {
+    case History::MatchNotEquals:
         condition = QString("%1!=%2");
-    } else {
+        break;
+    case History::MatchLess:
+        condition = QString("%1<%2");
+        break;
+    case History::MatchGreater:
+        condition = QString("%1>%2");
+        break;
+    case History::MatchLessOrEquals:
+        condition = QString("%1<=%2");
+        break;
+    case History::MatchGreaterOrEquals:
+        condition = QString("%1>=%2");
+        break;
+    default:
         condition = QString("%1=%2");
     }
+
     return QString(condition).arg(propertyName, value);
 }
 
@@ -92,10 +107,23 @@ bool FilterPrivate::match(const QVariantMap properties) const
         return true;
     }
 
-    // FIXME: use the MatchFlags
-    if (matchFlags & History::MatchNotEquals) {
+    switch (matchFlags) {
+    case History::MatchNotEquals:
         return properties[filterProperty] != filterValue;
-    } else {
+        break;
+    case History::MatchLess:
+        return properties[filterProperty] < filterValue;
+        break;
+    case History::MatchGreater:
+        return properties[filterProperty] > filterValue;
+        break;
+    case History::MatchLessOrEquals:
+        return properties[filterProperty] <= filterValue;
+        break;
+    case History::MatchGreaterOrEquals:
+        return properties[filterProperty] >= filterValue;
+        break;
+    default:
         return properties[filterProperty] == filterValue;
     }
 }

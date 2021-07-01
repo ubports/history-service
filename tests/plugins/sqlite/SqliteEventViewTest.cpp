@@ -41,6 +41,10 @@ private Q_SLOTS:
     void testSort();
     void testSortWithMultipleFields();
     void testFilterWithValueToExclude();
+    void testFilterWithFilterLessThan();
+    void testFilterWithFilterGreaterThan();
+    void testFilterWithFilterGreaterOrEqualsThan();
+    void testFilterWithFilterLessOrEqualsThan();
 
 private:
     SQLiteHistoryPlugin *mPlugin;
@@ -123,6 +127,102 @@ void SqliteEventViewTest::testFilterWithValueToExclude()
     delete view;
 }
 
+void SqliteEventViewTest::testFilterWithFilterLessThan()
+{
+    History::Sort ascendingSort(History::FieldEventId, Qt::AscendingOrder);
+    History::IntersectionFilter filter;
+
+    QDateTime queryTime = QDateTime::currentDateTime().addDays(10);
+    filter.append(History::Filter(History::FieldAccountId, "account0"));
+    filter.append(History::Filter(History::FieldTimestamp, queryTime, History::MatchLess));
+    History::PluginEventView *view = mPlugin->queryEvents(History::EventTypeText, ascendingSort, filter);
+    QVERIFY(view->IsValid());
+    QList<QVariantMap> events = view->NextPage();
+    while (!events.isEmpty()) {
+
+        for (const auto& event : events)
+        {
+            QVERIFY(event[History::FieldTimestamp].toDateTime() < queryTime);
+        }
+
+        events = view->NextPage();
+    }
+
+    delete view;
+}
+
+void SqliteEventViewTest::testFilterWithFilterGreaterThan()
+{
+    History::Sort ascendingSort(History::FieldEventId, Qt::AscendingOrder);
+    History::IntersectionFilter filter;
+
+    QDateTime queryTime = QDateTime::currentDateTime().addDays(10);
+    filter.append(History::Filter(History::FieldAccountId, "account0"));
+    filter.append(History::Filter(History::FieldTimestamp, queryTime, History::MatchGreater));
+    History::PluginEventView *view = mPlugin->queryEvents(History::EventTypeText, ascendingSort, filter);
+    QVERIFY(view->IsValid());
+    QList<QVariantMap> events = view->NextPage();
+    while (!events.isEmpty()) {
+
+        for (const auto& event : events)
+        {
+            QVERIFY(event[History::FieldTimestamp].toDateTime() > queryTime);
+        }
+
+        events = view->NextPage();
+    }
+
+    delete view;
+}
+
+void SqliteEventViewTest::testFilterWithFilterGreaterOrEqualsThan()
+{
+    History::Sort ascendingSort(History::FieldEventId, Qt::AscendingOrder);
+    History::IntersectionFilter filter;
+
+    QDateTime queryTime = QDateTime::currentDateTime().addDays(10);
+    filter.append(History::Filter(History::FieldAccountId, "account0"));
+    filter.append(History::Filter(History::FieldTimestamp, queryTime, History::MatchGreaterOrEquals));
+    History::PluginEventView *view = mPlugin->queryEvents(History::EventTypeText, ascendingSort, filter);
+    QVERIFY(view->IsValid());
+    QList<QVariantMap> events = view->NextPage();
+    while (!events.isEmpty()) {
+
+        for (const auto& event : events)
+        {
+            QVERIFY(event[History::FieldTimestamp].toDateTime() >= queryTime);
+        }
+
+        events = view->NextPage();
+    }
+
+    delete view;
+}
+
+void SqliteEventViewTest::testFilterWithFilterLessOrEqualsThan()
+{
+    History::Sort ascendingSort(History::FieldEventId, Qt::AscendingOrder);
+    History::IntersectionFilter filter;
+
+    QDateTime queryTime = QDateTime::currentDateTime().addDays(10);
+    filter.append(History::Filter(History::FieldAccountId, "account0"));
+    filter.append(History::Filter(History::FieldTimestamp, queryTime, History::MatchLessOrEquals));
+    History::PluginEventView *view = mPlugin->queryEvents(History::EventTypeText, ascendingSort, filter);
+    QVERIFY(view->IsValid());
+    QList<QVariantMap> events = view->NextPage();
+    while (!events.isEmpty()) {
+
+        for (const auto& event : events)
+        {
+            QVERIFY(event[History::FieldTimestamp].toDateTime() <= queryTime);
+        }
+
+        events = view->NextPage();
+    }
+
+    delete view;
+}
+
 void SqliteEventViewTest::testSort()
 {
     History::Sort ascendingSort(History::FieldEventId, Qt::AscendingOrder);
@@ -178,6 +278,7 @@ void SqliteEventViewTest::populateDatabase()
 {
     mPlugin->beginBatchOperation();
 
+    QDateTime currentDate = QDateTime::currentDateTime();
     // create two threads of each type
     for (int i = 1; i >= 0; --i) {
         QVariantMap voiceThread = mPlugin->createThreadForParticipants(QString("account%1").arg(i),
@@ -190,7 +291,7 @@ void SqliteEventViewTest::populateDatabase()
                                            voiceThread[History::FieldThreadId].toString(),
                                            QString("event%1").arg(j, 2, 10, QChar('0')),
                                            j % 2 ? "self" : QString("participant%1").arg(i),
-                                           QDateTime::currentDateTime(),
+                                           currentDate.addDays(j),
                                            j % 2,
                                            j % 2,
                                            j % 2 ? QTime(i, j, 0) : QTime());
@@ -207,8 +308,8 @@ void SqliteEventViewTest::populateDatabase()
                                          textThread[History::FieldThreadId].toString(),
                                          QString("event%1").arg(j, 2, 10, QChar('0')),
                                          j % 2 ? "self" : QString("participant%1").arg(i),
-                                         QDateTime::currentDateTime(),
-                                         QDateTime::currentDateTime().addSecs(-10),
+                                         currentDate.addDays(j),
+                                         currentDate.addDays(j).addSecs(-10),
                                          j % 2,
                                          QString("Hello %1").arg(j),
                                          History::MessageTypeText,

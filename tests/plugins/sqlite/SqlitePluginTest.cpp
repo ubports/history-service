@@ -762,6 +762,26 @@ void SqlitePluginTest::testFilterToString_data()
     QTest::newRow("filter with a prefix") << filter.properties() << filterValues << QString("prefix") << "prefix.testProperty=:filterValue0";
 
     filter.setFilterValue(12345);
+    filter.setMatchFlags(History::MatchLess);
+    filterValues[":filterValue0"] = filter.filterValue();
+    QTest::newRow("filter less") << filter.properties() << filterValues << QString() << "testProperty<:filterValue0";
+
+    filter.setFilterValue(12345);
+    filter.setMatchFlags(History::MatchGreater);
+    filterValues[":filterValue0"] = filter.filterValue();
+    QTest::newRow("filter greather") << filter.properties() << filterValues << QString() << "testProperty>:filterValue0";
+
+    filter.setFilterValue(12345);
+    filter.setMatchFlags(History::MatchLessOrEquals);
+    filterValues[":filterValue0"] = filter.filterValue();
+    QTest::newRow("filter less or equals") << filter.properties() << filterValues << QString() << "testProperty<=:filterValue0";
+
+    filter.setFilterValue(12345);
+    filter.setMatchFlags(History::MatchGreaterOrEquals);
+    filterValues[":filterValue0"] = filter.filterValue();
+    QTest::newRow("filter greater or equals") << filter.properties() << filterValues << QString() << "testProperty>=:filterValue0";
+
+    filter.setFilterValue(12345);
     filter.setMatchFlags(History::MatchNotEquals);
     filterValues[":filterValue0"] = filter.filterValue();
     QTest::newRow("filter not equals") << filter.properties() << filterValues << QString() << "testProperty!=:filterValue0";

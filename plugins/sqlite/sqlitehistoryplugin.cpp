@@ -1559,12 +1559,29 @@ QString SQLiteHistoryPlugin::filterToString(const History::Filter &filter, QVari
         if (filter.matchFlags() & History::MatchContains) {
             // FIXME: maybe we should use QString("%1 LIKE '\%'||%2'\%'").arg(bindId) ?? needs more time for investigating
             result = QString("%1 LIKE '\%%2\%' ESCAPE '\\'").arg(propertyName, escapeFilterValue(filterValue.toString()));
-        } else if (filter.matchFlags() & History::MatchNotEquals) {
-            result = QString("%1!=%2").arg(propertyName, bindId);
-            bindValues[bindId] = filterValue;
         } else {
-            result = QString("%1=%2").arg(propertyName, bindId);
+
+            switch (filter.matchFlags()) {
+            case History::MatchNotEquals:
+                result = QString("%1!=%2").arg(propertyName, bindId);
+                break;
+            case History::MatchLess:
+                result = QString("%1<%2").arg(propertyName, bindId);
+                break;
+            case History::MatchGreater:
+                result = QString("%1>%2").arg(propertyName, bindId);
+                break;
+            case History::MatchLessOrEquals:
+                result = QString("%1<=%2").arg(propertyName, bindId);
+                break;
+            case History::MatchGreaterOrEquals:
+                result = QString("%1>=%2").arg(propertyName, bindId);
+                break;
+            default:
+                result = QString("%1=%2").arg(propertyName, bindId);
+            }
             bindValues[bindId] = filterValue;
+
         }
     }
 
