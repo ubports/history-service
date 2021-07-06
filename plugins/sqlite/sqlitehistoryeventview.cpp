@@ -104,6 +104,20 @@ QList<QVariantMap> SQLiteHistoryEventView::NextPage()
     return events;
 }
 
+int SQLiteHistoryEventView::TotalCount()
+{
+    mQuery.prepare(QString("SELECT count(*) FROM %1").arg(mTemporaryTable));
+    if (!mQuery.exec() || !mQuery.next()) {
+        qWarning() << "Failed to get total count. Error:" << mQuery.lastError();
+        return 0;
+    }
+
+    int totalCount = mQuery.value(0).toUInt();
+    mQuery.clear();
+
+    return totalCount;
+}
+
 bool SQLiteHistoryEventView::IsValid() const
 {
     return mQuery.isActive();

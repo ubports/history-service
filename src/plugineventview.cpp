@@ -65,6 +65,11 @@ bool PluginEventView::IsValid() const
     return true;
 }
 
+int PluginEventView::TotalCount()
+{
+    return 0;
+}
+
 QString PluginEventView::objectPath() const
 {
     Q_D(const PluginEventView);

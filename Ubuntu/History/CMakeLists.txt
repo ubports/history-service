@@ -12,6 +12,7 @@ set(plugin_SRCS
     historyqmltexteventattachment.cpp
     historyqmlunionfilter.cpp
     historythreadmodel.cpp
+    historymanager.cpp
     )
 
 set(plugin_HDRS
@@ -26,6 +27,7 @@ set(plugin_HDRS
     historyqmltexteventattachment.h
     historyqmlunionfilter.h
     historythreadmodel.h
+    historymanager.h
 )
 
 include_directories(

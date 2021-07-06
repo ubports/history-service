@@ -29,6 +29,7 @@
 #include "voiceevent.h"
 #include <QDBusInterface>
 #include <QDBusReply>
+#include <QDebug>
 
 namespace History
 {
@@ -140,6 +141,23 @@ EventView::~EventView()
     if (d->valid) {
         d->dbus->call("Destroy");
     }
+}
+
+int EventView::totalCount()
+{
+    Q_D(EventView);
+
+    if (!d->valid) {
+        return 0;
+    }
+
+    QDBusReply<int> reply = d->dbus->call("TotalCount");
+    if (!reply.isValid()) {
+        qWarning() << reply.error();
+        return 0;
+    }
+
+    return reply.value();
 }
 
 QList<Event> EventView::nextPage()

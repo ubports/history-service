@@ -67,6 +67,7 @@ public:
     Q_INVOKABLE bool removeEvents(const QVariantList &eventsProperties);
     Q_INVOKABLE bool writeEvents(const QVariantList &eventsProperties);
     Q_INVOKABLE bool removeEventAttachment(const QString &accountId, const QString &threadId, const QString &eventId, int eventType, const QString &attachmentId);
+    Q_INVOKABLE int totalCount();
 
 protected Q_SLOTS:
     virtual void updateQuery();
