@@ -204,6 +204,18 @@ bool Manager::removeEvents(const Events &events)
     return d->dbus->removeEvents(events);
 }
 
+bool Manager::removeEvents(EventType type, const Filter &filter, const Sort &sort)
+{
+    Q_D(Manager);
+    return d->dbus->removeEvents(type, filter, sort);
+}
+
+int Manager::eventsCount(EventType type, const Filter &filter)
+{
+    Q_D(Manager);
+    return d->dbus->eventsCount(type, filter);
+}
+
 bool Manager::isServiceRunning() const
 {
     Q_D(const Manager);

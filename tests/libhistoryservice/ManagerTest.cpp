@@ -44,6 +44,7 @@ private Q_SLOTS:
     void testGetSingleThread();
     void testWriteEvents();
     void testRemoveEvents();
+    void testRemoveEventsByFilter();
     void testGetSingleEvent();
     void testRemoveThreads();
     void cleanupTestCase();
@@ -281,6 +282,71 @@ void ManagerTest::testRemoveEvents()
     qSort(secondRemoval);
     QCOMPARE(removedEvents, secondRemoval);
     QCOMPARE(removedThreads.count(), 2);
+}
+
+void ManagerTest::testRemoveEventsByFilter()
+{
+
+
+    QString voiceParticipant("voiceParticipant");
+    // tests above fill the database and don't clean it later, make sure we don't work on the same year
+    QDateTime currentDate = QDateTime::currentDateTime().addYears(-10);
+    // create voice thread
+    History::Thread voiceThread = mManager->threadForParticipants("voiceRemovableAccount",
+                                                                  History::EventTypeVoice,
+                                                                  QStringList()<< voiceParticipant,
+                                                                  History::MatchCaseSensitive, true);
+    // insert some voice events
+    History::Events events;
+    for (int i = 0; i < 50; ++i) {
+
+        History::VoiceEvent voiceEvent(voiceThread.accountId(),
+                                       voiceThread.threadId(),
+                                       QString("eventToBeRemoved%1").arg(i),
+                                       voiceParticipant,
+                                       currentDate.addDays(i),
+                                       true,
+                                       true);
+        events.append(voiceEvent);
+    }
+    QSignalSpy eventsRemovedSpy(mManager, SIGNAL(eventsRemoved(History::Events)));
+    QSignalSpy threadsModifiedSpy(mManager, SIGNAL(threadsModified(History::Threads)));
+    QVERIFY(mManager->writeEvents(events));
+    QTRY_COMPARE(threadsModifiedSpy.count(), 1);
+    threadsModifiedSpy.clear();
+
+    History::Filter filter;
+    filter.setFilterProperty(History::FieldTimestamp);
+    filter.setFilterValue(currentDate.addDays(10).toString("yyyy-MM-ddTHH:mm:ss.zzz")); //should delete 10 voice_events
+    filter.setMatchFlags(History::MatchLess);
+
+    History::Sort sort;
+    sort.setSortField(History::FieldTimestamp);
+    sort.setSortOrder(Qt::DescendingOrder);
+
+    QVERIFY(mManager->removeEvents(History::EventTypeVoice ,filter, sort));
+    QTRY_COMPARE(eventsRemovedSpy.count(), 1);
+    QTRY_COMPARE(threadsModifiedSpy.count(), 1);
+    History::Events removedEvents = eventsRemovedSpy.first().first().value<History::Events>();
+    History::Threads modifiedThreads = threadsModifiedSpy.first().first().value<History::Threads>();
+
+    QCOMPARE(removedEvents.count(), 10);
+    QCOMPARE(modifiedThreads.count(), 1);
+
+    // now remove the remaining events and make sure the threads get removed too
+    filter.setFilterValue(currentDate.addYears(1).toString("yyyy-MM-ddTHH:mm:ss.zzz"));
+    QSignalSpy threadsRemovedSpy(mManager, SIGNAL(threadsRemoved(History::Threads)));
+    eventsRemovedSpy.clear();
+
+    QVERIFY(mManager->removeEvents(History::EventTypeVoice ,filter, sort));
+    QTRY_COMPARE(eventsRemovedSpy.count(), 1);
+    QTRY_COMPARE(threadsRemovedSpy.count(), 1);
+    removedEvents = eventsRemovedSpy.first().first().value<History::Events>();
+
+    History::Threads removedThreads = threadsRemovedSpy.first().first().value<History::Threads>();
+
+    QCOMPARE(removedEvents.count(), 40);
+    QCOMPARE(removedThreads.count(), 1);
 }
 
 void ManagerTest::testGetSingleEvent()

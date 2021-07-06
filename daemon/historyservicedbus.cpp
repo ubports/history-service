@@ -138,9 +138,19 @@ void HistoryServiceDBus::MarkThreadsAsRead(const QList<QVariantMap> &threads)
     return HistoryDaemon::instance()->markThreadsAsRead(threads);
 }
 
+int HistoryServiceDBus::EventsCount(int type, const QVariantMap &filter)
+{
+    return HistoryDaemon::instance()->eventsCount(type, filter);
+}
+
 bool HistoryServiceDBus::RemoveEvents(const QList<QVariantMap> &events)
 {
     return HistoryDaemon::instance()->removeEvents(events);
+}
+
+bool HistoryServiceDBus::RemoveEventsBy(int type, const QVariantMap &filter, const QVariantMap &sort)
+{
+    return HistoryDaemon::instance()->removeEvents(type, filter, sort);
 }
 
 QString HistoryServiceDBus::QueryThreads(int type, const QVariantMap &sort, const QVariantMap &filter, const QVariantMap &properties)

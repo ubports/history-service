@@ -1155,6 +1155,44 @@ bool SQLiteHistoryPlugin::removeVoiceEvent(const QVariantMap &event)
     return true;
 }
 
+int SQLiteHistoryPlugin::eventsCount(History::EventType type, const History::Filter &filter)
+{
+    QString table;
+
+    switch (type) {
+    case History::EventTypeText:
+        table = "text_events";
+        break;
+    case History::EventTypeVoice:
+        table = "voice_events";
+        break;
+    case History::EventTypeNull:
+        qWarning("SQLiteHistoryPlugin::sqlQueryForThreads: Got EventTypeNull, ignoring!");
+        return 0;
+        break;
+    }
+
+    QSqlQuery query(SQLiteDatabase::instance()->database());
+
+    QVariantMap filterValues;
+    QString condition = filterToString(filter, filterValues);
+    condition.prepend(" WHERE ");
+    QString queryText = QString("SELECT count(*) FROM %1 %2").arg(table).arg(condition);
+
+    query.prepare(queryText);
+
+    Q_FOREACH(const QString &key, filterValues.keys()) {
+        query.bindValue(key, filterValues[key]);
+    }
+
+    if (!query.exec() || !query.next()) {
+        qWarning() << "Failed to get total count. Error:" << query.lastError();
+        return 0;
+    }
+
+    return query.value(0).toUInt();
+}
+
 bool SQLiteHistoryPlugin::beginBatchOperation()
 {
     return SQLiteDatabase::instance()->beginTransation();
@@ -1581,7 +1619,6 @@ QString SQLiteHistoryPlugin::filterToString(const History::Filter &filter, QVari
                 result = QString("%1=%2").arg(propertyName, bindId);
             }
             bindValues[bindId] = filterValue;
-
         }
     }
 
