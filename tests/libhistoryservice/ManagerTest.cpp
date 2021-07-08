@@ -47,6 +47,7 @@ private Q_SLOTS:
     void testRemoveEventsByFilter();
     void testGetSingleEvent();
     void testRemoveThreads();
+    void cleanup();
     void cleanupTestCase();
 
 private:
@@ -287,18 +288,33 @@ void ManagerTest::testRemoveEvents()
 void ManagerTest::testRemoveEventsByFilter()
 {
 
-
+    QString textParticipant("textParticipant");
     QString voiceParticipant("voiceParticipant");
-    // tests above fill the database and don't clean it later, make sure we don't work on the same year
-    QDateTime currentDate = QDateTime::currentDateTime().addYears(-10);
-    // create voice thread
+
+    QDateTime currentDate = QDateTime::currentDateTime();
+    // create two threads, one for voice and one for text
+    History::Thread textThread = mManager->threadForParticipants("textRemovableAccount",
+                                                                 History::EventTypeText,
+                                                                 QStringList()<< textParticipant,
+                                                                 History::MatchCaseSensitive, true);
     History::Thread voiceThread = mManager->threadForParticipants("voiceRemovableAccount",
                                                                   History::EventTypeVoice,
                                                                   QStringList()<< voiceParticipant,
                                                                   History::MatchCaseSensitive, true);
-    // insert some voice events
+    // insert some text and voice events
     History::Events events;
     for (int i = 0; i < 50; ++i) {
+        History::TextEvent textEvent(textThread.accountId(),
+                                     textThread.threadId(),
+                                     QString("eventToBeRemoved%1").arg(i),
+                                     textParticipant,
+                                     currentDate.addDays(i),
+                                     currentDate.addDays(i).addSecs(-10),
+                                     true,
+                                     QString("Hello world %1").arg(i),
+                                     History::MessageTypeText);
+        events.append(textEvent);
+
 
         History::VoiceEvent voiceEvent(voiceThread.accountId(),
                                        voiceThread.threadId(),
@@ -347,6 +363,10 @@ void ManagerTest::testRemoveEventsByFilter()
 
     QCOMPARE(removedEvents.count(), 40);
     QCOMPARE(removedThreads.count(), 1);
+
+    //verify text events are still there
+    QCOMPARE(mManager->eventsCount(History::EventTypeText ,filter), 50);
+
 }
 
 void ManagerTest::testGetSingleEvent()
@@ -432,6 +452,42 @@ void ManagerTest::testRemoveThreads()
     qSort(removedThreads);
     qSort(threads);
     QCOMPARE(removedThreads, threads);
+}
+
+void ManagerTest::cleanup() {
+
+    History::Filter filter;
+    filter.setFilterProperty(History::FieldTimestamp);
+    filter.setFilterValue(QDateTime::currentDateTime().addYears(10).toString("yyyy-MM-ddTHH:mm:ss.zzz"));
+    filter.setMatchFlags(History::MatchLess);
+
+    History::Sort sort;
+    sort.setSortField(History::FieldTimestamp);
+    sort.setSortOrder(Qt::DescendingOrder);
+
+    int voiceEventsCount = mManager->eventsCount(History::EventTypeVoice, filter);
+    int textEventsCount = mManager->eventsCount(History::EventTypeText, filter);
+
+    int totalToRemove = voiceEventsCount + textEventsCount;
+    int deletedCount = 0;
+    if (totalToRemove > 0) {
+
+        QMetaObject::Connection conn = connect(mManager,
+                &History::Manager::eventsRemoved,
+                [&deletedCount](const History::Events &events)
+            {
+                deletedCount+= events.count();
+            });
+
+        QVERIFY(mManager->removeEvents(History::EventTypeVoice, filter, sort));
+        QVERIFY(mManager->removeEvents(History::EventTypeText, filter, sort));
+
+        while (totalToRemove > deletedCount) {
+            QTest::qWait(100);
+        }
+
+        QObject::disconnect(conn);
+    }
 }
 
 void ManagerTest::cleanupTestCase()
