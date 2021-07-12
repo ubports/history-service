@@ -44,8 +44,10 @@ private Q_SLOTS:
     void testGetSingleThread();
     void testWriteEvents();
     void testRemoveEvents();
+    void testRemoveEventsByFilter();
     void testGetSingleEvent();
     void testRemoveThreads();
+    void cleanup();
     void cleanupTestCase();
 
 private:
@@ -283,6 +285,90 @@ void ManagerTest::testRemoveEvents()
     QCOMPARE(removedThreads.count(), 2);
 }
 
+void ManagerTest::testRemoveEventsByFilter()
+{
+
+    QString textParticipant("textParticipant");
+    QString voiceParticipant("voiceParticipant");
+
+    QDateTime currentDate = QDateTime::currentDateTime();
+    // create two threads, one for voice and one for text
+    History::Thread textThread = mManager->threadForParticipants("textRemovableAccount",
+                                                                 History::EventTypeText,
+                                                                 QStringList()<< textParticipant,
+                                                                 History::MatchCaseSensitive, true);
+    History::Thread voiceThread = mManager->threadForParticipants("voiceRemovableAccount",
+                                                                  History::EventTypeVoice,
+                                                                  QStringList()<< voiceParticipant,
+                                                                  History::MatchCaseSensitive, true);
+    // insert some text and voice events
+    History::Events events;
+    for (int i = 0; i < 50; ++i) {
+        History::TextEvent textEvent(textThread.accountId(),
+                                     textThread.threadId(),
+                                     QString("eventToBeRemoved%1").arg(i),
+                                     textParticipant,
+                                     currentDate.addDays(i),
+                                     currentDate.addDays(i).addSecs(-10),
+                                     true,
+                                     QString("Hello world %1").arg(i),
+                                     History::MessageTypeText);
+        events.append(textEvent);
+
+
+        History::VoiceEvent voiceEvent(voiceThread.accountId(),
+                                       voiceThread.threadId(),
+                                       QString("eventToBeRemoved%1").arg(i),
+                                       voiceParticipant,
+                                       currentDate.addDays(i),
+                                       true,
+                                       true);
+        events.append(voiceEvent);
+    }
+    QSignalSpy eventsRemovedSpy(mManager, SIGNAL(eventsRemoved(History::Events)));
+    QSignalSpy threadsModifiedSpy(mManager, SIGNAL(threadsModified(History::Threads)));
+    QVERIFY(mManager->writeEvents(events));
+    QTRY_COMPARE(threadsModifiedSpy.count(), 1);
+    threadsModifiedSpy.clear();
+
+    History::Filter filter;
+    filter.setFilterProperty(History::FieldTimestamp);
+    filter.setFilterValue(currentDate.addDays(10).toString("yyyy-MM-ddTHH:mm:ss.zzz")); //should delete 10 voice_events
+    filter.setMatchFlags(History::MatchLess);
+
+    History::Sort sort;
+    sort.setSortField(History::FieldTimestamp);
+    sort.setSortOrder(Qt::DescendingOrder);
+
+    QVERIFY(mManager->removeEvents(History::EventTypeVoice ,filter, sort));
+    QTRY_COMPARE(eventsRemovedSpy.count(), 1);
+    QTRY_COMPARE(threadsModifiedSpy.count(), 1);
+    History::Events removedEvents = eventsRemovedSpy.first().first().value<History::Events>();
+    History::Threads modifiedThreads = threadsModifiedSpy.first().first().value<History::Threads>();
+
+    QCOMPARE(removedEvents.count(), 10);
+    QCOMPARE(modifiedThreads.count(), 1);
+
+    // now remove the remaining events and make sure the threads get removed too
+    filter.setFilterValue(currentDate.addYears(1).toString("yyyy-MM-ddTHH:mm:ss.zzz"));
+    QSignalSpy threadsRemovedSpy(mManager, SIGNAL(threadsRemoved(History::Threads)));
+    eventsRemovedSpy.clear();
+
+    QVERIFY(mManager->removeEvents(History::EventTypeVoice ,filter, sort));
+    QTRY_COMPARE(eventsRemovedSpy.count(), 1);
+    QTRY_COMPARE(threadsRemovedSpy.count(), 1);
+    removedEvents = eventsRemovedSpy.first().first().value<History::Events>();
+
+    History::Threads removedThreads = threadsRemovedSpy.first().first().value<History::Threads>();
+
+    QCOMPARE(removedEvents.count(), 40);
+    QCOMPARE(removedThreads.count(), 1);
+
+    //verify text events are still there
+    QCOMPARE(mManager->eventsCount(History::EventTypeText ,filter), 50);
+
+}
+
 void ManagerTest::testGetSingleEvent()
 {
     QString textParticipant("textSingleParticipant");
@@ -366,6 +452,42 @@ void ManagerTest::testRemoveThreads()
     qSort(removedThreads);
     qSort(threads);
     QCOMPARE(removedThreads, threads);
+}
+
+void ManagerTest::cleanup() {
+
+    History::Filter filter;
+    filter.setFilterProperty(History::FieldTimestamp);
+    filter.setFilterValue(QDateTime::currentDateTime().addYears(10).toString("yyyy-MM-ddTHH:mm:ss.zzz"));
+    filter.setMatchFlags(History::MatchLess);
+
+    History::Sort sort;
+    sort.setSortField(History::FieldTimestamp);
+    sort.setSortOrder(Qt::DescendingOrder);
+
+    int voiceEventsCount = mManager->eventsCount(History::EventTypeVoice, filter);
+    int textEventsCount = mManager->eventsCount(History::EventTypeText, filter);
+
+    int totalToRemove = voiceEventsCount + textEventsCount;
+    int deletedCount = 0;
+    if (totalToRemove > 0) {
+
+        QMetaObject::Connection conn = connect(mManager,
+                &History::Manager::eventsRemoved,
+                [&deletedCount](const History::Events &events)
+            {
+                deletedCount+= events.count();
+            });
+
+        QVERIFY(mManager->removeEvents(History::EventTypeVoice, filter, sort));
+        QVERIFY(mManager->removeEvents(History::EventTypeText, filter, sort));
+
+        while (totalToRemove > deletedCount) {
+            QTest::qWait(100);
+        }
+
+        QObject::disconnect(conn);
+    }
 }
 
 void ManagerTest::cleanupTestCase()

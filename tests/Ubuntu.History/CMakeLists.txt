@@ -10,6 +10,8 @@ set(SOURCE_DIR ${CMAKE_SOURCE_DIR}/Ubuntu/History)
 set(HistoryQml_SOURCES
     ${SOURCE_DIR}/historyeventmodel.cpp
     ${SOURCE_DIR}/historyeventmodel.h
+    ${SOURCE_DIR}/historymanager.h
+    ${SOURCE_DIR}/historymanager.cpp
     ${SOURCE_DIR}/historygroupedeventsmodel.cpp
     ${SOURCE_DIR}/historygroupedeventsmodel.h
     ${SOURCE_DIR}/historygroupedthreadsmodel.cpp
@@ -44,6 +46,19 @@ generate_test(HistoryGroupedThreadsModelTest
               USE_XVFB
               TASKS --task ${CMAKE_BINARY_DIR}/daemon/history-daemon --ignore-return --task-name history-daemon
               WAIT_FOR com.canonical.HistoryService)
+set(HistoryManagerTest_SOURCES
+  ${HistoryQml_SOURCES}
+  HistoryManagerTest.cpp
+  )
+generate_test(HistoryManagerTest
+            SOURCES ${HistoryManagerTest_SOURCES}
+            LIBRARIES historyservice
+            QT5_MODULES Core Qml Test
+            USE_DBUS
+            USE_XVFB
+            TASKS --task ${CMAKE_BINARY_DIR}/daemon/history-daemon --ignore-return --task-name history-daemon
+            WAIT_FOR com.canonical.HistoryService)
+
 set(HistoryEventModelTest_SOURCES
     ${HistoryQml_SOURCES}
     HistoryEventModelTest.cpp

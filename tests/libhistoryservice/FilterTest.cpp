@@ -40,6 +40,10 @@ private Q_SLOTS:
     void testToString_data();
     void testToString();
     void testToStringWithNotEqualsMatch();
+    void testToStringWithLessMatch();
+    void testToStringWithGreaterMatch();
+    void testToStringWithLessOrEqualsMatch();
+    void testToStringWithGreaterOrEqualsMatch();
     void testToStringPrefix();
     void testNullToString();
     void testMatch_data();
@@ -152,6 +156,42 @@ void FilterTest::testToStringWithNotEqualsMatch()
     QCOMPARE(filter.toString(),QString("%1!=\"%2\"").arg(filterProperty,filterValue));
 }
 
+void FilterTest::testToStringWithLessMatch()
+{
+    QString filterProperty("someProperty");
+    QString filterValue("someValue");
+
+    History::Filter filter(filterProperty, filterValue, History::MatchLess);
+    QCOMPARE(filter.toString(),QString("%1<\"%2\"").arg(filterProperty,filterValue));
+}
+
+void FilterTest::testToStringWithGreaterMatch()
+{
+    QString filterProperty("someProperty");
+    QString filterValue("someValue");
+
+    History::Filter filter(filterProperty, filterValue, History::MatchGreater);
+    QCOMPARE(filter.toString(),QString("%1>\"%2\"").arg(filterProperty,filterValue));
+}
+
+void FilterTest::testToStringWithLessOrEqualsMatch()
+{
+    QString filterProperty("someProperty");
+    QString filterValue("someValue");
+
+    History::Filter filter(filterProperty, filterValue, History::MatchLessOrEquals);
+    QCOMPARE(filter.toString(),QString("%1<=\"%2\"").arg(filterProperty,filterValue));
+}
+
+void FilterTest::testToStringWithGreaterOrEqualsMatch()
+{
+    QString filterProperty("someProperty");
+    QString filterValue("someValue");
+
+    History::Filter filter(filterProperty, filterValue, History::MatchGreaterOrEquals);
+    QCOMPARE(filter.toString(),QString("%1>=\"%2\"").arg(filterProperty,filterValue));
+}
+
 void FilterTest::testToStringPrefix()
 {
     QString prefix("somePrefix");
@@ -226,14 +266,22 @@ void FilterTest::testMatchFlags_data()
     MatchCaseInsensitive = 0x02,
     MatchContains = 0x04,
     MatchPhoneNumber = 0x08,
-    MatchNotEquals = 0x16
-
+    MatchNotEquals = 0x10,
+    MatchLess = 0x20,
+    MatchGreater = 0x40,
+    MatchLessOrEquals = 0x80,
+    MatchGreaterOrEquals = 0x100
     */
+
     QTest::newRow("null flag") << History::MatchFlags() << History::MatchCaseSensitive << false;
     QTest::newRow("case sensitive alone") << History::MatchFlags(History::MatchCaseSensitive) << History::MatchCaseSensitive << true;
     QTest::newRow("case insensitive alone") << History::MatchFlags(History::MatchCaseInsensitive) << History::MatchCaseInsensitive << true;
     QTest::newRow("contains alone") << History::MatchFlags(History::MatchContains) << History::MatchContains << true;
     QTest::newRow("not contains alone") << History::MatchFlags(History::MatchNotEquals) << History::MatchNotEquals << true;
+    QTest::newRow("less alone") << History::MatchFlags(History::MatchLess) << History::MatchLess << true;
+    QTest::newRow("greater alone") << History::MatchFlags(History::MatchGreater) << History::MatchGreater << true;
+    QTest::newRow("less or equals alone") << History::MatchFlags(History::MatchLessOrEquals) << History::MatchLessOrEquals << true;
+    QTest::newRow("greater or equals alone") << History::MatchFlags(History::MatchGreaterOrEquals) << History::MatchGreaterOrEquals << true;
     QTest::newRow("phone number alone") << History::MatchFlags(History::MatchPhoneNumber) << History::MatchPhoneNumber << true;
     QTest::newRow("no mismatch") << History::MatchFlags(History::MatchPhoneNumber) << History::MatchContains << false;
     QTest::newRow("all still match one") << History::MatchFlags(History::MatchCaseInsensitive |

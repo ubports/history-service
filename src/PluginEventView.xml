@@ -22,6 +22,12 @@
                 Destroy the view object.
             ]]></dox:d>
         </method>
+        <method name="TotalCount">
+            <dox:d><![CDATA[
+                Return the total number of entries in the view.
+            ]]></dox:d>
+            <arg type="i" direction="out"/>
+        </method>
         <method name="IsValid">
             <dox:d><![CDATA[
                 Returns true if this view is still valid.

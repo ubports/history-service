@@ -464,6 +464,16 @@ void HistoryEventModel::onThreadsRemoved(const History::Threads &threads)
     }
 }
 
+int HistoryEventModel::totalCount()
+{
+    if (mView.isNull()) {
+        qWarning() << "component not ready";
+        return 0;
+    }
+
+    return mView->totalCount();
+}
+
 History::Events HistoryEventModel::fetchNextPage()
 {
     return mView->nextPage();

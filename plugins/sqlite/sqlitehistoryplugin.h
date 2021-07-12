@@ -84,6 +84,7 @@ public:
 
     History::EventWriteResult writeVoiceEvent(const QVariantMap &event);
     bool removeVoiceEvent(const QVariantMap &event);
+    int eventsCount(History::EventType type, const History::Filter &filter);
 
     bool beginBatchOperation();
     bool endBatchOperation();

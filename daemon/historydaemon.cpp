@@ -577,6 +577,43 @@ bool HistoryDaemon::removeEvents(const QList<QVariantMap> &events)
     return true;
 }
 
+bool HistoryDaemon::removeEvents(int type, const QVariantMap &filter, const QVariantMap &sort)
+{
+    History::Filter theFilter = History::Filter::fromProperties(filter);
+    History::Sort theSort = History::Sort::fromProperties(sort);
+    History::PluginEventView *view = mBackend->queryEvents((History::EventType)type, theSort , theFilter);
+    if (!view->IsValid()) {
+        qWarning() << "removeEvents: bad query " << filter;
+        return false;
+    }
+
+    QList<QVariantMap> events = view->NextPage();
+    QList<QVariantMap> allEvents;
+    int batchSize = 200;
+    bool ok = true;
+    while (events.count() > 0 && ok) {
+        allEvents << events;
+        if (allEvents.count() > batchSize) {
+            ok = ok & removeEvents(allEvents);
+            allEvents.clear();
+        }
+        events = view->NextPage();
+    }
+
+    if (ok) {
+        ok = ok & removeEvents(allEvents);
+    }
+    view->deleteLater();
+
+    return ok;
+}
+
+int HistoryDaemon::eventsCount(int type, const QVariantMap &filter)
+{
+    History::Filter theFilter = History::Filter::fromProperties(filter);
+    return mBackend->eventsCount((History::EventType)type, theFilter);
+}
+
 void HistoryDaemon::markThreadsAsRead(const QList<QVariantMap> &threads)
 {
     if (!mBackend) {

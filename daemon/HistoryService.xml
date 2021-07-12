@@ -62,6 +62,27 @@
             <arg type="b" direction="out"/>
             <annotation name="org.qtproject.QtDBus.QtTypeName.In0" value="QList &lt; QVariantMap &gt;"/>
         </method>
+        <method name="RemoveEventsBy">
+            <dox:d><![CDATA[
+                Remove events from the storage given the type and filter
+                Returns true if succeeded in removing the events.
+            ]]></dox:d>
+            <arg name="type" type="i" direction="in"/>
+            <arg name="filter" type="a{sv}" direction="in"/>
+            <arg name="sort" type="a{sv}" direction="in"/>
+            <arg type="b" direction="out"/>
+            <annotation name="org.qtproject.QtDBus.QtTypeName.In1" value="QVariantMap"/>
+            <annotation name="org.qtproject.QtDBus.QtTypeName.In2" value="QVariantMap"/>
+        </method>
+        <method name="EventsCount">
+            <dox:d><![CDATA[
+                Count the number of events from the storage given the type and filter
+            ]]></dox:d>
+            <arg name="type" type="i" direction="in"/>
+            <arg name="filter" type="a{sv}" direction="in"/>
+            <arg type="i" direction="out"/>
+            <annotation name="org.qtproject.QtDBus.QtTypeName.In1" value="QVariantMap"/>
+        </method>
         <method name="RemoveThreads">
             <dox:d><![CDATA[
                 Remove the given threads from the storage.

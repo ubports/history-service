@@ -49,6 +49,8 @@ public:
     virtual PluginEventView* queryEvents(EventType type,
                                          const Sort &sort = Sort(),
                                          const Filter &filter = Filter()) = 0;
+    virtual int eventsCount(EventType type, const Filter &filter = Filter()) = 0;
+
     virtual QVariantMap getSingleThread(EventType type,
                                         const QString &accountId,
                                         const QString &threadId,
