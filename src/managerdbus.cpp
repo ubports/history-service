@@ -164,10 +164,9 @@ bool ManagerDBus::removeEvents(const Events &events)
     return true;
 }
 
-bool ManagerDBus::removeEvents(EventType type, const Filter &filter, const Sort &sort)
+void ManagerDBus::removeEvents(EventType type, const Filter &filter, const Sort &sort)
 {
     mInterface.asyncCall("RemoveEventsBy", (int)type, filter.properties(), sort.properties());
-    return true;
 }
 
 int ManagerDBus::eventsCount(int type, const Filter &filter)

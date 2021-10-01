@@ -1,3 +1,24 @@
+/*
+ * Copyright (C) 2021 UBports Foundation
+ *
+ * Authors:
+ *  Lionel Duboeuf <lduboeuf@ouvaton.org>
+ *
+ * This file is part of history-service.
+ *
+ * history-service is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; version 3.
+ *
+ * history-service is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include <QtCore/QObject>
 #include <QtTest/QtTest>
 #include "manager.h"
@@ -26,22 +47,19 @@ void HistoryManagerTest::testShouldNotTriggerOperation()
     HistoryManager historyManager;
     QSignalSpy countChanged(&historyManager, SIGNAL(countChanged()));
     // no type
-    QCOMPARE(historyManager.removeAll(), false);
-    historyManager.setType(HistoryModel::EventTypeVoice);
+    QCOMPARE(historyManager.removeAll(History::EventTypeNull, QDateTime::currentDateTime().toString("yyyy-MM-ddTHH:mm:ss.zzz")), false);
+    QCOMPARE(historyManager.error(),HistoryManager::OPERATION_INVALID);
+    //historyManager.setType(HistoryModel::EventTypeVoice);
 
-    // no filter
-    QCOMPARE(historyManager.removeAll(), false);
-    HistoryQmlFilter *filter = new HistoryQmlFilter(this);
-    filter->setFilterProperty(History::FieldTimestamp);
-    filter->setFilterValue(QDateTime::currentDateTime().toString("yyyy-MM-ddTHH:mm:ss.zzz"));
-    filter->setMatchFlags(History::MatchLess);
-    historyManager.setFilter(filter);
+    // bad filter
+    QCOMPARE(historyManager.removeAll(HistoryModel::EventTypeVoice, ""), false);
+    QCOMPARE(historyManager.error(),HistoryManager::OPERATION_INVALID);
 
     //start remove no datas
-    QCOMPARE(historyManager.removeAll(), false);
+    QCOMPARE(historyManager.removeAll(HistoryModel::EventTypeVoice, QDateTime::currentDateTime().toString("yyyy-MM-ddTHH:mm:ss.zzz")), false);
     QTRY_COMPARE(countChanged.count(), 1);
     QCOMPARE(historyManager.count(), 0);
-
+    QCOMPARE(historyManager.error(),HistoryManager::NO_ERROR);
 }
 
 void HistoryManagerTest::testRemoveAll()
@@ -69,20 +87,11 @@ void HistoryManagerTest::testRemoveAll()
                                    true);
     QVERIFY(mManager->writeEvents(History::Events() << voiceEvent));
 
-    HistoryQmlFilter *filter = new HistoryQmlFilter(this);
-    filter->setFilterProperty(History::FieldTimestamp);
-    filter->setFilterValue(QDateTime::currentDateTime().addDays(1).toString("yyyy-MM-ddTHH:mm:ss.zzz"));
-    filter->setMatchFlags(History::MatchLess);
-
-    historyManager.setType(HistoryModel::EventTypeVoice);
-    historyManager.setFilter(filter);
-
-    QCOMPARE(historyManager.eventsCount(), 1);
-
-    QVERIFY(historyManager.removeAll());
+    QVERIFY(historyManager.removeAll(HistoryModel::EventTypeVoice, QDateTime::currentDateTime().addDays(1).toString("yyyy-MM-ddTHH:mm:ss.zzz")));
     QTRY_COMPARE(operationStarted.count(), 1);
     QTRY_COMPARE(operationEnded.count(), 1);
     QCOMPARE(historyManager.deletedCount(), 1);
+    QCOMPARE(historyManager.error(),HistoryManager::NO_ERROR);
 }
 
 

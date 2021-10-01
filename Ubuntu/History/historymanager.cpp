@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Ubports Foundation
+ * Copyright (C) 2021 UBports Foundation
  *
  * Authors:
  *  Lionel Duboeuf <lduboeuf@ouvaton.org>
@@ -22,42 +22,11 @@
 #include "manager.h"
 #include "eventview.h"
 #include <QDebug>
+#include <QTimer>
 
 
-HistoryManager::HistoryManager(QObject *parent) : QObject(parent), mFilter(0), mSort(new HistoryQmlSort(this)), mType(HistoryModel::EventTypeText), mDeletedCount(0), mPendingOperation(false), mSignalsTimer(-1)
+HistoryManager::HistoryManager(QObject *parent) : QObject(parent), mError(OperationError::NO_ERROR), mDeletedCount(0), mPendingOperation(false)
 {
-}
-
-HistoryQmlFilter *HistoryManager::filter() const
-{
-    return mFilter;
-}
-
-void HistoryManager::setFilter(HistoryQmlFilter *value)
-{
-    if (mFilter) {
-        mFilter->disconnect(this);
-    }
-
-    mFilter = value;
-
-    Q_EMIT filterChanged();
-}
-
-HistoryModel::EventType HistoryManager::type() const
-{
-    return mType;
-}
-
-void HistoryManager::setType(HistoryModel::EventType value)
-{
-    mType = value;
-    Q_EMIT typeChanged();
-}
-
-HistoryQmlSort *HistoryManager::sort() const
-{
-    return mSort;
 }
 
 int HistoryManager::count() const
@@ -70,53 +39,35 @@ int HistoryManager::deletedCount() const
     return mDeletedCount;
 }
 
-void HistoryManager::setSort(HistoryQmlSort *value)
+HistoryManager::OperationError HistoryManager::error() const
 {
-    // disconnect the previous sort
-    if (mSort) {
-        mSort->disconnect(this);
-    }
-
-    mSort = value;
-
-    Q_EMIT sortChanged();
+    return mError;
 }
 
-int HistoryManager::eventsCount()
+bool HistoryManager::removeAll(int eventType, const QString &from)
 {
-    History::Filter queryFilter;
-
-    if (!mType || !mFilter) {
-        return false;
-    }
-
-    if (mFilter && mFilter->filter().isValid()) {
-        queryFilter = mFilter->filter();
-    }
-
-    return History::Manager::instance()->eventsCount((History::EventType)mType, queryFilter);
-}
-
-void HistoryManager::timerEvent(QTimerEvent *event)
-{
-    if (event->timerId() == mSignalsTimer) {
-        pendingOperation(false);
-    }
-}
-
-bool HistoryManager::removeAll()
-{
-
-    History::Filter queryFilter;
-    History::Sort querySort;
 
     if (mPendingOperation) {
+        setError(OperationError::OPERATION_ALREADY_PENDING);
         qWarning() << "there is a pending operation, request cancelled";
         return false;
     }
 
-    if (!mType || !mFilter || !mFilter->filter().isValid()) {
-        qWarning() << "type or filter not set, operation cancelled";
+    QDateTime fromDate = QDateTime::fromString(from, Qt::ISODate);
+    History::EventType type = (History::EventType) eventType;
+
+    if (type == History::EventTypeNull|| !fromDate.isValid()) {
+        setError(OperationError::OPERATION_INVALID);
+        qWarning() << "invalid type or date, request cancelled";
+        return false;
+    }
+
+    History::Filter queryFilter(History::FieldTimestamp, QVariant(from), History::MatchLess);
+    History::Sort querySort(History::FieldTimestamp, Qt::DescendingOrder);
+
+    if (!queryFilter.isValid()) {
+        setError(OperationError::OPERATION_INVALID);
+        qWarning() << "filter invalid, operation cancelled";
         return false;
     }
 
@@ -124,24 +75,20 @@ bool HistoryManager::removeAll()
         mView->disconnect(this);
     }
 
-    queryFilter = mFilter->filter();
-
-    if (mSort) {
-        querySort = mSort->sort();
-    }
-
-    setCount(eventsCount());
+    setCount(History::Manager::instance()->eventsCount(type, queryFilter));
     mDeletedCount = 0;
+    setError(OperationError::NO_ERROR);
 
     bool started = false;
     if (count() > 0) {
 
-        mView = History::Manager::instance()->queryEvents((History::EventType)mType, querySort, queryFilter);
+        mView = History::Manager::instance()->queryEvents(type, querySort, queryFilter);
         connect(mView.data(),
                 SIGNAL(eventsRemoved(History::Events)),
                 SLOT(onEventsRemoved(History::Events)));
 
-        started = History::Manager::instance()->removeEvents((History::EventType)mType, queryFilter, querySort);
+        History::Manager::instance()->removeEvents(type, queryFilter, querySort);
+        started = true;
 
     }
     pendingOperation(started);
@@ -152,7 +99,7 @@ bool HistoryManager::removeAll()
 void HistoryManager::onEventsRemoved(const History::Events &events)
 {
     mDeletedCount += events.count();
-    qDebug() << "mDeletedCount" << mDeletedCount;
+    qDebug() << "onEventsRemoved: removed " << mDeletedCount << " events";
     Q_EMIT deletedCountChanged();
 
     if (mDeletedCount == mCount) {
@@ -160,21 +107,23 @@ void HistoryManager::onEventsRemoved(const History::Events &events)
     }
 }
 
+void HistoryManager::onTimeoutReached()
+{
+    if (mPendingOperation) {
+        pendingOperation(false);
+        setError(OperationError::OPERATION_TIMEOUT);
+        Q_EMIT operationTimeOutReached();
+    }
+}
+
 void HistoryManager::pendingOperation(bool state)
 {
     mPendingOperation = state;
     if (mPendingOperation) {
-        if (mSignalsTimer >= 0) {
-            killTimer(mSignalsTimer);
-        }
-
-        mSignalsTimer = startTimer(180000);
+        QTimer::singleShot(180000, this, &HistoryManager::onTimeoutReached);
         Q_EMIT operationStarted();
     } else {
-        if (mSignalsTimer >= 0) {
-            killTimer(mSignalsTimer);
-            mSignalsTimer = -1;
-        }
+        setError(OperationError::NO_ERROR);
         Q_EMIT operationEnded();
     }
 }
@@ -183,4 +132,10 @@ void HistoryManager::setCount(int count)
 {
     mCount = count;
     Q_EMIT countChanged();
+}
+
+void HistoryManager::setError(OperationError error)
+{
+    mError = error;
+    Q_EMIT errorChanged();
 }

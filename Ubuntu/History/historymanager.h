@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Ubports Foundation
+ * Copyright (C) 2021 UBports Foundation
  *
  * Authors:
  *  Lionel Duboeuf <lduboeuf@ouvaton.org>
@@ -22,69 +22,58 @@
 #define HISTORYMANAGER_H
 
 #include <QObject>
-#include <QTimerEvent>
 #include "types.h"
 #include "event.h"
-#include "historyqmlfilter.h"
-#include "historyqmlsort.h"
 #include "historymodel.h"
 
 class HistoryManager : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(HistoryQmlFilter *filter READ filter WRITE setFilter NOTIFY filterChanged)
-    Q_PROPERTY(HistoryQmlSort *sort READ sort WRITE setSort NOTIFY sortChanged)
-    Q_PROPERTY(HistoryModel::EventType type READ type WRITE setType NOTIFY typeChanged)
     Q_PROPERTY(int count READ count NOTIFY countChanged)
     Q_PROPERTY(int deletedCount READ deletedCount NOTIFY deletedCountChanged)
+    Q_PROPERTY(OperationError error READ error NOTIFY errorChanged)
 
 public:
 
+    enum OperationError {
+        NO_ERROR,
+        OPERATION_ALREADY_PENDING,
+        OPERATION_INVALID,
+        OPERATION_TIMEOUT
+    };
+    Q_ENUM(OperationError)
+
     explicit HistoryManager(QObject *parent = 0);
-
-    HistoryQmlFilter *filter() const;
-    void setFilter(HistoryQmlFilter *value);
-
-    HistoryModel::EventType type() const;
-    void setType(HistoryModel::EventType value);
-
-    void setSort(HistoryQmlSort *value);
-    HistoryQmlSort *sort() const;
 
     int count() const;
     int deletedCount() const;
+    OperationError error() const;
 
-    Q_INVOKABLE bool removeAll();
-    Q_INVOKABLE int eventsCount();
-
-protected:
-    void timerEvent(QTimerEvent *event) override;
+    Q_INVOKABLE bool removeAll(int eventType, const QString &from);
 
 Q_SIGNALS:
-    void filterChanged();
-    void sortChanged();
-    void typeChanged();
     void countChanged();
+    void errorChanged();
     void deletedCountChanged();
     void operationStarted();
     void operationEnded();
+    void operationTimeOutReached();
 
 protected Q_SLOTS:
     void onEventsRemoved(const History::Events &events);
+    void onTimeoutReached();
 
 private:
 
     void pendingOperation(bool state);
     void setCount(int count);
+    void setError(OperationError error);
 
-    HistoryQmlFilter *mFilter;
-    HistoryQmlSort *mSort;
-    HistoryModel::EventType mType;
     History::EventViewPtr mView;
+    HistoryManager::OperationError mError;
     int mCount;
     int mDeletedCount;
     bool mPendingOperation;
-    int mSignalsTimer;
 };
 
 #endif // HISTORYMANAGER_H

@@ -303,6 +303,8 @@ void ManagerTest::testRemoveEventsByFilter()
                                                                   History::MatchCaseSensitive, true);
     // insert some text and voice events
     History::Events events;
+    History::Events eventsExpectedToBeRemoved;
+    int daysToRemove = 10;
     for (int i = 0; i < 50; ++i) {
         History::TextEvent textEvent(textThread.accountId(),
                                      textThread.threadId(),
@@ -323,6 +325,9 @@ void ManagerTest::testRemoveEventsByFilter()
                                        currentDate.addDays(i),
                                        true,
                                        true);
+        if (i < daysToRemove) {
+            eventsExpectedToBeRemoved << voiceEvent;
+        }
         events.append(voiceEvent);
     }
     QSignalSpy eventsRemovedSpy(mManager, SIGNAL(eventsRemoved(History::Events)));
@@ -333,20 +338,23 @@ void ManagerTest::testRemoveEventsByFilter()
 
     History::Filter filter;
     filter.setFilterProperty(History::FieldTimestamp);
-    filter.setFilterValue(currentDate.addDays(10).toString("yyyy-MM-ddTHH:mm:ss.zzz")); //should delete 10 voice_events
+    filter.setFilterValue(currentDate.addDays(daysToRemove).toString("yyyy-MM-ddTHH:mm:ss.zzz")); //should delete 10 voice_events
     filter.setMatchFlags(History::MatchLess);
 
     History::Sort sort;
     sort.setSortField(History::FieldTimestamp);
     sort.setSortOrder(Qt::DescendingOrder);
 
-    QVERIFY(mManager->removeEvents(History::EventTypeVoice ,filter, sort));
+    mManager->removeEvents(History::EventTypeVoice ,filter, sort);
     QTRY_COMPARE(eventsRemovedSpy.count(), 1);
     QTRY_COMPARE(threadsModifiedSpy.count(), 1);
     History::Events removedEvents = eventsRemovedSpy.first().first().value<History::Events>();
     History::Threads modifiedThreads = threadsModifiedSpy.first().first().value<History::Threads>();
 
-    QCOMPARE(removedEvents.count(), 10);
+    qSort(removedEvents);
+    qSort(eventsExpectedToBeRemoved);
+    QCOMPARE(removedEvents, eventsExpectedToBeRemoved);
+
     QCOMPARE(modifiedThreads.count(), 1);
 
     // now remove the remaining events and make sure the threads get removed too
@@ -354,7 +362,7 @@ void ManagerTest::testRemoveEventsByFilter()
     QSignalSpy threadsRemovedSpy(mManager, SIGNAL(threadsRemoved(History::Threads)));
     eventsRemovedSpy.clear();
 
-    QVERIFY(mManager->removeEvents(History::EventTypeVoice ,filter, sort));
+    mManager->removeEvents(History::EventTypeVoice ,filter, sort);
     QTRY_COMPARE(eventsRemovedSpy.count(), 1);
     QTRY_COMPARE(threadsRemovedSpy.count(), 1);
     removedEvents = eventsRemovedSpy.first().first().value<History::Events>();
@@ -479,12 +487,10 @@ void ManagerTest::cleanup() {
                 deletedCount+= events.count();
             });
 
-        QVERIFY(mManager->removeEvents(History::EventTypeVoice, filter, sort));
-        QVERIFY(mManager->removeEvents(History::EventTypeText, filter, sort));
+        mManager->removeEvents(History::EventTypeVoice, filter, sort);
+        mManager->removeEvents(History::EventTypeText, filter, sort);
 
-        while (totalToRemove > deletedCount) {
-            QTest::qWait(100);
-        }
+        QTRY_COMPARE(totalToRemove, deletedCount);
 
         QObject::disconnect(conn);
     }
