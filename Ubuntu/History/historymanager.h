@@ -22,16 +22,12 @@
 #define HISTORYMANAGER_H
 
 #include <QObject>
-#include "types.h"
-#include "event.h"
+#include <QJSValue>
 #include "historymodel.h"
 
 class HistoryManager : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(int count READ count NOTIFY countChanged)
-    Q_PROPERTY(int deletedCount READ deletedCount NOTIFY deletedCountChanged)
-    Q_PROPERTY(OperationError error READ error NOTIFY errorChanged)
 
 public:
 
@@ -39,40 +35,27 @@ public:
         NO_ERROR,
         OPERATION_ALREADY_PENDING,
         OPERATION_INVALID,
+        OPERATION_FAILED,
         OPERATION_TIMEOUT
     };
     Q_ENUM(OperationError)
 
     explicit HistoryManager(QObject *parent = 0);
 
-    int count() const;
-    int deletedCount() const;
-    OperationError error() const;
+    /*!
+     * \brief removeEvents remove all events given eventType and created before maxDate,
+     * \param eventType event type according to History.EventType
+     * \param maxDate QString date in ISO format
+     * \param callback expect a javascript function(eventsCount, deletedEventsCount, error)
+     * eventsCount is the total number of events that should be removed,
+     * deletedEventsCount number of deleted events
+     * error  HistoryManager::OperationError enum type,
+     * \return
+     */
+    Q_INVOKABLE void removeEvents(int eventType, const QString &maxDate, const QJSValue &callback);
 
-    Q_INVOKABLE bool removeAll(int eventType, const QString &from);
-
-Q_SIGNALS:
-    void countChanged();
-    void errorChanged();
-    void deletedCountChanged();
-    void operationStarted();
-    void operationEnded();
-    void operationTimeOutReached();
-
-protected Q_SLOTS:
-    void onEventsRemoved(const History::Events &events);
-    void onTimeoutReached();
 
 private:
-
-    void pendingOperation(bool state);
-    void setCount(int count);
-    void setError(OperationError error);
-
-    History::EventViewPtr mView;
-    HistoryManager::OperationError mError;
-    int mCount;
-    int mDeletedCount;
     bool mPendingOperation;
 };
 

@@ -204,16 +204,16 @@ bool Manager::removeEvents(const Events &events)
     return d->dbus->removeEvents(events);
 }
 
-void Manager::removeEvents(EventType type, const Filter &filter, const Sort &sort)
+void Manager::removeEvents(EventType type, const Filter &filter, const Sort &sort, std::function<void(int,bool)> callback)
 {
     Q_D(Manager);
-    d->dbus->removeEvents(type, filter, sort);
+    d->dbus->removeEvents(type, filter, sort, callback);
 }
 
-int Manager::eventsCount(EventType type, const Filter &filter)
+int Manager::getEventsCount(EventType type, const Filter &filter)
 {
     Q_D(Manager);
-    return d->dbus->eventsCount(type, filter);
+    return d->dbus->getEventsCount(type, filter);
 }
 
 bool Manager::isServiceRunning() const

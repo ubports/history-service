@@ -56,8 +56,8 @@ public:
     bool writeEvents(const History::Events &events);
     bool removeThreads(const Threads &threads);
     bool removeEvents(const Events &events);
-    void removeEvents(EventType type, const Filter &filter, const Sort &sort);
-    int eventsCount(int type, const Filter &filter);
+    void removeEvents(EventType type, const Filter &filter, const Sort &sort, std::function<void(int,bool)> callback);
+    int getEventsCount(int type, const Filter &filter);
     Thread getSingleThread(EventType type, const QString &accountId, const QString &threadId, const QVariantMap &properties = QVariantMap());
     Event getSingleEvent(EventType type, const QString &accountId, const QString &threadId, const QString &eventId);
     void markThreadsAsRead(const History::Threads &threads);

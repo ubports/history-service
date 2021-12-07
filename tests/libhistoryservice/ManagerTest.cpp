@@ -345,7 +345,12 @@ void ManagerTest::testRemoveEventsByFilter()
     sort.setSortField(History::FieldTimestamp);
     sort.setSortOrder(Qt::DescendingOrder);
 
-    mManager->removeEvents(History::EventTypeVoice ,filter, sort);
+    auto onVoiceEventsRemoveCompleted = [this](int removedCount, bool isError) {
+        QCOMPARE(removedCount, 10);
+        QCOMPARE(isError, false);
+    };
+
+    mManager->removeEvents(History::EventTypeVoice ,filter, sort, onVoiceEventsRemoveCompleted);
     QTRY_COMPARE(eventsRemovedSpy.count(), 1);
     QTRY_COMPARE(threadsModifiedSpy.count(), 1);
     History::Events removedEvents = eventsRemovedSpy.first().first().value<History::Events>();
@@ -362,7 +367,12 @@ void ManagerTest::testRemoveEventsByFilter()
     QSignalSpy threadsRemovedSpy(mManager, SIGNAL(threadsRemoved(History::Threads)));
     eventsRemovedSpy.clear();
 
-    mManager->removeEvents(History::EventTypeVoice ,filter, sort);
+    auto onRemainingVoiceEventsRemoveCompleted = [this](int removedCount, bool isError) {
+        QCOMPARE(removedCount, 40);
+        QCOMPARE(isError, false);
+    };
+
+    mManager->removeEvents(History::EventTypeVoice ,filter, sort, onRemainingVoiceEventsRemoveCompleted);
     QTRY_COMPARE(eventsRemovedSpy.count(), 1);
     QTRY_COMPARE(threadsRemovedSpy.count(), 1);
     removedEvents = eventsRemovedSpy.first().first().value<History::Events>();
@@ -373,7 +383,7 @@ void ManagerTest::testRemoveEventsByFilter()
     QCOMPARE(removedThreads.count(), 1);
 
     //verify text events are still there
-    QCOMPARE(mManager->eventsCount(History::EventTypeText ,filter), 50);
+    QCOMPARE(mManager->getEventsCount(History::EventTypeText ,filter), 50);
 
 }
 
@@ -473,26 +483,26 @@ void ManagerTest::cleanup() {
     sort.setSortField(History::FieldTimestamp);
     sort.setSortOrder(Qt::DescendingOrder);
 
-    int voiceEventsCount = mManager->eventsCount(History::EventTypeVoice, filter);
-    int textEventsCount = mManager->eventsCount(History::EventTypeText, filter);
+    int voiceEventsCount = mManager->getEventsCount(History::EventTypeVoice, filter);
+    int textEventsCount = mManager->getEventsCount(History::EventTypeText, filter);
 
     int totalToRemove = voiceEventsCount + textEventsCount;
-    int deletedCount = 0;
     if (totalToRemove > 0) {
 
-        QMetaObject::Connection conn = connect(mManager,
-                &History::Manager::eventsRemoved,
-                [&deletedCount](const History::Events &events)
-            {
-                deletedCount+= events.count();
-            });
+        auto onVoiceEventsRemoveCompleted = [this, voiceEventsCount](int removedCount, bool isError) {
+            QCOMPARE(removedCount, voiceEventsCount);
+            QCOMPARE(isError, 0);
+        };
 
-        mManager->removeEvents(History::EventTypeVoice, filter, sort);
-        mManager->removeEvents(History::EventTypeText, filter, sort);
+        auto onTextEventsRemoveCompleted = [this, textEventsCount](int removedCount, bool isError) {
+            QCOMPARE(removedCount, textEventsCount);
+            QCOMPARE(isError, 0);
+        };
 
-        QTRY_COMPARE(totalToRemove, deletedCount);
+        mManager->removeEvents(History::EventTypeVoice, filter, sort, onVoiceEventsRemoveCompleted);
+        mManager->removeEvents(History::EventTypeText, filter, sort, onTextEventsRemoveCompleted);
 
-        QObject::disconnect(conn);
+        QTest::qWait(300);
     }
 }
 

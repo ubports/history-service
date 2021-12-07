@@ -43,7 +43,7 @@ public:
     Q_NOREPLY void Destroy();
     virtual QList<QVariantMap> NextPage() = 0;
     virtual bool IsValid() const;
-    virtual int TotalCount() = 0;
+    virtual int GetTotalCount() = 0;
 
     // other methods
     QString objectPath() const;

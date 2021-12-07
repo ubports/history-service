@@ -164,16 +164,33 @@ bool ManagerDBus::removeEvents(const Events &events)
     return true;
 }
 
-void ManagerDBus::removeEvents(EventType type, const Filter &filter, const Sort &sort)
+void ManagerDBus::removeEvents(EventType type, const Filter &filter, const Sort &sort, std::function<void(int,bool)> callback)
 {
-    mInterface.asyncCall("RemoveEventsBy", (int)type, filter.properties(), sort.properties());
+    QDBusMessage message = QDBusMessage::createMethodCall(mInterface.service(), mInterface.path(), mInterface.interface(), "RemoveEventsBy");
+    message.setArguments({ (int)type, filter.properties(), sort.properties()});
+    // 7500 events takes 38sec on N5, 2 min should be enough for most cases
+    QDBusPendingCall async = mInterface.connection().asyncCall(message, 120000);
+
+    QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(async, this);
+    QObject::connect(watcher, &QDBusPendingCallWatcher::finished, [this, callback](QDBusPendingCallWatcher *call) {
+        QDBusPendingReply<int> reply = *call;
+        if (reply.isError()) {
+            qWarning() << "error:" << __func__ << reply.error().message();
+            callback(0, true);
+        } else {
+            int removedCount = reply.value();
+            qDebug()  << __func__ << "Events removed:" << removedCount;
+            callback(removedCount, false);
+        }
+        call->deleteLater();
+    });
 }
 
-int ManagerDBus::eventsCount(int type, const Filter &filter)
+int ManagerDBus::getEventsCount(int type, const Filter &filter)
 {
-    QDBusReply<int> reply = mInterface.call("EventsCount", (int)type, filter.properties());
+    QDBusReply<int> reply = mInterface.call("GetEventsCount", (int)type, filter.properties());
     if (!reply.isValid()) {
-        qWarning() << "invalid reply from EventsCount" << reply.error();
+        qWarning() << "invalid reply from GetEventsCount" << reply.error();
         return 0;
     }
     return reply.value();

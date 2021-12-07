@@ -30,6 +30,7 @@
 class HistoryEventModel : public HistoryModel
 {
     Q_OBJECT
+    Q_PROPERTY(int totalCount READ totalCount NOTIFY totalCountChanged)
     Q_ENUMS(EventRole)
 public:
     enum EventRole {
@@ -55,6 +56,8 @@ public:
 
     explicit HistoryEventModel(QObject *parent = 0);
 
+    int totalCount() const;
+
     virtual int rowCount(const QModelIndex &parent = QModelIndex()) const;
     virtual QVariant data(const QModelIndex &index, int role) const;
     QVariant eventData(const History::Event &event, int role) const;
@@ -67,7 +70,9 @@ public:
     Q_INVOKABLE bool removeEvents(const QVariantList &eventsProperties);
     Q_INVOKABLE bool writeEvents(const QVariantList &eventsProperties);
     Q_INVOKABLE bool removeEventAttachment(const QString &accountId, const QString &threadId, const QString &eventId, int eventType, const QString &attachmentId);
-    Q_INVOKABLE int totalCount();
+
+Q_SIGNALS:
+    void totalCountChanged();
 
 protected Q_SLOTS:
     virtual void updateQuery();

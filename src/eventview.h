@@ -45,7 +45,7 @@ public:
     virtual ~EventView();
 
     QList<Event> nextPage();
-    int totalCount();
+    int getTotalCount();
     bool isValid() const;
 
 Q_SIGNALS:

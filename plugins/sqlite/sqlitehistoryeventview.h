@@ -42,7 +42,7 @@ public:
     ~SQLiteHistoryEventView();
 
     QList<QVariantMap> NextPage();
-    int TotalCount();
+    int GetTotalCount();
     bool IsValid() const;
 
 protected:

@@ -72,8 +72,8 @@ public:
     bool writeEvents(const History::Events &events);
     bool removeThreads(const Threads &threads);
     bool removeEvents(const Events &events);
-    void removeEvents(EventType type, const Filter &filter, const Sort &sort);
-    int eventsCount(EventType type, const Filter &filter);
+    void removeEvents(EventType type, const Filter &filter, const Sort &sort, std::function<void(int,bool)> callback);
+    int getEventsCount(EventType type, const Filter &filter);
     void markThreadsAsRead(const History::Threads &thread);
 
     bool isServiceRunning() const;

@@ -51,6 +51,18 @@ HistoryEventModel::HistoryEventModel(QObject *parent) :
     mRoles[CallDurationRole] = "callDuration";
     mRoles[RemoteParticipantRole] = "remoteParticipant";
     mRoles[SubjectAsAliasRole] = "subjectAsAlias";
+
+    connect(this, SIGNAL(countChanged()), this, SIGNAL(totalCountChanged()));
+}
+
+int HistoryEventModel::totalCount() const
+{
+    if (mView.isNull()) {
+        qWarning() << "component not ready";
+        return 0;
+    }
+
+    return mView->getTotalCount();
 }
 
 int HistoryEventModel::rowCount(const QModelIndex &parent) const
@@ -462,16 +474,6 @@ void HistoryEventModel::onThreadsRemoved(const History::Threads &threads)
             }
         }
     }
-}
-
-int HistoryEventModel::totalCount()
-{
-    if (mView.isNull()) {
-        qWarning() << "component not ready";
-        return 0;
-    }
-
-    return mView->totalCount();
 }
 
 History::Events HistoryEventModel::fetchNextPage()

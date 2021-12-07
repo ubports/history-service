@@ -143,7 +143,7 @@ EventView::~EventView()
     }
 }
 
-int EventView::totalCount()
+int EventView::getTotalCount()
 {
     Q_D(EventView);
 
@@ -151,7 +151,7 @@ int EventView::totalCount()
         return 0;
     }
 
-    QDBusReply<int> reply = d->dbus->call("TotalCount");
+    QDBusReply<int> reply = d->dbus->call("GetTotalCount");
     if (!reply.isValid()) {
         qWarning() << reply.error();
         return 0;

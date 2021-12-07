@@ -21,6 +21,7 @@
 
 #include <QtCore/QObject>
 #include <QtTest/QtTest>
+#include <QJSEngine>
 #include "manager.h"
 #include "historymanager.h"
 #include "voiceevent.h"
@@ -45,30 +46,43 @@ void HistoryManagerTest::initTestCase()
 void HistoryManagerTest::testShouldNotTriggerOperation()
 {
     HistoryManager historyManager;
-    QSignalSpy countChanged(&historyManager, SIGNAL(countChanged()));
+
+    QJSEngine myEngine;
+    myEngine.globalObject().setProperty("error","");
+    myEngine.globalObject().setProperty("eventCount","");
+    myEngine.globalObject().setProperty("deletedEventCount","");
+    QJSValue fun = myEngine.evaluate("(function(_eventCount, _deletedEventCount, _error) {"
+                                     " error = _error; "
+                                     " eventCount = _eventCount;"
+                                     " deletedEventCount = _deletedEventCount;"
+                                     "})");
     // no type
-    QCOMPARE(historyManager.removeAll(History::EventTypeNull, QDateTime::currentDateTime().toString("yyyy-MM-ddTHH:mm:ss.zzz")), false);
-    QCOMPARE(historyManager.error(),HistoryManager::OPERATION_INVALID);
-    //historyManager.setType(HistoryModel::EventTypeVoice);
+    historyManager.removeEvents(History::EventTypeNull, QDateTime::currentDateTime().toString("yyyy-MM-ddTHH:mm:ss.zzz"),fun);
+    QCOMPARE(myEngine.globalObject().property("error").toInt(),HistoryManager::OPERATION_INVALID);
 
     // bad filter
-    QCOMPARE(historyManager.removeAll(HistoryModel::EventTypeVoice, ""), false);
-    QCOMPARE(historyManager.error(),HistoryManager::OPERATION_INVALID);
+    historyManager.removeEvents(HistoryModel::EventTypeVoice, "", fun);
+    QCOMPARE(myEngine.globalObject().property("error").toInt(),HistoryManager::OPERATION_INVALID);
 
     //start remove no datas
-    QCOMPARE(historyManager.removeAll(HistoryModel::EventTypeVoice, QDateTime::currentDateTime().toString("yyyy-MM-ddTHH:mm:ss.zzz")), false);
-    QTRY_COMPARE(countChanged.count(), 1);
-    QCOMPARE(historyManager.count(), 0);
-    QCOMPARE(historyManager.error(),HistoryManager::NO_ERROR);
+    historyManager.removeEvents(HistoryModel::EventTypeVoice, QDateTime::currentDateTime().toString("yyyy-MM-ddTHH:mm:ss.zzz"),fun);
+    QCOMPARE(myEngine.globalObject().property("error").toInt(),HistoryManager::NO_ERROR);
+    QCOMPARE(myEngine.globalObject().property("eventCount").toInt(),0);
 }
 
 void HistoryManagerTest::testRemoveAll()
 {
     HistoryManager historyManager;
-    QSignalSpy countChanged(&historyManager, SIGNAL(countChanged()));
-    QSignalSpy operationEnded(&historyManager, SIGNAL(operationEnded()));
-    QSignalSpy operationStarted(&historyManager, SIGNAL(operationStarted()));
-    QSignalSpy deletedCountChanged(&historyManager, SIGNAL(deletedCountChanged()));
+
+    QJSEngine myEngine;
+    myEngine.globalObject().setProperty("error","");
+    myEngine.globalObject().setProperty("eventCount",-1);
+    myEngine.globalObject().setProperty("deletedEventCount",-1);
+    QJSValue fun = myEngine.evaluate("(function(_eventCount, _deletedEventCount, _error) {"
+                                     " error = _error; "
+                                     " eventCount = _eventCount;"
+                                     " deletedEventCount = _deletedEventCount;"
+                                     "})");
 
     QString voiceParticipant("voiceParticipant");
 
@@ -83,17 +97,18 @@ void HistoryManagerTest::testRemoveAll()
                                    QString("eventId1"),
                                    voiceParticipant,
                                    QDateTime::currentDateTime(),
-                                   true,
-                                   true);
+                                   false,
+                                   false,
+                                   QTime(1,2,3));
     QVERIFY(mManager->writeEvents(History::Events() << voiceEvent));
 
-    QVERIFY(historyManager.removeAll(HistoryModel::EventTypeVoice, QDateTime::currentDateTime().addDays(1).toString("yyyy-MM-ddTHH:mm:ss.zzz")));
-    QTRY_COMPARE(operationStarted.count(), 1);
-    QTRY_COMPARE(operationEnded.count(), 1);
-    QCOMPARE(historyManager.deletedCount(), 1);
-    QCOMPARE(historyManager.error(),HistoryManager::NO_ERROR);
+    historyManager.removeEvents(HistoryModel::EventTypeVoice, QDateTime::currentDateTime().addDays(1).toString("yyyy-MM-ddTHH:mm:ss.zzz"), fun);
+    QTest::qWait(400);
+    qDebug() << "after: " << myEngine.globalObject().property("deletedEventCount").toInt();
+    QCOMPARE(myEngine.globalObject().property("error").toInt(),HistoryManager::NO_ERROR);
+    QCOMPARE(myEngine.globalObject().property("eventCount").toInt(),1);
+    QCOMPARE(myEngine.globalObject().property("deletedEventCount").toInt(),1);
 }
-
 
 QTEST_MAIN(HistoryManagerTest)
 #include "HistoryManagerTest.moc"

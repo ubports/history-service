@@ -64,17 +64,17 @@
         </method>
         <method name="RemoveEventsBy">
             <dox:d><![CDATA[
-                Remove events from the storage given the type and filter
-                Returns true if succeeded in removing the events.
+                Remove events from the storage given the type and filter.
+                Returns the number of removedEvents
             ]]></dox:d>
             <arg name="type" type="i" direction="in"/>
             <arg name="filter" type="a{sv}" direction="in"/>
             <arg name="sort" type="a{sv}" direction="in"/>
-            <arg type="b" direction="out"/>
+            <arg type="i" direction="out"/>
             <annotation name="org.qtproject.QtDBus.QtTypeName.In1" value="QVariantMap"/>
             <annotation name="org.qtproject.QtDBus.QtTypeName.In2" value="QVariantMap"/>
         </method>
-        <method name="EventsCount">
+        <method name="GetEventsCount">
             <dox:d><![CDATA[
                 Count the number of events from the storage given the type and filter
             ]]></dox:d>

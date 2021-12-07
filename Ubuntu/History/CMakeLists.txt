@@ -4,6 +4,7 @@ set(plugin_SRCS
     historyeventmodel.cpp
     historygroupedeventsmodel.cpp
     historygroupedthreadsmodel.cpp
+    historymanager.cpp
     historymodel.cpp
     historyqmlfilter.cpp
     historyqmlintersectionfilter.cpp
@@ -12,13 +13,13 @@ set(plugin_SRCS
     historyqmltexteventattachment.cpp
     historyqmlunionfilter.cpp
     historythreadmodel.cpp
-    historymanager.cpp
     )
 
 set(plugin_HDRS
     historyeventmodel.h
     historygroupedeventsmodel.h
     historygroupedthreadsmodel.h
+    historymanager.h
     historymodel.h
     historyqmlfilter.h
     historyqmlintersectionfilter.h
@@ -27,7 +28,6 @@ set(plugin_HDRS
     historyqmltexteventattachment.h
     historyqmlunionfilter.h
     historythreadmodel.h
-    historymanager.h
 )
 
 include_directories(

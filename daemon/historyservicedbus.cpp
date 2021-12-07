@@ -138,9 +138,9 @@ void HistoryServiceDBus::MarkThreadsAsRead(const QList<QVariantMap> &threads)
     return HistoryDaemon::instance()->markThreadsAsRead(threads);
 }
 
-int HistoryServiceDBus::EventsCount(int type, const QVariantMap &filter)
+int HistoryServiceDBus::GetEventsCount(int type, const QVariantMap &filter)
 {
-    return HistoryDaemon::instance()->eventsCount(type, filter);
+    return HistoryDaemon::instance()->getEventsCount(type, filter);
 }
 
 bool HistoryServiceDBus::RemoveEvents(const QList<QVariantMap> &events)
@@ -148,9 +148,14 @@ bool HistoryServiceDBus::RemoveEvents(const QList<QVariantMap> &events)
     return HistoryDaemon::instance()->removeEvents(events);
 }
 
-bool HistoryServiceDBus::RemoveEventsBy(int type, const QVariantMap &filter, const QVariantMap &sort)
+int HistoryServiceDBus::RemoveEventsBy(int type, const QVariantMap &filter, const QVariantMap &sort)
 {
-    return HistoryDaemon::instance()->removeEvents(type, filter, sort);
+    int removedCount = 0;
+    bool ok = HistoryDaemon::instance()->removeEvents(type, filter, sort, removedCount);
+    if (!ok) {
+        sendErrorReply(QDBusError::InternalError, "Issue while removing events");
+    }
+    return removedCount;
 }
 
 QString HistoryServiceDBus::QueryThreads(int type, const QVariantMap &sort, const QVariantMap &filter, const QVariantMap &properties)

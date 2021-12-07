@@ -65,7 +65,7 @@ bool PluginEventView::IsValid() const
     return true;
 }
 
-int PluginEventView::TotalCount()
+int PluginEventView::GetTotalCount()
 {
     return 0;
 }

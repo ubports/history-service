@@ -19,123 +19,61 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "historymanager.h"
+#include "event.h"
 #include "manager.h"
-#include "eventview.h"
+#include "types.h"
 #include <QDebug>
-#include <QTimer>
+#include <QJSValueList>
 
-
-HistoryManager::HistoryManager(QObject *parent) : QObject(parent), mError(OperationError::NO_ERROR), mDeletedCount(0), mPendingOperation(false)
+HistoryManager::HistoryManager(QObject *parent) :
+    QObject(parent), mPendingOperation(false)
 {
 }
 
-int HistoryManager::count() const
+void HistoryManager::removeEvents(int eventType, const QString &maxDate, const QJSValue &callback)
 {
-    return mCount;
-}
-
-int HistoryManager::deletedCount() const
-{
-    return mDeletedCount;
-}
-
-HistoryManager::OperationError HistoryManager::error() const
-{
-    return mError;
-}
-
-bool HistoryManager::removeAll(int eventType, const QString &from)
-{
-
-    if (mPendingOperation) {
-        setError(OperationError::OPERATION_ALREADY_PENDING);
-        qWarning() << "there is a pending operation, request cancelled";
-        return false;
+    if (!callback.isCallable()) {
+        qCritical() << "no callback found!";
+        return;
     }
 
-    QDateTime fromDate = QDateTime::fromString(from, Qt::ISODate);
+    QJSValue result(callback);
+    if (mPendingOperation) {
+        result.call(QJSValueList { 0, 0, OperationError::OPERATION_ALREADY_PENDING });
+        qWarning() << "there is a pending operation, request cancelled";
+        return;
+    }
+
+    QDateTime fromDate = QDateTime::fromString(maxDate, Qt::ISODate);
     History::EventType type = (History::EventType) eventType;
 
     if (type == History::EventTypeNull|| !fromDate.isValid()) {
-        setError(OperationError::OPERATION_INVALID);
+        result.call(QJSValueList { 0, 0, OperationError::OPERATION_INVALID });
         qWarning() << "invalid type or date, request cancelled";
-        return false;
+        return;
     }
 
-    History::Filter queryFilter(History::FieldTimestamp, QVariant(from), History::MatchLess);
+    History::Filter queryFilter(History::FieldTimestamp, QVariant(maxDate), History::MatchLess);
     History::Sort querySort(History::FieldTimestamp, Qt::DescendingOrder);
 
     if (!queryFilter.isValid()) {
-        setError(OperationError::OPERATION_INVALID);
-        qWarning() << "filter invalid, operation cancelled";
-        return false;
+        result.call(QJSValueList { 0, 0, OperationError::OPERATION_INVALID });
+        qWarning() << "invalid filter, operation cancelled";
+        return;
     }
 
-    if (!mView.isNull()) {
-        mView->disconnect(this);
+    int eventsCount = History::Manager::instance()->getEventsCount(type, queryFilter);
+    result.call(QJSValueList { eventsCount, 0, OperationError::NO_ERROR });
+
+    if (eventsCount == 0) {
+        return;
     }
 
-    setCount(History::Manager::instance()->eventsCount(type, queryFilter));
-    mDeletedCount = 0;
-    setError(OperationError::NO_ERROR);
+    auto onCompleted = [this, eventsCount, callback](int removedCount, bool isError) {
+            QJSValue result(callback);
+            OperationError error = isError ? OperationError::OPERATION_FAILED : OperationError::NO_ERROR;
+            result.call(QJSValueList { eventsCount, removedCount, error });
+    };
 
-    bool started = false;
-    if (count() > 0) {
-
-        mView = History::Manager::instance()->queryEvents(type, querySort, queryFilter);
-        connect(mView.data(),
-                SIGNAL(eventsRemoved(History::Events)),
-                SLOT(onEventsRemoved(History::Events)));
-
-        History::Manager::instance()->removeEvents(type, queryFilter, querySort);
-        started = true;
-
-    }
-    pendingOperation(started);
-
-    return started;
-}
-
-void HistoryManager::onEventsRemoved(const History::Events &events)
-{
-    mDeletedCount += events.count();
-    qDebug() << "onEventsRemoved: removed " << mDeletedCount << " events";
-    Q_EMIT deletedCountChanged();
-
-    if (mDeletedCount == mCount) {
-        pendingOperation(false);
-    }
-}
-
-void HistoryManager::onTimeoutReached()
-{
-    if (mPendingOperation) {
-        pendingOperation(false);
-        setError(OperationError::OPERATION_TIMEOUT);
-        Q_EMIT operationTimeOutReached();
-    }
-}
-
-void HistoryManager::pendingOperation(bool state)
-{
-    mPendingOperation = state;
-    if (mPendingOperation) {
-        QTimer::singleShot(180000, this, &HistoryManager::onTimeoutReached);
-        Q_EMIT operationStarted();
-    } else {
-        setError(OperationError::NO_ERROR);
-        Q_EMIT operationEnded();
-    }
-}
-
-void HistoryManager::setCount(int count)
-{
-    mCount = count;
-    Q_EMIT countChanged();
-}
-
-void HistoryManager::setError(OperationError error)
-{
-    mError = error;
-    Q_EMIT errorChanged();
+    History::Manager::instance()->removeEvents(type, queryFilter, querySort, onCompleted);
 }

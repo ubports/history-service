@@ -577,7 +577,7 @@ bool HistoryDaemon::removeEvents(const QList<QVariantMap> &events)
     return true;
 }
 
-bool HistoryDaemon::removeEvents(int type, const QVariantMap &filter, const QVariantMap &sort)
+bool HistoryDaemon::removeEvents(int type, const QVariantMap &filter, const QVariantMap &sort, int &removedCount)
 {
     History::Filter theFilter = History::Filter::fromProperties(filter);
     History::Sort theSort = History::Sort::fromProperties(sort);
@@ -589,26 +589,22 @@ bool HistoryDaemon::removeEvents(int type, const QVariantMap &filter, const QVar
 
     QList<QVariantMap> events = view->NextPage();
     QList<QVariantMap> allEvents;
-    int batchSize = 200;
-    bool ok = true;
-    while (events.count() > 0 && ok) {
+    while (events.count() > 0) {
         allEvents << events;
-        if (allEvents.count() > batchSize) {
-            ok = ok & removeEvents(allEvents);
-            allEvents.clear();
-        }
         events = view->NextPage();
     }
 
+    bool ok = removeEvents(allEvents);
     if (ok) {
-        ok = ok & removeEvents(allEvents);
+        removedCount = allEvents.count();
     }
+
     view->deleteLater();
 
     return ok;
 }
 
-int HistoryDaemon::eventsCount(int type, const QVariantMap &filter)
+int HistoryDaemon::getEventsCount(int type, const QVariantMap &filter)
 {
     History::Filter theFilter = History::Filter::fromProperties(filter);
     return mBackend->eventsCount((History::EventType)type, theFilter);

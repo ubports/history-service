@@ -22,7 +22,7 @@
                 Destroy the view object.
             ]]></dox:d>
         </method>
-        <method name="TotalCount">
+        <method name="GetTotalCount">
             <dox:d><![CDATA[
                 Return the total number of entries in the view.
             ]]></dox:d>
