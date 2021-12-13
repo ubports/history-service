@@ -39,7 +39,7 @@ void HistoryManager::removeEvents(int eventType, const QString &maxDate, const Q
 
     QJSValue result(callback);
     if (mPendingOperation) {
-        result.call(QJSValueList { 0, 0, OperationError::OPERATION_ALREADY_PENDING });
+        result.call(QJSValueList { 0, OperationError::OPERATION_ALREADY_PENDING });
         qWarning() << "there is a pending operation, request cancelled";
         return;
     }
@@ -48,32 +48,44 @@ void HistoryManager::removeEvents(int eventType, const QString &maxDate, const Q
     History::EventType type = (History::EventType) eventType;
 
     if (type == History::EventTypeNull|| !fromDate.isValid()) {
-        result.call(QJSValueList { 0, 0, OperationError::OPERATION_INVALID });
+        result.call(QJSValueList { 0, OperationError::OPERATION_INVALID });
         qWarning() << "invalid type or date, request cancelled";
         return;
     }
 
     History::Filter queryFilter(History::FieldTimestamp, QVariant(maxDate), History::MatchLess);
-    History::Sort querySort(History::FieldTimestamp, Qt::DescendingOrder);
 
     if (!queryFilter.isValid()) {
-        result.call(QJSValueList { 0, 0, OperationError::OPERATION_INVALID });
+        result.call(QJSValueList { 0, OperationError::OPERATION_INVALID });
         qWarning() << "invalid filter, operation cancelled";
         return;
     }
 
-    int eventsCount = History::Manager::instance()->getEventsCount(type, queryFilter);
-    result.call(QJSValueList { eventsCount, 0, OperationError::NO_ERROR });
-
-    if (eventsCount == 0) {
-        return;
-    }
-
-    auto onCompleted = [this, eventsCount, callback](int removedCount, bool isError) {
+    auto onCompleted = [this, callback](int removedCount, bool isError) {
             QJSValue result(callback);
             OperationError error = isError ? OperationError::OPERATION_FAILED : OperationError::NO_ERROR;
-            result.call(QJSValueList { eventsCount, removedCount, error });
+            result.call(QJSValueList { removedCount, error });
     };
 
-    History::Manager::instance()->removeEvents(type, queryFilter, querySort, onCompleted);
+    History::Manager::instance()->removeEvents(type, queryFilter, onCompleted);
+}
+
+int HistoryManager::getEventsCount(int eventType, const QString &maxDate)
+{
+    QDateTime fromDate = QDateTime::fromString(maxDate, Qt::ISODate);
+    History::EventType type = (History::EventType) eventType;
+
+    if (type == History::EventTypeNull|| !fromDate.isValid()) {
+        qWarning() << "invalid type or date, request cancelled";
+        return -1;
+    }
+
+    History::Filter queryFilter(History::FieldTimestamp, QVariant(maxDate), History::MatchLess);
+
+    if (!queryFilter.isValid()) {
+        qWarning() << "invalid filter, request cancelled";
+        return -1;
+    }
+
+    return History::Manager::instance()->getEventsCount(type, queryFilter);
 }

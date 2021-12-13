@@ -56,6 +56,7 @@ private Q_SLOTS:
     void testWriteVoiceEvent();
     void testModifyVoiceEvent();
     void testRemoveVoiceEvent();
+    void testRemoveEvents();
     void testEventsForThread();
     void testGetSingleEvent_data();
     void testGetSingleEvent();
@@ -590,6 +591,62 @@ void SqlitePluginTest::testRemoveVoiceEvent()
     // check that the event was removed from the database
     QSqlQuery query(SQLiteDatabase::instance()->database());
     QVERIFY(query.exec("SELECT count(*) FROM voice_events"));
+    QVERIFY(query.next());
+    QCOMPARE(query.value(0).toInt(), 0);
+}
+
+void SqlitePluginTest::testRemoveEvents()
+{
+    // clear the database
+    SQLiteDatabase::instance()->reopen();
+
+    QVariantMap thread = mPlugin->createThreadForParticipants("theAccountId", History::EventTypeVoice, QStringList() << "theParticipant");
+    QVERIFY(!thread.isEmpty());
+
+    History::VoiceEvent voiceEvent(thread[History::FieldAccountId].toString(),
+                                   thread[History::FieldThreadId].toString(), "theEventId",
+                                   "theParticipant", QDateTime::currentDateTime().addDays(-10), true,
+                                   false, QTime(0, 5, 10));
+    QCOMPARE(mPlugin->writeVoiceEvent(voiceEvent.properties()), History::EventWriteCreated);
+
+    History::VoiceEvent voiceEvent2(thread[History::FieldAccountId].toString(),
+                                   thread[History::FieldThreadId].toString(), "theEventId2",
+                                   "theParticipant", QDateTime::currentDateTime().addDays(-1), true,
+                                   false, QTime(0, 6, 10));
+
+    QCOMPARE(mPlugin->writeVoiceEvent(voiceEvent2.properties()), History::EventWriteCreated);
+
+    History::Filter filter;
+    filter.setFilterProperty(History::FieldTimestamp);
+    filter.setFilterValue(QDateTime::currentDateTime().addDays(-5).toString("yyyy-MM-ddTHH:mm:ss.zzz"));
+    filter.setMatchFlags(History::MatchLess);
+
+    // remove events before 5 days and check that voiceEvent is really removed from the database and that only voiceEvent2 is still there
+    QCOMPARE(mPlugin->removeEvents(History::EventTypeVoice, filter), 1);
+
+    QSqlQuery query(SQLiteDatabase::instance()->database());
+    QVERIFY(query.exec("SELECT count(*) FROM voice_events"));
+    QVERIFY(query.next());
+    QCOMPARE(query.value(0).toInt(), 1);
+
+    QVERIFY(query.exec("SELECT * FROM voice_events"));
+    QVERIFY(query.next());
+    QCOMPARE(query.value("eventId"), "theEventId2");
+
+    // we should still have a thread
+    QVERIFY(query.exec("SELECT count(*) FROM threads"));
+    QVERIFY(query.next());
+    QCOMPARE(query.value(0).toInt(), 1);
+
+    // now check if we remove the last event
+    filter.setFilterValue(QDateTime::currentDateTime().toString("yyyy-MM-ddTHH:mm:ss.zzz"));
+    QCOMPARE(mPlugin->removeEvents(History::EventTypeVoice, filter), 1);
+
+    QVERIFY(query.exec("SELECT count(*) FROM voice_events"));
+    QVERIFY(query.next());
+    QCOMPARE(query.value(0).toInt(), 0);
+    // it should remove the thread too
+    QVERIFY(query.exec("SELECT count(*) FROM threads"));
     QVERIFY(query.next());
     QCOMPARE(query.value(0).toInt(), 0);
 }

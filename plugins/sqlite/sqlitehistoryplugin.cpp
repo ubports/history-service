@@ -1155,6 +1155,64 @@ bool SQLiteHistoryPlugin::removeVoiceEvent(const QVariantMap &event)
     return true;
 }
 
+int SQLiteHistoryPlugin::removeEvents(History::EventType type, const History::Filter &filter)
+{
+    QString table;
+
+    switch (type) {
+    case History::EventTypeText:
+        table = "text_events";
+        break;
+    case History::EventTypeVoice:
+        table = "voice_events";
+        break;
+    case History::EventTypeNull:
+        qWarning("SQLiteHistoryPlugin::sqlQueryForThreads: Got EventTypeNull, ignoring!");
+        return -1;
+        break;
+    }
+
+    QSqlQuery query(SQLiteDatabase::instance()->database());
+
+    QVariantMap filterValues;
+    QString condition = filterToString(filter, filterValues);
+    condition.prepend(" WHERE ");
+    QString queryText = QString("DELETE FROM %1 %2").arg(table).arg(condition);
+    query.prepare(queryText);
+
+    Q_FOREACH(const QString &key, filterValues.keys()) {
+        query.bindValue(key, filterValues[key]);
+    }
+
+    if (!query.exec()) {
+        qWarning() << "Failed to remove events. Error:" << query.lastError();
+        return -1;
+    }
+
+    int deletedEvents = query.numRowsAffected();
+    if (deletedEvents <= 0) {
+        return deletedEvents;
+    }
+
+    // now need to remove threads that have count == 0 if any
+    QSqlQuery queryThread(SQLiteDatabase::instance()->database());
+    queryThread.prepare("DELETE FROM threads WHERE type=:type AND count=0");
+    queryThread.bindValue(":type", type);
+
+    if (!queryThread.exec()) {
+        qCritical() << "Failed to remove threads: Error:" << queryThread.lastError() << queryThread.lastQuery();
+        return -1;
+    }
+
+    // refresh cache
+    if (queryThread.numRowsAffected()>0) {
+        updateGroupedThreadsCache();
+    }
+
+
+    return deletedEvents;
+}
+
 int SQLiteHistoryPlugin::eventsCount(History::EventType type, const History::Filter &filter)
 {
     QString table;

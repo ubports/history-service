@@ -89,6 +89,7 @@ public:
 
     virtual EventWriteResult writeVoiceEvent(const QVariantMap& /* event */) { return EventWriteError; }
     virtual bool removeVoiceEvent(const QVariantMap& /* event */) { return false; }
+    virtual int removeEvents(EventType type, const Filter &filter = Filter()) = 0;
 
     virtual bool beginBatchOperation() { return false; }
     virtual bool endBatchOperation() { return false; }

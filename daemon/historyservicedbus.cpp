@@ -148,10 +148,10 @@ bool HistoryServiceDBus::RemoveEvents(const QList<QVariantMap> &events)
     return HistoryDaemon::instance()->removeEvents(events);
 }
 
-int HistoryServiceDBus::RemoveEventsBy(int type, const QVariantMap &filter, const QVariantMap &sort)
+int HistoryServiceDBus::RemoveEventsBy(int type, const QVariantMap &filter)
 {
     int removedCount = 0;
-    bool ok = HistoryDaemon::instance()->removeEvents(type, filter, sort, removedCount);
+    bool ok = HistoryDaemon::instance()->removeEvents(type, filter, removedCount);
     if (!ok) {
         sendErrorReply(QDBusError::InternalError, "Issue while removing events");
     }

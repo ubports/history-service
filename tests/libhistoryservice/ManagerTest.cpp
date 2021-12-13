@@ -330,57 +330,46 @@ void ManagerTest::testRemoveEventsByFilter()
         }
         events.append(voiceEvent);
     }
-    QSignalSpy eventsRemovedSpy(mManager, SIGNAL(eventsRemoved(History::Events)));
-    QSignalSpy threadsModifiedSpy(mManager, SIGNAL(threadsModified(History::Threads)));
+
     QVERIFY(mManager->writeEvents(events));
-    QTRY_COMPARE(threadsModifiedSpy.count(), 1);
-    threadsModifiedSpy.clear();
 
     History::Filter filter;
     filter.setFilterProperty(History::FieldTimestamp);
     filter.setFilterValue(currentDate.addDays(daysToRemove).toString("yyyy-MM-ddTHH:mm:ss.zzz")); //should delete 10 voice_events
     filter.setMatchFlags(History::MatchLess);
 
-    History::Sort sort;
-    sort.setSortField(History::FieldTimestamp);
-    sort.setSortOrder(Qt::DescendingOrder);
-
     auto onVoiceEventsRemoveCompleted = [this](int removedCount, bool isError) {
         QCOMPARE(removedCount, 10);
         QCOMPARE(isError, false);
     };
 
-    mManager->removeEvents(History::EventTypeVoice ,filter, sort, onVoiceEventsRemoveCompleted);
-    QTRY_COMPARE(eventsRemovedSpy.count(), 1);
-    QTRY_COMPARE(threadsModifiedSpy.count(), 1);
-    History::Events removedEvents = eventsRemovedSpy.first().first().value<History::Events>();
-    History::Threads modifiedThreads = threadsModifiedSpy.first().first().value<History::Threads>();
+    mManager->removeEvents(History::EventTypeVoice ,filter, onVoiceEventsRemoveCompleted);
+    QTest::qWait(100);
 
-    qSort(removedEvents);
-    qSort(eventsExpectedToBeRemoved);
-    QCOMPARE(removedEvents, eventsExpectedToBeRemoved);
+    History::EventViewPtr eventView = mManager->queryEvents(History::EventTypeVoice);
+    events = eventView->nextPage();
+    History::Events remainingVoiceEvents;
+    while (events.count() > 0) {
+        remainingVoiceEvents << events;
+        events = eventView->nextPage();
+    }
+    QCOMPARE(remainingVoiceEvents.count(), 40);
 
-    QCOMPARE(modifiedThreads.count(), 1);
+    // expect removed Events not being there anymore
+    Q_FOREACH(const History::Event &event, eventsExpectedToBeRemoved) {
+        QCOMPARE(remainingVoiceEvents.contains(event), false);
+    }
 
     // now remove the remaining events and make sure the threads get removed too
     filter.setFilterValue(currentDate.addYears(1).toString("yyyy-MM-ddTHH:mm:ss.zzz"));
-    QSignalSpy threadsRemovedSpy(mManager, SIGNAL(threadsRemoved(History::Threads)));
-    eventsRemovedSpy.clear();
 
     auto onRemainingVoiceEventsRemoveCompleted = [this](int removedCount, bool isError) {
         QCOMPARE(removedCount, 40);
         QCOMPARE(isError, false);
     };
 
-    mManager->removeEvents(History::EventTypeVoice ,filter, sort, onRemainingVoiceEventsRemoveCompleted);
-    QTRY_COMPARE(eventsRemovedSpy.count(), 1);
-    QTRY_COMPARE(threadsRemovedSpy.count(), 1);
-    removedEvents = eventsRemovedSpy.first().first().value<History::Events>();
-
-    History::Threads removedThreads = threadsRemovedSpy.first().first().value<History::Threads>();
-
-    QCOMPARE(removedEvents.count(), 40);
-    QCOMPARE(removedThreads.count(), 1);
+    mManager->removeEvents(History::EventTypeVoice ,filter, onRemainingVoiceEventsRemoveCompleted);
+    QTest::qWait(100);
 
     //verify text events are still there
     QCOMPARE(mManager->getEventsCount(History::EventTypeText ,filter), 50);
@@ -479,10 +468,6 @@ void ManagerTest::cleanup() {
     filter.setFilterValue(QDateTime::currentDateTime().addYears(10).toString("yyyy-MM-ddTHH:mm:ss.zzz"));
     filter.setMatchFlags(History::MatchLess);
 
-    History::Sort sort;
-    sort.setSortField(History::FieldTimestamp);
-    sort.setSortOrder(Qt::DescendingOrder);
-
     int voiceEventsCount = mManager->getEventsCount(History::EventTypeVoice, filter);
     int textEventsCount = mManager->getEventsCount(History::EventTypeText, filter);
 
@@ -499,10 +484,10 @@ void ManagerTest::cleanup() {
             QCOMPARE(isError, 0);
         };
 
-        mManager->removeEvents(History::EventTypeVoice, filter, sort, onVoiceEventsRemoveCompleted);
-        mManager->removeEvents(History::EventTypeText, filter, sort, onTextEventsRemoveCompleted);
+        mManager->removeEvents(History::EventTypeVoice, filter, onVoiceEventsRemoveCompleted);
+        mManager->removeEvents(History::EventTypeText, filter, onTextEventsRemoveCompleted);
 
-        QTest::qWait(300);
+        QTest::qWait(100);
     }
 }
 

@@ -562,7 +562,6 @@ bool HistoryDaemon::removeEvents(const QList<QVariantMap> &events)
             mBackend->rollbackBatchOperation();
             return false;
         }
-
     }
 
     mBackend->endBatchOperation();
@@ -577,31 +576,25 @@ bool HistoryDaemon::removeEvents(const QList<QVariantMap> &events)
     return true;
 }
 
-bool HistoryDaemon::removeEvents(int type, const QVariantMap &filter, const QVariantMap &sort, int &removedCount)
+bool HistoryDaemon::removeEvents(int type, const QVariantMap &filter, int &removedCount)
 {
-    History::Filter theFilter = History::Filter::fromProperties(filter);
-    History::Sort theSort = History::Sort::fromProperties(sort);
-    History::PluginEventView *view = mBackend->queryEvents((History::EventType)type, theSort , theFilter);
-    if (!view->IsValid()) {
-        qWarning() << "removeEvents: bad query " << filter;
+    if (!mBackend) {
         return false;
     }
 
-    QList<QVariantMap> events = view->NextPage();
-    QList<QVariantMap> allEvents;
-    while (events.count() > 0) {
-        allEvents << events;
-        events = view->NextPage();
+    History::Filter theFilter = History::Filter::fromProperties(filter);
+
+    mBackend->beginBatchOperation();
+
+    removedCount = mBackend->removeEvents((History::EventType) type, theFilter);
+    if (removedCount == -1) {
+        mBackend->rollbackBatchOperation();
+        return false;
     }
 
-    bool ok = removeEvents(allEvents);
-    if (ok) {
-        removedCount = allEvents.count();
-    }
+    mBackend->endBatchOperation();
 
-    view->deleteLater();
-
-    return ok;
+    return true;
 }
 
 int HistoryDaemon::getEventsCount(int type, const QVariantMap &filter)

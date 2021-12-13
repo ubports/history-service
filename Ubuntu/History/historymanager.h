@@ -46,13 +46,19 @@ public:
      * \brief removeEvents remove all events given eventType and created before maxDate,
      * \param eventType event type according to History.EventType
      * \param maxDate QString date in ISO format
-     * \param callback expect a javascript function(eventsCount, deletedEventsCount, error)
-     * eventsCount is the total number of events that should be removed,
+     * \param callback expect a javascript function(deletedEventsCount, error)
      * deletedEventsCount number of deleted events
      * error  HistoryManager::OperationError enum type,
-     * \return
      */
     Q_INVOKABLE void removeEvents(int eventType, const QString &maxDate, const QJSValue &callback);
+
+    /*!
+     * \brief getEventsCount return the number of events given eventType and created before maxDate
+     * \param eventType event type according to History.EventType
+     * \param maxDate QString date in ISO format
+     * \return number of events count
+     */
+    Q_INVOKABLE int getEventsCount(int eventType, const QString &maxDate);
 
 
 private:

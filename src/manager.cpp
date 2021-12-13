@@ -204,10 +204,10 @@ bool Manager::removeEvents(const Events &events)
     return d->dbus->removeEvents(events);
 }
 
-void Manager::removeEvents(EventType type, const Filter &filter, const Sort &sort, std::function<void(int,bool)> callback)
+void Manager::removeEvents(EventType type, const Filter &filter, std::function<void(int,bool)> callback)
 {
     Q_D(Manager);
-    d->dbus->removeEvents(type, filter, sort, callback);
+    d->dbus->removeEvents(type, filter, callback);
 }
 
 int Manager::getEventsCount(EventType type, const Filter &filter)

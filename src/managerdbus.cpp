@@ -164,10 +164,10 @@ bool ManagerDBus::removeEvents(const Events &events)
     return true;
 }
 
-void ManagerDBus::removeEvents(EventType type, const Filter &filter, const Sort &sort, std::function<void(int,bool)> callback)
+void ManagerDBus::removeEvents(EventType type, const Filter &filter, std::function<void(int,bool)> callback)
 {
     QDBusMessage message = QDBusMessage::createMethodCall(mInterface.service(), mInterface.path(), mInterface.interface(), "RemoveEventsBy");
-    message.setArguments({ (int)type, filter.properties(), sort.properties()});
+    message.setArguments({ (int)type, filter.properties()});
     // 7500 events takes 38sec on N5, 2 min should be enough for most cases
     QDBusPendingCall async = mInterface.connection().asyncCall(message, 120000);
 
